@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Draft War Room 2026</title>
+<style>
+:root{
+  --bg:#0e1613; --panel:#16211c; --panel2:#1b2822; --raise:#213028;
+  --line:rgba(214,232,219,.12); --line2:rgba(214,232,219,.22);
+  --ink:#e9efe9; --muted:#8fa398; --chalk:#eef3ec;
+  --qb:#e8a13a; --rb:#38c884; --wr:#4aa8f2; --te:#c877e6; --k:#9aa6b2; --dst:#7c8b9c;
+  --mine:#38c884; --gone:#6a7a72; --target:#ffd45e; --warn:#ff7a6b;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);
+  font-size:14px;line-height:1.35;-webkit-text-size-adjust:100%}
+/* chalk field texture: faint yard lines */
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:repeating-linear-gradient(90deg,transparent 0 79px,rgba(214,232,219,.025) 79px 80px)}
+.wrap{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:10px 12px 40px}
+.eyebrow{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+button{font-family:var(--sans);cursor:pointer}
+
+/* header */
+.top{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,var(--bg) 70%,transparent);
+  padding-top:6px}
+.masthead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.masthead h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-.01em}
+.masthead .sub{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.clock{margin-left:auto;display:flex;gap:14px;align-items:center;font-family:var(--mono)}
+.clock .cell{text-align:right;line-height:1.1}
+.clock .cell b{font-size:17px;display:block}
+.clock .cell span{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.clock .up{color:var(--target)}
+.onclock{padding:3px 10px;border:1px solid var(--line2);border-radius:999px;font-size:11px}
+.onclock.me{border-color:var(--target);color:var(--target);box-shadow:0 0 0 1px var(--target) inset}
+
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px;margin-bottom:10px}
+.search{flex:1 1 200px;min-width:160px;background:var(--panel2);border:1px solid var(--line);
+  color:var(--ink);border-radius:8px;padding:8px 10px;font-size:14px}
+.search::placeholder{color:var(--muted)}
+.filters{display:flex;gap:4px;flex-wrap:wrap}
+.chip{background:var(--panel2);border:1px solid var(--line);color:var(--muted);
+  border-radius:7px;padding:6px 9px;font-size:12px;font-weight:700;letter-spacing:.02em}
+.chip[data-on="1"]{color:var(--bg);background:var(--chalk);border-color:var(--chalk)}
+.chip.pos-QB[data-on="1"]{background:var(--qb);border-color:var(--qb)}
+.chip.pos-RB[data-on="1"]{background:var(--rb);border-color:var(--rb)}
+.chip.pos-WR[data-on="1"]{background:var(--wr);border-color:var(--wr)}
+.chip.pos-TE[data-on="1"]{background:var(--te);border-color:var(--te)}
+.tool{background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+  border-radius:8px;padding:7px 11px;font-size:12px;font-weight:600}
+.tool:hover{border-color:var(--line2)}
+.tool.warn:hover{border-color:var(--warn);color:var(--warn)}
+.tgl{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:12px;user-select:none}
+.tgl input{accent-color:var(--rb)}
+
+/* layout */
+.grid{display:grid;grid-template-columns:1fr 340px;gap:12px;align-items:start}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+
+/* board */
+.board{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.bhead,.row{display:grid;grid-template-columns:34px 1fr 42px 52px 52px 132px;align-items:center}
+.bhead{padding:8px 10px;border-bottom:1px solid var(--line2);font-size:10px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.bhead b{cursor:pointer}
+.bhead b.on{color:var(--chalk)}
+.bhead .r{text-align:right}
+.rows{max-height:calc(100vh - 220px);overflow:auto}
+.row{padding:7px 10px;border-bottom:1px solid var(--line);position:relative}
+.row:hover{background:var(--panel2)}
+.row.gone{opacity:.4}
+.row.mine{background:rgba(56,200,132,.08)}
+.row.mine::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--mine)}
+.rk{font-family:var(--mono);color:var(--muted);font-size:12px}
+.who{min-width:0}
+.nm{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{display:flex;gap:6px;align-items:center;margin-top:2px}
+.pill{font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.03em;
+  padding:1px 5px;border-radius:4px;color:#0c120f}
+.pill.QB{background:var(--qb)} .pill.RB{background:var(--rb)} .pill.WR{background:var(--wr)}
+.pill.TE{background:var(--te)} .pill.K{background:var(--k)} .pill.DST{background:var(--dst)}
+.tm{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.rush{font-family:var(--mono);font-size:9px;font-weight:800;color:var(--qb);
+  border:1px solid var(--qb);border-radius:3px;padding:0 3px;letter-spacing:.02em}
+.num{font-family:var(--mono);text-align:right;font-size:13px}
+.num.vor{color:var(--rb)} .num.vor.neg{color:var(--gone)}
+.bye{font-family:var(--mono);text-align:right;font-size:12px;color:var(--muted)}
+.acts{display:flex;gap:5px;justify-content:flex-end}
+.act{border:1px solid var(--line2);background:transparent;color:var(--ink);
+  border-radius:6px;padding:5px 8px;font-size:11px;font-weight:700;line-height:1}
+.act.mine{border-color:var(--mine);color:var(--mine)}
+.act.gone{color:var(--muted)}
+.act.star[data-on="1"]{border-color:var(--target);color:var(--target)}
+.act:active{transform:translateY(1px)}
+.empty{padding:30px;text-align:center;color:var(--muted)}
+
+/* rail */
+.rail{display:flex;flex-direction:column;gap:12px;position:sticky;top:96px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.card>h3{margin:0;padding:10px 12px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.card>h3 .cnt{font-family:var(--mono);color:var(--chalk)}
+.card .body{padding:10px 12px}
+.slots{display:flex;flex-direction:column;gap:5px}
+.slot{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;
+  padding:5px 7px;border:1px solid var(--line);border-radius:8px;font-size:13px}
+.slot .lab{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.05em}
+.slot.need{border-style:dashed;color:var(--muted)}
+.slot .bpill{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.slot .bpill.clash{color:var(--warn);font-weight:800}
+.needline{margin-top:9px;font-size:11px;color:var(--muted);font-family:var(--mono)}
+.byewarn{margin-top:8px;font-size:11px;color:var(--warn);display:none}
+.byewarn.show{display:block}
+
+.slotpick{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.slotpick label{font-size:11px;color:var(--muted)}
+.slotpick select{background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+  border-radius:7px;padding:6px 8px;font-family:var(--mono)}
+.snake{display:flex;flex-wrap:wrap;gap:3px;margin-top:10px}
+.sq{width:22px;height:22px;border:1px solid var(--line);border-radius:5px;display:flex;
+  align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.sq.me{border-color:var(--target);color:var(--target)}
+.sq.now{background:var(--chalk);color:var(--bg);border-color:var(--chalk)}
+.sq.now.me{background:var(--target)}
+
+details.card summary{list-style:none;cursor:pointer;padding:10px 12px;font-size:11px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between}
+details.card summary::-webkit-details-marker{display:none}
+details.card summary::after{content:"+";font-family:var(--mono);color:var(--muted)}
+details.card[open] summary::after{content:"\2212"}
+.ref{padding:0 12px 12px;font-size:12.5px;color:var(--ink)}
+.ref .row2{padding:8px 0;border-top:1px solid var(--line)}
+.ref .row2:first-child{border-top:none}
+.ref b.tag{font-family:var(--mono);font-size:10px;padding:1px 5px;border-radius:4px;color:#0c120f}
+.ref p{margin:5px 0 0;color:var(--muted);line-height:1.4}
+.mgr{display:flex;flex-direction:column;gap:6px;padding:0 12px 12px}
+.mgr .m{display:grid;grid-template-columns:76px 1fr;gap:6px;align-items:center}
+.mgr input.nmn{background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+  border-radius:6px;padding:5px 6px;font-size:12px;font-weight:700}
+.mgr textarea{background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+  border-radius:6px;padding:5px 6px;font-size:12px;resize:vertical;min-height:30px;font-family:var(--sans)}
+.foot{margin-top:14px;font-size:11px;color:var(--muted);text-align:center;font-family:var(--mono)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:50;
+  background:var(--raise);border:1px solid var(--line2);color:var(--ink);padding:9px 14px;
+  border-radius:9px;font-size:13px;opacity:0;transition:opacity .18s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="masthead">
+      <h1>Draft War Room</h1>
+      <span class="sub">2026 · 12-team · half-PPR · 15 rounds</span>
+      <div class="clock">
+        <span class="onclock" id="onclock">set your slot</span>
+        <div class="cell"><b id="ovPick">1</b><span>Overall</span></div>
+        <div class="cell"><b id="ovRound">R1</b><span>Round</span></div>
+        <div class="cell up"><b id="nextPick">--</b><span>Your next</span></div>
+      </div>
+    </div>
+    <div class="controls">
+      <input id="search" class="search" placeholder="Search player..." autocomplete="off">
+      <div class="filters" id="filters">
+        <button class="chip" data-pos="ALL" data-on="1">ALL</button>
+        <button class="chip pos-QB" data-pos="QB">QB</button>
+        <button class="chip pos-RB" data-pos="RB">RB</button>
+        <button class="chip pos-WR" data-pos="WR">WR</button>
+        <button class="chip pos-TE" data-pos="TE">TE</button>
+        <button class="chip" data-pos="K">K</button>
+        <button class="chip" data-pos="DST">DST</button>
+      </div>
+      <label class="tgl"><input type="checkbox" id="hideDrafted">Hide drafted</label>
+      <label class="tgl"><input type="checkbox" id="onlyTargets">Targets only</label>
+      <button class="tool" id="undo">&#8630; Undo</button>
+      <button class="tool" id="export">Export CSV</button>
+      <button class="tool warn" id="reset">Reset</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="board">
+      <div class="bhead">
+        <div>#</div><div>Player</div><div class="r">Bye</div>
+        <b class="r" data-sort="pts">Pts</b><b class="r" data-sort="vor">VOR</b>
+        <div class="r">Draft</div>
+      </div>
+      <div class="rows" id="rows"></div>
+    </div>
+
+    <div class="rail">
+      <div class="card">
+        <h3>My roster <span class="cnt" id="rcount">0/15</span></h3>
+        <div class="body">
+          <div class="slots" id="roster"></div>
+          <div class="needline" id="needline"></div>
+          <div class="byewarn" id="byewarn"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Pick tracker</h3>
+        <div class="body">
+          <div class="slotpick">
+            <label>Your draft slot</label>
+            <select id="slotSel"><option value="0">—</option></select>
+            <span class="sub" id="slotHint" style="font-family:var(--mono);font-size:11px;color:var(--muted)"></span>
+          </div>
+          <div class="snake" id="snake"></div>
+        </div>
+      </div>
+
+      <details class="card" id="refCard">
+        <summary>League-winner archetypes</summary>
+        <div class="ref">
+          <div class="row2"><b class="tag" style="background:var(--qb)">QB</b>
+            <p>55+ rush attempts (aim 100), usually gone R3&ndash;4. Take a rushing stud over a late-round QB. Rows auto-tag <span class="rush">RUSH</span> at 55+ and <span class="rush">RUSH&#43;</span> at 100+.</p></div>
+          <div class="row2"><b class="tag" style="background:var(--rb)">RB</b>
+            <p>ADP R1&ndash;3. Target years 1&ndash;3; avg winner age 25. Avoid 27+. (Ages aren&rsquo;t in this build &mdash; verify at the table.)</p></div>
+          <div class="row2"><b class="tag" style="background:var(--wr)">WR</b>
+            <p>First downs per route run 12%+ (sticky). Breakout window years 3&ndash;6. Avoid age 32+ &mdash; possible exceptions Evans, Adams.</p></div>
+          <div class="row2"><b class="tag" style="background:var(--te)">TE</b>
+            <p>No WR inside top-60 ADP on the team, offense 20+ ppg, high target share. Exception: prime Kelce.</p></div>
+        </div>
+      </details>
+
+      <details class="card">
+        <summary>Manager notes</summary>
+        <div class="mgr" id="mgr"></div>
+      </details>
+    </div>
+  </div>
+
+  <div class="foot">VOR baselines: QB12 &middot; RB30 &middot; WR36 &middot; TE12 &nbsp;|&nbsp; state saved locally in this browser</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const PLAYERS = [{"rank":1,"name":"Jahmyr Gibbs","team":"DET","pos":"RB","posrank":"RB 1","bye":6,"pts":336.8,"carries":274.4,"vor":168.8},{"rank":2,"name":"Puka Nacua","team":"LAR","pos":"WR","posrank":"WR 1","bye":11,"pts":281.3,"carries":13.6,"vor":132.9},{"rank":3,"name":"Ja'Marr Chase","team":"CIN","pos":"WR","posrank":"WR 2","bye":6,"pts":274.9,"carries":3,"vor":126.5},{"rank":4,"name":"Bijan Robinson","team":"ATL","pos":"RB","posrank":"RB 2","bye":11,"pts":330.5,"carries":289.6,"vor":162.5},{"rank":5,"name":"Christian McCaffrey","team":"SF","pos":"RB","posrank":"RB 3","bye":8,"pts":295.5,"carries":269.4,"vor":127.5},{"rank":6,"name":"Jaxon Smith-Njigba","team":"SEA","pos":"WR","posrank":"WR 3","bye":11,"pts":268.9,"carries":5.5,"vor":120.5},{"rank":7,"name":"Jonathan Taylor","team":"IND","pos":"RB","posrank":"RB 4","bye":13,"pts":290.3,"carries":327.4,"vor":122.3},{"rank":8,"name":"Amon-Ra St. Brown","team":"DET","pos":"WR","posrank":"WR 4","bye":6,"pts":260.9,"carries":3.1,"vor":112.5},{"rank":9,"name":"Justin Jefferson","team":"MIN","pos":"WR","posrank":"WR 5","bye":6,"pts":220.3,"carries":1.3,"vor":71.9},{"rank":10,"name":"Saquon Barkley","team":"PHI","pos":"RB","posrank":"RB 5","bye":10,"pts":244.8,"carries":295.9,"vor":76.8},{"rank":11,"name":"CeeDee Lamb","team":"DAL","pos":"WR","posrank":"WR 6","bye":14,"pts":224.2,"carries":2.4,"vor":75.8},{"rank":12,"name":"Kenneth Walker III","team":"KC","pos":"RB","posrank":"RB 6","bye":5,"pts":228.3,"carries":255.7,"vor":60.3},{"rank":13,"name":"De'Von Achane","team":"MIA","pos":"RB","posrank":"RB 7","bye":6,"pts":259.5,"carries":237.9,"vor":91.5},{"rank":14,"name":"James Cook III","team":"BUF","pos":"RB","posrank":"RB 8","bye":7,"pts":253.5,"carries":287.3,"vor":85.5},{"rank":15,"name":"Chase Brown","team":"CIN","pos":"RB","posrank":"RB 9","bye":6,"pts":245.4,"carries":239.4,"vor":77.4},{"rank":16,"name":"Derrick Henry","team":"BAL","pos":"RB","posrank":"RB 10","bye":13,"pts":264.2,"carries":314,"vor":96.2},{"rank":17,"name":"Ashton Jeanty","team":"LV","pos":"RB","posrank":"RB 11","bye":13,"pts":247.1,"carries":281.4,"vor":79.1},{"rank":18,"name":"Brock Bowers","team":"LV","pos":"TE","posrank":"TE 1","bye":13,"pts":195.3,"carries":0,"vor":61.2},{"rank":19,"name":"Drake London","team":"ATL","pos":"WR","posrank":"WR 7","bye":11,"pts":236.3,"carries":0,"vor":87.9},{"rank":20,"name":"Nico Collins","team":"HOU","pos":"WR","posrank":"WR 8","bye":8,"pts":207.3,"carries":1.4,"vor":58.9},{"rank":21,"name":"A.J. Brown","team":"NE","pos":"WR","posrank":"WR 9","bye":11,"pts":212.8,"carries":0,"vor":64.4},{"rank":22,"name":"Omarion Hampton","team":"LAC","pos":"RB","posrank":"RB 12","bye":7,"pts":238.2,"carries":249.1,"vor":70.2},{"rank":23,"name":"George Pickens","team":"DAL","pos":"WR","posrank":"WR 10","bye":14,"pts":210.9,"carries":0.3,"vor":62.5},{"rank":24,"name":"Malik Nabers","team":"NYG","pos":"WR","posrank":"WR 11","bye":8,"pts":192.0,"carries":2.7,"vor":43.6},{"rank":25,"name":"Breece Hall","team":"NYJ","pos":"RB","posrank":"RB 13","bye":13,"pts":229.6,"carries":259.3,"vor":61.6},{"rank":26,"name":"DeVonta Smith","team":"PHI","pos":"WR","posrank":"WR 12","bye":10,"pts":192.8,"carries":0,"vor":44.4},{"rank":27,"name":"Jaylen Waddle","team":"DEN","pos":"WR","posrank":"WR 13","bye":10,"pts":172.3,"carries":1.7,"vor":23.9},{"rank":28,"name":"Josh Allen","team":"BUF","pos":"QB","posrank":"QB 1","bye":7,"pts":360.8,"carries":118.1,"vor":70.3},{"rank":29,"name":"Tee Higgins","team":"CIN","pos":"WR","posrank":"WR 14","bye":6,"pts":186.0,"carries":0,"vor":37.6},{"rank":30,"name":"Jeremiyah Love","team":"ARI","pos":"RB","posrank":"RB 14","bye":14,"pts":228.4,"carries":238.3,"vor":60.4},{"rank":31,"name":"Javonte Williams","team":"DAL","pos":"RB","posrank":"RB 15","bye":14,"pts":217.9,"carries":255.5,"vor":49.9},{"rank":32,"name":"Trey McBride","team":"ARI","pos":"TE","posrank":"TE 2","bye":14,"pts":200.0,"carries":0,"vor":65.9},{"rank":33,"name":"Kyren Williams","team":"LAR","pos":"RB","posrank":"RB 16","bye":11,"pts":223.3,"carries":240.2,"vor":55.3},{"rank":34,"name":"Josh Jacobs","team":"GB","pos":"RB","posrank":"RB 17","bye":11,"pts":238.9,"carries":288.8,"vor":70.9},{"rank":35,"name":"Zay Flowers","team":"BAL","pos":"WR","posrank":"WR 15","bye":13,"pts":202.8,"carries":9.9,"vor":54.4},{"rank":36,"name":"Emeka Egbuka","team":"TB","pos":"WR","posrank":"WR 16","bye":10,"pts":191.2,"carries":1.4,"vor":42.8},{"rank":37,"name":"Chris Olave","team":"NO","pos":"WR","posrank":"WR 17","bye":8,"pts":210.2,"carries":0.3,"vor":61.8},{"rank":38,"name":"Travis Etienne Jr.","team":"NO","pos":"RB","posrank":"RB 18","bye":8,"pts":209.6,"carries":244.6,"vor":41.6},{"rank":39,"name":"Tetairoa McMillan","team":"CAR","pos":"WR","posrank":"WR 18","bye":5,"pts":188.4,"carries":0,"vor":40.0},{"rank":40,"name":"Garrett Wilson","team":"NYJ","pos":"WR","posrank":"WR 19","bye":13,"pts":194.1,"carries":1.1,"vor":45.7},{"rank":41,"name":"Ladd McConkey","team":"LAC","pos":"WR","posrank":"WR 20","bye":7,"pts":174.0,"carries":0,"vor":25.6},{"rank":42,"name":"Cam Skattebo","team":"NYG","pos":"RB","posrank":"RB 19","bye":8,"pts":221.3,"carries":243.4,"vor":53.3},{"rank":43,"name":"Rashee Rice","team":"KC","pos":"WR","posrank":"WR 21","bye":5,"pts":224.2,"carries":5.4,"vor":75.8},{"rank":44,"name":"Colston Loveland","team":"CHI","pos":"TE","posrank":"TE 3","bye":10,"pts":170.5,"carries":0,"vor":36.4},{"rank":45,"name":"Lamar Jackson","team":"BAL","pos":"QB","posrank":"QB 2","bye":13,"pts":315.0,"carries":118.7,"vor":24.5},{"rank":46,"name":"Jameson Williams","team":"DET","pos":"WR","posrank":"WR 22","bye":6,"pts":185.1,"carries":7.3,"vor":36.7},{"rank":47,"name":"Christian Watson","team":"GB","pos":"WR","posrank":"WR 23","bye":11,"pts":162.7,"carries":1.7,"vor":14.3},{"rank":48,"name":"Terry McLaurin","team":"WAS","pos":"WR","posrank":"WR 24","bye":7,"pts":178.8,"carries":0.3,"vor":30.4},{"rank":49,"name":"D'Andre Swift","team":"CHI","pos":"RB","posrank":"RB 20","bye":10,"pts":205.3,"carries":233.1,"vor":37.3},{"rank":50,"name":"Rome Odunze","team":"CHI","pos":"WR","posrank":"WR 25","bye":10,"pts":177.8,"carries":0.3,"vor":29.4},{"rank":51,"name":"DJ Moore","team":"BUF","pos":"WR","posrank":"WR 26","bye":7,"pts":173.3,"carries":10.3,"vor":24.9},{"rank":52,"name":"Mike Evans","team":"SF","pos":"WR","posrank":"WR 27","bye":8,"pts":170.3,"carries":0,"vor":21.9},{"rank":53,"name":"Davante Adams","team":"LAR","pos":"WR","posrank":"WR 28","bye":11,"pts":187.7,"carries":0,"vor":39.3},{"rank":54,"name":"Luther Burden III","team":"CHI","pos":"WR","posrank":"WR 29","bye":10,"pts":171.7,"carries":7.7,"vor":23.3},{"rank":55,"name":"David Montgomery","team":"HOU","pos":"RB","posrank":"RB 21","bye":8,"pts":176.3,"carries":225.5,"vor":8.3},{"rank":56,"name":"Quinshon Judkins","team":"CLE","pos":"RB","posrank":"RB 22","bye":11,"pts":198.1,"carries":289.1,"vor":30.1},{"rank":57,"name":"Bhayshul Tuten","team":"JAC","pos":"RB","posrank":"RB 23","bye":7,"pts":193.4,"carries":243,"vor":25.4},{"rank":58,"name":"Tyler Warren","team":"IND","pos":"TE","posrank":"TE 4","bye":13,"pts":160.2,"carries":0,"vor":26.1},{"rank":59,"name":"Joe Burrow","team":"CIN","pos":"QB","posrank":"QB 3","bye":6,"pts":299.2,"carries":48.3,"vor":8.7},{"rank":60,"name":"Jayden Daniels","team":"WAS","pos":"QB","posrank":"QB 4","bye":7,"pts":313.4,"carries":130,"vor":22.9},{"rank":61,"name":"Drake Maye","team":"NE","pos":"QB","posrank":"QB 5","bye":11,"pts":316.5,"carries":100.3,"vor":26.0},{"rank":62,"name":"Jalen Hurts","team":"PHI","pos":"QB","posrank":"QB 6","bye":10,"pts":313.4,"carries":111.8,"vor":22.9},{"rank":63,"name":"TreVeyon Henderson","team":"NE","pos":"RB","posrank":"RB 24","bye":11,"pts":182.8,"carries":190.1,"vor":14.8},{"rank":64,"name":"Jaylen Warren","team":"PIT","pos":"RB","posrank":"RB 25","bye":9,"pts":171.6,"carries":188,"vor":3.6},{"rank":65,"name":"Alec Pierce","team":"IND","pos":"WR","posrank":"WR 30","bye":13,"pts":175.2,"carries":0,"vor":26.8},{"rank":66,"name":"Parker Washington","team":"JAC","pos":"WR","posrank":"WR 31","bye":7,"pts":148.4,"carries":5.3,"vor":0.0},{"rank":67,"name":"Jadarian Price","team":"SEA","pos":"RB","posrank":"RB 26","bye":11,"pts":174.4,"carries":215.2,"vor":6.4},{"rank":68,"name":"Bucky Irving","team":"TB","pos":"RB","posrank":"RB 27","bye":10,"pts":204.1,"carries":256.5,"vor":36.1},{"rank":69,"name":"Rhamondre Stevenson","team":"NE","pos":"RB","posrank":"RB 28","bye":11,"pts":167.1,"carries":168.8,"vor":-0.9},{"rank":70,"name":"Tony Pollard","team":"TEN","pos":"RB","posrank":"RB 29","bye":9,"pts":175.4,"carries":238.8,"vor":7.4},{"rank":71,"name":"Caleb Williams","team":"CHI","pos":"QB","posrank":"QB 7","bye":10,"pts":290.5,"carries":79,"vor":0.0},{"rank":72,"name":"Dak Prescott","team":"DAL","pos":"QB","posrank":"QB 8","bye":14,"pts":294.8,"carries":49.1,"vor":4.3},{"rank":73,"name":"Carnell Tate","team":"TEN","pos":"WR","posrank":"WR 32","bye":9,"pts":147.9,"carries":0.7,"vor":-0.5},{"rank":74,"name":"Marvin Harrison Jr.","team":"ARI","pos":"WR","posrank":"WR 33","bye":14,"pts":163.5,"carries":0,"vor":15.1},{"rank":75,"name":"Brian Thomas Jr.","team":"JAC","pos":"WR","posrank":"WR 34","bye":7,"pts":147.2,"carries":2.7,"vor":-1.2},{"rank":76,"name":"Jordyn Tyson","team":"NO","pos":"WR","posrank":"WR 35","bye":8,"pts":140.7,"carries":0.7,"vor":-7.7},{"rank":77,"name":"Justin Herbert","team":"LAC","pos":"QB","posrank":"QB 9","bye":7,"pts":288.6,"carries":78.4,"vor":-1.9},{"rank":78,"name":"Kyle Pitts Sr.","team":"ATL","pos":"TE","posrank":"TE 5","bye":11,"pts":155.9,"carries":0,"vor":21.8},{"rank":79,"name":"Tucker Kraft","team":"GB","pos":"TE","posrank":"TE 6","bye":11,"pts":145.0,"carries":0,"vor":10.9},{"rank":80,"name":"Sam LaPorta","team":"DET","pos":"TE","posrank":"TE 7","bye":6,"pts":148.4,"carries":0,"vor":14.3},{"rank":81,"name":"Harold Fannin Jr.","team":"CLE","pos":"TE","posrank":"TE 8","bye":11,"pts":151.2,"carries":0,"vor":17.1},{"rank":82,"name":"Chuba Hubbard","team":"CAR","pos":"RB","posrank":"RB 30","bye":5,"pts":168.0,"carries":207,"vor":0.0},{"rank":83,"name":"DK Metcalf","team":"PIT","pos":"WR","posrank":"WR 36","bye":9,"pts":162.7,"carries":0.7,"vor":14.3},{"rank":84,"name":"Makai Lemon","team":"PHI","pos":"WR","posrank":"WR 37","bye":10,"pts":133.9,"carries":1.5,"vor":-14.5},{"rank":85,"name":"Josh Downs","team":"IND","pos":"WR","posrank":"WR 38","bye":13,"pts":136.2,"carries":1.4,"vor":-12.2},{"rank":86,"name":"Xavier Worthy","team":"KC","pos":"WR","posrank":"WR 39","bye":5,"pts":139.9,"carries":15.5,"vor":-8.5},{"rank":87,"name":"Jordan Addison","team":"MIN","pos":"WR","posrank":"WR 40","bye":6,"pts":141.5,"carries":2.7,"vor":-6.9},{"rank":88,"name":"Quentin Johnston","team":"LAC","pos":"WR","posrank":"WR 41","bye":7,"pts":143.0,"carries":1.7,"vor":-5.4},{"rank":89,"name":"J.K. Dobbins","team":"DEN","pos":"RB","posrank":"RB 31","bye":10,"pts":162.2,"carries":218.2,"vor":-5.8},{"rank":90,"name":"Blake Corum","team":"LAR","pos":"RB","posrank":"RB 32","bye":11,"pts":132.3,"carries":167.7,"vor":-35.7},{"rank":91,"name":"Kyle Monangai","team":"CHI","pos":"RB","posrank":"RB 33","bye":10,"pts":144.6,"carries":191,"vor":-23.4},{"rank":92,"name":"Rachaad White","team":"WAS","pos":"RB","posrank":"RB 34","bye":7,"pts":147.9,"carries":139.9,"vor":-20.1},{"rank":93,"name":"Jonathon Brooks","team":"CAR","pos":"RB","posrank":"RB 35","bye":5,"pts":131.1,"carries":167.9,"vor":-36.9},{"rank":94,"name":"Trevor Lawrence","team":"JAC","pos":"QB","posrank":"QB 10","bye":7,"pts":290.8,"carries":72.5,"vor":0.3},{"rank":95,"name":"Bo Nix","team":"DEN","pos":"QB","posrank":"QB 11","bye":10,"pts":286.7,"carries":79.1,"vor":-3.8},{"rank":96,"name":"RJ Harvey","team":"DEN","pos":"RB","posrank":"RB 36","bye":10,"pts":154.3,"carries":130.5,"vor":-13.7},{"rank":97,"name":"Matthew Stafford","team":"LAR","pos":"QB","posrank":"QB 12","bye":11,"pts":285.4,"carries":23.7,"vor":-5.1},{"rank":98,"name":"Jaxson Dart","team":"NYG","pos":"QB","posrank":"QB 13","bye":8,"pts":300.1,"carries":100.9,"vor":9.6},{"rank":99,"name":"Brock Purdy","team":"SF","pos":"QB","posrank":"QB 14","bye":8,"pts":291.6,"carries":70.5,"vor":1.1},{"rank":100,"name":"Brandon Aubrey","team":"DAL","pos":"K","posrank":"K 1","bye":14,"pts":0,"carries":0,"vor":null},{"rank":101,"name":"Matthew Golden","team":"GB","pos":"WR","posrank":"WR 42","bye":11,"pts":128.3,"carries":5.5,"vor":-20.1},{"rank":102,"name":"Courtland Sutton","team":"DEN","pos":"WR","posrank":"WR 43","bye":10,"pts":169.6,"carries":0,"vor":21.2},{"rank":103,"name":"Michael Wilson","team":"ARI","pos":"WR","posrank":"WR 44","bye":14,"pts":143.1,"carries":0,"vor":-5.3},{"rank":104,"name":"Jayden Reed","team":"GB","pos":"WR","posrank":"WR 45","bye":11,"pts":144.4,"carries":12,"vor":-4.0},{"rank":105,"name":"Chris Godwin Jr.","team":"TB","pos":"WR","posrank":"WR 46","bye":10,"pts":141.7,"carries":0.3,"vor":-6.7},{"rank":106,"name":"Jordan Mason","team":"MIN","pos":"RB","posrank":"RB 37","bye":6,"pts":131.0,"carries":181.7,"vor":-37.0},{"rank":107,"name":"Rico Dowdle","team":"PIT","pos":"RB","posrank":"RB 38","bye":9,"pts":169.7,"carries":206.6,"vor":1.7},{"rank":108,"name":"Chris Rodriguez Jr.","team":"JAC","pos":"RB","posrank":"RB 39","bye":7,"pts":92.3,"carries":133.8,"vor":-75.7},{"rank":109,"name":"Houston Texans","team":"HOU","pos":"DST","posrank":"DST 1","bye":8,"pts":0,"carries":0,"vor":null},{"rank":110,"name":"Michael Pittman Jr.","team":"PIT","pos":"WR","posrank":"WR 47","bye":9,"pts":150.0,"carries":0,"vor":1.6},{"rank":111,"name":"Jalen Coker","team":"CAR","pos":"WR","posrank":"WR 48","bye":5,"pts":124.5,"carries":0,"vor":-23.9},{"rank":112,"name":"Dalton Kincaid","team":"BUF","pos":"TE","posrank":"TE 9","bye":7,"pts":131.1,"carries":0,"vor":-3.0},{"rank":113,"name":"Los Angeles Rams","team":"LAR","pos":"DST","posrank":"DST 2","bye":11,"pts":0,"carries":0,"vor":null},{"rank":114,"name":"Kyler Murray","team":"MIN","pos":"QB","posrank":"QB 15","bye":6,"pts":266.3,"carries":79.6,"vor":-24.2},{"rank":115,"name":"Jared Goff","team":"DET","pos":"QB","posrank":"QB 16","bye":6,"pts":277.4,"carries":23.7,"vor":-13.1},{"rank":116,"name":"Jordan Love","team":"GB","pos":"QB","posrank":"QB 17","bye":11,"pts":257.1,"carries":46.1,"vor":-33.4},{"rank":117,"name":"Patrick Mahomes II","team":"KC","pos":"QB","posrank":"QB 18","bye":5,"pts":292.0,"carries":60.4,"vor":1.5},{"rank":118,"name":"Baker Mayfield","team":"TB","pos":"QB","posrank":"QB 19","bye":10,"pts":269.9,"carries":57.7,"vor":-20.6},{"rank":119,"name":"KC Concepcion","team":"CLE","pos":"WR","posrank":"WR 49","bye":11,"pts":117.0,"carries":4.2,"vor":-31.4},{"rank":120,"name":"De'Zhaun Stribling","team":"SF","pos":"WR","posrank":"WR 50","bye":8,"pts":106.5,"carries":1.5,"vor":-41.9},{"rank":121,"name":"Dallas Goedert","team":"PHI","pos":"TE","posrank":"TE 10","bye":10,"pts":146.8,"carries":0,"vor":12.7},{"rank":122,"name":"Mark Andrews","team":"BAL","pos":"TE","posrank":"TE 11","bye":13,"pts":134.0,"carries":0,"vor":-0.1},{"rank":123,"name":"Jacory Croskey-Merritt","team":"WAS","pos":"RB","posrank":"RB 40","bye":7,"pts":138.5,"carries":182.3,"vor":-29.5},{"rank":124,"name":"Keaton Mitchell","team":"LAC","pos":"RB","posrank":"RB 41","bye":7,"pts":64.8,"carries":85.2,"vor":-103.2},{"rank":125,"name":"Seattle Seahawks","team":"SEA","pos":"DST","posrank":"DST 3","bye":11,"pts":0,"carries":0,"vor":null},{"rank":126,"name":"Denver Broncos","team":"DEN","pos":"DST","posrank":"DST 4","bye":10,"pts":0,"carries":0,"vor":null},{"rank":127,"name":"Isaiah Likely","team":"NYG","pos":"TE","posrank":"TE 12","bye":8,"pts":134.1,"carries":0,"vor":0.0},{"rank":128,"name":"George Kittle","team":"SF","pos":"TE","posrank":"TE 13","bye":8,"pts":138.4,"carries":0,"vor":4.3},{"rank":129,"name":"Travis Kelce","team":"KC","pos":"TE","posrank":"TE 14","bye":5,"pts":144.1,"carries":0,"vor":10.0},{"rank":130,"name":"Philadelphia Eagles","team":"PHI","pos":"DST","posrank":"DST 5","bye":10,"pts":0,"carries":0,"vor":null},{"rank":131,"name":"Malik Willis","team":"MIA","pos":"QB","posrank":"QB 20","bye":6,"pts":257.0,"carries":124.5,"vor":-33.5},{"rank":132,"name":"Jayden Higgins","team":"HOU","pos":"WR","posrank":"WR 51","bye":8,"pts":113.3,"carries":0,"vor":-35.1},{"rank":133,"name":"Rashid Shaheed","team":"SEA","pos":"WR","posrank":"WR 52","bye":11,"pts":132.3,"carries":13.4,"vor":-16.1},{"rank":134,"name":"Stefon Diggs","team":"FA","pos":"WR","posrank":"WR 53","bye":null,"pts":0,"carries":0,"vor":null},{"rank":135,"name":"Romeo Doubs","team":"NE","pos":"WR","posrank":"WR 54","bye":11,"pts":132.5,"carries":0,"vor":-15.9},{"rank":136,"name":"Wan'Dale Robinson","team":"TEN","pos":"WR","posrank":"WR 55","bye":9,"pts":147.4,"carries":2,"vor":-1.0},{"rank":137,"name":"Cam Little","team":"JAC","pos":"K","posrank":"K 2","bye":7,"pts":0,"carries":0,"vor":null},{"rank":138,"name":"Cameron Dicker","team":"LAC","pos":"K","posrank":"K 3","bye":7,"pts":0,"carries":0,"vor":null},{"rank":139,"name":"Ka'imi Fairbairn","team":"HOU","pos":"K","posrank":"K 4","bye":8,"pts":0,"carries":0,"vor":null},{"rank":140,"name":"Jacksonville Jaguars","team":"JAC","pos":"DST","posrank":"DST 6","bye":7,"pts":0,"carries":0,"vor":null},{"rank":141,"name":"Pittsburgh Steelers","team":"PIT","pos":"DST","posrank":"DST 7","bye":9,"pts":0,"carries":0,"vor":null},{"rank":142,"name":"Minnesota Vikings","team":"MIN","pos":"DST","posrank":"DST 8","bye":6,"pts":0,"carries":0,"vor":null},{"rank":143,"name":"Jake Bates","team":"DET","pos":"K","posrank":"K 5","bye":6,"pts":0,"carries":0,"vor":null},{"rank":144,"name":"Evan McPherson","team":"CIN","pos":"K","posrank":"K 6","bye":6,"pts":0,"carries":0,"vor":null},{"rank":145,"name":"Khalil Shakir","team":"BUF","pos":"WR","posrank":"WR 56","bye":7,"pts":135.2,"carries":1.1,"vor":-13.2},{"rank":146,"name":"Jakobi Meyers","team":"JAC","pos":"WR","posrank":"WR 57","bye":7,"pts":150.5,"carries":4.7,"vor":2.1},{"rank":147,"name":"Kenny Gainwell","team":"TB","pos":"RB","posrank":"RB 42","bye":10,"pts":143.3,"carries":113.6,"vor":-24.7},{"rank":148,"name":"Aaron Jones Sr.","team":"MIN","pos":"RB","posrank":"RB 43","bye":6,"pts":147.7,"carries":160,"vor":-20.3},{"rank":149,"name":"Jake Ferguson","team":"DAL","pos":"TE","posrank":"TE 15","bye":14,"pts":130.3,"carries":0,"vor":-3.8},{"rank":150,"name":"Jason Myers","team":"SEA","pos":"K","posrank":"K 7","bye":11,"pts":0,"carries":0,"vor":null},{"rank":151,"name":"New England Patriots","team":"NE","pos":"DST","posrank":"DST 9","bye":11,"pts":0,"carries":0,"vor":null},{"rank":152,"name":"Woody Marks","team":"HOU","pos":"RB","posrank":"RB 44","bye":8,"pts":112.7,"carries":142.6,"vor":-55.3},{"rank":153,"name":"Tyrone Tracy Jr.","team":"NYG","pos":"RB","posrank":"RB 45","bye":8,"pts":106.2,"carries":122.8,"vor":-61.8},{"rank":154,"name":"Jalen Nailor","team":"LV","pos":"WR","posrank":"WR 58","bye":13,"pts":108.2,"carries":2,"vor":-40.2},{"rank":155,"name":"Jalen McMillan","team":"TB","pos":"WR","posrank":"WR 59","bye":10,"pts":110.2,"carries":4.7,"vor":-38.2},{"rank":156,"name":"Deebo Samuel Sr.","team":"SF","pos":"WR","posrank":"WR 60","bye":8,"pts":144.4,"carries":29.1,"vor":-4.0},{"rank":157,"name":"Travis Hunter","team":"JAC","pos":"WR","posrank":"WR 61","bye":7,"pts":91.1,"carries":2,"vor":-57.3},{"rank":158,"name":"Baltimore Ravens","team":"BAL","pos":"DST","posrank":"DST 10","bye":13,"pts":0,"carries":0,"vor":null},{"rank":159,"name":"Los Angeles Chargers","team":"LAC","pos":"DST","posrank":"DST 11","bye":7,"pts":0,"carries":0,"vor":null},{"rank":160,"name":"Cairo Santos","team":"CHI","pos":"K","posrank":"K 8","bye":10,"pts":0,"carries":0,"vor":null},{"rank":161,"name":"Tyler Loop","team":"BAL","pos":"K","posrank":"K 9","bye":13,"pts":0,"carries":0,"vor":null},{"rank":162,"name":"Eddy Pineiro","team":"SF","pos":"K","posrank":"K 10","bye":8,"pts":0,"carries":0,"vor":null},{"rank":163,"name":"Harrison Mevis","team":"LAR","pos":"K","posrank":"K 11","bye":11,"pts":0,"carries":0,"vor":null},{"rank":164,"name":"C.J. Stroud","team":"HOU","pos":"QB","posrank":"QB 21","bye":8,"pts":249.1,"carries":54.4,"vor":-41.4},{"rank":165,"name":"Tyler Shough","team":"NO","pos":"QB","posrank":"QB 22","bye":8,"pts":275.0,"carries":78.2,"vor":-15.5},{"rank":166,"name":"Sam Darnold","team":"SEA","pos":"QB","posrank":"QB 23","bye":11,"pts":253.3,"carries":44,"vor":-37.2},{"rank":167,"name":"Tank Bigsby","team":"PHI","pos":"RB","posrank":"RB 46","bye":10,"pts":65.9,"carries":85.6,"vor":-102.1},{"rank":168,"name":"Tyler Allgeier","team":"ARI","pos":"RB","posrank":"RB 47","bye":14,"pts":87.4,"carries":111.7,"vor":-80.6},{"rank":169,"name":"Brian Robinson Jr.","team":"ATL","pos":"RB","posrank":"RB 48","bye":11,"pts":89.2,"carries":129.8,"vor":-78.8},{"rank":170,"name":"Isiah Pacheco","team":"DET","pos":"RB","posrank":"RB 49","bye":6,"pts":105.3,"carries":139.2,"vor":-62.7},{"rank":171,"name":"Tyjae Spears","team":"TEN","pos":"RB","posrank":"RB 50","bye":9,"pts":113.5,"carries":92.1,"vor":-54.5},{"rank":172,"name":"Chig Okonkwo","team":"WAS","pos":"TE","posrank":"TE 16","bye":7,"pts":99.5,"carries":0,"vor":-34.6},{"rank":173,"name":"Juwan Johnson","team":"NO","pos":"TE","posrank":"TE 17","bye":8,"pts":122.1,"carries":0,"vor":-12.0},{"rank":174,"name":"Green Bay Packers","team":"GB","pos":"DST","posrank":"DST 12","bye":11,"pts":0,"carries":0,"vor":null},{"rank":175,"name":"Kansas City Chiefs","team":"KC","pos":"DST","posrank":"DST 13","bye":5,"pts":0,"carries":0,"vor":null},{"rank":176,"name":"Andy Borregales","team":"NE","pos":"K","posrank":"K 12","bye":11,"pts":0,"carries":0,"vor":null},{"rank":177,"name":"Bryce Young","team":"CAR","pos":"QB","posrank":"QB 24","bye":5,"pts":236.0,"carries":58.3,"vor":-54.5},{"rank":178,"name":"Daniel Jones","team":"IND","pos":"QB","posrank":"QB 25","bye":13,"pts":263.1,"carries":66,"vor":-27.4},{"rank":179,"name":"AJ Barner","team":"SEA","pos":"TE","posrank":"TE 18","bye":11,"pts":100.3,"carries":0,"vor":-33.8},{"rank":180,"name":"Brenton Strange","team":"JAC","pos":"TE","posrank":"TE 19","bye":7,"pts":121.2,"carries":0,"vor":-12.9},{"rank":181,"name":"Alvin Kamara","team":"NO","pos":"RB","posrank":"RB 51","bye":8,"pts":114.0,"carries":127.9,"vor":-54.0},{"rank":182,"name":"Dylan Sampson","team":"CLE","pos":"RB","posrank":"RB 52","bye":11,"pts":89.7,"carries":73.5,"vor":-78.3},{"rank":183,"name":"Chase McLaughlin","team":"TB","pos":"K","posrank":"K 13","bye":10,"pts":0,"carries":0,"vor":null},{"rank":184,"name":"Dallas Cowboys","team":"DAL","pos":"DST","posrank":"DST 14","bye":14,"pts":0,"carries":0,"vor":null},{"rank":185,"name":"Detroit Lions","team":"DET","pos":"DST","posrank":"DST 15","bye":6,"pts":0,"carries":0,"vor":null},{"rank":186,"name":"Hunter Henry","team":"NE","pos":"TE","posrank":"TE 20","bye":11,"pts":125.5,"carries":0,"vor":-8.6},{"rank":187,"name":"Oronde Gadsden II","team":"LAC","pos":"TE","posrank":"TE 21","bye":7,"pts":96.7,"carries":0,"vor":-37.4},{"rank":188,"name":"Adonai Mitchell","team":"NYJ","pos":"WR","posrank":"WR 62","bye":13,"pts":103.6,"carries":2.2,"vor":-44.8},{"rank":189,"name":"Jerry Jeudy","team":"CLE","pos":"WR","posrank":"WR 63","bye":11,"pts":117.5,"carries":0.5,"vor":-30.9},{"rank":190,"name":"Omar Cooper Jr.","team":"NYJ","pos":"WR","posrank":"WR 64","bye":13,"pts":97.4,"carries":2.1,"vor":-51.0},{"rank":191,"name":"Ryan Flournoy","team":"DAL","pos":"WR","posrank":"WR 65","bye":14,"pts":72.6,"carries":2.2,"vor":-75.8},{"rank":192,"name":"Jauan Jennings","team":"MIN","pos":"WR","posrank":"WR 66","bye":6,"pts":109.9,"carries":0,"vor":-38.5},{"rank":193,"name":"Tre' Harris","team":"LAC","pos":"WR","posrank":"WR 67","bye":7,"pts":72.3,"carries":0,"vor":-76.1},{"rank":194,"name":"Chris Boswell","team":"PIT","pos":"K","posrank":"K 14","bye":9,"pts":0,"carries":0,"vor":null},{"rank":195,"name":"Harrison Butker","team":"KC","pos":"K","posrank":"K 15","bye":5,"pts":0,"carries":0,"vor":null},{"rank":196,"name":"New York Giants","team":"NYG","pos":"DST","posrank":"DST 16","bye":8,"pts":0,"carries":0,"vor":null},{"rank":197,"name":"Cincinnati Bengals","team":"CIN","pos":"DST","posrank":"DST 17","bye":6,"pts":0,"carries":0,"vor":null},{"rank":198,"name":"San Francisco 49ers","team":"SF","pos":"DST","posrank":"DST 18","bye":8,"pts":0,"carries":0,"vor":null},{"rank":199,"name":"Cam Ward","team":"TEN","pos":"QB","posrank":"QB 26","bye":9,"pts":221.6,"carries":44.2,"vor":-68.9},{"rank":200,"name":"Geno Smith","team":"NYJ","pos":"QB","posrank":"QB 27","bye":13,"pts":219.6,"carries":57.3,"vor":-70.9},{"rank":201,"name":"Fernando Mendoza","team":"LV","pos":"QB","posrank":"QB 28","bye":13,"pts":180.6,"carries":50.4,"vor":-109.9},{"rank":202,"name":"MarShawn Lloyd","team":"GB","pos":"RB","posrank":"RB 53","bye":11,"pts":40.3,"carries":50.6,"vor":-127.7},{"rank":203,"name":"Sean Tucker","team":"TB","pos":"RB","posrank":"RB 54","bye":10,"pts":31.2,"carries":38.8,"vor":-136.8},{"rank":204,"name":"Ray Davis","team":"BUF","pos":"RB","posrank":"RB 55","bye":7,"pts":32.3,"carries":32.3,"vor":-135.7},{"rank":205,"name":"Kaelon Black","team":"SF","pos":"RB","posrank":"RB 56","bye":8,"pts":68.5,"carries":93.7,"vor":-99.5},{"rank":206,"name":"Malik Washington","team":"MIA","pos":"WR","posrank":"WR 68","bye":6,"pts":85.2,"carries":13.4,"vor":-63.2},{"rank":207,"name":"Darius Slayton","team":"NYG","pos":"WR","posrank":"WR 69","bye":8,"pts":83.1,"carries":1.6,"vor":-65.3},{"rank":208,"name":"Tre Tucker","team":"LV","pos":"WR","posrank":"WR 70","bye":13,"pts":117.5,"carries":11.2,"vor":-30.9},{"rank":209,"name":"Isaac TeSlaa","team":"DET","pos":"WR","posrank":"WR 71","bye":6,"pts":72.3,"carries":0,"vor":-76.1},{"rank":210,"name":"Rashod Bateman","team":"BAL","pos":"WR","posrank":"WR 72","bye":13,"pts":114.4,"carries":0,"vor":-34.0},{"rank":211,"name":"Calvin Ridley","team":"TEN","pos":"WR","posrank":"WR 73","bye":9,"pts":128.3,"carries":4.5,"vor":-20.1},{"rank":212,"name":"Kenyon Sadiq","team":"NYJ","pos":"TE","posrank":"TE 22","bye":13,"pts":104.6,"carries":0,"vor":-29.5},{"rank":213,"name":"T.J. Hockenson","team":"MIN","pos":"TE","posrank":"TE 23","bye":6,"pts":108.8,"carries":0,"vor":-25.3},{"rank":214,"name":"Greg Dulcich","team":"MIA","pos":"TE","posrank":"TE 24","bye":6,"pts":106.1,"carries":0,"vor":-28.0},{"rank":215,"name":"Dalton Schultz","team":"HOU","pos":"TE","posrank":"TE 25","bye":8,"pts":115.8,"carries":0,"vor":-18.3},{"rank":216,"name":"Aaron Rodgers","team":"PIT","pos":"QB","posrank":"QB 29","bye":9,"pts":213.6,"carries":26,"vor":-76.9},{"rank":217,"name":"Mike Washington Jr.","team":"LV","pos":"RB","posrank":"RB 57","bye":13,"pts":69.8,"carries":92.8,"vor":-98.2},{"rank":218,"name":"Braelon Allen","team":"NYJ","pos":"RB","posrank":"RB 58","bye":13,"pts":79.8,"carries":97.3,"vor":-88.2},{"rank":219,"name":"Colby Parkinson","team":"LAR","pos":"TE","posrank":"TE 26","bye":11,"pts":74.8,"carries":0,"vor":-59.3},{"rank":220,"name":"Cade Otton","team":"TB","pos":"TE","posrank":"TE 27","bye":10,"pts":101.5,"carries":0,"vor":-32.6},{"rank":221,"name":"Will Reichard","team":"MIN","pos":"K","posrank":"K 16","bye":6,"pts":0,"carries":0,"vor":null},{"rank":222,"name":"Wil Lutz","team":"DEN","pos":"K","posrank":"K 17","bye":10,"pts":0,"carries":0,"vor":null},{"rank":223,"name":"Atlanta Falcons","team":"ATL","pos":"DST","posrank":"DST 19","bye":11,"pts":0,"carries":0,"vor":null},{"rank":224,"name":"Cleveland Browns","team":"CLE","pos":"DST","posrank":"DST 20","bye":11,"pts":0,"carries":0,"vor":null},{"rank":225,"name":"Denzel Boston","team":"CLE","pos":"WR","posrank":"WR 74","bye":11,"pts":101.4,"carries":1,"vor":-47.0},{"rank":226,"name":"Germie Bernard","team":"PIT","pos":"WR","posrank":"WR 75","bye":9,"pts":95.4,"carries":2.1,"vor":-53.0},{"rank":227,"name":"Kaytron Allen","team":"WAS","pos":"RB","posrank":"RB 59","bye":7,"pts":20.0,"carries":23.6,"vor":-148.0},{"rank":228,"name":"Jonah Coleman","team":"DEN","pos":"RB","posrank":"RB 60","bye":10,"pts":34.1,"carries":24.6,"vor":-133.9},{"rank":229,"name":"Tennessee Titans","team":"TEN","pos":"DST","posrank":"DST 21","bye":9,"pts":0,"carries":0,"vor":null},{"rank":230,"name":"Buffalo Bills","team":"BUF","pos":"DST","posrank":"DST 22","bye":7,"pts":0,"carries":0,"vor":null},{"rank":231,"name":"Tampa Bay Buccaneers","team":"TB","pos":"DST","posrank":"DST 23","bye":10,"pts":0,"carries":0,"vor":null},{"rank":232,"name":"Terrance Ferguson","team":"LAR","pos":"TE","posrank":"TE 28","bye":11,"pts":94.8,"carries":0,"vor":-39.3},{"rank":233,"name":"Gunnar Helm","team":"TEN","pos":"TE","posrank":"TE 29","bye":9,"pts":87.0,"carries":0,"vor":-47.1},{"rank":234,"name":"Cooper Kupp","team":"SEA","pos":"WR","posrank":"WR 76","bye":11,"pts":101.2,"carries":0.5,"vor":-47.2},{"rank":235,"name":"Kayshon Boutte","team":"NE","pos":"WR","posrank":"WR 77","bye":11,"pts":89.6,"carries":0,"vor":-58.8},{"rank":236,"name":"Brandon Aiyuk","team":"SF","pos":"WR","posrank":"WR 78","bye":8,"pts":0,"carries":0,"vor":null},{"rank":237,"name":"Justice Hill","team":"BAL","pos":"RB","posrank":"RB 61","bye":13,"pts":98.7,"carries":56.4,"vor":-69.3},{"rank":238,"name":"Zach Charbonnet","team":"SEA","pos":"RB","posrank":"RB 62","bye":11,"pts":113.1,"carries":130.5,"vor":-54.9},{"rank":239,"name":"Jacoby Brissett","team":"ARI","pos":"QB","posrank":"QB 30","bye":14,"pts":221.9,"carries":48.7,"vor":-68.6},{"rank":240,"name":"Tua Tagovailoa","team":"ATL","pos":"QB","posrank":"QB 31","bye":11,"pts":156.2,"carries":19.6,"vor":-134.3},{"rank":241,"name":"Deshaun Watson","team":"CLE","pos":"QB","posrank":"QB 32","bye":11,"pts":102.0,"carries":36,"vor":-188.5},{"rank":242,"name":"James Conner","team":"ARI","pos":"RB","posrank":"RB 63","bye":14,"pts":52.6,"carries":42.5,"vor":-115.4},{"rank":243,"name":"Dontayvion Wicks","team":"PHI","pos":"WR","posrank":"WR 79","bye":10,"pts":65.5,"carries":0.5,"vor":-82.9},{"rank":244,"name":"Jack Bech","team":"LV","pos":"WR","posrank":"WR 80","bye":13,"pts":65.2,"carries":0,"vor":-83.2},{"rank":245,"name":"Pat Bryant","team":"DEN","pos":"WR","posrank":"WR 81","bye":10,"pts":58.2,"carries":0,"vor":-90.2},{"rank":246,"name":"Elijah Sarratt","team":"BAL","pos":"WR","posrank":"WR 82","bye":13,"pts":49.6,"carries":0,"vor":-98.8},{"rank":247,"name":"Antonio Williams","team":"WAS","pos":"WR","posrank":"WR 83","bye":7,"pts":103.6,"carries":3.5,"vor":-44.8},{"rank":248,"name":"Tyquan Thornton","team":"KC","pos":"WR","posrank":"WR 84","bye":5,"pts":80.1,"carries":0,"vor":-68.3},{"rank":249,"name":"Jordan James","team":"SF","pos":"RB","posrank":"RB 64","bye":8,"pts":84.0,"carries":100.1,"vor":-84.0},{"rank":250,"name":"Jaydon Blue","team":"DAL","pos":"RB","posrank":"RB 65","bye":14,"pts":42.1,"carries":48.7,"vor":-125.9},{"rank":251,"name":"Kirk Cousins","team":"LV","pos":"QB","posrank":"QB 33","bye":13,"pts":43.6,"carries":5.2,"vor":-246.9},{"rank":252,"name":"Michael Penix Jr.","team":"ATL","pos":"QB","posrank":"QB 34","bye":11,"pts":79.9,"carries":13.5,"vor":-210.6},{"rank":253,"name":"Evan Engram","team":"DEN","pos":"TE","posrank":"TE 30","bye":10,"pts":89.9,"carries":0,"vor":-44.2},{"rank":254,"name":"Charlie Kolar","team":"LAC","pos":"TE","posrank":"TE 31","bye":7,"pts":44.9,"carries":0,"vor":-89.2},{"rank":255,"name":"Mike Gesicki","team":"CIN","pos":"TE","posrank":"TE 32","bye":6,"pts":91.3,"carries":0,"vor":-42.8},{"rank":256,"name":"Zachariah Branch","team":"ATL","pos":"WR","posrank":"WR 85","bye":11,"pts":79.3,"carries":0,"vor":-69.1},{"rank":257,"name":"Keenan Allen","team":"LAC","pos":"WR","posrank":"WR 86","bye":7,"pts":0,"carries":0,"vor":null},{"rank":258,"name":"Chris Bell","team":"MIA","pos":"WR","posrank":"WR 87","bye":6,"pts":71.4,"carries":0,"vor":-77.0},{"rank":259,"name":"Darnell Mooney","team":"NYG","pos":"WR","posrank":"WR 88","bye":8,"pts":87.2,"carries":1.1,"vor":-61.2},{"rank":260,"name":"Chris Brazzell II","team":"CAR","pos":"WR","posrank":"WR 89","bye":5,"pts":0,"carries":0,"vor":null},{"rank":261,"name":"Emari Demercado","team":"KC","pos":"RB","posrank":"RB 66","bye":5,"pts":74.2,"carries":76.8,"vor":-93.8},{"rank":262,"name":"Emmett Johnson","team":"KC","pos":"RB","posrank":"RB 67","bye":5,"pts":32.0,"carries":39.7,"vor":-136.0},{"rank":263,"name":"Kimani Vidal","team":"LAC","pos":"RB","posrank":"RB 68","bye":7,"pts":55.1,"carries":62.2,"vor":-112.9},{"rank":264,"name":"Eli Stowers","team":"PHI","pos":"TE","posrank":"TE 33","bye":10,"pts":42.4,"carries":0,"vor":-91.7},{"rank":265,"name":"Pat Freiermuth","team":"PIT","pos":"TE","posrank":"TE 34","bye":9,"pts":107.7,"carries":0,"vor":-26.4},{"rank":266,"name":"DJ Giddens","team":"IND","pos":"RB","posrank":"RB 69","bye":13,"pts":31.5,"carries":33.6,"vor":-136.5},{"rank":267,"name":"David Njoku","team":"LAC","pos":"TE","posrank":"TE 35","bye":7,"pts":72.9,"carries":0,"vor":-61.2},{"rank":268,"name":"Jaylin Noel","team":"HOU","pos":"WR","posrank":"WR 90","bye":8,"pts":59.7,"carries":4.2,"vor":-88.7},{"rank":269,"name":"Jalen Tolbert","team":"MIA","pos":"WR","posrank":"WR 91","bye":6,"pts":72.1,"carries":0,"vor":-76.3},{"rank":270,"name":"Emanuel Wilson","team":"SEA","pos":"RB","posrank":"RB 70","bye":11,"pts":47.2,"carries":69.7,"vor":-120.8},{"rank":271,"name":"Troy Franklin","team":"DEN","pos":"WR","posrank":"WR 92","bye":10,"pts":78.1,"carries":3,"vor":-70.3},{"rank":272,"name":"Nicholas Singleton","team":"TEN","pos":"RB","posrank":"RB 71","bye":9,"pts":18.1,"carries":20.3,"vor":-149.9},{"rank":273,"name":"Jaylen Wright","team":"MIA","pos":"RB","posrank":"RB 72","bye":6,"pts":46.8,"carries":79.9,"vor":-121.2},{"rank":274,"name":"Tank Dell","team":"HOU","pos":"WR","posrank":"WR 93","bye":8,"pts":116.1,"carries":10.2,"vor":-32.3},{"rank":275,"name":"Ollie Gordon II","team":"MIA","pos":"RB","posrank":"RB 73","bye":6,"pts":32.4,"carries":49.4,"vor":-135.6},{"rank":276,"name":"Ted Hurst III","team":"TB","pos":"WR","posrank":"WR 94","bye":10,"pts":68.4,"carries":1,"vor":-80.0},{"rank":277,"name":"Elic Ayomanor","team":"TEN","pos":"WR","posrank":"WR 95","bye":9,"pts":63.5,"carries":0,"vor":-84.9},{"rank":278,"name":"Keon Coleman","team":"BUF","pos":"WR","posrank":"WR 96","bye":7,"pts":49.7,"carries":0,"vor":-98.7},{"rank":279,"name":"Demond Claiborne","team":"MIN","pos":"RB","posrank":"RB 74","bye":6,"pts":22.1,"carries":27.7,"vor":-145.9},{"rank":280,"name":"Tory Horton","team":"SEA","pos":"WR","posrank":"WR 97","bye":11,"pts":79.6,"carries":0.5,"vor":-68.8},{"rank":281,"name":"Isaiah Davis","team":"NYJ","pos":"RB","posrank":"RB 75","bye":13,"pts":38.4,"carries":35.1,"vor":-129.6},{"rank":282,"name":"George Holani","team":"SEA","pos":"RB","posrank":"RB 76","bye":11,"pts":37.0,"carries":38.9,"vor":-131.0},{"rank":283,"name":"Chris Brooks","team":"GB","pos":"RB","posrank":"RB 77","bye":11,"pts":59.2,"carries":72.7,"vor":-108.8},{"rank":284,"name":"Marvin Mims Jr.","team":"DEN","pos":"WR","posrank":"WR 98","bye":10,"pts":54.5,"carries":8.2,"vor":-93.9},{"rank":285,"name":"Malachi Fields","team":"NYG","pos":"WR","posrank":"WR 99","bye":8,"pts":27.6,"carries":0,"vor":-120.8},{"rank":286,"name":"Samaje Perine","team":"CIN","pos":"RB","posrank":"RB 78","bye":6,"pts":87.6,"carries":98.9,"vor":-80.4},{"rank":287,"name":"LeQuint Allen Jr.","team":"JAC","pos":"RB","posrank":"RB 79","bye":7,"pts":34.8,"carries":8,"vor":-133.2},{"rank":288,"name":"Mack Hollins","team":"NE","pos":"WR","posrank":"WR 100","bye":11,"pts":22.7,"carries":0,"vor":-125.7},{"rank":289,"name":"New Orleans Saints","team":"NO","pos":"DST","posrank":"DST 24","bye":8,"pts":0,"carries":0,"vor":null},{"rank":290,"name":"Andrei Iosivas","team":"CIN","pos":"WR","posrank":"WR 101","bye":6,"pts":73.2,"carries":2,"vor":-75.2},{"rank":291,"name":"Ja'Kobi Lane","team":"BAL","pos":"WR","posrank":"WR 102","bye":13,"pts":81.3,"carries":1.5,"vor":-67.1},{"rank":292,"name":"Calvin Austin III","team":"NYG","pos":"WR","posrank":"WR 103","bye":8,"pts":50.0,"carries":0,"vor":-98.4},{"rank":293,"name":"Treylon Burks","team":"WAS","pos":"WR","posrank":"WR 104","bye":7,"pts":66.9,"carries":0,"vor":-81.5},{"rank":294,"name":"Kendrick Bourne","team":"ARI","pos":"WR","posrank":"WR 105","bye":14,"pts":39.1,"carries":0,"vor":-109.3},{"rank":295,"name":"Jake Elliott","team":"PHI","pos":"K","posrank":"K 18","bye":10,"pts":0,"carries":0,"vor":null},{"rank":296,"name":"Devaughn Vele","team":"NO","pos":"WR","posrank":"WR 106","bye":8,"pts":76.4,"carries":0,"vor":-72.0},{"rank":297,"name":"Mason Taylor","team":"NYJ","pos":"TE","posrank":"TE 36","bye":13,"pts":75.5,"carries":0,"vor":-58.6},{"rank":298,"name":"Hollywood Brown","team":"PHI","pos":"WR","posrank":"WR 107","bye":10,"pts":74.2,"carries":0,"vor":-74.2},{"rank":299,"name":"Christian Kirk","team":"SF","pos":"WR","posrank":"WR 108","bye":8,"pts":76.5,"carries":0,"vor":-71.9}];
+const TEAMS=12, ROUNDS=15;
+const TARGET_ROSTER=[["QB",1],["RB",2],["WR",2],["TE",1],["FLEX",2],["K",1],["DST",1]]; // + bench
+const FLEX_POS=["RB","WR","TE"];
+const KEY="draftwarroom2026";
+
+let S={slot:0,st:{},drafter:{},tgt:{},hist:[],mgr:{},filter:"ALL",sort:"rank",
+       search:"",hideDrafted:false,onlyTargets:false,order:[]};
+
+function load(){try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r));}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+
+const $=s=>document.querySelector(s), rowsEl=$("#rows");
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),1400);}
+
+// ---- pick math (snake) ----
+function teamOnClock(pickIdx){ // pickIdx: 1-based overall
+  const rnd=Math.ceil(pickIdx/TEAMS), inRnd=pickIdx-(rnd-1)*TEAMS;
+  return (rnd%2===1)?inRnd:(TEAMS-inRnd+1);
+}
+function myPickNumbers(){const a=[];if(!S.slot)return a;
+  for(let r=1;r<=ROUNDS;r++){a.push((r-1)*TEAMS+((r%2===1)?S.slot:(TEAMS-S.slot+1)));}return a;}
+function picksMade(){return S.order.length;}
+
+// ---- actions ----
+function setStatus(rank,status){
+  const prev={rank,st:S.st[rank]||"avail",drafter:S.drafter[rank]||null,inOrder:S.order.includes(rank)};
+  S.hist.push(prev); if(S.hist.length>60)S.hist.shift();
+  // manage draft order (any mine/gone counts as a pick)
+  const wasDrafted=(prev.st==="mine"||prev.st==="gone");
+  const nowDrafted=(status==="mine"||status==="gone");
+  if(nowDrafted && !wasDrafted){S.order.push(rank);}
+  if(!nowDrafted && wasDrafted){S.order=S.order.filter(x=>x!==rank);}
+  S.st[rank]=status;
+  if(status==="gone"){S.drafter[rank]=teamOnClock(S.order.indexOf(rank)+1);}
+  else if(status==="mine"){S.drafter[rank]="ME";}
+  else{delete S.drafter[rank];}
+  save();render();
+}
+function toggleTarget(rank){S.tgt[rank]=!S.tgt[rank];save();render();}
+function undo(){const p=S.hist.pop();if(!p){toast("Nothing to undo");return;}
+  S.st[p.rank]=p.st==="avail"?undefined:p.st;
+  if(p.st==="avail")delete S.st[p.rank];
+  if(p.drafter)S.drafter[p.rank]=p.drafter;else delete S.drafter[p.rank];
+  S.order=S.order.filter(x=>x!==p.rank);
+  if(p.inOrder)S.order.push(p.rank);
+  save();render();toast("Undone");}
+
+// ---- rendering ----
+const byRank=Object.fromEntries(PLAYERS.map(p=>[p.rank,p]));
+function fmt(n){return (n==null)?"–":(Math.round(n*10)/10).toFixed(1);}
+
+function render(){renderClock();renderBoard();renderRoster();renderSnake();save();}
+
+function renderClock(){
+  const made=picksMade(), cur=made+1;
+  $("#ovPick").textContent=cur;
+  $("#ovRound").textContent="R"+Math.min(ROUNDS,Math.ceil(cur/TEAMS));
+  const oc=$("#onclock");
+  if(!S.slot){oc.textContent="set your slot";oc.className="onclock";}
+  else{const t=teamOnClock(cur);oc.textContent="On clock: Team "+t;oc.className="onclock"+(t===S.slot?" me":"");}
+  const mine=myPickNumbers().filter(n=>n>=cur);
+  $("#nextPick").textContent=S.slot? (mine.length?("#"+mine[0]+" ("+(mine[0]-cur)+" away)"):"done"):"--";
+}
+
+function passFilter(p){
+  if(S.filter!=="ALL"&&p.pos!==S.filter)return false;
+  if(S.onlyTargets&&!S.tgt[p.rank])return false;
+  const st=S.st[p.rank];
+  if(S.hideDrafted&&(st==="mine"||st==="gone"))return false;
+  if(S.search){const q=S.search.toLowerCase();
+    if(!(p.name.toLowerCase().includes(q)||(p.team||"").toLowerCase().includes(q)||(p.pos||"").toLowerCase().includes(q)))return false;}
+  return true;
+}
+function sortList(list){
+  if(S.sort==="pts")return list.slice().sort((a,b)=>(b.pts||0)-(a.pts||0));
+  if(S.sort==="vor")return list.slice().sort((a,b)=>((b.vor==null?-999:b.vor))-((a.vor==null?-999:a.vor)));
+  return list.slice().sort((a,b)=>a.rank-b.rank);
+}
+function renderBoard(){
+  document.querySelectorAll(".bhead b").forEach(b=>b.classList.toggle("on",b.dataset.sort===S.sort));
+  let list=sortList(PLAYERS.filter(passFilter));
+  if(!list.length){rowsEl.innerHTML='<div class="empty">No players match. Clear a filter or the search.</div>';return;}
+  const h=[];
+  for(const p of list){
+    const st=S.st[p.rank]||"avail";
+    const cls=["row"];if(st==="gone")cls.push("gone");if(st==="mine")cls.push("mine");
+    let rush="";
+    if(p.pos==="QB"){if(p.carries>=100)rush='<span class="rush">RUSH+</span>';else if(p.carries>=55)rush='<span class="rush">RUSH</span>';}
+    const drafterTag = st==="gone" ? ('<span class="tm">T'+(S.drafter[p.rank]||"?")+'</span>') : "";
+    const vor=p.vor;
+    h.push(
+     '<div class="'+cls.join(" ")+'" data-rk="'+p.rank+'">'+
+       '<div class="rk">'+p.rank+'</div>'+
+       '<div class="who"><div class="nm">'+p.name+' '+drafterTag+'</div>'+
+         '<div class="meta"><span class="pill '+p.pos+'">'+(p.posrank||p.pos)+'</span>'+
+         '<span class="tm">'+(p.team||"")+'</span>'+rush+'</div></div>'+
+       '<div class="bye">'+(p.bye||"–")+'</div>'+
+       '<div class="num">'+(p.pts?fmt(p.pts):"–")+'</div>'+
+       '<div class="num vor'+(vor!=null&&vor<0?" neg":"")+'">'+(vor==null?"–":(vor>0?"+":"")+fmt(vor))+'</div>'+
+       '<div class="acts">'+
+         '<button class="act star" data-a="star" data-on="'+(S.tgt[p.rank]?1:0)+'" title="Target">&#9733;</button>'+
+         '<button class="act mine" data-a="mine" title="Draft to my team">Mine</button>'+
+         '<button class="act gone" data-a="gone" title="Drafted by someone else">Gone</button>'+
+       '</div></div>');
+  }
+  rowsEl.innerHTML=h.join("");
+}
+
+function myPlayers(){return S.order.map(r=>byRank[r]).filter(p=>p&&S.st[p.rank]==="mine");}
+function renderRoster(){
+  const mine=myPlayers();
+  $("#rcount").textContent=mine.length+"/"+ROUNDS;
+  // fill target slots greedily
+  const pool=mine.slice().sort((a,b)=>a.rank-b.rank);
+  const used=new Set(); const rows=[];
+  const take=(pos)=>{for(const p of pool){if(used.has(p.rank))continue;
+      if(pos==="FLEX"?FLEX_POS.includes(p.pos):p.pos===pos){used.add(p.rank);return p;}}return null;};
+  for(const [pos,n] of TARGET_ROSTER){for(let i=0;i<n;i++){
+    const p=take(pos);
+    if(p){rows.push('<div class="slot"><span class="lab">'+pos+'</span><span>'+p.name+
+      ' <span class="tm">'+p.team+'</span></span><span class="bpill" data-bye="'+p.bye+'">B'+(p.bye||"–")+'</span></div>');}
+    else{rows.push('<div class="slot need"><span class="lab">'+pos+'</span><span>need</span><span></span></div>');}
+  }}
+  // bench (leftovers)
+  const bench=pool.filter(p=>!used.has(p.rank));
+  for(const p of bench){rows.push('<div class="slot"><span class="lab">BN</span><span>'+p.name+
+    ' <span class="tm">'+p.team+'</span></span><span class="bpill" data-bye="'+p.bye+'">B'+(p.bye||"–")+'</span></div>');}
+  $("#roster").innerHTML=rows.join("")||'<div class="needline">No picks yet. Tap “Mine” on the board.</div>';
+  // needs line
+  const cnt={};mine.forEach(p=>cnt[p.pos]=(cnt[p.pos]||0)+1);
+  const soft={QB:1,RB:4,WR:4,TE:1};
+  const needs=Object.keys(soft).filter(pos=>(cnt[pos]||0)<soft[pos]).map(pos=>pos+" "+(cnt[pos]||0)+"/"+soft[pos]);
+  $("#needline").textContent=needs.length?("Thin: "+needs.join("  ·  ")):"Positions balanced";
+  // bye collisions among starters
+  const byes={};mine.forEach(p=>{if(!used.size||used.has(p.rank))byes[p.bye]=(byes[p.bye]||[]);});
+  const startByes={};[...used].forEach(r=>{const p=byRank[r];startByes[p.bye]=(startByes[p.bye]||0)+1;});
+  const clash=Object.entries(startByes).filter(([b,c])=>c>=2);
+  const bw=$("#byewarn");
+  document.querySelectorAll(".bpill").forEach(el=>{
+    const b=el.dataset.bye; el.classList.toggle("clash",clash.some(([cb])=>cb===b));});
+  if(clash.length){bw.classList.add("show");
+    bw.textContent="⚠ Bye stack in starters — "+clash.map(([b,c])=>"Wk"+b+" ×"+c).join(", ");}
+  else bw.classList.remove("show");
+}
+
+function renderSnake(){
+  const sn=$("#snake"); if(!S.slot){sn.innerHTML='<span class="sub" style="font-family:var(--mono);font-size:11px;color:var(--muted)">Pick your slot to map the snake.</span>';return;}
+  const cur=picksMade()+1, myNums=new Set(myPickNumbers());
+  const h=[];
+  for(let r=1;r<=ROUNDS;r++){const n=(r-1)*TEAMS+((r%2===1)?S.slot:(TEAMS-S.slot+1));
+    const cls=["sq"];if(myNums.has(n))cls.push("me");if(n===cur)cls.push("now");
+    h.push('<div class="'+cls.join(" ")+'" title="Round '+r+'">'+n+'</div>');}
+  sn.innerHTML=h.join("");
+  $("#slotHint").textContent="Picks: "+myPickNumbers().join(", ");
+}
+
+// ---- manager notes ----
+function renderMgr(){
+  const el=$("#mgr");const h=[];
+  for(let i=1;i<=TEAMS;i++){const m=S.mgr[i]||{};
+    h.push('<div class="m" data-i="'+i+'"><input class="nmn" placeholder="Team '+i+'" value="'+
+      (m.name||"").replace(/"/g,"&quot;")+'"><textarea placeholder="tendencies...">'+(m.note||"")+'</textarea></div>');}
+  el.innerHTML=h.join("");
+  el.querySelectorAll(".m").forEach(row=>{const i=row.dataset.i;
+    row.querySelector(".nmn").addEventListener("input",e=>{S.mgr[i]=S.mgr[i]||{};S.mgr[i].name=e.target.value;save();});
+    row.querySelector("textarea").addEventListener("input",e=>{S.mgr[i]=S.mgr[i]||{};S.mgr[i].note=e.target.value;save();});
+  });
+}
+
+// ---- export ----
+function exportCSV(){
+  const rows=[["OverallPick","Round","DraftedBy","Player","Team","Pos","PosRank","Bye","Pts","VOR"]];
+  S.order.forEach((rk,idx)=>{const p=byRank[rk];const pick=idx+1;
+    rows.push([pick,Math.ceil(pick/TEAMS),S.st[rk]==="mine"?"ME":("Team "+(S.drafter[rk]||"?")),
+      p.name,p.team,p.pos,p.posrank,p.bye,p.pts,p.vor==null?"":p.vor]);});
+  const csv=rows.map(r=>r.map(x=>('"'+String(x==null?"":x).replace(/"/g,'""')+'"')).join(",")).join("\n");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download="draft_results_2026.csv";a.click();toast("CSV exported");
+}
+
+// ---- events ----
+rowsEl.addEventListener("click",e=>{const btn=e.target.closest(".act");if(!btn)return;
+  const rk=+e.target.closest(".row").dataset.rk, a=btn.dataset.a;
+  if(a==="star")toggleTarget(rk);
+  else if(a==="mine")setStatus(rk, S.st[rk]==="mine"?"avail":"mine");
+  else if(a==="gone")setStatus(rk, S.st[rk]==="gone"?"avail":"gone");
+});
+$("#search").addEventListener("input",e=>{S.search=e.target.value;renderBoard();});
+$("#filters").addEventListener("click",e=>{const c=e.target.closest(".chip");if(!c)return;
+  S.filter=c.dataset.pos;document.querySelectorAll(".chip").forEach(x=>x.dataset.on=(x.dataset.pos===S.filter)?"1":"0");
+  save();renderBoard();});
+$("#hideDrafted").addEventListener("change",e=>{S.hideDrafted=e.target.checked;save();renderBoard();});
+$("#onlyTargets").addEventListener("change",e=>{S.onlyTargets=e.target.checked;save();renderBoard();});
+document.querySelectorAll(".bhead b").forEach(b=>b.addEventListener("click",()=>{
+  S.sort=(S.sort===b.dataset.sort)?"rank":b.dataset.sort;save();renderBoard();}));
+$("#undo").addEventListener("click",undo);
+$("#export").addEventListener("click",exportCSV);
+$("#reset").addEventListener("click",()=>{if(confirm("Reset the whole draft? Manager notes and your slot are kept."))
+  {S.st={};S.drafter={};S.tgt={};S.hist=[];S.order=[];save();render();toast("Board reset");}});
+const slotSel=$("#slotSel");
+for(let i=1;i<=TEAMS;i++){const o=document.createElement("option");o.value=i;o.textContent="Slot "+i;slotSel.appendChild(o);}
+slotSel.addEventListener("change",e=>{S.slot=+e.target.value;save();render();});
+
+// ---- init ----
+load();
+$("#hideDrafted").checked=S.hideDrafted;$("#onlyTargets").checked=S.onlyTargets;
+slotSel.value=S.slot;
+document.querySelectorAll(".chip").forEach(x=>x.dataset.on=(x.dataset.pos===S.filter)?"1":"0");
+$("#search").value=S.search||"";
+renderMgr();render();
+</script>
+</body>
+</html>

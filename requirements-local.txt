@@ -1,0 +1,8 @@
+# Local / desktop-only extras, on top of the cloud requirements.
+#   uv pip install -r requirements-local.txt
+# These power the live Yahoo league pull, which needs an interactive browser and
+# therefore only works on your Mac — not on Streamlit Community Cloud.
+-r requirements.txt
+
+yfpy>=16.0               # official Yahoo Fantasy API (pull_league.py)
+playwright>=1.44         # browser-scrape fallback; run `playwright install chromium` once
