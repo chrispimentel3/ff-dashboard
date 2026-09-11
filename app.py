@@ -307,9 +307,9 @@ ui.masthead([
 ])
 
 (tab_over, tab_start, tab_axe, tab_use, tab_match,
- tab_wire, tab_trade, tab_draft, tab_arch, tab_news, tab_raw) = st.tabs(
+ tab_wire, tab_trade, tab_draft, tab_arch, tab_wopr, tab_news, tab_raw) = st.tabs(
     ["Team overview", "Start / Sit", "Actual vs expected", "Usage trends", "Matchups",
-     "Waiver wire", "Trades", "Draft value", "Archetypes", "News", "Raw data"]
+     "Waiver wire", "Trades", "Draft value", "Archetypes", "WOPR", "News", "Raw data"]
 )
 
 
@@ -317,6 +317,12 @@ ui.masthead([
 def _archetypes(season: int) -> pd.DataFrame:
     from mega.archetypes import score
     return score(season)
+
+
+@st.cache_data(ttl=dt.timedelta(hours=6), show_spinner="Computing WOPR (opportunity) targets…")
+def _wopr(season: int) -> dict:
+    from mega.wopr import summary
+    return summary(season)
 
 
 @st.cache_data(ttl=dt.timedelta(hours=6), show_spinner="Pulling projections…")
@@ -772,6 +778,82 @@ with tab_arch:
                 sequential=["arch_fit"],
                 fmt={"arch_fit": "{:.0f}", "half_ppr_pg": "{:.1f}", "proj_ppg": "{:.1f}"}),
             width="stretch", hide_index=True,
+        )
+
+with tab_wopr:
+    st.caption(
+        "**Weighted Opportunity Rating** — how much receiving opportunity each WR/TE earns "
+        "(target share + air-yards share), split by who owns them. `anchored` blends last season "
+        "with this one on a 3-game prior; `residual` (ppg − xPPG) flags points running ahead of / "
+        "behind the underlying role."
+    )
+    try:
+        W = _wopr(int(season))
+    except Exception as e:
+        W = None
+        st.warning(f"WOPR unavailable: {e}")
+
+    if W and not W["df"].empty:
+        from mega.wopr import SCHEMA
+
+        meta = W["meta"]
+        pct = meta.get("percentiles", {})
+        st.caption(
+            f"Ownership: **{meta.get('ownership_source', '')}** · baseline {meta.get('base_season')} "
+            f"· value axis = board VOR (preseason)."
+        )
+
+        with st.expander("How to read this — formula, tags, percentiles"):
+            st.markdown(
+                "**WOPR** = 1.5 × target share + 0.7 × air-yards share (numerators and denominators "
+                "summed across the window, then divided — never an average of weekly ratios).\n\n"
+                "**Tags** — `UNDERPRICED`: opportunity beats draft cost (board rank ≥6 worse) · "
+                "`BUY_LOW`: strong role, points lagging · `SELL_HIGH`: points ahead of role · "
+                "`RISER`: late-season opportunity trending up · `ROLE_JUMP`: new-season breakout · "
+                "`FADE`: drafted high but thin opportunity.\n\n"
+                "**Percentiles (board-matched, ≥6 games):** "
+                + " · ".join(
+                    f"{p} p50 {v['p50']:.2f} / p75 {v['p75']:.2f} / p90 {v['p90']:.2f}"
+                    for p, v in pct.items()
+                )
+            )
+
+        _mcols = ["name", "pos", "team_2026_nfl", "wopr_anchored", "wopr_posrank",
+                  "board_posrank", "rank_delta", "ppg_minus_xppg", "tags"]
+        _fmt = {"wopr_anchored": "{:.3f}", "ppg_minus_xppg": "{:+.1f}", "rank_delta": "{:+.0f}",
+                "wopr_posrank": "{:.0f}", "board_posrank": "{:.0f}"}
+
+        def _show(frame, cols):
+            if frame is None or frame.empty:
+                st.info("Nothing flagged here right now.")
+                return
+            st.dataframe(
+                ui.style_df(frame[cols], pos_cols=["pos"], sequential=["wopr_anchored"],
+                            diverging=["rank_delta", "ppg_minus_xppg"], fmt=_fmt),
+                width="stretch", hide_index=True,
+            )
+
+        st.markdown("#### Your WR/TE — sell / hold")
+        st.caption("`SELL_HIGH` / `FADE` = points ran ahead of opportunity, shop them. "
+                   "`BUY_LOW` = hold, don't sell low.")
+        _show(W["mine"], _mcols)
+
+        st.markdown("#### Trade targets on other rosters")
+        st.caption("Players whose opportunity outstrips their price or is trending up — grouped by manager.")
+        _show(W["opp"], ["owner"] + _mcols)
+
+        st.markdown("#### Waiver adds (free agents)")
+        st.caption("Unrostered WR/TE clearing a startable opportunity bar or jumping in role.")
+        _show(W["fa"], _mcols)
+
+        if not W["unknown"].empty:
+            st.markdown("#### Match review (unmatched)")
+            st.dataframe(W["unknown"][["name", "pos", "tags"]], width="stretch", hide_index=True)
+
+        _full = W["df"][[c for c in SCHEMA if c in W["df"].columns]]
+        st.download_button(
+            "Download full WOPR table (CSV)", _full.to_csv(index=False),
+            file_name=f"wopr_targets_{int(season)}.csv", mime="text/csv",
         )
 
 with tab_news:
