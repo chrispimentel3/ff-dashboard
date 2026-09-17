@@ -169,6 +169,15 @@ def _ownership() -> tuple[pd.DataFrame, str]:
                 return own, "Yahoo API roster pull"
     except Exception:
         pass
+    try:  # browser scrape — the only live path while the Yahoo API is scope-blocked
+        from .yahoo import cached_rosters
+
+        r = cached_rosters()
+        if not r.empty:
+            own = r[["norm", "team"]].rename(columns={"team": "owner"}).drop_duplicates("norm")
+            return own, "scraped Yahoo rosters"
+    except Exception:
+        pass
     from .draft_board import load_draft
 
     d = load_draft()

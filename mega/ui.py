@@ -4,24 +4,30 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
-BG = "#FBFAF8"
-SURFACE = "#FFFFFF"
-SURFACE2 = "#F4F2EE"
-BORDER = "#E5E2DB"
-INK = "#1C1C1A"
-INK2 = "#5A574F"
-INK3 = "#9A9690"
-GOLD = "#D4960A"
-MINE_BG = "#FFFDF5"
+# NFL shield palette: navy #013369 and red #D50A0A on white.
+NAVY = "#013369"
+RED = "#D50A0A"
 
+BG = "#FFFFFF"
+SURFACE = "#FFFFFF"
+SURFACE2 = "#F5F7FA"
+BORDER = "#DDE3EC"
+INK = "#12161C"
+INK2 = "#4E5866"
+INK3 = "#8A93A0"
+GOLD = NAVY          # the accent name the rest of the module already reads
+MINE_BG = "#F2F6FC"
+
+# Drawn from real team palettes rather than only navy/red — the position column has to
+# stay readable at a glance, and a two-colour set can't do that across six positions.
 POS_COLORS = {
-    "QB": "#C2452D", "RB": "#2E6DB4", "WR": "#B87A10",
-    "TE": "#6B3FA0", "K": "#5A7080", "DEF": "#3A7048", "W/R": "#8A867E",
+    "QB": "#D50A0A", "RB": "#013369", "WR": "#B8860B",
+    "TE": "#4B2E83", "K": "#5A7080", "DEF": "#1F5C34", "W/R": "#8A93A0",
 }
 
-_NEG = (46, 109, 180)     # blue  — buy-low / underperforming
-_POS = (176, 122, 16)     # amber — sell-high / overperforming
-_HEAT = (212, 150, 10)    # gold  — sequential highlight
+_NEG = (1, 51, 105)       # navy — buy-low / underperforming
+_POS = (213, 10, 10)      # red  — sell-high / overperforming
+_HEAT = (1, 51, 105)      # navy — sequential highlight
 
 
 def _rgb(t: tuple[int, int, int]) -> str:
@@ -35,7 +41,7 @@ def _mix(a, b, t):
 _CSS = """
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-:root { --gold:#D4960A; --ink:#1C1C1A; --ink2:#5A574F; --ink3:#8A867E; --border:#E7E4DD; --surface2:#FAF9F7; }
+:root { --navy:#013369; --red:#D50A0A; --gold:#013369; --ink:#12161C; --ink2:#4E5866; --ink3:#8A93A0; --border:#DDE3EC; --surface2:#F5F7FA; }
 .stApp { background:#FFFFFF; }
 html, body, [class*="st-"], .stMarkdown, .stDataFrame { font-family:'Archivo Narrow', system-ui, sans-serif; }
 /* the rule above also catches Streamlit's icon spans, which turns their ligatures into raw text */
@@ -44,17 +50,17 @@ h1,h2,h3,h4,.mb-title { font-family:'Archivo', system-ui, sans-serif; letter-spa
 /* Streamlit's floating toolbar sits ~2.9rem tall; less top padding clips the masthead. */
 .block-container { padding-top:3.6rem; padding-bottom:3rem; max-width:1400px; }
 section[data-testid="stSidebar"] { background:var(--surface2); border-right:1px solid var(--border); }
-.mb-mast { border-bottom:2px solid var(--border); padding-bottom:10px; margin-bottom:14px; }
-.mb-title { font-weight:800; font-size:26px; color:var(--ink); line-height:1.25; }
-.mb-title em { font-style:normal; color:var(--gold); }
+.mb-mast { border-bottom:3px solid var(--navy); padding-bottom:10px; margin-bottom:14px; }
+.mb-title { font-weight:800; font-size:26px; color:var(--navy); line-height:1.25; }
+.mb-title em { font-style:normal; color:var(--red); }
 .mb-sub { font-size:12.5px; color:var(--ink3); margin-top:3px; }
-.mb-kpi { background:#fff; border:1px solid var(--border); border-radius:8px; padding:11px 14px; height:100%; }
+.mb-kpi { background:#fff; border:1px solid var(--border); border-top:3px solid var(--navy); border-radius:6px; padding:11px 14px; height:100%; }
 .mb-kpi-l { font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink3); }
-.mb-kpi-v { font-family:'Archivo',sans-serif; font-weight:800; font-size:22px; color:var(--ink); line-height:1.15; margin-top:3px; }
+.mb-kpi-v { font-family:'Archivo',sans-serif; font-weight:800; font-size:22px; color:var(--navy); line-height:1.15; margin-top:3px; }
 .mb-kpi-s { font-size:11.5px; color:var(--ink2); margin-top:2px; }
 .stTabs [data-baseweb="tab-list"] { gap:2px; border-bottom:1px solid var(--border); overflow-x:auto; scrollbar-width:thin; }
 .stTabs [data-baseweb="tab"] { font-weight:700; font-size:13px; color:var(--ink3); padding:6px 12px; white-space:nowrap; }
-.stTabs [aria-selected="true"] { color:var(--ink) !important; border-bottom:2px solid var(--gold) !important; }
+.stTabs [aria-selected="true"] { color:var(--navy) !important; border-bottom:3px solid var(--red) !important; }
 .mb-legend { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
 .mb-chip { font-size:10px; font-weight:700; color:#fff; padding:2px 6px; border-radius:3px; }
 .mb-key { display:flex; flex-wrap:wrap; gap:5px 14px; margin:7px 0 2px; font-size:11px; color:var(--ink2); }

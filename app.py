@@ -254,6 +254,15 @@ def map_roster(roster: pd.DataFrame, ids: pd.DataFrame) -> pd.DataFrame:
             pref = hit[hit["position"].astype(str).str.upper() == str(r["pos"]).upper()]
             hit = pref if not pref.empty else hit
         rec = dict(r)
+        # The roster scrape leaves pos blank on most bench rows, and a player with no
+        # position can't be slotted into a lineup at all — he silently vanishes from
+        # Start/Sit rather than competing for the flex. Backfill from ff_playerids.
+        if not str(rec.get("pos") or "").strip() and not hit.empty and "position" in hit:
+            rec["pos"] = str(hit["position"].iloc[0] or "").upper()
+        # Same for the NFL team: without it there's no opponent to look up, so the
+        # matchup adjustment silently does nothing for that player.
+        if not str(rec.get("nfl_team") or "").strip() and not hit.empty and "team" in hit:
+            rec["nfl_team"] = str(hit["team"].iloc[0] or "").upper()
         rec["gsis_id"] = hit["gsis_id"].iloc[0] if not hit.empty else None
         rec["pfr_id"] = hit["pfr_id"].iloc[0] if (not hit.empty and "pfr_id" in hit) else None
         rec["matched_name"] = hit["name"].iloc[0] if not hit.empty else None
@@ -274,7 +283,31 @@ if nfl is None:
     st.error("`nflreadpy` is not installed. Run:  `pip install -r requirements.txt`")
     st.stop()
 
-roster_raw = pd.read_csv(ROSTER_CSV, dtype=str).fillna("")
+def _my_roster() -> tuple[pd.DataFrame, str]:
+    """My roster, live scrape first. `roster.csv` is hand-maintained and drifts the
+    moment a waiver clears — it is the fallback, not the source of truth."""
+    try:
+        from mega.config import MY_TEAM
+        from mega.yahoo import cached_rosters
+
+        r = cached_rosters()
+        r = r[r["team"] == MY_TEAM] if not r.empty else r
+        if not r.empty:
+            out = r.rename(columns={"player": "name"})[["name", "slot", "pos", "nfl_team"]].copy()
+            # The roster page often omits pos; the starting slot implies it for everyone
+            # but flex, and the name match fills the rest in downstream.
+            out["pos"] = out["pos"].where(
+                out["pos"].notna() & out["pos"].astype(str).ne("nan"),
+                out["slot"].where(out["slot"].isin(["QB", "RB", "WR", "TE", "K", "DEF"]), ""),
+            )
+            out["gsis_id"] = ""
+            return out.fillna(""), "live Yahoo scrape"
+    except Exception:
+        pass
+    return pd.read_csv(ROSTER_CSV, dtype=str).fillna(""), "roster.csv (stale — run the scrape)"
+
+
+roster_raw, ROSTER_SRC = _my_roster()
 
 try:
     _cur_season = int(nfl.get_current_season())
@@ -305,7 +338,9 @@ with st.sidebar:
     ui.pos_legend()
 
 mapped = map_roster(roster_raw, ids)
-skill = mapped[~mapped["pos"].isin(["K", "DEF"])].copy()
+# Filter on slot too — the scrape leaves pos blank on plenty of rows, so a pos-only
+# test lets the kicker and defense through into the skill-player views.
+skill = mapped[~mapped["pos"].isin(["K", "DEF"]) & ~mapped["slot"].isin(["K", "DEF"])].copy()
 unmatched = skill[skill["gsis_id"].isna()]["name"].tolist()
 gsis_list = [g for g in skill["gsis_id"].dropna().tolist()]
 
@@ -328,7 +363,7 @@ ui.masthead([
     "Half-PPR · team <strong>TaylorMade</strong>",
     f"{int(season)} season · through wk {week}",
     f"matchup wk {next_week}",
-    "data: nflverse · Sleeper · FantasyCalc",
+    f"roster: {ROSTER_SRC}",
 ])
 
 # Grouped by the decision you're making, not by where the data came from. Streamlit
@@ -674,28 +709,46 @@ with tab_start:
         ])
         st.write("")
 
-        slot_order = {"QB": 0, "RB": 1, "WR": 2, "TE": 3, "FLEX": 4}
-        cols = ["lineup", "player", "pos", "nfl_team", "opp", "ease_rank", "proj", "proj_adj",
-                "proj_source", "start_sit", "close_call"]
+        # Opportunity alongside the projection. Below the FantasyPros free-tier cutoff
+        # (top 10 per position) everything is an estimate, and a 1-2 point gap between
+        # two estimates is noise — target share is the steadier tiebreaker.
+        _ts = target_share(int(season), int(week), int(roll))
+        lu = lu.merge(_ts, on="gsis_id", how="left") if "gsis_id" in lu.columns else lu
+        for _c in ("tgt_pct", "tm_rank"):
+            if _c not in lu.columns:
+                lu[_c] = pd.NA
+        starters, bench = lu[lu["start"]], lu[~lu["start"]]
 
-        lu_fmt = {"PROJ": "{:.1f}", "PROJ*": "{:.1f}", "MU#": "{:.0f}"}
+        slot_order = {"QB": 0, "RB": 1, "WR": 2, "TE": 3, "FLEX": 4}
+        cols = [c for c in ["lineup", "player", "pos", "nfl_team", "opp", "ease_rank",
+                            "proj", "proj_adj", "proj_source", "tgt_pct", "tm_rank",
+                            "start_sit", "close_call"] if c in lu.columns]
+
+        lu_fmt = {"PROJ": "{:.1f}", "PROJ*": "{:.1f}", "MU#": "{:.0f}",
+                  "TGT%": "{:.1%}", "TM#": "{:.0f}"}
 
         st.markdown("#### ✅ Recommended starters")
         sview = starters.assign(_o=starters["lineup"].map(slot_order)).sort_values("_o")[cols]
-        st.dataframe(
-            ui.style_df(ui.cols(sview, proj="PROJ"), sequential=["PROJ*"], pos_cols=["POS"], fmt=lu_fmt),
-            width="stretch", hide_index=True,
-        )
-        ui.col_key("PROJ*", "MU#", "SRC", "GRADE", PROJ="raw projection", NOTE="close-call flag")
+        ui.table(sview, rename={"proj": "PROJ"}, sequential=["PROJ*"], pos_cols=["POS"], fmt=lu_fmt)
+        ui.col_key("PROJ*", "MU#", "SRC", "GRADE", "TGT%", "TM#",
+                   PROJ="raw projection", NOTE="close-call flag")
 
         st.markdown("#### 🪑 Bench")
         bview = bench.sort_values("proj_adj", ascending=False)[cols]
-        st.dataframe(
-            ui.style_df(ui.cols(bview, proj="PROJ"), pos_cols=["POS"], fmt=lu_fmt),
-            width="stretch", hide_index=True,
-        )
+        ui.table(bview, rename={"proj": "PROJ"}, pos_cols=["POS"], fmt=lu_fmt)
+
+        _est = int((starters["proj_source"] != "FantasyPros").sum())
+        if _est:
+            st.warning(
+                f"**{_est} of {len(starters)} starters are running on estimates, not real projections.** "
+                "FantasyPros' free tier stops at the top 10 per position, so everyone below that is "
+                "modelled from usage. Two estimates within ~2 points of each other is a coin flip, not "
+                "a recommendation — when it's that close, start the player with the bigger **TGT%** "
+                "and the better **TM#**, because volume holds up week to week and points don't."
+            )
         if n_close:
-            st.info("**Close calls** flagged in `note` — a bench player projects within ~2 pts of a starter at the same slot. Worth a matchup/injury check before lock.")
+            st.info("**Close calls** are flagged in **NOTE** — a bench player projecting within ~2 points "
+                    "of a starter in the same slot. Worth an injury and matchup check before lock.")
 
 # ---- Actual vs expected ------------------------------------------------------------
 with tab_axe:

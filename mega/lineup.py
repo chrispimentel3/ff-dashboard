@@ -67,7 +67,9 @@ def optimize_lineup(roster: pd.DataFrame, season: int, week: int) -> pd.DataFram
     Returns the roster with matchup-adjusted proj, lineup slot assignment, and flags."""
     df = attach_matchup(roster.copy(), season, week)
     # FantasyPros already prices the matchup; only nudge the nflverse estimates.
-    is_est = df.get("proj_source", "").eq("nflverse-est")
+    # df.get returns a bare str when the column is absent, and str has no .eq
+    is_est = df["proj_source"].eq("nflverse-est") if "proj_source" in df.columns \
+        else pd.Series(False, index=df.index)
     adj_factor = (0.80 + 0.20 * df["mult"]).where(is_est, 1.0)
     df["proj_adj"] = (pd.to_numeric(df["proj"], errors="coerce") * adj_factor).round(2)
     df = df.sort_values("proj_adj", ascending=False)

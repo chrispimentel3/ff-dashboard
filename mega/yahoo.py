@@ -27,7 +27,7 @@ from pathlib import Path
 import pandas as pd
 from lxml import html as lx
 
-from .config import DATA, LEAGUE_ID, SEAT_BY_TEAM, TEAM_BY_SEAT
+from .config import DATA, LEAGUE_ID, N_TEAMS, SEAT_BY_TEAM, TEAM_BY_SEAT
 
 STATE = DATA / "yahoo_state.json"
 MANUAL = DATA / "manual"
@@ -247,9 +247,27 @@ def parse_transactions(html_text: str) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+_TITLE_TEAM = re.compile(r"^\s*(?P<league>.+?)\s+-\s+(?P<team>.+?)\s*\|\s*Fantasy Football", re.I)
+
+
+def team_name_from(html_text: str) -> str:
+    """Team name off the page title — 'Mega Bowl - TaylorMade | Fantasy Football …'.
+
+    The URL segment is Yahoo's team_id, which is NOT the draft seat, so the roster
+    has to be labelled from the page itself or every player lands on the wrong team.
+    """
+    doc = lx.fromstring(html_text)
+    title = (doc.xpath("//title/text()") or [""])[0]
+    m = _TITLE_TEAM.search(title)
+    return m.group("team").strip() if m else ""
+
+
 def parse_roster(html_text: str, seat: int | None = None) -> pd.DataFrame:
     """Best-effort parse of a team roster page."""
     doc = lx.fromstring(html_text)
+    team = team_name_from(html_text)
+    if team:
+        seat = _seat_for(team)
     rows = []
     for tr in doc.xpath('//table[contains(@class,"Table")]//tbody/tr'):
         nc = tr.xpath('.//*[contains(@class,"ysf-player-name")]')
@@ -263,7 +281,7 @@ def parse_roster(html_text: str, seat: int | None = None) -> pd.DataFrame:
         tds = tr.xpath("./td")
         slot = _clean(tds[0].text_content()) if tds else ""
         rows.append(dict(
-            seat=seat, team=TEAM_BY_SEAT.get(seat), slot=slot, player=name,
+            seat=seat, team=team or TEAM_BY_SEAT.get(seat), slot=slot, player=name,
             yahoo_id=yid, nfl_team=m.group(1) if m else None, pos=m.group(2) if m else None,
         ))
     return pd.DataFrame(rows)
@@ -297,7 +315,9 @@ def pull(manual: bool = False, fa_pages: int = 4) -> dict[str, pd.DataFrame]:
             out["free_agents"] = fa.drop_duplicates("yahoo_id")
             out["standings"] = parse_standings(s.get_text(BASE + "/standings"))
             out["transactions"] = parse_transactions(s.get(BASE + "/transactions"))
-            rosters = [parse_roster(s.get(f"{BASE}/{seat}"), seat) for seat in TEAM_BY_SEAT]
+            # 1..N is Yahoo's team_id, unrelated to draft seat — parse_roster reads the
+            # real team name off each page title and derives the seat from that.
+            rosters = [parse_roster(s.get(f"{BASE}/{tid}")) for tid in range(1, N_TEAMS + 1)]
             out["rosters"] = pd.concat(rosters, ignore_index=True)
 
     for name, df in out.items():
