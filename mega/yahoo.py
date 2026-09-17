@@ -92,6 +92,19 @@ class LeagueSession:
             raise AuthExpired("Yahoo session expired. Run:  python -m mega.yahoo login")
         return htmltext
 
+    def get_text(self, url: str) -> str:
+        """Rendered innerText. Needed where layout newlines carry the structure —
+        the standings page has no <table>, so only the visual line breaks separate
+        team from manager from record."""
+        page = self._ctx.new_page()
+        page.goto(url, wait_until="domcontentloaded", timeout=45_000)
+        page.wait_for_timeout(2500)
+        text = page.evaluate("document.body.innerText")
+        page.close()
+        if "Sign in to Yahoo" in text[:5000]:
+            raise AuthExpired("Yahoo session expired. Run:  python -m mega.yahoo login")
+        return text
+
     def close(self) -> None:
         self._ctx.close()
         self._browser.close()
@@ -179,16 +192,48 @@ def parse_player_table(html_text: str) -> pd.DataFrame:
     return df[[c for c in keep if c in df.columns]]
 
 
-def parse_standings(html_text: str) -> pd.DataFrame:
-    try:
-        tabs = pd.read_html(io.StringIO(html_text), match="Rank")
-    except ValueError:
-        tabs = []
-    if not tabs:
+_STANDING = re.compile(
+    r"^(?P<team>.+)\n(?P<manager>.+)\n(?P<w>\d+) - (?P<l>\d+) - (?P<t>\d+) \| (?P<rank>\d+)(?:st|nd|rd|th)\s*$",
+    re.M,
+)
+
+
+def parse_standings(page_text: str) -> pd.DataFrame:
+    """Standings from the rendered page text.
+
+    Yahoo renders this page as flex divs, not a <table>, and with "Live Standings"
+    on it leads with the current matchup — so pd.read_html finds nothing. Each team
+    still reads as three lines: name, manager, then "W - L - T | Nth". The featured
+    matchup repeats its two teams, hence the de-dupe on first sighting.
+    """
+    if "<html" in page_text[:2000].lower():  # --manual path hands us saved HTML
+        page_text = "\n".join(
+            t.strip() for t in lx.fromstring(page_text).itertext() if t.strip()
+        )
+    seen: dict[str, dict] = {}
+    for m in _STANDING.finditer(page_text):
+        seen.setdefault(m.group("team").strip(), m.groupdict())
+    if not seen:
         return pd.DataFrame()
-    df = tabs[0]
-    df.columns = [str(c).strip() for c in df.columns]
-    return df
+    rows = [
+        dict(
+            rank=int(d["rank"]), team=team, manager=d["manager"].strip(),
+            wins=int(d["w"]), losses=int(d["l"]), ties=int(d["t"]),
+            seat=_seat_for(team),
+        )
+        for team, d in seen.items()
+    ]
+    return pd.DataFrame(rows).sort_values("rank").reset_index(drop=True)
+
+
+def _seat_for(team_name: str) -> int | None:
+    """Draft seat for a team, tolerating in-season renames."""
+    if team_name in SEAT_BY_TEAM:
+        return SEAT_BY_TEAM[team_name]
+    import difflib
+
+    hit = difflib.get_close_matches(team_name, list(SEAT_BY_TEAM), n=1, cutoff=0.6)
+    return SEAT_BY_TEAM[hit[0]] if hit else None
 
 
 def parse_transactions(html_text: str) -> pd.DataFrame:
@@ -250,7 +295,7 @@ def pull(manual: bool = False, fa_pages: int = 4) -> dict[str, pd.DataFrame]:
                 fa_frames.append(parse_player_table(s.get(url)))
             fa = pd.concat(fa_frames, ignore_index=True)
             out["free_agents"] = fa.drop_duplicates("yahoo_id")
-            out["standings"] = parse_standings(s.get(BASE + "/standings"))
+            out["standings"] = parse_standings(s.get_text(BASE + "/standings"))
             out["transactions"] = parse_transactions(s.get(BASE + "/transactions"))
             rosters = [parse_roster(s.get(f"{BASE}/{seat}"), seat) for seat in TEAM_BY_SEAT]
             out["rosters"] = pd.concat(rosters, ignore_index=True)
@@ -260,6 +305,30 @@ def pull(manual: bool = False, fa_pages: int = 4) -> dict[str, pd.DataFrame]:
         df.to_csv(path, index=False)
         print(f"  yahoo_{name:12s} {len(df):>4} rows -> {path}")
     return out
+
+
+def cached_rosters() -> pd.DataFrame:
+    """Last `pull` result from disk, shaped like yahoo_api.rosters_df()."""
+    path = DATA / "yahoo_rosters.csv"
+    if not path.is_file():
+        return pd.DataFrame()
+    df = pd.read_csv(path)
+    if df.empty:
+        return df
+    from .intel import _norm
+
+    df["norm"] = df["player"].map(_norm)
+    df["pos"] = df["pos"].astype(str).str.upper().str.replace("W/R/T", "W/R", regex=False)
+    return df
+
+
+def cached_standings() -> pd.DataFrame:
+    """Last `pull` standings from disk."""
+    path = DATA / "yahoo_standings.csv"
+    if not path.is_file():
+        return pd.DataFrame()
+    df = pd.read_csv(path)
+    return df if df.empty else df.sort_values("rank").reset_index(drop=True)
 
 
 def main(argv=None) -> None:

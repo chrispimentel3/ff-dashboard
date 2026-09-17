@@ -25,7 +25,7 @@ import pandas as pd
 
 from .config import ROOT
 from .draft_board import load_draft
-from .intel import _norm, form_season, weekly
+from .intel import _norm, _team_target_share, form_season, weekly
 
 GAMES = 17
 WARROOM_HTML = ROOT / "draftwarroom2026.html"
@@ -103,10 +103,11 @@ def _per_game(season: int) -> pd.DataFrame:
         half_ppr_pg=("half_ppr", "mean"),
         carries_pg=("carries", "mean") if "carries" in w.columns else ("half_ppr", "size"),
         targets_pg=("targets", "mean") if "targets" in w.columns else ("half_ppr", "size"),
-        tgt_share=("target_share", "mean") if "target_share" in w.columns else ("half_ppr", "size"),
         rec_fd_pg=("receiving_first_downs", "mean") if "receiving_first_downs" in w.columns else ("half_ppr", "size"),
         rush_fd_pg=("rushing_first_downs", "mean") if "rushing_first_downs" in w.columns else ("half_ppr", "size"),
     )
+    share = _team_target_share(w, key="gsis_id").rename(columns={"tgt_pct": "tgt_share"})
+    g = g.merge(share, on="gsis_id", how="left")
     # first-down rate proxy (FD per target) for the WR "sticky" signal
     if "receiving_first_downs" in w.columns and "targets" in w.columns:
         tot = w.groupby("gsis_id").agg(fd=("receiving_first_downs", "sum"), tg=("targets", "sum"))
@@ -239,6 +240,7 @@ def score(season: int) -> pd.DataFrame:
             vor=r["vor"], age=r["age"], exp_yrs=r["exp_yrs"],
             carries_pg=round(r["carries_pg_use"], 1) if pd.notna(r["carries_pg_use"]) else np.nan,
             tgt_share=round(r["tgt_share"], 3) if pd.notna(r["tgt_share"]) else np.nan,
+            tm_rank=r["tm_rank"],
             why="; ".join(why), norm=r["norm"],
         ))
     return pd.DataFrame(rows).sort_values("arch_fit", ascending=False).reset_index(drop=True)

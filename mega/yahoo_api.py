@@ -142,6 +142,70 @@ def standings_df() -> pd.DataFrame:
     return df.sort_values("rank", na_position="last").reset_index(drop=True) if not df.empty else df
 
 
+def _matchup_teams(m: dict) -> list[dict]:
+    """The two team dicts inside one matchup, de-duplicated."""
+    out, seen = [], set()
+    for d in _walk(m.get("teams")):
+        if "name" not in d or "team_points" not in d:
+            continue
+        key = d.get("team_id") or d.get("team_key") or _player_name(d)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(d)
+    return out
+
+
+def _points(d: dict, *keys: str) -> float | None:
+    for k in keys:
+        v = d.get(k)
+        if isinstance(v, dict):
+            v = v.get("total")
+        if v not in (None, ""):
+            try:
+                return round(float(v), 2)
+            except (TypeError, ValueError):
+                continue
+    return None
+
+
+def matchups_df() -> pd.DataFrame:
+    """One row per team per week: what they scored and who beat them."""
+    rows = []
+    for path in sorted(API_DIR.glob("scoreboard_week_*.json")):
+        m_wk = re.search(r"scoreboard_week_(\d+)", path.name)
+        if not m_wk:
+            continue
+        wk = int(m_wk.group(1))
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        for m in _walk(data):
+            if "teams" not in m:
+                continue
+            pair = _matchup_teams(m)
+            if len(pair) != 2:
+                continue
+            final = str(m.get("status", "")).lower() == "postevent"
+            for side, other in ((pair[0], pair[1]), (pair[1], pair[0])):
+                name = _player_name(side) if isinstance(side.get("name"), dict) else str(side.get("name", ""))
+                opp = _player_name(other) if isinstance(other.get("name"), dict) else str(other.get("name", ""))
+                pf = _points(side, "team_points")
+                pa = _points(other, "team_points")
+                rows.append(dict(
+                    week=wk, team=name, seat=_seat_for(name), opponent=opp,
+                    points=pf, opp_points=pa,
+                    proj=_points(side, "team_projected_points"),
+                    result=("W" if pf > pa else "L" if pf < pa else "T")
+                           if final and pf is not None and pa is not None else "",
+                    final=final,
+                    playoffs=bool(int(m.get("is_playoffs") or 0)),
+                ))
+    df = pd.DataFrame(rows)
+    return df.drop_duplicates(["week", "team"]).sort_values(["week", "team"]).reset_index(drop=True) if not df.empty else df
+
+
 def transactions_df() -> pd.DataFrame:
     data = _load("transactions.json")
     if not data:

@@ -126,8 +126,30 @@ def _recent_form(season: int, weeks: int = 3) -> pd.DataFrame:
         tgt_pg=("targets", "mean") if "targets" in recent.columns else ("half_ppr", "size"),
         carry_pg=("carries", "mean") if "carries" in recent.columns else ("half_ppr", "size"),
     )
-    # week-over-week snap/target trend from full season
-    return g
+    return g.merge(_team_target_share(recent), on="norm", how="left")
+
+
+def _team_target_share(recent: pd.DataFrame, key: str = "norm") -> pd.DataFrame:
+    """Share of his own offense's targets over the window, and his rank on that team.
+
+    Summed numerator over summed denominator — a mean of weekly shares lets one
+    low-volume game dominate.
+    """
+    if "targets" not in recent.columns or "team" not in recent.columns:
+        return pd.DataFrame(columns=[key, "tgt_pct", "tm_rank"])
+    r = recent.copy()
+    r["targets"] = _n(r, "targets")
+    team_tot = r.groupby("team")["targets"].sum().rename("tm_tgt").reset_index()
+    p = (
+        r.sort_values("week")
+        .groupby(key)
+        .agg(targets=("targets", "sum"), team=("team", "last"))
+        .reset_index()
+    )
+    p = p[p["targets"] > 0].merge(team_tot, on="team", how="left")
+    p["tgt_pct"] = p["targets"] / p["tm_tgt"].replace(0, np.nan)
+    p["tm_rank"] = p.groupby("team")["targets"].rank(method="min", ascending=False)
+    return p[[key, "tgt_pct", "tm_rank"]]
 
 
 def waiver_board(season: int, rostered_norms: set[str], top: int = 20) -> pd.DataFrame:
@@ -171,12 +193,15 @@ def waiver_board(season: int, rostered_norms: set[str], top: int = 20) -> pd.Dat
             bits.append("value rising")
         if pd.notna(r.get("tgt_pg")) and r["tgt_pg"] >= 6:
             bits.append(f"{r['tgt_pg']:.1f} tgt/g")
+        if pd.notna(r.get("tm_rank")) and r["tm_rank"] <= 2 and pd.notna(r.get("tgt_pct")):
+            bits.append(f"#{int(r['tm_rank'])} target on {r['tgt_pct']:.0%} share")
         if pd.notna(r.get("carry_pg")) and r["carry_pg"] >= 10:
             bits.append(f"{r['carry_pg']:.1f} carry/g")
         return "; ".join(bits) or "role trending up"
 
     b["why"] = b.apply(why, axis=1)
-    return b[["player", "pos", "pg_recent", "tgt_pg", "carry_pg", "value", "add_rank", "trend_30d", "add_score", "why"]]
+    return b[["player", "pos", "pg_recent", "tgt_pg", "tgt_pct", "tm_rank", "carry_pg",
+              "value", "add_rank", "trend_30d", "add_score", "why"]]
 
 
 # ────────────────────────────────────────────────────────── buy low / sell high
@@ -297,6 +322,7 @@ def trade_finder(season: int, yahoo_rosters: pd.DataFrame | None = None, max_ide
                     give=give["player"], give_pos=give["pos"], give_val=int(gv), give_trend=give.get("trend_30d"),
                     get=get["player"], get_pos=get["pos"], get_val=int(tv), get_trend=get.get("trend_30d"),
                     addresses=f"my {get['pos']} need",
+                    they_need=", ".join(their_need_pos[:2]) or "—",
                     fairness=round(1 - abs(gv - tv) / max(gv, tv), 2),
                 ))
     out = pd.DataFrame(ideas)
@@ -305,6 +331,53 @@ def trade_finder(season: int, yahoo_rosters: pd.DataFrame | None = None, max_ide
     out["edge"] = out["get_val"] - out["give_val"] + 0.15 * (out["get_trend"].fillna(0) - out["give_trend"].fillna(0))
     return (out.sort_values(["fairness", "edge"], ascending=False)
             .drop_duplicates(["get", "give"]).head(max_ideas).reset_index(drop=True))
+
+
+def roster_strength(season: int, rosters: pd.DataFrame) -> pd.DataFrame:
+    """Each team's expected weekly points from its best legal lineup.
+
+    Strength independent of record: two 1-0 teams are not the same team. Positions
+    come from the stats join rather than the roster page, which often omits them.
+    """
+    # Full-season per-game, not _recent_form: in week 1 the 3-week window collapses to
+    # the tail of last season and matches barely a third of each roster.
+    w = weekly(form_season(season))
+    if w.empty or rosters is None or rosters.empty:
+        return pd.DataFrame()
+    form = (
+        w[w["pos"].isin(["QB", "RB", "WR", "TE"])]
+        .groupby(["norm", "pos"], as_index=False)
+        .agg(pg_recent=("half_ppr", "mean"), gms=("week", "nunique"))
+    )
+    form = form.sort_values("gms", ascending=False).drop_duplicates("norm")
+    r = rosters[["norm", "team"]].drop_duplicates().merge(form, on="norm", how="left")
+    r["pg_recent"] = pd.to_numeric(r["pg_recent"], errors="coerce").fillna(0.0)
+
+    rows = []
+    for team, grp in r.groupby("team"):
+        used: set = set()
+        pts = 0.0
+        for slot, n in LINEUP.items():
+            if slot in ("K", "DEF", "W/R"):
+                continue
+            pool = grp[(grp["pos"] == slot) & (~grp.index.isin(used))].nlargest(n, "pg_recent")
+            pts += float(pool["pg_recent"].sum())
+            used |= set(pool.index)
+        flex = grp[grp["pos"].isin(FLEX_ELIGIBLE) & (~grp.index.isin(used))].nlargest(
+            LINEUP.get("W/R", 1), "pg_recent")
+        pts += float(flex["pg_recent"].sum())
+        used |= set(flex.index)
+        bench = grp[~grp.index.isin(used)].nlargest(3, "pg_recent")
+        rows.append(dict(
+            team=team,
+            starters_pg=round(pts, 1),
+            bench_pg=round(float(bench["pg_recent"].sum()), 1),
+            matched=int(grp["pg_recent"].gt(0).sum()),
+            size=len(grp),
+        ))
+    out = pd.DataFrame(rows).sort_values("starters_pg", ascending=False).reset_index(drop=True)
+    out.insert(0, "power_rank", range(1, len(out) + 1))
+    return out
 
 
 if __name__ == "__main__":
