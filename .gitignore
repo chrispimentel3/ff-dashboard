@@ -2,8 +2,23 @@
 __pycache__/
 **/__pycache__/
 *.pyc
-data/
 .env
 .streamlit/secrets.toml
-yahoo_state.json
 .DS_Store
+
+# data/ is published so the hosted app has the league — the scrape can't run there.
+# Everything below stays out. NB: gitignore has no trailing comments, a pattern with
+# one on the same line silently matches nothing.
+
+# Yahoo login cookies. Never commit — this is a live session for the account.
+yahoo_state.json
+data/yahoo_state.json
+
+# hand-saved HTML, large and redundant
+data/manual/
+
+# FantasyPros responses; the hosted app refetches with its own key
+data/fp_cache/
+
+# generated weekly, rebuildable in the app
+data/digest_*.md
