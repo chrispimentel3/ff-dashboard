@@ -7,7 +7,6 @@ Run:  streamlit run app.py
 from __future__ import annotations
 
 import datetime as dt
-import difflib
 import os
 import re
 from pathlib import Path
@@ -225,49 +224,18 @@ def load_schedule(season: int) -> pd.DataFrame:
     return df
 
 
-@st.cache_data(ttl=CACHE_TTL, show_spinner=False)
-def load_ids() -> pd.DataFrame:
-    df = to_pandas(nfl.load_ff_playerids())
-    keep = [c for c in ["name", "gsis_id", "pfr_id", "position", "team", "sleeper_id", "yahoo_id"] if c in df.columns]
-    df = df[keep].copy()
-    df["norm"] = df["name"].map(norm_name)
-    return df
-
-
 # --------------------------------------------------------------------------------------
 # Roster mapping
 # --------------------------------------------------------------------------------------
-def map_roster(roster: pd.DataFrame, ids: pd.DataFrame) -> pd.DataFrame:
-    rows = []
-    norms = ids["norm"].tolist()
-    for _, r in roster.iterrows():
-        gsis = str(r.get("gsis_id") or "").strip()
-        hit = ids[ids["gsis_id"] == gsis] if gsis else ids.iloc[0:0]
-        if hit.empty:
-            n = norm_name(r["name"])
-            hit = ids[ids["norm"] == n]
-            if hit.empty:
-                close = difflib.get_close_matches(n, norms, n=1, cutoff=0.87)
-                if close:
-                    hit = ids[ids["norm"] == close[0]]
-        if len(hit) > 1 and str(r.get("pos")):
-            pref = hit[hit["position"].astype(str).str.upper() == str(r["pos"]).upper()]
-            hit = pref if not pref.empty else hit
-        rec = dict(r)
-        # The roster scrape leaves pos blank on most bench rows, and a player with no
-        # position can't be slotted into a lineup at all — he silently vanishes from
-        # Start/Sit rather than competing for the flex. Backfill from ff_playerids.
-        if not str(rec.get("pos") or "").strip() and not hit.empty and "position" in hit:
-            rec["pos"] = str(hit["position"].iloc[0] or "").upper()
-        # Same for the NFL team: without it there's no opponent to look up, so the
-        # matchup adjustment silently does nothing for that player.
-        if not str(rec.get("nfl_team") or "").strip() and not hit.empty and "team" in hit:
-            rec["nfl_team"] = str(hit["team"].iloc[0] or "").upper()
-        rec["gsis_id"] = hit["gsis_id"].iloc[0] if not hit.empty else None
-        rec["pfr_id"] = hit["pfr_id"].iloc[0] if (not hit.empty and "pfr_id" in hit) else None
-        rec["matched_name"] = hit["name"].iloc[0] if not hit.empty else None
-        rows.append(rec)
-    return pd.DataFrame(rows)
+def map_roster(roster: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
+    """Resolve a roster to nflverse ids and backfill position + NFL team.
+
+    The resolution order and the match report live in mega.ids so the league-wide
+    rosters that feed the trade finder and the power rankings go through exactly the
+    same path as this one — a player who resolves here and not there is how the same
+    name ends up on two different teams.
+    """
+    return player_ids.resolve(roster, name_col="name")
 
 
 # --------------------------------------------------------------------------------------
@@ -275,6 +243,7 @@ def map_roster(roster: pd.DataFrame, ids: pd.DataFrame) -> pd.DataFrame:
 # --------------------------------------------------------------------------------------
 st.set_page_config(page_title="Mega Bowl · Command Center", page_icon="🏈", layout="wide")
 
+from mega import ids as player_ids  # noqa: E402
 from mega import ui  # noqa: E402
 
 ui.inject_css()
@@ -293,7 +262,11 @@ def _my_roster() -> tuple[pd.DataFrame, str]:
         r = cached_rosters()
         r = r[r["team"] == MY_TEAM] if not r.empty else r
         if not r.empty:
-            out = r.rename(columns={"player": "name"})[["name", "slot", "pos", "nfl_team"]].copy()
+            # Carry yahoo_id through — it is the exact key, and dropping it forced
+            # every one of these rows down the name-matching path.
+            cols = [c for c in ("name", "slot", "pos", "nfl_team", "yahoo_id") if c in
+                    r.rename(columns={"player": "name"}).columns]
+            out = r.rename(columns={"player": "name"})[cols].copy()
             # The roster page often omits pos; the starting slot implies it for everyone
             # but flex, and the name match fills the rest in downstream.
             out["pos"] = out["pos"].where(
@@ -317,7 +290,6 @@ except Exception:
 with st.sidebar:
     st.header("Settings")
     season = st.number_input("Season", min_value=2015, max_value=2030, value=_cur_season, step=1)
-    ids = load_ids()
     stats = load_player_stats(int(season))
     max_wk = int(stats["week"].max()) if not stats.empty else 1
     if max_wk <= 1:
@@ -337,15 +309,25 @@ with st.sidebar:
     st.caption("Positions")
     ui.pos_legend()
 
-mapped = map_roster(roster_raw, ids)
+mapped, MATCH = map_roster(roster_raw)
 # Filter on slot too — the scrape leaves pos blank on plenty of rows, so a pos-only
 # test lets the kicker and defense through into the skill-player views.
 skill = mapped[~mapped["pos"].isin(["K", "DEF"]) & ~mapped["slot"].isin(["K", "DEF"])].copy()
-unmatched = skill[skill["gsis_id"].isna()]["name"].tolist()
+# An unresolved player has no stats to show and no position to be slotted at, so he
+# would sit in every view as a silent blank row. Drop him here and say so loudly —
+# that is the whole point of the match check.
+dropped = skill[~skill["resolved"] & ~skill["unmapped"]]
+skill = skill[skill["resolved"]].copy()
 gsis_list = [g for g in skill["gsis_id"].dropna().tolist()]
 
-if unmatched:
-    st.warning("Unmatched (add a `gsis_id` in roster.csv): " + ", ".join(unmatched))
+if not dropped.empty:
+    st.error(
+        "**Couldn't match " + str(len(dropped)) + " rostered player(s) to nflverse:** "
+        + ", ".join(f"`{n}`" for n in dropped["name"])
+        + ".  They're excluded from every stat view below — add a row to "
+        "`data/id_overrides.csv` (`yahoo_id,name,gsis_id,note`) to fix or to mark them "
+        "intentionally unmapped."
+    )
 
 sw = stats[(stats["gsis_id"].isin(gsis_list)) & (stats["week"] <= week)].copy()
 ffo = load_ff_opportunity(int(season))
@@ -359,11 +341,24 @@ name_by_id = dict(zip(skill["gsis_id"], skill["name"]))
 slot_by_id = dict(zip(skill["gsis_id"], skill["slot"]))
 team_by_id = dict(zip(skill["gsis_id"], skill["nfl_team"]))
 
+@st.cache_data(ttl=CACHE_TTL, show_spinner=False)
+def _season_basis(season: int) -> dict:
+    from mega.intel import season_basis
+    return season_basis(season)
+
+
+try:
+    BASIS = _season_basis(int(season))
+except Exception:
+    BASIS = {"season": int(season), "current": True, "weeks": 0, "label": f"{int(season)} form"}
+
 ui.masthead([
     "Half-PPR · team <strong>TaylorMade</strong>",
     f"{int(season)} season · through wk {week}",
     f"matchup wk {next_week}",
     f"roster: {ROSTER_SRC}",
+    f"ids: {player_ids.report_line(MATCH)}",
+    BASIS["label"],
 ])
 
 # Grouped by the decision you're making, not by where the data came from. Streamlit
@@ -886,7 +881,7 @@ def _intel_bundle(season: int):
         trades=_i.trade_finder(season, yahoo_rosters=ros),
         draft_delta=_i.draft_value_delta(season),
         buysell=_i.buy_low_sell_high(season),
-        form_season=_i.form_season(season),
+        basis=_i.season_basis(season),
         roster_src=roster_src,
     )
 
@@ -905,6 +900,13 @@ with tab_action:
         "tabs — the one idea running through it is that <b>opportunity is sticky and points "
         "are noisy</b>, so a gap between the two is usually a chance to buy or sell."
     )
+
+    if not BASIS["current"]:
+        st.info(
+            f"**Form numbers below are {BASIS['season']}, not {int(season)}.**  "
+            f"{int(season)} has {BASIS['weeks']} week(s) played and the rolling window needs 3 — "
+            "a one-week sample would read as a trend. This switches over on its own at week 3."
+        )
 
     mine = agg.copy() if not agg.empty else pd.DataFrame()
     if not mine.empty and "xfp_diff" in mine.columns:
@@ -987,7 +989,7 @@ with tab_wire:
             for i, (_, r) in enumerate(top3.iterrows())
         ] or [("—", "no candidates", "")])
         st.write("")
-        st.caption(f"Recent-form data: {IB['form_season']} season · adds via Sleeper · values via FantasyCalc")
+        st.caption(f"Recent form: {IB['basis']['label']} · adds via Sleeper · values via FantasyCalc")
         ui.lede(
             "Free agents ranked by <b>whether their role actually changed</b>, not just whether they had one "
             "good week. Check <b>TM#</b> and <b>TGT%</b> before you spend a claim."
@@ -1028,7 +1030,11 @@ with tab_trade:
             for partner, grp in tt.groupby("partner", sort=False):
                 need = grp["they_need"].iloc[0] if "they_need" in grp.columns else "—"
                 st.markdown(f"#### {partner}")
-                st.caption(f"Thin at **{need}** — lead with that when you pitch it.")
+                st.caption(
+                    f"Thin at **{need}** — lead with that when you pitch it."
+                    if need and need != "—"
+                    else "No clear positional hole — pitch this one on value, not need."
+                )
                 ui.table(grp[tcols], sequential=["FAIR"], diverging=["EDGE"], fmt=tfmt)
         else:
             ui.table(tt[["partner"] + tcols], sequential=["FAIR"], diverging=["EDGE"], fmt=tfmt)

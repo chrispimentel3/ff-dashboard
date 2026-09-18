@@ -12,7 +12,7 @@ import nflreadpy as nfl
 import numpy as np
 import pandas as pd
 
-from .config import FLEX_ELIGIBLE, LINEUP, MY_SEAT, SCORING, TEAM_BY_SEAT
+from .config import FLEX_ELIGIBLE, LINEUP, MY_SEAT, MY_TEAM, SCORING, TEAM_BY_SEAT
 from .draft_board import load_draft
 from .sources import fantasycalc_values, sleeper_players, sleeper_trending
 
@@ -48,9 +48,31 @@ def _weeks_available(season: int) -> int:
     return 0 if w.empty else int(w["week"].max())
 
 
-def form_season(season: int, min_weeks: int = 2) -> int:
+# The rolling window is 3 games. Below that the current season cannot fill it, so
+# every "recent form" number would be a one- or two-game sample dressed up as a
+# trend. Fall back to last season until week 3, then switch over automatically.
+MIN_WEEKS_CURRENT = 3
+
+
+def form_season(season: int, min_weeks: int = MIN_WEEKS_CURRENT) -> int:
     """Season to use for recent-form signals: fall back a year until early-season."""
     return season if _weeks_available(season) >= min_weeks else season - 1
+
+
+def season_basis(season: int, min_weeks: int = MIN_WEEKS_CURRENT) -> dict:
+    """Which season the form signals actually read, plus a label for the UI.
+
+    Every tab that talks about "recent form" should say which season that form is
+    from — in week 1 it is last season's tail, and a number with no provenance is
+    worse than no number.
+    """
+    have = _weeks_available(season)
+    used = season if have >= min_weeks else season - 1
+    if used == season:
+        return dict(season=used, current=True, weeks=have,
+                    label=f"{season} form · {have} wk played")
+    return dict(season=used, current=False, weeks=have,
+                label=f"{used} form — {season} has only {have} wk, needs {min_weeks}")
 
 
 @functools.lru_cache(maxsize=4)
@@ -102,12 +124,21 @@ def rosters_from_draft() -> pd.DataFrame:
 
 
 def current_rosters(yahoo_rosters: pd.DataFrame | None = None) -> pd.DataFrame:
+    """League-wide rosters, resolved to nflverse ids.
+
+    The scrape leaves `pos` and `nfl_team` blank on roughly two-thirds of rows, and
+    _positional_strength() groups by `pos` — so without the backfill every team's
+    positional strength was computed from the third of its roster that happened to
+    carry a position. The match report rides along on .attrs.
+    """
     if yahoo_rosters is not None and not yahoo_rosters.empty:
-        r = yahoo_rosters.copy()
-        r["norm"] = r["player"].map(_norm)
+        from .ids import resolve
+
+        r, rep = resolve(yahoo_rosters.copy(), name_col="player")
         if "seat" not in r.columns and "team" in r.columns:
             from .config import SEAT_BY_TEAM
             r["seat"] = r["team"].map(SEAT_BY_TEAM)
+        r.attrs["match"] = rep
         return r
     return rosters_from_draft()
 
@@ -274,13 +305,19 @@ def _starter_value(players: pd.DataFrame) -> tuple[float, dict]:
 
 
 def _positional_strength(ros: pd.DataFrame) -> pd.DataFrame:
-    """Per team-position: summed value of that team's best `LINEUP` starters at the position."""
+    """Per team-position: summed value of that team's best `LINEUP` starters at the position.
+
+    Keyed by team name as well as seat. Seat comes from a hard-coded map that goes
+    stale the moment a manager renames their team, and a NaN seat silently drops that
+    manager out of every comparison here.
+    """
     rows = []
-    for seat, g in ros.groupby("seat"):
+    for (seat, team), g in ros.groupby(["seat", "team"], dropna=False):
         for pos in ("QB", "RB", "WR", "TE"):
             need = LINEUP.get(pos, 1) + (1 if pos in FLEX_ELIGIBLE else 0)
             top = g[g["pos"] == pos].nlargest(need, "value")["value"].sum()
-            rows.append(dict(seat=seat, pos=pos, starter_value=top, depth=(g["pos"] == pos).sum()))
+            rows.append(dict(seat=seat, team=team, pos=pos, starter_value=top,
+                             depth=(g["pos"] == pos).sum()))
     return pd.DataFrame(rows)
 
 
@@ -293,25 +330,31 @@ def trade_finder(season: int, yahoo_rosters: pd.DataFrame | None = None, max_ide
 
     strength = _positional_strength(ros)
     lg_avg = strength.groupby("pos")["starter_value"].mean()
-    mine_str = strength[strength["seat"] == MY_SEAT].set_index("pos")["starter_value"]
+    mine_str = strength[strength["team"] == MY_TEAM].set_index("pos")["starter_value"]
     my_need = (mine_str - lg_avg).sort_values()           # most negative = biggest need
     my_surplus_pos = list(my_need[my_need > 0].index)     # positions I can trade from
     need_pos = list(my_need[my_need < 0].index) or list(my_need.index[:2])
 
     mine = ros[ros["seat"] == MY_SEAT].sort_values("value", ascending=False)
     ideas = []
-    for seat, name in TEAM_BY_SEAT.items():
-        if seat == MY_SEAT:
+    # Iterate the teams actually present, not config.TEAM_BY_SEAT — a manager who
+    # renames their team loses its seat mapping and would otherwise vanish from the
+    # finder entirely, with no error and no empty section to notice.
+    for seat, name in ros[["seat", "team"]].drop_duplicates().itertuples(index=False):
+        if seat == MY_SEAT or str(name) == MY_TEAM:
             continue
-        theirs = ros[ros["seat"] == seat]
-        their_str = strength[strength["seat"] == seat].set_index("pos")["starter_value"]
+        theirs = ros[ros["team"] == name]
+        their_str = strength[strength["team"] == name].set_index("pos")["starter_value"]
         their_need = (their_str - lg_avg).sort_values()
         their_need_pos = list(their_need[their_need < 0].index)
 
         # I target their startable surplus at a position I need
         for _, get in theirs[theirs["pos"].isin(need_pos)].nlargest(6, "value").iterrows():
             # what I give: my best expendable at a position of surplus (or a position they need)
-            give_pool = mine[mine["pos"].isin(set(my_surplus_pos) | set(their_need_pos))]
+            # A partner needing QB does not make my own QB expendable — without this
+            # the finder happily offers my starter to "fill my QB need".
+            give_positions = (set(my_surplus_pos) | set(their_need_pos)) - set(need_pos)
+            give_pool = mine[mine["pos"].isin(give_positions)]
             give_pool = give_pool[give_pool["player"] != get["player"]]
             for _, give in give_pool.iterrows():
                 gv, tv = give["value"], get["value"]
