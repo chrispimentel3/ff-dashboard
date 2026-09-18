@@ -42,13 +42,23 @@ def _s(v: object) -> str:
     return "" if t.lower() in ("nan", "none", "<na>") else t
 
 
-# ff_playerids keeps its own team vocabulary (GBP/KCC/LVR/NEP/NOS/SFO/TBB/JAC);
-# Yahoo uses the broadcast abbreviations. Only used to break name ties, so a miss
-# here costs nothing — it just means the tiebreak doesn't fire.
-_TEAM_ALIAS = {
-    "GB": "GBP", "KC": "KCC", "LV": "LVR", "NE": "NEP", "NO": "NOS",
-    "SF": "SFO", "TB": "TBB", "JAX": "JAC", "LA": "LAR", "WSH": "WAS", "ARZ": "ARI",
+# One team vocabulary for the whole app: nflverse's, which is what the schedule, the
+# defense-vs-position table and the logo file are keyed on. Yahoo says LAR/WSH/JAC
+# and ff_playerids says GBP/KCC/SFO — before this, every Ram and Jaguar on a roster
+# matched no opponent, so the matchup adjustment silently skipped them.
+_TEAM_CANON = {
+    "LAR": "LA", "RAM": "LA", "STL": "LA", "WSH": "WAS", "JAC": "JAX", "ARZ": "ARI",
+    "GBP": "GB", "KCC": "KC", "LVR": "LV", "OAK": "LV", "NEP": "NE", "NOS": "NO",
+    "SFO": "SF", "TBB": "TB", "SDC": "LAC", "SD": "LAC", "BLT": "BAL", "CLV": "CLE",
+    "HST": "HOU",
 }
+
+
+def canon_team(t: object) -> str:
+    """Any team abbreviation -> nflverse's (LA, WAS, JAX, GB, ...). Blank stays blank."""
+    v = _s(t).upper()
+    return _TEAM_CANON.get(v, v)
+
 
 # ff_playerids spells kickers PK and punters PN; Yahoo says K. The skill-player
 # filters test `pos not in ("K", "DEF")`, so an un-normalized PK walks straight into
@@ -75,11 +85,6 @@ def _id_str(v: object) -> str:
     """Ids read out of a CSV arrive as floats — "40896.0" joins to nothing."""
     t = _s(v)
     return t[:-2] if t.endswith(".0") else t
-
-
-def _team_key(t: object) -> str:
-    t = str(t or "").strip().upper()
-    return _TEAM_ALIAS.get(t, t)
 
 
 @functools.lru_cache(maxsize=1)
@@ -134,7 +139,7 @@ def crosswalk() -> pd.DataFrame:
         x["norm_merge"] = x["merge_name"].map(norm)
     else:
         x["norm_merge"] = x["norm"]
-    x["team_key"] = x.get("team", "").map(_team_key)
+    x["team_key"] = x.get("team", "").map(canon_team)
     x["pos_key"] = x.get("position", "").astype(str).str.upper().str.strip()
     return x
 
@@ -162,7 +167,7 @@ def _pick(hits: pd.DataFrame, pos: str, team: str) -> tuple[pd.DataFrame, bool]:
         if not by_pos.empty:
             hits = by_pos
     if len(hits) > 1 and team:
-        by_team = hits[hits["team_key"] == _team_key(team)]
+        by_team = hits[hits["team_key"] == canon_team(team)]
         if not by_team.empty:
             hits = by_team
     # Players change teams, so an unresolved tie is genuinely ambiguous, not a
@@ -261,13 +266,14 @@ def resolve(players: pd.DataFrame, name_col: str = "player") -> tuple[pd.DataFra
             if not pos and _s(top.get("pos_key")):
                 rec["pos"] = canon_pos(top["pos_key"])
             if not team and _s(top.get("team")):
-                rec["nfl_team"] = _s(top["team"]).upper()
+                rec["nfl_team"] = canon_team(top["team"])
         else:
             rec.setdefault("pfr_id", None)
             rec.setdefault("matched_name", None)
             if not method:
                 rec["gsis_id"] = _s(rec.get("gsis_id")) or None
 
+        rec["nfl_team"] = canon_team(rec.get("nfl_team"))
         rec["unmapped"] = unmapped
         rec["match_method"] = method or ("unmapped" if unmapped else "unresolved")
         rec["resolved"] = bool(method)

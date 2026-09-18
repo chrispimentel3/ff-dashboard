@@ -1,13 +1,18 @@
+# NFL shield palette on white. Streamlit's own widgets (sliders, toggles, radios,
+# buttons, focus rings, the dataframe header) read these, not the CSS in mega/ui.py —
+# so this has to match it or the controls stay gold on grey.
 [theme]
 base = "light"
-primaryColor = "#D4960A"
-backgroundColor = "#F2F1EE"
-secondaryBackgroundColor = "#FFFFFF"
-textColor = "#1C1C1A"
+primaryColor = "#013369"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F5F7FA"
+textColor = "#12161C"
 font = "sans serif"
 
 [server]
 headless = true
+# Serves static/ at app/static/ — the team logos in table cells come from here.
+enableStaticServing = true
 
 [browser]
 gatherUsageStats = false

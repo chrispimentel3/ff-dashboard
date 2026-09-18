@@ -340,6 +340,40 @@ sched = load_schedule(int(season))
 name_by_id = dict(zip(skill["gsis_id"], skill["name"]))
 slot_by_id = dict(zip(skill["gsis_id"], skill["slot"]))
 team_by_id = dict(zip(skill["gsis_id"], skill["nfl_team"]))
+pos_by_id = dict(zip(skill["gsis_id"], skill["pos"]))
+
+
+@st.cache_data(ttl=CACHE_TTL, show_spinner=False)
+def _player_teams(season: int) -> dict[str, str]:
+    """normalized name -> current NFL team, for the logo beside every player.
+
+    Layered freshest-last: ff_playerids covers nearly everyone, this season's box scores
+    catch moves since that file was built, and the league rosters are what Yahoo says
+    today. All of it goes through canon_team so LAR/JAC/GBP land on the right logo.
+    """
+    xw = player_ids.crosswalk()
+    out = dict(zip(xw["norm"], xw["team"].map(player_ids.canon_team)))
+    st_ = load_player_stats(season)
+    if not st_.empty and {"player", "team", "week"} <= set(st_.columns):
+        last = st_.sort_values("week").groupby("player")["team"].last()
+        out.update({player_ids.norm(n): player_ids.canon_team(t) for n, t in last.items()})
+    try:
+        from mega.intel import current_rosters
+        from mega.yahoo import cached_rosters
+
+        lr = current_rosters(cached_rosters())
+        if not lr.empty:
+            lr = lr[lr["nfl_team"].astype(str).str.len() > 0]
+            out.update(dict(zip(lr["norm"], lr["nfl_team"])))
+    except Exception:
+        pass
+    return {k: v for k, v in out.items() if k and v}
+
+
+try:
+    ui.set_player_teams(_player_teams(int(season)))
+except Exception:
+    pass  # logos are decoration; never block the dashboard on them
 
 @st.cache_data(ttl=CACHE_TTL, show_spinner=False)
 def _season_basis(season: int) -> dict:
@@ -357,7 +391,6 @@ ui.masthead([
     f"{int(season)} season · through wk {week}",
     f"matchup wk {next_week}",
     f"roster: {ROSTER_SRC}",
-    f"ids: {player_ids.report_line(MATCH)}",
     BASIS["label"],
 ])
 
@@ -457,6 +490,7 @@ def _build_agg() -> pd.DataFrame:
     )
     agg["player"] = agg["gsis_id"].map(name_by_id)
     agg["slot"] = agg["gsis_id"].map(slot_by_id)
+    agg["pos"] = agg["gsis_id"].map(pos_by_id)
     agg = agg.merge(target_share(int(season), int(week), int(roll)), on="gsis_id", how="left")
 
     if not ffo.empty:
@@ -520,7 +554,7 @@ with tab_over:
         st.write("")
 
         show_cols = [c for c in [
-            "slot", "player", "games", "half_ppr_pg", "roll_pg", "last_wk",
+            "slot", "player", "pos", "games", "half_ppr_pg", "roll_pg", "last_wk",
             "xfp_tot", "xfp_diff", "tgt_pg", "tgt_pct", "tm_rank", "carry_pg",
             "report_status", "opp", "implied",
         ] if c in agg.columns]
@@ -532,18 +566,16 @@ with tab_over:
         ui.table(
             agg[show_cols],
             rename={"roll_pg": roll_lbl},
-            diverging=["xFP±"], sequential=["TGT%"], pos_cols=["SLOT"],
+            diverging=["xFP±"], sequential=["TGT%"], pos_cols=["POS"],
             fmt={c: "{:.1f}" for c in ["PPG", roll_lbl, "LAST", "xFP", "xFP±", "TGT", "CAR", "IMP"]}
-                | {"TGT%": "{:.1%}", "TM#": "{:.0f}"},
-            help={roll_lbl: f"points per game, last {roll} weeks"},
+                | {"TGT%": "{:.1%}"},
+            labels={roll_lbl: f"Last {roll} /g"},
+            help={roll_lbl: f"Fantasy points per game over his last {roll} games."},
         )
-        ui.col_key("G", "PPG", "xFP", "xFP±", "TGT", "TGT%", "TM#", "CAR", "ST", "OPP", "IMP",
-                   **{roll_lbl: f"points per game, last {roll} weeks"})
         st.caption(
-            f"**TGT%** and **TM#** cover the last {roll} weeks — his share of his own offense's targets, and where "
-            "that ranks him on the team. **TM# 1** on a high **TGT%** is a true alpha. A good **PPG** on a low "
-            "**TGT%** is usually touchdown luck that won't hold. **xFP±**: amber = outscoring his opportunity "
-            "(sell high) · blue = underperforming it (buy low / hold)."
+            f"**Target share** and **Team tgt rank** cover the last {roll} weeks. A #1 target rank on a high "
+            "share is a true alpha. Good points on a low target share is usually touchdown luck that won't "
+            "hold. **Vs expected**: red = scoring above his usage (sell high) · navy = below it (hold or buy)."
         )
 
 # ---- League (live Yahoo API) ---------------------------------------------------------
@@ -566,13 +598,9 @@ with tab_league:
             ])
             st.write("")
         st.markdown("#### Standings")
-        st.dataframe(
-            ui.style_df(
-                ui.cols(_scraped[["rank", "team", "manager", "wins", "losses", "ties"]],
-                        team="TEAM", manager="MGR"),
-                fmt={c: "{:.0f}" for c in ["RANK", "W", "L", "T"]},
-            ),
-            width="stretch", hide_index=True,
+        ui.table(
+            _scraped[["rank", "team", "manager", "wins", "losses", "ties"]],
+            rename={"team": "TEAM"}, fmt={c: "{:.0f}" for c in ["W", "L", "T"]}, logos=False,
         )
         st.caption(
             "Points for / against and weekly results need the Yahoo API, which is "
@@ -582,7 +610,7 @@ with tab_league:
         st.markdown("#### Power rankings — who's actually good")
         ui.lede(
             "Every roster scored by what its <b>best legal lineup</b> is worth per game, ignoring "
-            "record entirely. <b>LUCK</b> is the gap between where a team sits and how good it is: "
+            "record entirely. <b>Luck</b> is the gap between where a team sits and how good it is: "
             "a big positive number means the record is flattering them, and they'll come back."
         )
         try:
@@ -600,10 +628,9 @@ with tab_league:
                 _rs[["power_rank", "team", "starters_pg", "bench_pg", "rank", "luck", "matched"]],
                 rename={"team": "TEAM"},
                 sequential=["LINEUP"], diverging=["LUCK"],
-                fmt={"LINEUP": "{:.1f}", "BENCH": "{:.1f}", "PWR": "{:.0f}",
-                     "RANK": "{:.0f}", "LUCK": "{:+.0f}", "MATCHED": "{:.0f}"},
+                fmt={"LINEUP": "{:.1f}", "BENCH": "{:.1f}", "LUCK": "{:+.0f}", "MATCHED": "{:.0f}"},
+                logos=False,
             )
-            ui.col_key("PWR", "LINEUP", "BENCH", "LUCK", "MATCHED")
         st.divider()
 
     if not _ya.available():
@@ -640,16 +667,11 @@ with tab_league:
             scols = [c for c in ["rank", "team", "wins", "losses", "ties", "points_for",
                                  "points_against", "streak", "faab_balance", "moves", "trades"]
                      if c in standings.columns]
-            st.dataframe(
-                ui.style_df(
-                    ui.cols(standings[scols], team="TEAM"),
-                    sequential=["PF"], diverging=[],
-                    fmt={"PF": "{:.1f}", "PA": "{:.1f}", "RANK": "{:.0f}",
-                         "W": "{:.0f}", "L": "{:.0f}", "T": "{:.0f}"},
-                ),
-                width="stretch", hide_index=True,
+            ui.table(
+                standings[scols], rename={"team": "TEAM"}, sequential=["PF"],
+                fmt={"PF": "{:.1f}", "PA": "{:.1f}", "W": "{:.0f}", "L": "{:.0f}", "T": "{:.0f}"},
+                logos=False,
             )
-            ui.col_key("PF", "PA", "STRK", "FAAB", "MOV", "TRD")
 
         mu = _ya.matchups_df()
         if not mu.empty:
@@ -658,14 +680,10 @@ with tab_league:
             wv = mu[mu["week"] == wk_pick]
             mcols = [c for c in ["team", "opponent", "points", "opp_points", "proj", "result"]
                      if c in wv.columns]
-            st.dataframe(
-                ui.style_df(
-                    ui.cols(wv[mcols].sort_values("points", ascending=False),
-                            team="TEAM", proj="PROJ"),
-                    sequential=["PTS"],
-                    fmt={"PTS": "{:.1f}", "OPP PTS": "{:.1f}", "PROJ": "{:.1f}"},
-                ),
-                width="stretch", hide_index=True,
+            ui.table(
+                wv[mcols].sort_values("points", ascending=False), rename={"team": "TEAM"},
+                sequential=["PTS"], fmt={"PTS": "{:.1f}", "OPP PTS": "{:.1f}", "PROJ": "{:.1f}"},
+                logos=False,
             )
 
             st.markdown("#### Points by week")
@@ -675,7 +693,7 @@ with tab_league:
         tx = _ya.transactions_df()
         if not tx.empty:
             st.markdown("#### Recent transactions")
-            st.dataframe(ui.cols(tx.head(40), team="TEAM"), width="stretch", hide_index=True)
+            ui.table(tx.head(40), rename={"team": "TEAM"}, logos=False)
 
 # ---- Start / Sit -------------------------------------------------------------------
 with tab_start:
@@ -719,18 +737,15 @@ with tab_start:
                             "proj", "proj_adj", "proj_source", "tgt_pct", "tm_rank",
                             "start_sit", "close_call"] if c in lu.columns]
 
-        lu_fmt = {"PROJ": "{:.1f}", "PROJ*": "{:.1f}", "MU#": "{:.0f}",
-                  "TGT%": "{:.1%}", "TM#": "{:.0f}"}
+        lu_fmt = {"PROJ": "{:.1f}", "PROJ*": "{:.1f}", "TGT%": "{:.1%}"}
 
         st.markdown("#### ✅ Recommended starters")
         sview = starters.assign(_o=starters["lineup"].map(slot_order)).sort_values("_o")[cols]
-        ui.table(sview, rename={"proj": "PROJ"}, sequential=["PROJ*"], pos_cols=["POS"], fmt=lu_fmt)
-        ui.col_key("PROJ*", "MU#", "SRC", "GRADE", "TGT%", "TM#",
-                   PROJ="raw projection", NOTE="close-call flag")
+        ui.table(sview, sequential=["PROJ*"], pos_cols=["POS"], fmt=lu_fmt)
 
         st.markdown("#### 🪑 Bench")
         bview = bench.sort_values("proj_adj", ascending=False)[cols]
-        ui.table(bview, rename={"proj": "PROJ"}, pos_cols=["POS"], fmt=lu_fmt)
+        ui.table(bview, pos_cols=["POS"], fmt=lu_fmt)
 
         _est = int((starters["proj_source"] != "FantasyPros").sum())
         if _est:
@@ -738,11 +753,11 @@ with tab_start:
                 f"**{_est} of {len(starters)} starters are running on estimates, not real projections.** "
                 "FantasyPros' free tier stops at the top 10 per position, so everyone below that is "
                 "modelled from usage. Two estimates within ~2 points of each other is a coin flip, not "
-                "a recommendation — when it's that close, start the player with the bigger **TGT%** "
-                "and the better **TM#**, because volume holds up week to week and points don't."
+                "a recommendation — when it's that close, start the player with the bigger **target share** "
+                "and the better **team target rank**, because volume holds up week to week and points don't."
             )
         if n_close:
-            st.info("**Close calls** are flagged in **NOTE** — a bench player projecting within ~2 points "
+            st.info("**Close calls** are flagged in the **Close call** column — a bench player projecting within ~2 points "
                     "of a starter in the same slot. Worth an injury and matchup check before lock.")
 
 # ---- Actual vs expected ------------------------------------------------------------
@@ -758,8 +773,8 @@ with tab_axe:
         cmp = cmp.dropna(subset=["player"]).sort_values("diff")
         st.subheader(f"Season total: actual half-PPR vs expected (through wk {week})")
         st.bar_chart(cmp.set_index("player")[["expected", "actual"]])
-        st.dataframe(cmp[["player", "expected", "actual", "diff"]].round(1),
-                     width="stretch", hide_index=True)
+        ui.table(cmp[["player", "expected", "actual", "diff"]], diverging=["xFP±"],
+                 fmt={"xFP": "{:.1f}", "ACT": "{:.1f}", "xFP±": "{:+.1f}"})
 
 # ---- Usage trends ----------------------------------------------------------------
 with tab_use:
@@ -819,15 +834,8 @@ with tab_match:
         mt = pd.DataFrame(rows).sort_values("implied_pts", ascending=False)
         st.subheader(f"Week {next_week} — team game environment (Vegas)")
         st.caption("Implied team total = Vegas's expected points for that offense. Higher = more scoring to go around.")
-        st.dataframe(
-            ui.style_df(
-                ui.cols(mt, players="PLAYERS", matchup="MU", total="TOT", spread="SPRD", implied_pts="IMP"),
-                sequential=["IMP"],
-                fmt={"TOT": "{:.1f}", "SPRD": "{:+.1f}", "IMP": "{:.1f}"},
-            ),
-            width="stretch", hide_index=True,
-        )
-        ui.col_key("IMP", TOT="Vegas game total", SPRD="point spread", MU="opponent")
+        ui.table(mt, sequential=["IMP"], fmt={"TOT": "{:.1f}", "SPRD": "{:+.1f}", "IMP": "{:.1f}"},
+                 help={"IMP": "Vegas's expected points for this offense. Higher = more scoring to go around."})
 
         # per-player defense-vs-position matchup
         dvp = _dvp(int(season))
@@ -845,13 +853,7 @@ with tab_match:
             pr["verdict"] = pd.cut(pr["ease_rank"], [0, 8, 16, 24, 32],
                                    labels=["🟢 great", "🙂 good", "😐 tough", "🔴 avoid"])
             show = pr[["player", "pos", "matchup", "ease_rank", "pa_pg", "verdict"]].sort_values("ease_rank")
-            st.dataframe(
-                ui.style_df(ui.cols(show, matchup="MU", verdict="VERDICT"), pos_cols=["POS"],
-                            fmt={"MU#": "{:.0f}", "PA/G": "{:.1f}"}),
-                width="stretch", hide_index=True,
-            )
-            ui.col_key("MU#", "PA/G", MU="opponent")
-            st.caption("**MU#**: opponent's rank in half-PPR points allowed to that position — **1 = easiest** of 32, 32 = stingiest.")
+            ui.table(show, pos_cols=["POS"], fmt={"PA/G": "{:.1f}"})
 
 # ---- League intelligence (Mega Bowl) ---------------------------------------------
 @st.cache_data(ttl=dt.timedelta(hours=6), show_spinner="Crunching league intel…")
@@ -905,7 +907,7 @@ with tab_action:
         st.info(
             f"**Form numbers below are {BASIS['season']}, not {int(season)}.**  "
             f"{int(season)} has {BASIS['weeks']} week(s) played and the rolling window needs 3 — "
-            "a one-week sample would read as a trend. This switches over on its own at week 3."
+            f"a {BASIS['weeks']}-week sample would read as a trend. This switches over on its own at week 3."
         )
 
     mine = agg.copy() if not agg.empty else pd.DataFrame()
@@ -928,9 +930,8 @@ with tab_action:
                 bits.append(f"his team's #{int(r['tm_rank'])} option")
             return "; ".join(bits)
 
-        acols = ["player", "slot", "half_ppr_pg", "per_g", "tgt_pct", "tm_rank", "why"]
-        afmt = {"PPG": "{:.1f}", "xFP±/G": "{:+.1f}", "TGT%": "{:.1%}", "TM#": "{:.0f}"}
-        aren = {"per_g": "xFP±/G", "slot": "SLOT"}
+        acols = ["player", "pos", "slot", "half_ppr_pg", "per_g", "tgt_pct", "tm_rank", "why"]
+        afmt = {"PPG": "{:.1f}", "xFP±/G": "{:+.1f}", "TGT%": "{:.1%}"}
 
         sell = mine[mine["per_g"] >= 2.0].sort_values("per_g", ascending=False).head(5)
         st.markdown("#### Shop these — points are ahead of the work")
@@ -938,8 +939,7 @@ with tab_action:
             st.caption("Nobody on your roster is meaningfully outscoring his opportunity right now.")
         else:
             sell = sell.assign(why=sell.apply(_why_sell, axis=1))
-            ui.table(sell[acols], rename=aren, diverging=["xFP±/G"], pos_cols=["SLOT"], fmt=afmt,
-                     help={"xFP±/G": "points per game above what his usage predicts"})
+            ui.table(sell[acols], diverging=["xFP±/G"], pos_cols=["POS"], fmt=afmt)
             st.caption("Their value to a leaguemate is at its peak. Sell the name, not the role.")
 
         buy = mine[mine["per_g"] <= -1.5].sort_values("per_g").head(5)
@@ -948,8 +948,7 @@ with tab_action:
             st.caption("Nobody is notably underperforming his opportunity.")
         else:
             buy = buy.assign(why=buy.apply(_why_buy, axis=1))
-            ui.table(buy[acols], rename=aren, diverging=["xFP±/G"], pos_cols=["SLOT"], fmt=afmt,
-                     help={"xFP±/G": "points per game above what his usage predicts"})
+            ui.table(buy[acols], diverging=["xFP±/G"], pos_cols=["POS"], fmt=afmt)
             st.caption("Don't sell into a cold streak — the usage says the points are coming.")
     else:
         st.info("Expected-points data isn't available yet this season, so sell/hold flags are off.")
@@ -968,6 +967,7 @@ with tab_action:
             tr5 = tr.head(5).copy()
             tr5["give"] = tr5["give"] + " (" + tr5["give_pos"] + ")"
             tr5["get"] = tr5["get"] + " (" + tr5["get_pos"] + ")"
+            tr5["addresses"] = tr5["addresses"].str.replace(r"^my (\S+) need$", r"\1", regex=True)
             ui.table(
                 tr5[["partner", "give", "give_val", "get", "get_val", "addresses", "fairness"]],
                 sequential=["FAIR"],
@@ -992,7 +992,7 @@ with tab_wire:
         st.caption(f"Recent form: {IB['basis']['label']} · adds via Sleeper · values via FantasyCalc")
         ui.lede(
             "Free agents ranked by <b>whether their role actually changed</b>, not just whether they had one "
-            "good week. Check <b>TM#</b> and <b>TGT%</b> before you spend a claim."
+            "good week. Check <b>Team tgt rank</b> and <b>Target share</b> before you spend a claim."
         )
         ui.table(
             wv,
@@ -1001,10 +1001,10 @@ with tab_wire:
                  "TM#": "{:.0f}", "VAL": "{:.0f}", "ADD#": "{:.0f}", "TR30": "{:+.0f}",
                  "SCORE": "{:.2f}"},
         )
-        ui.col_key("PPG", "TGT", "TGT%", "TM#", "CAR", "VAL", "ADD#", "TR30", "SCORE")
         st.caption(
-            "**SCORE** blends recent points, target/carry volume, FantasyCalc value + 30-day trend, and industry "
-            "add rank. **TM# 1–2** on a rising **TGT%** is the strongest signal a role has genuinely changed."
+            "A **#1–2 team target rank** on a rising **target share** is the strongest sign a role has "
+            "genuinely changed. **Claim score** blends that with recent points, trade value and how fast "
+            "he's being added elsewhere."
         )
 
 with tab_trade:
@@ -1022,6 +1022,7 @@ with tab_trade:
         # Position folded into the name — two "POS" columns would collide on rename.
         tt["give"] = tt["give"] + " (" + tt["give_pos"] + ")"
         tt["get"] = tt["get"] + " (" + tt["get_pos"] + ")"
+        tt["addresses"] = tt["addresses"].str.replace(r"^my (\S+) need$", r"\1", regex=True)
         tfmt = {"GIVE VAL": "{:.0f}", "GET VAL": "{:.0f}", "FAIR": "{:.2f}", "EDGE": "{:+.0f}"}
         tcols = ["give", "give_val", "get", "get_val", "addresses", "fairness", "edge"]
 
@@ -1039,9 +1040,8 @@ with tab_trade:
         else:
             ui.table(tt[["partner"] + tcols], sequential=["FAIR"], diverging=["EDGE"], fmt=tfmt)
 
-        ui.col_key("MANAGER", "YOU GIVE", "YOU GET", "GIVE VAL", "GET VAL", "FAIR", "EDGE", "FILLS")
         st.caption(
-            f"Rosters: {IB['roster_src']}. **FAIR** near 1.0 means an even swap by FantasyCalc value — "
+            f"Rosters: {IB['roster_src']}. **Fairness** near 1.00 means an even swap by FantasyCalc value — "
             "offers below ~0.85 get filtered out, so everything here should at least get a reply."
         )
 
@@ -1054,26 +1054,25 @@ with tab_draft:
         view = dd[dd["mine"]] if mine_only else dd
         view = view[view["value"] > 0]
         dcols = ["player", "pos", "drafted_by", "round", "value", "value_delta"]
-        dfmt = {"value": "{:.0f}", "value_delta": "{:+.0f}"}
+        dfmt = {"VAL": "{:.0f}", "VAL±": "{:+.0f}", "RD": "{:.0f}"}
         c1, c2 = st.columns(2)
         c1.markdown("**▲ Risers vs draft slot**")
-        c1.dataframe(ui.style_df(view.head(15)[dcols], diverging=["value_delta"], pos_cols=["pos"], fmt=dfmt),
-                     width="stretch", hide_index=True)
+        ui.table(view.head(15)[dcols], diverging=["VAL±"], pos_cols=["POS"], fmt=dfmt,
+                 legend=False, container=c1)
         c2.markdown("**▼ Fallers vs draft slot**")
-        c2.dataframe(ui.style_df(view.sort_values("value_delta").head(15)[dcols], diverging=["value_delta"], pos_cols=["pos"], fmt=dfmt),
-                     width="stretch", hide_index=True)
+        ui.table(view.sort_values("value_delta").head(15)[dcols], diverging=["VAL±"], pos_cols=["POS"],
+                 fmt=dfmt, container=c2)
         st.markdown("**Your regression watch** — actual vs expected half-PPR")
         from mega.intel import _norm as _mnorm
         bs = IB["buysell"]
         my_norm = {_mnorm(n) for n in skill["name"]}
         mine_bs = bs[bs["norm"].isin(my_norm)].sort_values("diff_pg")[
             ["player", "pos", "gms", "actual", "expected", "diff_pg", "signal"]] if not bs.empty else pd.DataFrame()
-        st.dataframe(
-            ui.style_df(mine_bs, diverging=["diff_pg"], pos_cols=["pos"],
-                        fmt={"actual": "{:.1f}", "expected": "{:.1f}", "diff_pg": "{:+.1f}"})
-            if not mine_bs.empty else mine_bs,
-            width="stretch", hide_index=True,
-        )
+        if mine_bs.empty:
+            st.caption("Not enough games yet to compare.")
+        else:
+            ui.table(mine_bs, diverging=["xFP±/G"], pos_cols=["POS"],
+                     fmt={"ACT": "{:.1f}", "xFP": "{:.1f}", "xFP±/G": "{:+.1f}"})
 
 with tab_arch:
     st.caption(
@@ -1103,13 +1102,8 @@ with tab_arch:
         mine = arch[arch["mine"]].sort_values("arch_fit", ascending=False)
         acols = ["player", "pos", "team", "arch_fit", "tags", "carries_pg", "tgt_share",
                  "tm_rank", "age", "exp_yrs", "why"]
-        st.dataframe(
-            ui.style_df(ui.cols(mine[acols]), sequential=["FIT"], pos_cols=["POS"],
-                        fmt={"FIT": "{:.0f}", "CAR": "{:.1f}", "TGT%": "{:.1%}",
-                             "TM#": "{:.0f}", "AGE": "{:.0f}", "EXP": "{:.0f}"}),
-            width="stretch", hide_index=True,
-        )
-        ui.col_key("FIT", "TAGS", "CAR", "TGT%", "TM#", "AGE", "EXP")
+        ui.table(mine[acols], sequential=["FIT"], pos_cols=["POS"],
+                 fmt={"FIT": "{:.0f}", "CAR": "{:.1f}", "TGT%": "{:.1%}", "AGE": "{:.0f}", "EXP": "{:.0f}"})
 
         # target board by position
         pos_sel = st.radio("Position", ["QB", "RB", "WR", "TE"], horizontal=True)
@@ -1119,17 +1113,10 @@ with tab_arch:
             lambda r: "🟡 mine" if r["mine"] else ("rostered" if r["norm"] in rostered else "🟢 available"), axis=1)
         st.markdown(f"#### Best {pos_sel} fits — who to target")
         st.caption("🟢 available = not on any draft-board roster (verify against live adds). 🟡 mine = already yours.")
-        st.dataframe(
-            ui.style_df(
-                ui.cols(pool.head(20)[["status", "player", "team", "arch_fit", "tags",
-                                       "half_ppr_pg", "proj_ppg", "tgt_share", "tm_rank", "why"]],
-                        status="OWN"),
-                sequential=["FIT"],
-                fmt={"FIT": "{:.0f}", "PPG": "{:.1f}", "PROJ": "{:.1f}",
-                     "TGT%": "{:.1%}", "TM#": "{:.0f}"}),
-            width="stretch", hide_index=True,
-        )
-        ui.col_key("FIT", "TAGS", "PPG", "TGT%", "TM#", OWN="who holds him", PROJ="season projection per game")
+        ui.table(pool.head(20)[["status", "player", "team", "arch_fit", "tags",
+                                "half_ppr_pg", "proj_ppg", "tgt_share", "tm_rank", "why"]],
+                 sequential=["FIT"], fmt={"FIT": "{:.0f}", "PPG": "{:.1f}", "PROJ": "{:.1f}", "TGT%": "{:.1%}"},
+                 labels={"PROJ": "Proj pts/g"}, help={"PROJ": "Projected fantasy points per game this season."})
 
 with tab_wopr:
     st.caption(
@@ -1171,20 +1158,14 @@ with tab_wopr:
 
         _mcols = ["name", "pos", "team_2026_nfl", "wopr_anchored", "wopr_posrank",
                   "board_posrank", "rank_delta", "ppg_minus_xppg", "tags"]
-        _fmt = {"WOPR": "{:.3f}", "xPPG±": "{:+.1f}", "GAP": "{:+.0f}",
-                "WOPR#": "{:.0f}", "DRAFT#": "{:.0f}"}
+        _fmt = {"WOPR": "{:.3f}", "xPPG±": "{:+.1f}", "GAP": "{:+.0f}"}
 
         def _show(frame, cols):
             if frame is None or frame.empty:
                 st.info("Nothing flagged here right now.")
                 return
-            st.dataframe(
-                ui.style_df(ui.cols(frame[cols], name="PLAYER"), pos_cols=["POS"],
-                            sequential=["WOPR"], diverging=["GAP", "xPPG±"], fmt=_fmt),
-                width="stretch", hide_index=True,
-            )
-            ui.col_key("WOPR", "WOPR#", "DRAFT#", "GAP", "xPPG±",
-                       TAGS="opportunity flags — see 'How to read this' above")
+            ui.table(frame[cols], pos_cols=["POS"], sequential=["WOPR"], diverging=["GAP", "xPPG±"],
+                     fmt=_fmt, help={"TAGS": "Opportunity flags — see 'How to read this' above."})
 
         st.markdown("#### Your WR/TE — sell / hold")
         st.caption("`SELL_HIGH` / `FADE` = points ran ahead of opportunity, shop them. "
@@ -1201,8 +1182,7 @@ with tab_wopr:
 
         if not W["unknown"].empty:
             st.markdown("#### Match review (unmatched)")
-            st.dataframe(ui.cols(W["unknown"][["name", "pos", "tags"]], name="PLAYER"),
-                         width="stretch", hide_index=True)
+            ui.table(W["unknown"][["name", "pos", "tags"]], legend=False)
 
         _full = W["df"][[c for c in SCHEMA if c in W["df"].columns]]
         st.download_button(
@@ -1250,13 +1230,19 @@ with tab_news:
         nn = news_items() if scope == "All NFL" else news_for_players(names)
         st.dataframe(nn[["published", "source", "title", "link"]].head(60) if not nn.empty else pd.DataFrame(),
                      width="stretch", hide_index=True,
-                     column_config={"link": st.column_config.LinkColumn("link")})
+                     column_config={
+                         "published": st.column_config.DatetimeColumn("Published", format="MMM D, h:mm a"),
+                         "source": st.column_config.Column("Source", width="small"),
+                         "title": st.column_config.Column("Headline", width="large"),
+                         "link": st.column_config.LinkColumn("Link", display_text="Open"),
+                     })
     except Exception as e:
         st.warning(f"News feeds unavailable: {e}")
 
 # ---- Raw ---------------------------------------------------------------------
 with tab_raw:
     st.write("Mapped roster")
+    st.caption(f"Yahoo → nflverse id match: {player_ids.report_line(MATCH)}")
     st.dataframe(mapped, width="stretch", hide_index=True)
     st.download_button("weekly player_stats (your roster)", sw.to_csv(index=False), "player_stats.csv")
     if not ffo.empty:

@@ -1,6 +1,8 @@
 """Shared UI theming for the Streamlit dashboard — matches the Mega Bowl draft board."""
 from __future__ import annotations
 
+import re
+
 import pandas as pd
 import streamlit as st
 
@@ -63,8 +65,12 @@ section[data-testid="stSidebar"] { background:var(--surface2); border-right:1px 
 .stTabs [aria-selected="true"] { color:var(--navy) !important; border-bottom:3px solid var(--red) !important; }
 .mb-legend { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
 .mb-chip { font-size:10px; font-weight:700; color:#fff; padding:2px 6px; border-radius:3px; }
-.mb-key { display:flex; flex-wrap:wrap; gap:5px 14px; margin:7px 0 2px; font-size:11px; color:var(--ink2); }
-.mb-key b { font-family:'Archivo',sans-serif; font-weight:700; color:var(--ink); letter-spacing:.03em; }
+/* column key: label | what it means, one row per column */
+.mb-key { display:grid; grid-template-columns:max-content 1fr; gap:6px 16px; margin:2px 0; font-size:13px; line-height:1.45; }
+.mb-key dt { font-family:'Archivo',sans-serif; font-weight:700; color:var(--navy); white-space:nowrap; }
+.mb-key dd { margin:0; color:var(--ink2); }
+[data-testid="stExpander"] details summary p { font-size:12.5px; color:var(--ink3); }
+[data-testid="stExpander"] { border-color:var(--border); margin:-4px 0 10px; }
 [data-testid="stDataFrame"] { font-size:12.5px; }
 .stAlert { border-radius:7px; }
 .mb-lede { font-size:13.5px; color:var(--ink2); margin:2px 0 10px; line-height:1.5; }
@@ -82,7 +88,8 @@ section[data-testid="stSidebar"] { background:var(--surface2); border-right:1px 
   .mb-kpi-v { font-size:19px; }
   .stTabs [data-baseweb="tab"] { font-size:12px; padding:6px 9px; }
   [data-testid="stDataFrame"] { font-size:11.5px; }
-  .mb-key { font-size:10.5px; gap:4px 10px; }
+  .mb-key { grid-template-columns:1fr; gap:1px; font-size:12.5px; }
+  .mb-key dd { margin-bottom:7px; }
 }
 </style>
 """
@@ -124,26 +131,37 @@ def kpi_row(items: list[tuple[str, str, str]]) -> None:
         )
 
 
-# Canonical short column labels. Keep every table speaking the same language:
-# uppercase, no spaces, no slashes unless the unit demands one.
+# Every table goes through `table()`, and every column has three layers:
+#
+#   COLS    raw column -> short internal code ("tgt_pct" -> "TGT%"). Call sites style and
+#           format by code, so codes never change once a table uses them.
+#   LABELS  code -> the header people read ("TGT%" -> "Target share").
+#   GLOSS   code -> what the number says and what to do about it (header tooltip, and the
+#           "What these columns mean" panel under each table — phones have no hover).
+#
+# The same idea gets the same name on every tab. Before this, points-vs-usage was
+# xFP±, xFP±/G, diff_pg and xPPG± depending on where you looked.
 COLS = {
     "slot": "SLOT", "player": "PLAYER", "pos": "POS", "team": "TM", "nfl_team": "TM",
-    "games": "G", "half_ppr_pg": "PPG", "last_wk": "LAST", "pg_recent": "PPG",
-    "xfp_tot": "xFP", "xfp_diff": "xFP±",
+    "games": "G", "gms": "G", "half_ppr_pg": "PPG", "last_wk": "LAST", "pg_recent": "PPG",
+    "xfp_tot": "xFP", "expected": "xFP", "actual": "ACT", "xfp_diff": "xFP±", "diff": "xFP±",
+    "per_g": "xFP±/G", "diff_pg": "xFP±/G", "signal": "SIGNAL",
     "tgt_pg": "TGT", "carry_pg": "CAR", "tgt_pct": "TGT%", "tm_rank": "TM#",
     "report_status": "ST", "opp": "OPP", "implied": "IMP",
     "value": "VAL", "add_rank": "ADD#", "trend_30d": "TR30", "add_score": "SCORE", "why": "WHY",
-    "ease_rank": "MU#", "pa_pg": "PA/G", "proj_adj": "PROJ*", "proj_source": "SRC",
+    "ease_rank": "MU#", "pa_pg": "PA/G", "proj_adj": "PROJ*", "proj": "PROJ", "proj_source": "SRC",
     "start_sit": "GRADE", "close_call": "NOTE", "lineup": "SLOT", "matchup": "MU",
+    # draft value
+    "drafted_by": "DRAFTED BY", "round": "RD", "value_delta": "VAL±",
     # archetypes
     "arch_fit": "FIT", "tags": "TAGS", "tgt_share": "TGT%", "age": "AGE", "carries_pg": "CAR",
-    "exp_yrs": "EXP", "proj_ppg": "PROJ", "gms": "G", "vor": "VOR",
+    "exp_yrs": "EXP", "proj_ppg": "PROJ", "vor": "VOR",
     # WOPR
-    "owner": "OWNER", "team_2026_nfl": "TM", "wopr_anchored": "WOPR",
+    "owner": "OWNER", "team_2026_nfl": "TM", "wopr_anchored": "WOPR", "name": "PLAYER",
     "wopr_posrank": "WOPR#", "board_posrank": "DRAFT#", "rank_delta": "GAP",
     "ppg_minus_xppg": "xPPG±", "nfl_status": "ST",
-    # league (Yahoo API)
-    "rank": "RANK", "wins": "W", "losses": "L", "ties": "T",
+    # league
+    "rank": "RANK", "wins": "W", "losses": "L", "ties": "T", "manager": "MGR",
     "points_for": "PF", "points_against": "PA", "streak": "STRK",
     "faab_balance": "FAAB", "moves": "MOV", "trades": "TRD",
     "week": "WK", "opponent": "OPP", "points": "PTS", "opp_points": "OPP PTS",
@@ -155,58 +173,237 @@ COLS = {
     # power rankings
     "power_rank": "PWR", "starters_pg": "LINEUP", "bench_pg": "BENCH",
     "matched": "MATCHED", "luck": "LUCK",
+    # game environment
+    "players": "PLAYERS", "total": "TOT", "spread": "SPRD", "implied_pts": "IMP",
+    "verdict": "VERDICT", "status": "OWN",
 }
 
-# What each abbreviation means, for the legend under a table.
-GLOSS = {
-    "G": "games played", "PPG": "half-PPR points per game", "LAST": "last week's points",
-    "xFP": "expected fantasy points", "xFP±": "actual minus expected",
-    "TGT": "targets per game", "CAR": "carries per game",
-    "TGT%": "share of his NFL team's targets", "TM#": "target rank on his NFL team (1 = alpha)",
-    "ST": "injury status", "OPP": "next opponent", "IMP": "Vegas implied team total",
-    "VAL": "FantasyCalc trade value", "ADD#": "industry add rank", "TR30": "30-day value trend",
-    "SCORE": "blended add score", "MU#": "matchup rank (1 = easiest of 32)",
-    "PA/G": "points allowed per game", "PROJ*": "matchup-adjusted projection",
-    "SRC": "projection source", "GRADE": "FantasyPros start/sit grade",
-    "FIT": "archetype fit, 0–100", "TAGS": "blueprint traits he hits",
-    "AGE": "age", "EXP": "seasons of NFL experience", "VOR": "draft-board value over replacement",
-    "WOPR": "weighted opportunity rating (1.5·target share + 0.7·air-yards share)",
-    "WOPR#": "his WOPR rank at the position", "DRAFT#": "where the board drafted him",
-    "GAP": "draft rank minus opportunity rank — positive = drafted below his role",
-    "xPPG±": "points above / below what his opportunity predicts",
-    "OWNER": "fantasy manager who holds him",
-    "PF": "points scored all season", "PA": "points scored against him",
-    "STRK": "current win / loss streak", "FAAB": "free-agent budget left",
-    "MOV": "roster moves made", "TRD": "trades made",
-    "PTS": "what he scored that week", "OPP PTS": "what his opponent scored",
-    "RES": "win / loss / tie",
-    "MANAGER": "who you'd be trading with", "YOU GIVE": "the player you send",
-    "YOU GET": "the player you receive",
-    "GIVE VAL": "FantasyCalc value of the player you send",
-    "GET VAL": "FantasyCalc value of the player you receive",
-    "FAIR": "value parity — 1.0 is an even swap", "EDGE": "value you gain on the deal",
-    "FILLS": "the hole on your roster this closes",
-    "THEY NEED": "positions where their starters are below league average",
-    "PWR": "rank by roster strength, ignoring record",
-    "LINEUP": "points per game from his best legal starting lineup",
-    "BENCH": "points per game from his three best bench players",
-    "MATCHED": "roster players with stats to score — lower means a rougher estimate",
-    "LUCK": "places the record sits above the roster — positive means they're overachieving",
+LABELS = {
+    "SLOT": "Slot", "PLAYER": "Player", "POS": "Pos", "TM": "NFL", "LOGO": "NFL",
+    "G": "Games", "PPG": "Pts/game", "LAST": "Last game",
+    "xFP": "Expected pts", "ACT": "Actual pts", "xFP±": "Vs expected", "xFP±/G": "Vs expected/g",
+    "SIGNAL": "Signal", "TGT": "Targets/g", "CAR": "Carries/g",
+    "TGT%": "Target share", "TM#": "Team tgt rank",
+    "ST": "Injury", "OPP": "Next opp", "IMP": "Vegas pts",
+    "VAL": "Trade value", "ADD#": "Add rank", "TR30": "30-day trend", "SCORE": "Claim score",
+    "WHY": "Why",
+    "MU#": "Matchup rank", "PA/G": "Pts allowed/g", "PROJ*": "Projection", "PROJ": "Raw proj",
+    "SRC": "Source", "GRADE": "FP grade", "NOTE": "Close call", "MU": "Opponent",
+    "DRAFTED BY": "Drafted by", "RD": "Round", "VAL±": "Value vs slot",
+    "FIT": "Blueprint fit", "TAGS": "Traits", "AGE": "Age", "EXP": "NFL yrs", "VOR": "Value over repl.",
+    "OWNER": "Owner", "WOPR": "WOPR", "WOPR#": "WOPR rank", "DRAFT#": "Draft rank",
+    "GAP": "Role vs price", "xPPG±": "Vs role/g",
+    "RANK": "Standing", "W": "W", "L": "L", "T": "T", "TEAM": "Team", "MGR": "Manager",
+    "PF": "Pts for", "PA": "Pts against", "STRK": "Streak", "FAAB": "FAAB left",
+    "MOV": "Moves", "TRD": "Trades",
+    "WK": "Week", "PTS": "Pts", "OPP PTS": "Opp pts", "RES": "Result",
+    "WHEN": "When", "TYPE": "Type", "MOVE": "Move",
+    "MANAGER": "Manager", "YOU GIVE": "You give", "GIVE VAL": "Give value",
+    "YOU GET": "You get", "GET VAL": "Get value", "FAIR": "Fairness", "EDGE": "Value gained",
+    "FILLS": "Fixes", "THEY NEED": "They need", "GIVE LOGO": "", "GET LOGO": "",
+    "PWR": "Power rank", "LINEUP": "Lineup pts/g", "BENCH": "Bench pts/g",
+    "MATCHED": "Players scored", "LUCK": "Luck",
+    "PLAYERS": "Your players", "TOT": "Game total", "SPRD": "Spread", "VERDICT": "Verdict",
+    "OWN": "Status",
 }
+
+GLOSS = {
+    "SLOT": "Where he sits in your Yahoo lineup. BN = bench.",
+    "TM": "His NFL team.",
+    "G": "Games he's played this season.",
+    "PPG": "Half-PPR fantasy points per game.",
+    "LAST": "Fantasy points in his most recent game.",
+    "xFP": "Points his usage should have produced — targets, carries, depth and red-zone looks, scored half-PPR.",
+    "ACT": "Fantasy points he actually scored.",
+    "xFP±": "Actual minus expected, season total. Plus = scoring above his usage (likely to cool off). "
+            "Minus = below it (the points should come).",
+    "xFP±/G": "Actual minus expected, per game. +2 or more: sell-high candidate. "
+              "−1.5 or less: hold or buy — the work is there, the points will follow.",
+    "SIGNAL": "BUY LOW = scoring well under his usage. SELL HIGH = well over it.",
+    "TGT": "Targets per game.",
+    "CAR": "Carries per game.",
+    "TGT%": "His share of his NFL team's targets. 25%+ is a No. 1 receiver's role; under 15% is a part-timer.",
+    "TM#": "Where he ranks in targets on his own NFL team. #1 = the go-to option.",
+    "ST": "Latest NFL injury-report status.",
+    "OPP": "Next opponent (@ = away game).",
+    "IMP": "Vegas's expected points for his offense next game. Higher = more scoring to go around.",
+    "VAL": "FantasyCalc trade value — what the trade market says he's worth.",
+    "ADD#": "Rank among the most-added players across Sleeper leagues. Lower = hotter pickup.",
+    "TR30": "Change in trade value over the last 30 days. Plus = rising.",
+    "SCORE": "Blend of recent points, usage, trade value and add rate. Higher = better claim.",
+    "WHY": "The main reasons behind this row, in plain words.",
+    "MU#": "How easy next week's defense is for his position. #1 = easiest of 32, #32 = toughest.",
+    "PA/G": "Fantasy points that defense allows per game to this position.",
+    "PROJ*": "This week's projection after the matchup adjustment — the number the lineup is built on.",
+    "PROJ": "Projection before the matchup adjustment.",
+    "SRC": "Where the projection comes from. FantasyPros = expert projection. "
+           "nflverse-est = modelled from his usage, so treat close calls as coin flips.",
+    "GRADE": "FantasyPros start/sit grade.",
+    "NOTE": "Flagged when a bench player projects within ~2 pts of a starter — worth a closer look.",
+    "MU": "Next opponent (@ = away game).",
+    "DRAFTED BY": "Manager who drafted him.",
+    "RD": "Draft round.",
+    "VAL±": "Trade value now minus what his draft slot should be worth. Plus = he's beaten his draft cost.",
+    "FIT": "How closely he matches the league-winner blueprint, 0–100.",
+    "TAGS": "Blueprint traits he hits.",
+    "EXP": "Seasons in the NFL.",
+    "VOR": "Draft-board value over a replacement-level player.",
+    "OWNER": "Fantasy manager who has him.",
+    "WOPR": "Weighted opportunity rating: 1.5 × target share + 0.7 × air-yards share. "
+            "About 0.5+ is a starting-calibre WR role.",
+    "WOPR#": "His WOPR rank at his position.",
+    "DRAFT#": "Where the draft board ranked him at his position.",
+    "GAP": "Draft rank minus opportunity rank. Plus = his role is bigger than his price.",
+    "xPPG±": "Points per game above or below what his WOPR predicts. Plus = running hot; minus = due.",
+    "RANK": "Place in the league standings.",
+    "PF": "Points scored all season.", "PA": "Points scored against him all season.",
+    "STRK": "Current win or loss streak.", "FAAB": "Free-agent budget left.",
+    "MOV": "Roster moves made.", "TRD": "Trades made.",
+    "PTS": "Points scored that week.", "OPP PTS": "Opponent's points that week.",
+    "RES": "Win, loss or tie.",
+    "MANAGER": "Who you'd be trading with.",
+    "GIVE VAL": "FantasyCalc value of the player you send.",
+    "GET VAL": "FantasyCalc value of the player you receive.",
+    "FAIR": "How even the swap is by trade value. 1.00 = dead even; offers below 0.85 are filtered out.",
+    "EDGE": "Trade value you gain. Plus = the deal favours you.",
+    "FILLS": "The weak spot on your roster this trade fixes.",
+    "THEY NEED": "Their weakest positions — lead with these when you pitch it.",
+    "PWR": "Rank by roster strength alone, ignoring record.",
+    "LINEUP": "Points per game his best legal starting lineup is worth.",
+    "BENCH": "Points per game from his three best bench players — cover for byes and injuries.",
+    "MATCHED": "Roster players with enough stats to score. Low = a rougher estimate.",
+    "LUCK": "Power rank minus standing. Plus = the record flatters the roster (expect a slide). "
+            "Minus = better than the record shows.",
+    "PLAYERS": "Your players in this game.",
+    "TOT": "Vegas over/under for the whole game.",
+    "SPRD": "Point spread. Plus = this team is favoured by that many.",
+    "VERDICT": "The matchup in one word.",
+    "OWN": "Whether he's free, on another roster, or already yours.",
+}
+
+# Ranks read as "#3", so they can't be mistaken for counts.
+RANKS = {"TM#", "MU#", "ADD#", "WOPR#", "DRAFT#", "PWR", "RANK"}
+# Obvious from the header; listing them in the legend is noise.
+_NO_KEY = {"PLAYER", "POS", "LOGO", "GIVE LOGO", "GET LOGO", "AGE", "W", "L", "T", "TEAM",
+           "MGR", "WK", "WHEN", "TYPE", "MOVE", "YOU GIVE", "YOU GET", "WHY"}
+_WIDTH = {"PLAYER": "medium", "WHY": "large", "TAGS": "medium", "PLAYERS": "large",
+          "YOU GIVE": "medium", "YOU GET": "medium", "MANAGER": "medium", "TEAM": "medium",
+}
+_LOGO_COLS = ("LOGO", "GIVE LOGO", "GET LOGO")
 
 
 def cols(df: pd.DataFrame, **extra: str) -> pd.DataFrame:
-    """Rename to the canonical short labels; `extra` overrides for dynamic names."""
+    """Rename to the internal codes; `extra` overrides for dynamic names."""
     return df.rename(columns={**COLS, **extra})
 
 
-def col_config(df: pd.DataFrame, **custom: str) -> dict:
-    """Hover tooltips on column headers, drawn from GLOSS.
+# ---------------------------------------------------------------- team logos
+_PLAYER_TEAM: dict[str, str] = {}
 
-    Phones have no hover, so `col_key` stays the readable fallback underneath.
-    """
-    gloss = {**GLOSS, **custom}
-    return {c: st.column_config.Column(help=gloss[c]) for c in df.columns if c in gloss}
+
+def set_player_teams(mapping: dict[str, str]) -> None:
+    """normalized player name -> NFL team, so a table with a player but no team column
+    still gets a logo. app.py fills this once per run."""
+    _PLAYER_TEAM.clear()
+    _PLAYER_TEAM.update({k: v for k, v in mapping.items() if k and v})
+
+
+def _logo_for_name(name: object) -> str:
+    from .ids import norm
+    from .logos import logo_url
+
+    # trade cells read "Name (WR)"
+    n = norm(re.sub(r"\s*\([A-Z/]+\)\s*$", "", str(name)))
+    return logo_url(_PLAYER_TEAM.get(n)) or ""
+
+
+def _with_logos(d: pd.DataFrame) -> pd.DataFrame:
+    """Swap the NFL team text for its logo, or add one beside the player."""
+    from .logos import logo_url
+
+    d = d.copy()
+    if "TM" in d.columns:
+        logos = d["TM"].map(lambda t: logo_url(t) or "")
+        at = list(d.columns).index("PLAYER") if "PLAYER" in d.columns else list(d.columns).index("TM")
+        d = d.drop(columns=["TM"])
+        d.insert(min(at, len(d.columns)), "LOGO", logos.values)
+    elif "PLAYER" in d.columns and _PLAYER_TEAM:
+        logos = d["PLAYER"].map(_logo_for_name)
+        if logos.ne("").any():
+            d.insert(list(d.columns).index("PLAYER"), "LOGO", logos.values)
+    for side, col in (("GIVE LOGO", "YOU GIVE"), ("GET LOGO", "YOU GET")):
+        if col in d.columns and _PLAYER_TEAM:
+            d.insert(list(d.columns).index(col), side, d[col].map(_logo_for_name).values)
+    return d
+
+
+# ---------------------------------------------------------------- render
+def col_config(df: pd.DataFrame, labels: dict | None = None, help: dict | None = None) -> dict:
+    """Readable header, tooltip and width for every column; image cells for logos."""
+    labels, gloss = {**LABELS, **(labels or {})}, {**GLOSS, **(help or {})}
+    out = {}
+    for c in df.columns:
+        if c in _LOGO_COLS:
+            # "small" is ~75px; a logo needs about half that, and trade rows carry two.
+            out[c] = st.column_config.ImageColumn(labels.get(c, ""), help="NFL team", width=44)
+            continue
+        kw = {"label": labels.get(c, c)}
+        if c in gloss:
+            kw["help"] = gloss[c]
+        if c in _WIDTH:
+            kw["width"] = _WIDTH[c]
+        out[c] = st.column_config.Column(**kw)
+    return out
+
+
+def table(
+    df: pd.DataFrame,
+    rename: dict | None = None,
+    diverging: list[str] = (),
+    sequential: list[str] = (),
+    pos_cols: list[str] = (),
+    fmt: dict | None = None,
+    help: dict | None = None,
+    labels: dict | None = None,
+    height: int | None = None,
+    legend: bool = True,
+    logos: bool = True,
+    container=None,
+) -> pd.DataFrame:
+    """The one way to put a table on screen: internal codes -> readable headers,
+    tooltips, team logos, heat shading, and a plain-English column key underneath.
+    Returns the frame as rendered (codes as column names)."""
+    box = container or st
+    d = cols(df, **(rename or {}))
+    if logos:
+        d = _with_logos(d)
+    fmt = {**(fmt or {}), **{r: "#{:.0f}" for r in RANKS if r in d.columns}}
+    box.dataframe(
+        style_df(d, diverging=diverging, sequential=sequential, pos_cols=pos_cols, fmt=fmt),
+        column_config=col_config(d, labels=labels, help=help),
+        width="stretch", hide_index=True,
+        **({"height": height} if height else {}),
+    )
+    if legend:
+        col_key(*d.columns, _labels=labels, _help=help, _container=box)
+    return d
+
+
+def col_key(*names: str, _labels: dict | None = None, _help: dict | None = None,
+            _container=None, **custom: str) -> None:
+    """'What these columns mean' panel. Collapsed, so it costs one line until it's needed."""
+    labels, gloss = {**LABELS, **(_labels or {})}, {**GLOSS, **(_help or {}), **custom}
+    seen, rows = set(), []
+    for n in list(names) + list(custom):
+        lab = labels.get(n, n)
+        if n in _NO_KEY or n not in gloss or lab in seen:
+            continue
+        seen.add(lab)
+        rows.append(f"<dt>{lab}</dt><dd>{gloss[n]}</dd>")
+    if not rows:
+        return
+    with (_container or st).expander("What these columns mean"):
+        st.markdown(f'<dl class="mb-key">{"".join(rows)}</dl>', unsafe_allow_html=True)
 
 
 def lede(text: str) -> None:
@@ -236,40 +433,7 @@ def line_chart(df: pd.DataFrame, x: str, y: str, color: str, y_title: str = "") 
         .configure_legend(labelFont="Archivo Narrow", labelColor=INK2, labelFontSize=11,
                           symbolStrokeWidth=2.5)
     )
-    st.altair_chart(ch, use_container_width=True)
-
-
-def table(
-    df: pd.DataFrame,
-    rename: dict | None = None,
-    diverging: list[str] = (),
-    sequential: list[str] = (),
-    pos_cols: list[str] = (),
-    fmt: dict | None = None,
-    help: dict | None = None,
-    height: int | None = None,
-) -> pd.DataFrame:
-    """Rename to short labels, style, attach header tooltips, render. Returns the
-    renamed frame so callers can pass its columns to `col_key`."""
-    d = cols(df, **(rename or {}))
-    st.dataframe(
-        style_df(d, diverging=diverging, sequential=sequential, pos_cols=pos_cols, fmt=fmt),
-        column_config=col_config(d, **(help or {})),
-        width="stretch", hide_index=True,
-        **({"height": height} if height else {}),
-    )
-    return d
-
-
-def col_key(*names: str, **custom: str) -> None:
-    """Compact 'ABBR meaning' legend under a table."""
-    parts = [(n, GLOSS[n]) for n in names if n in GLOSS] + list(custom.items())
-    st.markdown(
-        '<div class="mb-key">'
-        + "".join(f"<span><b>{k}</b> {v}</span>" for k, v in parts)
-        + "</div>",
-        unsafe_allow_html=True,
-    )
+    st.altair_chart(ch, width="stretch")
 
 
 def pos_legend() -> None:
