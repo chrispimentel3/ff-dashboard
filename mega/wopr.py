@@ -311,11 +311,19 @@ def build(season: int) -> pd.DataFrame:
     df["rank_delta"] = df["board_posrank"] - df["wopr_posrank"]
 
     meta = _roster_meta(season)
-    if not meta.empty:
+    have_meta = not meta.empty
+    if have_meta:
         df = df.merge(meta, on="player_id", how="left")
     for c in ("team_2026_nfl", "nfl_status"):
         if c not in df.columns:
             df[c] = ""
+    if have_meta:
+        # Absent from the current roster file = on no NFL team (retired, unsigned). His
+        # last team is history, not where he plays — Tyreek Hill showed as a MIA waiver
+        # add off 2025 volume while on no 2026 roster.
+        absent = df["nfl_status"].isna()
+        df.loc[absent, "nfl_status"] = "NO TEAM"
+        df.loc[absent, "team_2026_nfl"] = ""
     df["team_2026_nfl"] = df["team_2026_nfl"].fillna(df["last_team"])
     df["moved_team"] = (df["last_team"].notna() & df["team_2026_nfl"].notna()
                         & (df["last_team"] != df["team_2026_nfl"]))
@@ -336,6 +344,7 @@ def build(season: int) -> pd.DataFrame:
     df["tags"] = df.apply(lambda r: _tag_row(r, pct), axis=1)
 
     df.attrs["ownership_source"] = own_src
+    df.attrs["roster_file"] = have_meta
     df.attrs["percentiles"] = pct
     df.attrs["base_season"] = int(base["season"].iloc[0]) if "season" in base.columns and len(base) else season - 1
     df.attrs["cur_season"] = season
@@ -353,9 +362,18 @@ SCHEMA = [
 
 
 def _eligible(df: pd.DataFrame) -> pd.Series:
-    """sec 4: only proven-active players on target lists (allow blanks when status unknown)."""
+    """sec 4: only ACT players reach the trade or waiver lists, and never anyone Chris has
+    ruled out for the season (data/player_status.csv).
+
+    Blank status used to pass, which let players on no NFL team through. It still passes
+    when the roster file failed to load at all — then nothing can be verified, and an
+    empty tab would be worse than an unfiltered one.
+    """
+    from .status import out_for_season
+
     s = df["nfl_status"].fillna("").str.upper()
-    return s.isin(["", "ACT", "A"])
+    ok = s.isin(["ACT", "A"]) if df.attrs.get("roster_file", True) else s.isin(["", "ACT", "A"])
+    return ok & ~df["norm"].isin(out_for_season())
 
 
 def summary(season: int) -> dict:

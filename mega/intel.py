@@ -100,6 +100,16 @@ def ff_opportunity(season: int) -> pd.DataFrame:
         return pd.DataFrame()
     df = df.rename(columns={"player_id": "gsis_id", "full_name": "player"})
     df["norm"] = df["player"].map(_norm)
+    # Half-PPR expected points, scored here once. projections.nflverse_estimate looked for
+    # this column and never found it, so its 25% xFP weight silently fell back to points.
+    s = SCORING
+    df["half_ppr_exp"] = (
+        s["pass_yd"] * _n(df, "pass_yards_gained_exp") + s["pass_td"] * _n(df, "pass_touchdown_exp")
+        + s["pass_int"] * _n(df, "pass_interception_exp")
+        + s["rush_yd"] * _n(df, "rush_yards_gained_exp") + s["rush_td"] * _n(df, "rush_touchdown_exp")
+        + s["rec"] * _n(df, "receptions_exp") + s["rec_yd"] * _n(df, "rec_yards_gained_exp")
+        + s["rec_td"] * _n(df, "rec_touchdown_exp")
+    )
     return df
 
 
@@ -196,6 +206,8 @@ def waiver_board(season: int, rostered_norms: set[str], top: int = 20) -> pd.Dat
     b = form.merge(fc, on="norm", how="left").merge(tr, on="norm", how="left")
     b = b[~b["norm"].isin(rostered_norms)]
     b = b[b["pos"].isin(["QB", "RB", "WR", "TE"])]
+    from .status import out_for_season
+    b = b[~b["norm"].isin(out_for_season())]   # data/player_status.csv
 
     # vacated volume: teammates ruled out this week
     inj = injuries(season)
@@ -250,17 +262,8 @@ def buy_low_sell_high(season: int, through_week: int | None = None) -> pd.DataFr
     act = w[w["week"] <= mw].groupby("norm", as_index=False).agg(
         player=("player", "first"), pos=("pos", "first"), gms=("week", "nunique"), actual=("half_ppr", "sum")
     )
-    # half-PPR expected from ff_opportunity component columns
-    s = SCORING
-    ffo = ffo.copy()
-    ffo["exp_hp"] = (
-        s["pass_yd"] * _n(ffo, "pass_yards_gained_exp") + s["pass_td"] * _n(ffo, "pass_touchdown_exp")
-        + s["pass_int"] * _n(ffo, "pass_interception_exp")
-        + s["rush_yd"] * _n(ffo, "rush_yards_gained_exp") + s["rush_td"] * _n(ffo, "rush_touchdown_exp")
-        + s["rec"] * _n(ffo, "receptions_exp") + s["rec_yd"] * _n(ffo, "rec_yards_gained_exp")
-        + s["rec_td"] * _n(ffo, "rec_touchdown_exp")
-    )
-    exp = ffo[ffo["week"] <= mw].groupby("norm", as_index=False)["exp_hp"].sum().rename(columns={"exp_hp": "expected"})
+    exp = (ffo[ffo["week"] <= mw].groupby("norm", as_index=False)["half_ppr_exp"].sum()
+           .rename(columns={"half_ppr_exp": "expected"}))
     m = act.merge(exp, on="norm", how="inner")
     m = m[m["gms"] >= 2]
     m["diff"] = m["actual"] - m["expected"]
@@ -327,6 +330,8 @@ def _positional_strength(ros: pd.DataFrame) -> pd.DataFrame:
 def trade_finder(season: int, yahoo_rosters: pd.DataFrame | None = None, max_ideas: int = 15) -> pd.DataFrame:
     """Need + value + momentum driven 1-for-1 ideas. Approximate until real rosters are scraped."""
     ros = current_rosters(yahoo_rosters)
+    from .status import out_for_season
+    ros = ros[~ros["norm"].isin(out_for_season())]
     fc = fantasycalc_values()[["norm", "value", "pos_rank", "trend_30d"]]
     ros = ros.merge(fc, on="norm", how="left")
     ros = ros.dropna(subset=["value"])
@@ -396,7 +401,9 @@ def roster_strength(season: int, rosters: pd.DataFrame) -> pd.DataFrame:
         .agg(pg_recent=("half_ppr", "mean"), gms=("week", "nunique"))
     )
     form = form.sort_values("gms", ascending=False).drop_duplicates("norm")
-    r = rosters[["norm", "team"]].drop_duplicates().merge(form, on="norm", how="left")
+    from .status import out_for_season
+    live = rosters[~rosters["norm"].isin(out_for_season())]
+    r = live[["norm", "team"]].drop_duplicates().merge(form, on="norm", how="left")
     r["pg_recent"] = pd.to_numeric(r["pg_recent"], errors="coerce").fillna(0.0)
 
     rows = []

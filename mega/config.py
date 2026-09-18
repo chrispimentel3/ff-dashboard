@@ -49,9 +49,11 @@ SCORING = dict(
     fum_lost=-2, two_pt=2, ret_td=6,
 )
 
-# Starting lineup: 1 QB, 2 RB, 2 WR, 1 TE, 1 W/R (flex), 1 K, 1 DEF  (typical Yahoo)
+# Starting lineup: 1 QB, 2 RB, 2 WR, 1 TE, 1 W/R (flex), 1 K, 1 DEF.
 LINEUP = {"QB": 1, "RB": 2, "WR": 2, "TE": 1, "W/R": 1, "K": 1, "DEF": 1}
-FLEX_ELIGIBLE = {"RB", "WR", "TE"}
+# The flex is W/R: RB or WR only. A TE can't start there in Mega Bowl (Chris, 2026-09-18) —
+# this used to include TE, which let Start/Sit put a second tight end in an illegal slot.
+FLEX_ELIGIBLE = {"RB", "WR"}
 
 NEWS_FEEDS = [
     "https://www.espn.com/espn/rss/nfl/news",

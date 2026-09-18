@@ -224,6 +224,28 @@ def load_schedule(season: int) -> pd.DataFrame:
     return df
 
 
+@st.cache_data(ttl=CACHE_TTL, show_spinner=False)
+def load_rosters(season: int) -> pd.DataFrame:
+    try:
+        return to_pandas(nfl.load_rosters(seasons=[season]))
+    except Exception:
+        return pd.DataFrame()
+
+
+def current_week(season: int, fallback: int) -> int:
+    """The week you're setting a lineup for: the first regular-season week with a game
+    still to play. Box scores arrive game by game, so "latest week with stats + 1" jumps
+    ahead the moment Thursday night's game posts — on the Friday of Week 2 the dashboard
+    was optimizing Week 3."""
+    try:
+        s = load_schedule(season)
+        s = s[s["game_type"].astype(str).str.upper() == "REG"]
+        open_weeks = s.loc[s["result"].isna(), "week"]
+        return int(open_weeks.min()) if not open_weeks.empty else int(s["week"].max())
+    except Exception:
+        return fallback
+
+
 # --------------------------------------------------------------------------------------
 # Roster mapping
 # --------------------------------------------------------------------------------------
@@ -297,7 +319,9 @@ with st.sidebar:
         st.caption(f"Through week {week} (only week {max_wk} available)")
     else:
         week = st.slider("Through week", 1, max_wk, max_wk)
-    next_week = st.slider("Matchup week", 1, 18, min(max_wk + 1, 18))
+    next_week = st.slider("Matchup week", 1, 18, min(current_week(int(season), max_wk + 1), 18),
+                          help="The week Start/Sit and Matchups plan for. Defaults to the first week "
+                               "with games still to play.")
     roll = st.slider("Rolling window (weeks)", 2, 6, 3)
     if st.button("♻️ Clear data cache"):
         st.cache_data.clear()
@@ -397,8 +421,8 @@ ui.masthead([
 # Grouped by the decision you're making, not by where the data came from. Streamlit
 # tabs are containers, so the `with tab_*:` bodies further down render into these
 # wherever they appear in the file.
-sec_now, sec_team, sec_get, sec_league, sec_more = st.tabs(
-    ["This week", "My team", "Get better", "League", "More"]
+sec_now, sec_team, sec_get, sec_league, sec_players, sec_more = st.tabs(
+    ["This week", "My team", "Get better", "League", "Players", "More"]
 )
 with sec_now:
     tab_action, tab_start, tab_match = st.tabs(["Action board", "Start / Sit", "Matchups"])
@@ -506,6 +530,13 @@ def _build_agg() -> pd.DataFrame:
             .tail(1)[["gsis_id", "report_status"]]
         )
         agg = agg.merge(latest, on="gsis_id", how="left")
+
+    # Chris's overrides (data/player_status.csv) beat the injury report, which lags.
+    from mega.status import out_for_week
+    _out = out_for_week(int(next_week))
+    if _out:
+        lab = agg["player"].map(lambda n: _out.get(player_ids.norm(n)))
+        agg["report_status"] = lab.fillna(agg["report_status"]) if "report_status" in agg else lab
 
     if not sched.empty:  # next opponent + Vegas implied team total
         wk = sched[sched["week"] == next_week]
@@ -703,7 +734,13 @@ with tab_start:
     )
     try:
         from mega.lineup import optimize_lineup
-        rp = _my_roster_projected(int(season), int(next_week))
+        rp = _my_roster_projected(int(season), int(next_week)).copy()
+        # Applied outside the cached projection so an edit to data/player_status.csv
+        # takes effect on the next rerun.
+        from mega.status import out_for_week
+        _out = out_for_week(int(next_week))
+        rp["report_status"] = rp["player"].map(lambda n: _out.get(player_ids.norm(n)))
+        rp.loc[rp["report_status"].notna(), "proj"] = 0.0
         lu = optimize_lineup(rp, int(season), int(next_week))
     except Exception as e:
         lu = None
@@ -733,7 +770,7 @@ with tab_start:
         starters, bench = lu[lu["start"]], lu[~lu["start"]]
 
         slot_order = {"QB": 0, "RB": 1, "WR": 2, "TE": 3, "FLEX": 4}
-        cols = [c for c in ["lineup", "player", "pos", "nfl_team", "opp", "ease_rank",
+        cols = [c for c in ["lineup", "player", "pos", "nfl_team", "report_status", "opp", "ease_rank",
                             "proj", "proj_adj", "proj_source", "tgt_pct", "tm_rank",
                             "start_sit", "close_call"] if c in lu.columns]
 
@@ -1238,6 +1275,216 @@ with tab_news:
                      })
     except Exception as e:
         st.warning(f"News feeds unavailable: {e}")
+
+
+# ---- Player lookup -------------------------------------------------------------------
+@st.cache_data(ttl=CACHE_TTL, show_spinner="Indexing players…")
+def _player_index(cur: int) -> pd.DataFrame:
+    from mega.lookup import player_index
+    return player_index({cur: load_player_stats(cur), cur - 1: load_player_stats(cur - 1)},
+                        load_rosters(cur))
+
+
+@st.cache_data(ttl=CACHE_TTL, show_spinner="Crunching the season…")
+def _season_table(season: int) -> pd.DataFrame:
+    from mega.lookup import season_table
+    snaps_s = load_snaps(season)
+    return season_table(load_player_stats(season), load_ff_opportunity(season), snaps_s,
+                        player_ids.crosswalk())
+
+
+@st.cache_data(ttl=dt.timedelta(minutes=30), show_spinner=False)
+def _ownership() -> tuple[dict, dict]:
+    """gsis_id -> (fantasy team, slot) from the scraped rosters, and gsis_id -> Yahoo FA
+    status. Both go through the id resolver: matching the FA list by name missed players
+    Yahoo and nflverse spell differently (Joshua vs Josh Palmer)."""
+    from mega.intel import current_rosters
+    from mega.yahoo import cached_rosters
+
+    r = current_rosters(cached_rosters())
+    own = {g: (t, sl) for g, t, sl in zip(r["gsis_id"], r["team"], r["slot"]) if pd.notna(g) and g}
+    fa, path = {}, HERE / "data" / "yahoo_free_agents.csv"
+    if path.is_file():
+        f, _ = player_ids.resolve(pd.read_csv(path, dtype=str).fillna(""), name_col="player")
+        fa = {g: st_ for g, st_ in zip(f["gsis_id"], f["roster_status"]) if pd.notna(g) and g}
+    return own, fa
+
+
+def _height(v) -> str:
+    try:
+        v = int(float(v))
+        return f"{v // 12}'{v % 12}\""
+    except (TypeError, ValueError):
+        return ""
+
+
+with sec_players:
+    from mega import logos as _logos
+    from mega import lookup as LK
+    from mega.config import MY_TEAM
+    from mega.status import note_for, out_for_week
+
+    ui.lede(
+        "Look up any QB, RB, WR or TE — who has him in Mega Bowl, how he's actually being used, "
+        "and every game he's played. <b>Type part of a name.</b>"
+    )
+    _cur = int(season)
+    try:
+        _idx = _player_index(_cur)
+    except Exception as e:
+        _idx = pd.DataFrame()
+        st.warning(f"Player index unavailable: {e}")
+
+    if not _idx.empty:
+        c_pick, c_season = st.columns([3, 1])
+        _pick = c_pick.selectbox("Player", _idx["label"].tolist(), index=None, key="lookup_pick",
+                                 placeholder="Search — e.g. Puka, Bijan, Kelce…")
+        _season_pick = c_season.segmented_control("Season", [_cur, _cur - 1], default=_cur,
+                                                  key="lookup_season") or _cur
+        _mine = _idx[_idx["gsis_id"].isin(gsis_list)]["label"].tolist()
+        _quick = st.pills("Or pick one of yours", _mine, key="lookup_quick") if _mine else None
+        _label = _pick or _quick
+
+        if not _label:
+            st.caption("Nothing selected yet. Everyone on an NFL roster is searchable, plus anyone "
+                       f"who played in {_cur - 1}.")
+        else:
+            prow = _idx[_idx["label"] == _label].iloc[0]
+            gid, ppos, pteam = prow["gsis_id"], prow["pos"], prow["team"]
+            b = LK.bio(gid, load_rosters(_cur))
+
+            # ---- who he is, and whose he is
+            own, fa = _ownership()
+            n = player_ids.norm(prow["name"])
+            if gid in own:
+                t, sl = own[gid]
+                owner = f"<b>{'Yours' if t == MY_TEAM else t}</b> · {'bench' if sl == 'BN' else sl}"
+            elif str(fa.get(gid, "")).startswith("W"):
+                owner = f"<b>On waivers</b> until {str(fa[gid])[1:].strip(' ()')}"   # "W (Sep 19)"
+            elif not pteam:
+                owner = "<b>No NFL team</b>"
+            else:
+                owner = "<b>Free agent</b> in Mega Bowl"
+            _out_now = out_for_week(int(next_week)).get(n)
+            nfl_status = LK.STATUS_WORDS.get(str(b.get("status") or ""), str(b.get("status") or ""))
+            if not inj.empty and "gsis_id" in inj.columns:
+                _ir = inj[inj["gsis_id"] == gid].sort_values("week").tail(1)
+                if not _ir.empty and pd.notna(_ir["report_status"].iloc[0]):
+                    nfl_status += f" · wk {int(_ir['week'].iloc[0])} report: {_ir['report_status'].iloc[0]}"
+            status_html = (f'<span class="mb-flag">{_out_now}</span>' if _out_now else "") + nfl_status
+
+            facts = [ppos]
+            if b.get("jersey_number") and pd.notna(b.get("jersey_number")):
+                facts.append(f"#{int(float(b['jersey_number']))}")
+            if b.get("age"):
+                facts.append(f"age {b['age']}")
+            hw = " ".join(x for x in (_height(b.get("height")),
+                                      f"{int(b['weight'])} lb" if pd.notna(b.get("weight")) else "") if x)
+            if hw:
+                facts.append(hw)
+            if b.get("college"):
+                facts.append(str(b["college"]).split(";")[0])
+            if pd.notna(b.get("draft_number")):
+                facts.append(f"pick {int(b['draft_number'])} ({int(b['entry_year'])})"
+                             if pd.notna(b.get("entry_year")) else f"pick {int(b['draft_number'])}")
+            elif pd.notna(b.get("entry_year")):
+                facts.append(f"undrafted ({int(b['entry_year'])})")
+            logo = _logos.logo_url(pteam)
+            logo_html = f'<img src="{logo}" class="mb-card-logo" alt="{pteam}">' if logo else ""
+            team_txt = pteam or f"no team (last: {prow.get('last_team') or '—'})"
+
+            h_img, h_txt = st.columns([1, 5])
+            if isinstance(b.get("headshot_url"), str) and b["headshot_url"].startswith("http"):
+                h_img.image(b["headshot_url"], width=110)
+            h_txt.markdown(
+                f'<div class="mb-card"><div class="mb-card-name">{prow["name"]}</div>'
+                f'<div class="mb-card-team">{logo_html}<b>{team_txt}</b></div>'
+                f'<div class="mb-card-facts">{" · ".join(facts)}</div>'
+                f'<div class="mb-card-row"><span>Mega Bowl</span>{owner}</div>'
+                f'<div class="mb-card-row"><span>NFL status</span>{status_html}</div></div>',
+                unsafe_allow_html=True,
+            )
+
+            # ---- season at a glance
+            T = _season_table(int(_season_pick))
+            me = T[T["gsis_id"] == gid] if not T.empty else pd.DataFrame()
+            if me.empty:
+                st.info(f"No {_season_pick} regular-season games for {prow['name']}.")
+            else:
+                r = me.iloc[0]
+                rk = LK.ranks(T, gid, ppos)
+                usage = {"QB": ("att_pg", "Pass att/g", "{:.1f}"), "RB": ("rush_share", "Carry share", "{:.0%}")}.get(
+                    ppos, ("tgt_share", "Target share", "{:.1%}"))
+                fmt = lambda c, f: (f.format(r[c]) if pd.notna(r.get(c)) else "—")
+                ui.kpi_row([
+                    ("Games", f"{int(r['games'])}", f"{_season_pick} regular season"),
+                    ("Pts/game", fmt("pts_pg", "{:.1f}"), rk.get("pts_pg", "not enough games to rank")),
+                    ("Expected/g", fmt("xfp_pg", "{:.1f}"), rk.get("xfp_pg", "what his usage should score")),
+                    ("Vs expected/g", fmt("vs_exp_pg", "{:+.1f}"),
+                     "running hot" if (r.get("vs_exp_pg") or 0) >= 2 else
+                     "due to bounce back" if (r.get("vs_exp_pg") or 0) <= -1.5 else "about what his role earns"),
+                    (usage[1], fmt(usage[0], usage[2]), rk.get(usage[0], "")),
+                ])
+                st.write("")
+
+                # ---- this week
+                if int(_season_pick) == _cur and pteam:
+                    wk = sched[(sched["week"] == next_week) & ((sched["home_team"] == pteam) | (sched["away_team"] == pteam))]
+                    if wk.empty:
+                        st.caption(f"**Week {next_week}:** bye.")
+                    else:
+                        g0 = wk.iloc[0]
+                        opp = g0["away_team"] if g0["home_team"] == pteam else g0["home_team"]
+                        bits = [f"**Week {next_week}:** {'vs' if g0['home_team'] == pteam else '@'} {opp}"]
+                        try:
+                            dv = _dvp(_cur)
+                            m = dv[(dv["defense"] == opp) & (dv["pos"] == ppos)]
+                            if not m.empty:
+                                bits.append(f"matchup #{int(m['ease_rank'].iloc[0])} of 32 for {ppos}s (1 = easiest)")
+                        except Exception:
+                            pass
+                        if _out_now:   # ruled out: a projection would only mislead
+                            bits.append(f"**{_out_now}** — {note_for(prow['name']) or 'ruled out'}")
+                        else:
+                            try:
+                                pj = _blended_proj(_cur, int(next_week))
+                                pr = pj[pj["gsis_id"] == gid] if "gsis_id" in pj.columns else pd.DataFrame()
+                                if not pr.empty and pd.notna(pr["proj"].iloc[0]):
+                                    bits.append(f"projection {float(pr['proj'].iloc[0]):.1f} ({pr['proj_source'].iloc[0]})")
+                            except Exception:
+                                pass
+                        st.markdown(" · ".join(bits))
+
+                # ---- advanced
+                st.markdown("#### Season detail")
+                card = pd.DataFrame([
+                    {"stat": lab, "value_fmt": (f.format(r[c]) if pd.notna(r.get(c)) else "—"),
+                     "pos_rank": rk.get(c, "—"), "means": means}
+                    for c, lab, f, means in LK.CARD.get(ppos, [])
+                ])
+                ui.table(card, legend=False, logos=False)
+
+                # ---- game log
+                st.markdown("#### Game log")
+                pfr = r.get("pfr_id") if "pfr_id" in r.index else None
+                log = LK.game_log(load_player_stats(int(_season_pick)), gid,
+                                  load_ff_opportunity(int(_season_pick)), load_snaps(int(_season_pick)),
+                                  load_schedule(int(_season_pick)), pfr if isinstance(pfr, str) else None)
+                if log.empty:
+                    st.caption("No games yet.")
+                else:
+                    lcols = [c for c in LK.LOG_COLS.get(ppos, LK.LOG_COLS["WR"]) if c in log.columns]
+                    ui.table(log[lcols], diverging=["xFP±"], logos=False,
+                             fmt={"SNAP%": "{:.0%}", "TGT%": "{:.0%}", "PTS": "{:.1f}", "xFP": "{:.1f}",
+                                  "xFP±": "{:+.1f}", **{c: "{:.0f}" for c in
+                                  ("CMP", "ATT", "PASSYD", "PASSTD", "INT", "SK", "CARRIES", "RUSHYD", "RUSHTD",
+                                   "TARGETS", "REC", "RECYD", "RECTD", "AIRYD", "YAC")}})
+                    if len(log) >= 2:
+                        lg = pd.concat([
+                            log[["week", "half_ppr"]].rename(columns={"half_ppr": "pts"}).assign(series="Actual pts"),
+                            log[["week", "xfp"]].rename(columns={"xfp": "pts"}).assign(series="Expected pts"),
+                        ]).dropna(subset=["pts"])
+                        ui.line_chart(lg, x="week", y="pts", color="series", y_title="half-PPR points")
 
 # ---- Raw ---------------------------------------------------------------------
 with tab_raw:

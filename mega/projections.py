@@ -23,7 +23,7 @@ import nflreadpy as nfl
 import pandas as pd
 
 from .config import DATA
-from .intel import _norm, form_season, ff_opportunity, weekly
+from .intel import _norm, ff_opportunity, weekly
 
 try:
     from dotenv import load_dotenv
@@ -121,38 +121,60 @@ def fp_rankings(season: int, week: int, positions=SKILL, rank_type: str = "weekl
 
 
 # ---------------------------------------------------------------- nflverse estimate
-def nflverse_estimate(season: int) -> pd.DataFrame:
-    """A projected half-PPR/game for every player: blend recent form, season rate, xFP/g."""
-    fs = form_season(season)
-    w = weekly(fs)
+PRIOR_GAMES = 3   # last season counts as this many games (WOPR handoff D7)
+
+
+def _season_rates(season: int) -> pd.DataFrame:
+    """Per-player half-PPR rates for one regular season: season, last 3 games played, xFP."""
+    w = weekly(season)
     if w.empty:
-        return pd.DataFrame(columns=["gsis_id", "norm", "player", "pos", "nfl_est"])
-    w = w[w["pos"].isin(SKILL)]
-    maxwk = int(w["week"].max())
-    recent = w[w["week"] > maxwk - 3]
-
-    est = (
-        w.sort_values("week")
-        .groupby("gsis_id", as_index=False)
-        .agg(player=("player", "last"), pos=("pos", "last"),
-             season_pg=("half_ppr", "mean"), gms=("week", "nunique"))
-    )
-    rp = recent.groupby("gsis_id", as_index=False)["half_ppr"].mean().rename(columns={"half_ppr": "recent_pg"})
-    est = est.merge(rp, on="gsis_id", how="left")
-
-    ffo = ff_opportunity(fs)
+        return pd.DataFrame(columns=["gsis_id", "player", "pos", "gms", "season_pg", "recent_pg", "xfp_pg", "est"])
+    if "season_type" in w.columns:
+        w = w[w["season_type"].astype(str).str.upper() == "REG"]
+    w = w[w["pos"].isin(SKILL)].sort_values("week")
+    r = w.groupby("gsis_id", as_index=False).agg(
+        player=("player", "last"), pos=("pos", "last"),
+        season_pg=("half_ppr", "mean"), gms=("week", "nunique"))
+    # last 3 games he actually played, not the last 3 calendar weeks (byes aren't zeros)
+    rec = w.groupby("gsis_id")["half_ppr"].apply(lambda x: x.tail(3).mean()).rename("recent_pg")
+    r = r.merge(rec, on="gsis_id", how="left")
+    ffo = ff_opportunity(season)
     if not ffo.empty and "half_ppr_exp" in ffo.columns:
-        xp = ffo.groupby("gsis_id", as_index=False)["half_ppr_exp"].mean().rename(columns={"half_ppr_exp": "xfp_pg"})
-        est = est.merge(xp, on="gsis_id", how="left")
+        xp = ffo.groupby("gsis_id")["half_ppr_exp"].mean().rename("xfp_pg")
+        r = r.merge(xp, on="gsis_id", how="left")
     else:
-        est["xfp_pg"] = pd.NA
+        r["xfp_pg"] = pd.NA
+    r["xfp_pg"] = pd.to_numeric(r["xfp_pg"], errors="coerce").fillna(r["season_pg"])
+    r["est"] = 0.45 * r["recent_pg"] + 0.30 * r["season_pg"] + 0.25 * r["xfp_pg"]
+    return r
 
-    est["recent_pg"] = est["recent_pg"].fillna(est["season_pg"])
-    est["xfp_pg"] = pd.to_numeric(est["xfp_pg"], errors="coerce").fillna(est["season_pg"])
-    # weight recency + expected volume, anchor to season
-    est["nfl_est"] = (0.45 * est["recent_pg"] + 0.30 * est["season_pg"] + 0.25 * est["xfp_pg"]).round(2)
+
+def nflverse_estimate(season: int) -> pd.DataFrame:
+    """A projected half-PPR/game for every player who has played in either season.
+
+    This season's rate, anchored to last season's worth PRIOR_GAMES games, so a two-game
+    sample moves the number without owning it. It used to take one whole season or the
+    other (whichever form_season picked), which gave every rookie no projection at all
+    until Week 3 — Start/Sit then treated a 12.9-pts/g Denzel Boston as a zero.
+    """
+    cur, prev = _season_rates(season), _season_rates(season - 1)
+    est = cur.merge(prev[["gsis_id", "player", "pos", "est", "gms"]], on="gsis_id", how="outer",
+                    suffixes=("", "_prev"))
+    if est.empty:
+        return pd.DataFrame(columns=["gsis_id", "norm", "player", "pos", "nfl_est", "gms", "recent_pg",
+                                     "season_pg", "xfp_pg"])
+    g = pd.to_numeric(est["gms"], errors="coerce").fillna(0)
+    has_cur, has_prev = est["est"].notna(), est["est_prev"].notna()
+    anchored = (g * est["est"].fillna(0) + PRIOR_GAMES * est["est_prev"].fillna(0)) / (g + PRIOR_GAMES)
+    est["nfl_est"] = anchored.where(has_cur & has_prev, est["est"].where(has_cur, est["est_prev"])).round(2)
+    for c in ("player", "pos"):
+        est[c] = est[c].fillna(est[f"{c}_prev"])
+    est["gms"] = g.where(has_cur, est["gms_prev"])
+    est["basis"] = (has_cur & has_prev).map({True: f"{season}+{season - 1} prior", False: ""})
+    est.loc[has_cur & ~has_prev, "basis"] = f"{season} only"
+    est.loc[~has_cur, "basis"] = f"{season - 1} only"
     est["norm"] = est["player"].map(_norm)
-    return est[["gsis_id", "norm", "player", "pos", "nfl_est", "gms", "recent_pg", "season_pg", "xfp_pg"]]
+    return est[["gsis_id", "norm", "player", "pos", "nfl_est", "gms", "recent_pg", "season_pg", "xfp_pg", "basis"]]
 
 
 # ---------------------------------------------------------------- blend

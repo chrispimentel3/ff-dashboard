@@ -75,6 +75,17 @@ section[data-testid="stSidebar"] { background:var(--surface2); border-right:1px 
 .stAlert { border-radius:7px; }
 .mb-lede { font-size:13.5px; color:var(--ink2); margin:2px 0 10px; line-height:1.5; }
 .mb-lede b { color:var(--ink); }
+/* player lookup card */
+.mb-card { padding-top:4px; }
+.mb-card-name { font-family:'Archivo',sans-serif; font-weight:800; font-size:26px; color:var(--navy); line-height:1.15; }
+.mb-card-team { display:flex; align-items:center; gap:6px; font-size:15px; color:var(--ink); margin:4px 0 2px; }
+.mb-card-facts { font-size:13.5px; color:var(--ink2); margin:0 0 10px; }
+.mb-card-logo { height:26px; width:auto; }
+.mb-card-row { font-size:14px; color:var(--ink); margin:3px 0; }
+.mb-card-row span:first-child { display:inline-block; min-width:92px; font-size:11px; font-weight:700;
+  letter-spacing:.06em; text-transform:uppercase; color:var(--ink3); }
+.mb-flag { background:var(--red); color:#fff; font-weight:700; font-size:11.5px; padding:2px 7px;
+  border-radius:4px; margin-right:6px; }
 
 /* ---- phone ---------------------------------------------------------------
    Streamlit columns are flex children that never wrap on their own, so a KPI
@@ -176,6 +187,14 @@ COLS = {
     # game environment
     "players": "PLAYERS", "total": "TOT", "spread": "SPRD", "implied_pts": "IMP",
     "verdict": "VERDICT", "status": "OWN",
+    # game log (player lookup) — raw per-game counts, distinct from the per-game rates above
+    "game": "GAME", "snap_pct": "SNAP%", "half_ppr": "PTS", "xfp": "xFP", "vs_exp": "xFP±",
+    "completions": "CMP", "attempts": "ATT", "passing_yards": "PASSYD", "passing_tds": "PASSTD",
+    "passing_interceptions": "INT", "sacks_suffered": "SK", "carries": "CARRIES",
+    "rushing_yards": "RUSHYD", "rushing_tds": "RUSHTD", "targets": "TARGETS", "receptions": "REC",
+    "receiving_yards": "RECYD", "receiving_tds": "RECTD", "receiving_air_yards": "AIRYD",
+    "receiving_yards_after_catch": "YAC",
+    "stat": "STAT", "value_fmt": "VALUE", "pos_rank": "POSRANK", "means": "MEANS",
 }
 
 LABELS = {
@@ -184,7 +203,7 @@ LABELS = {
     "xFP": "Expected pts", "ACT": "Actual pts", "xFP±": "Vs expected", "xFP±/G": "Vs expected/g",
     "SIGNAL": "Signal", "TGT": "Targets/g", "CAR": "Carries/g",
     "TGT%": "Target share", "TM#": "Team tgt rank",
-    "ST": "Injury", "OPP": "Next opp", "IMP": "Vegas pts",
+    "ST": "Status", "OPP": "Next opp", "IMP": "Vegas pts",
     "VAL": "Trade value", "ADD#": "Add rank", "TR30": "30-day trend", "SCORE": "Claim score",
     "WHY": "Why",
     "MU#": "Matchup rank", "PA/G": "Pts allowed/g", "PROJ*": "Projection", "PROJ": "Raw proj",
@@ -205,6 +224,11 @@ LABELS = {
     "MATCHED": "Players scored", "LUCK": "Luck",
     "PLAYERS": "Your players", "TOT": "Game total", "SPRD": "Spread", "VERDICT": "Verdict",
     "OWN": "Status",
+    "GAME": "Opponent", "SNAP%": "Snap %", "CMP": "Cmp", "ATT": "Att", "PASSYD": "Pass yds",
+    "PASSTD": "Pass TD", "INT": "INT", "SK": "Sacked", "CARRIES": "Carries", "RUSHYD": "Rush yds",
+    "RUSHTD": "Rush TD", "TARGETS": "Targets", "REC": "Rec", "RECYD": "Rec yds", "RECTD": "Rec TD",
+    "AIRYD": "Air yds", "YAC": "YAC",
+    "STAT": "Stat", "VALUE": "Value", "POSRANK": "Rank at position", "MEANS": "What it tells you",
 }
 
 GLOSS = {
@@ -224,7 +248,7 @@ GLOSS = {
     "CAR": "Carries per game.",
     "TGT%": "His share of his NFL team's targets. 25%+ is a No. 1 receiver's role; under 15% is a part-timer.",
     "TM#": "Where he ranks in targets on his own NFL team. #1 = the go-to option.",
-    "ST": "Latest NFL injury-report status.",
+    "ST": "Out, doubtful, questionable or IR — from the NFL injury report, or from Chris's own list (data/player_status.csv), which wins when the report hasn't caught up.",
     "OPP": "Next opponent (@ = away game).",
     "IMP": "Vegas's expected points for his offense next game. Higher = more scoring to go around.",
     "VAL": "FantasyCalc trade value — what the trade market says he's worth.",
@@ -279,6 +303,13 @@ GLOSS = {
     "SPRD": "Point spread. Plus = this team is favoured by that many.",
     "VERDICT": "The matchup in one word.",
     "OWN": "Whether he's free, on another roster, or already yours.",
+    "GAME": "Who he played (@ = away game).",
+    "SNAP%": "Share of his offense's plays he was on the field for.",
+    "SK": "Times sacked.",
+    "AIRYD": "Air yards on his targets — how far downfield the ball was thrown, caught or not.",
+    "YAC": "Yards after the catch.",
+    "POSRANK": "Where he ranks at his position this season, among players with at least half "
+               "the games of the most-used one.",
 }
 
 # Ranks read as "#3", so they can't be mistaken for counts.
@@ -286,7 +317,7 @@ RANKS = {"TM#", "MU#", "ADD#", "WOPR#", "DRAFT#", "PWR", "RANK"}
 # Obvious from the header; listing them in the legend is noise.
 _NO_KEY = {"PLAYER", "POS", "LOGO", "GIVE LOGO", "GET LOGO", "AGE", "W", "L", "T", "TEAM",
            "MGR", "WK", "WHEN", "TYPE", "MOVE", "YOU GIVE", "YOU GET", "WHY"}
-_WIDTH = {"PLAYER": "medium", "WHY": "large", "TAGS": "medium", "PLAYERS": "large",
+_WIDTH = {"PLAYER": "medium", "WHY": "large", "MEANS": "large", "TAGS": "medium", "PLAYERS": "large",
           "YOU GIVE": "medium", "YOU GET": "medium", "MANAGER": "medium", "TEAM": "medium",
 }
 _LOGO_COLS = ("LOGO", "GIVE LOGO", "GET LOGO")
