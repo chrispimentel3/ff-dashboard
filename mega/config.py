@@ -20,7 +20,7 @@ SCORING_NAME = "half-PPR"
 # Current Yahoo team names by draft seat (seat = R1 pick order from the draft results page).
 TEAM_BY_SEAT = {
     1: "deez nuts",
-    2: "TyRick Hill",
+    2: "Burrow-Chase combo",   # was "TyRick Hill"; confirmed by 13 of 15 draft picks still on that roster (2026-09-18)
     3: "Undisputed",
     4: "Heartbreak Drake",
     5: "L'Omar",
