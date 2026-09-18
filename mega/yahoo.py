@@ -291,6 +291,18 @@ def parse_roster(html_text: str, seat: int | None = None) -> pd.DataFrame:
 FA_STAT_BLOCKS = {"season2025": "S_S_2025", "actual": "S_S_2026", "proj_ros": "S_PR"}
 
 
+def _nfl_season() -> int:
+    """The NFL season in progress. A season runs Sep–Feb, so Jan/Feb belong to last year's.
+
+    The free-agent pull used to be pinned to S_S_2025: in 2026 it ranked free agents by
+    last season's totals, so a 2026 breakout with no 2025 stats could miss the top 100.
+    """
+    import datetime as dt
+
+    today = dt.date.today()
+    return today.year if today.month >= 3 else today.year - 1
+
+
 def pull(manual: bool = False, fa_pages: int = 4) -> dict[str, pd.DataFrame]:
     out: dict[str, pd.DataFrame] = {}
 
@@ -309,7 +321,7 @@ def pull(manual: bool = False, fa_pages: int = 4) -> dict[str, pd.DataFrame]:
         with LeagueSession() as s:
             fa_frames = []
             for start in range(0, fa_pages * 25, 25):
-                url = FA_URL.format(pos="O", stat="S_S_2025", start=start)
+                url = FA_URL.format(pos="O", stat=f"S_S_{_nfl_season()}", start=start)
                 fa_frames.append(parse_player_table(s.get(url)))
             fa = pd.concat(fa_frames, ignore_index=True)
             out["free_agents"] = fa.drop_duplicates("yahoo_id")
