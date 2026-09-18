@@ -149,30 +149,48 @@ def _season_rates(season: int) -> pd.DataFrame:
     return r
 
 
+PRIOR_MIN_GAMES = 6   # who counts toward a position's median prior (WOPR handoff pool)
+
+
+def _prior(season: int) -> tuple[pd.DataFrame, dict[str, float]]:
+    """Last season as a prior: per player, and the position medians rookies borrow.
+
+    Whole-season rates, half points and half xFP. Not the recency-weighted `est`: a
+    prior built from the last three games of last season carried Emeka Egbuka's
+    3.1-pts/g finish (on a 9.7 season, 11.5 xFP/g) into this year.
+    """
+    p = _season_rates(season)
+    p["prior"] = 0.5 * p["season_pg"] + 0.5 * p["xfp_pg"]
+    pool = p[p["gms"] >= PRIOR_MIN_GAMES]
+    return p, pool.groupby("pos")["prior"].median().to_dict()
+
+
 def nflverse_estimate(season: int) -> pd.DataFrame:
     """A projected half-PPR/game for every player who has played in either season.
 
-    This season's rate, anchored to last season's worth PRIOR_GAMES games, so a two-game
-    sample moves the number without owning it. It used to take one whole season or the
-    other (whichever form_season picked), which gave every rookie no projection at all
-    until Week 3 — Start/Sit then treated a 12.9-pts/g Denzel Boston as a zero.
+    This season's rate anchored to a prior worth PRIOR_GAMES games (WOPR handoff D7):
+    the player's own last season, or for a rookie the position median. So a one-game
+    sample moves the number without owning it — Denzel Boston's one-TD debut (12.9 pts on
+    6.4 xFP) had projected him over Egbuka when rookies went unanchored.
     """
-    cur, prev = _season_rates(season), _season_rates(season - 1)
-    est = cur.merge(prev[["gsis_id", "player", "pos", "est", "gms"]], on="gsis_id", how="outer",
+    cur = _season_rates(season)
+    prev, pos_median = _prior(season - 1)
+    est = cur.merge(prev[["gsis_id", "player", "pos", "prior", "gms"]], on="gsis_id", how="outer",
                     suffixes=("", "_prev"))
     if est.empty:
         return pd.DataFrame(columns=["gsis_id", "norm", "player", "pos", "nfl_est", "gms", "recent_pg",
-                                     "season_pg", "xfp_pg"])
-    g = pd.to_numeric(est["gms"], errors="coerce").fillna(0)
-    has_cur, has_prev = est["est"].notna(), est["est_prev"].notna()
-    anchored = (g * est["est"].fillna(0) + PRIOR_GAMES * est["est_prev"].fillna(0)) / (g + PRIOR_GAMES)
-    est["nfl_est"] = anchored.where(has_cur & has_prev, est["est"].where(has_cur, est["est_prev"])).round(2)
+                                     "season_pg", "xfp_pg", "basis"])
     for c in ("player", "pos"):
         est[c] = est[c].fillna(est[f"{c}_prev"])
+    has_cur, has_prev = est["est"].notna(), est["prior"].notna()
+    prior = est["prior"].where(has_prev, est["pos"].map(pos_median))
+    g = pd.to_numeric(est["gms"], errors="coerce").fillna(0)
+    anchored = (g * est["est"].fillna(0) + PRIOR_GAMES * prior.fillna(0)) / (g + PRIOR_GAMES)
+    est["nfl_est"] = anchored.where(has_cur & prior.notna(), est["est"].where(has_cur, est["prior"])).round(2)
     est["gms"] = g.where(has_cur, est["gms_prev"])
-    est["basis"] = (has_cur & has_prev).map({True: f"{season}+{season - 1} prior", False: ""})
-    est.loc[has_cur & ~has_prev, "basis"] = f"{season} only"
-    est.loc[~has_cur, "basis"] = f"{season - 1} only"
+    est["basis"] = f"{season - 1} only"
+    est.loc[has_cur & has_prev, "basis"] = f"{season} + {season - 1} prior"
+    est.loc[has_cur & ~has_prev, "basis"] = f"{season} + position median"
     est["norm"] = est["player"].map(_norm)
     return est[["gsis_id", "norm", "player", "pos", "nfl_est", "gms", "recent_pg", "season_pg", "xfp_pg", "basis"]]
 
