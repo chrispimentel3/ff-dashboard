@@ -158,6 +158,9 @@ COLS = {
     "xfp_tot": "xFP", "expected": "xFP", "actual": "ACT", "xfp_diff": "xFP±", "diff": "xFP±",
     "per_g": "xFP±/G", "diff_pg": "xFP±/G", "signal": "SIGNAL",
     "tgt_pg": "TGT", "carry_pg": "CAR", "tgt_pct": "TGT%", "tm_rank": "TM#",
+    # receiving routes (estimated — see mega/routes.py)
+    "routes": "RTE", "routes_pg": "RTE/G", "tprr": "TPRR",
+    "fd_rr": "1D/RR", "fd": "1D", "receiving_first_downs": "1D", "route_flag": "FLAG",
     "report_status": "ST", "opp": "OPP", "implied": "IMP",
     "value": "VAL", "add_rank": "ADD#", "trend_30d": "TR30", "add_score": "SCORE", "why": "WHY",
     "ease_rank": "MU#", "pa_pg": "PA/G", "proj_adj": "PROJ*", "proj": "PROJ", "proj_source": "SRC",
@@ -203,6 +206,9 @@ LABELS = {
     "xFP": "Expected pts", "ACT": "Actual pts", "xFP±": "Vs expected", "xFP±/G": "Vs expected/g",
     "SIGNAL": "Signal", "TGT": "Targets/g", "CAR": "Carries/g",
     "TGT%": "Target share", "TM#": "Team tgt rank",
+    "RTE": "Routes (est.)", "RTE/G": "Routes/g (est.)",
+    "TPRR": "Targets/route (est.)", "1D/RR": "1st downs/route (est.)", "1D": "1st downs",
+    "FLAG": "Flag",
     "ST": "Status", "OPP": "Next opp", "IMP": "Vegas pts",
     "VAL": "Trade value", "ADD#": "Add rank", "TR30": "30-day trend", "SCORE": "Claim score",
     "WHY": "Why",
@@ -248,6 +254,18 @@ GLOSS = {
     "CAR": "Carries per game.",
     "TGT%": "His share of his NFL team's targets. 25%+ is a No. 1 receiver's role; under 15% is a part-timer.",
     "TM#": "Where he ranks in targets on his own NFL team. #1 = the go-to option.",
+    "RTE": "Pass routes run. Estimated — his snap share × his team's dropbacks, because nflverse "
+           "has no charted route count. It runs high for anyone who blocks or sits on passing downs.",
+    "RTE/G": "Estimated pass routes run per game. Under ~25 is a part-time role.",
+    "TPRR": "Targets per route run — how often he's thrown to when he's actually in a route. "
+            "Around 20%+ is a featured receiver. It tells a real role apart from empty snaps, "
+            "which raw target share can't.",
+    "1D/RR": "First downs per route run — the single best read on a receiver. 12%+ is the "
+             "league-winner line for a WR. Tight ends read lower: the route estimate counts "
+             "their blocking snaps, so compare them to other TEs, not to WRs.",
+    "1D": "Catches that moved the chains.",
+    "FLAG": "\"League-winner 1D/RR\" when a WR clears 12% on enough routes to believe it. "
+            "\"Under 50 routes\" means the sample is too small to read the rates at all.",
     "ST": "Out, doubtful, questionable or IR — from the NFL injury report, or from Chris's own list (data/player_status.csv), which wins when the report hasn't caught up.",
     "OPP": "Next opponent (@ = away game).",
     "IMP": "Vegas's expected points for his offense next game. Higher = more scoring to go around.",

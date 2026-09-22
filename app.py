@@ -203,6 +203,18 @@ def load_snaps(season: int) -> pd.DataFrame:
     return df
 
 
+@st.cache_data(ttl=CACHE_TTL, show_spinner="Estimating routes run…")
+def load_routes(season: int) -> pd.DataFrame:
+    """Weekly WR/TE routes, targets and receiving first downs. Estimated — see mega/routes.py.
+    Empty frame if play-by-play (the source of team dropbacks) can't be reached."""
+    from mega import routes as rz
+    try:
+        return rz.weekly(load_player_stats(season), load_snaps(season),
+                         player_ids.crosswalk(), rz.team_dropbacks(season))
+    except Exception:
+        return pd.DataFrame()
+
+
 @st.cache_data(ttl=CACHE_TTL, show_spinner=False)
 def load_injuries(season: int) -> pd.DataFrame:
     try:
@@ -608,6 +620,47 @@ with tab_over:
             "share is a true alpha. Good points on a low target share is usually touchdown luck that won't "
             "hold. **Vs expected**: red = scoring above his usage (sell high) · navy = below it (hold or buy)."
         )
+
+        # ---- route usage: WR and TE only. Routes are estimated (mega/routes.py), and the
+        # estimate is too crude for backs, who are on the field for runs they never route on.
+        _rw = load_routes(int(season))
+        if not _rw.empty:
+            from mega import routes as rz
+
+            _win = range(max(1, int(week) - int(roll) + 1), int(week) + 1)
+            _rt = rz.totals(_rw[_rw["gsis_id"].isin(gsis_list)], weeks=_win)
+            if not _rt.empty and _rt["routes"].notna().any():
+                _rt["slot"] = _rt["gsis_id"].map(slot_by_id)
+                _rt["route_flag"] = _rt.apply(rz.flag, axis=1)
+                if "tgt_pct" in agg.columns:
+                    _rt = _rt.merge(agg[["gsis_id", "tgt_pct"]], on="gsis_id", how="left")
+                # small samples last: a half-game cameo can top any per-route rate
+                _rt = _rt.sort_values(["qualified", "fd_rr"], ascending=False, na_position="last")
+                st.markdown(f"#### Route usage — your WRs and TEs, last {roll} weeks")
+                ui.lede(
+                    "Target share tells you how big his slice is. These tell you <b>how good the slice "
+                    "is</b>: how often he's on the field in a route, how often the ball comes when he is, "
+                    "and how often that moves the chains. <b>1st downs per route</b> is the one to read "
+                    "first — 12%+ is the league-winner line for a WR."
+                )
+                # The rates lead: they're the point of the table, and on a laptop the last
+                # columns of a wide table sit off the right edge until you scroll.
+                _rcols = [c for c in ["slot", "player", "pos", "team", "fd_rr", "tprr", "tgt_pct",
+                                      "targets", "routes", "routes_pg", "route_flag"] if c in _rt.columns]
+                # No heat shading on the rates: it would paint a half-game cameo's 50%
+                # target rate the darkest cell in the table, which is the opposite of true.
+                ui.table(
+                    _rt[_rcols], pos_cols=["POS"],
+                    fmt={"RTE": "{:.0f}", "RTE/G": "{:.1f}", "TARGETS": "{:.0f}",
+                         "TGT%": "{:.1%}", "TPRR": "{:.1%}", "1D/RR": "{:.1%}"},
+                )
+                st.caption(
+                    "Routes are **estimated** — his snap share × his team's dropbacks — because nflverse "
+                    "publishes no charted route count. The estimate counts blocking snaps, so tight ends "
+                    f"read low: compare a TE with other TEs. Under {rz.MIN_ROUTES} routes in the window, "
+                    "treat the rates as noise and no flag is given. Backs are left out — the estimate "
+                    "can't tell their run snaps from their pass snaps."
+                )
 
 # ---- League (live Yahoo API) ---------------------------------------------------------
 with tab_league:
@@ -1290,7 +1343,7 @@ def _season_table(season: int) -> pd.DataFrame:
     from mega.lookup import season_table
     snaps_s = load_snaps(season)
     return season_table(load_player_stats(season), load_ff_opportunity(season), snaps_s,
-                        player_ids.crosswalk())
+                        player_ids.crosswalk(), load_routes(season))
 
 
 @st.cache_data(ttl=dt.timedelta(minutes=30), show_spinner=False)
@@ -1469,7 +1522,8 @@ with sec_players:
                 pfr = r.get("pfr_id") if "pfr_id" in r.index else None
                 log = LK.game_log(load_player_stats(int(_season_pick)), gid,
                                   load_ff_opportunity(int(_season_pick)), load_snaps(int(_season_pick)),
-                                  load_schedule(int(_season_pick)), pfr if isinstance(pfr, str) else None)
+                                  load_schedule(int(_season_pick)), pfr if isinstance(pfr, str) else None,
+                                  load_routes(int(_season_pick)))
                 if log.empty:
                     st.caption("No games yet.")
                 else:
@@ -1478,7 +1532,7 @@ with sec_players:
                              fmt={"SNAP%": "{:.0%}", "TGT%": "{:.0%}", "PTS": "{:.1f}", "xFP": "{:.1f}",
                                   "xFP±": "{:+.1f}", **{c: "{:.0f}" for c in
                                   ("CMP", "ATT", "PASSYD", "PASSTD", "INT", "SK", "CARRIES", "RUSHYD", "RUSHTD",
-                                   "TARGETS", "REC", "RECYD", "RECTD", "AIRYD", "YAC")}})
+                                   "TARGETS", "REC", "RECYD", "RECTD", "AIRYD", "YAC", "RTE", "1D")}})
                     if len(log) >= 2:
                         lg = pd.concat([
                             log[["week", "half_ppr"]].rename(columns={"half_ppr": "pts"}).assign(series="Actual pts"),

@@ -88,11 +88,17 @@ STATUS_WORDS = {"ACT": "Active", "RES": "Reserve / IR", "INA": "Inactive", "DEV"
 
 
 # ---------------------------------------------------------------- season table
+ROUTE_COLS = ("routes", "route_games", "routes_pg", "tprr", "fd_rr", "qualified")
+
+
 def season_table(w: pd.DataFrame, ffo: pd.DataFrame | None, snaps: pd.DataFrame | None,
-                 crosswalk: pd.DataFrame | None = None) -> pd.DataFrame:
+                 crosswalk: pd.DataFrame | None = None,
+                 routes: pd.DataFrame | None = None) -> pd.DataFrame:
     """One row per skill player for the season: counting stats, shares and rates.
 
     `crosswalk` supplies gsis_id -> pfr_id for joining snap counts.
+    `routes` is a weekly frame from mega.routes — WR and TE only, so the route columns
+    are blank for everyone else.
     """
     w = _reg(w)
     if w.empty:
@@ -164,6 +170,14 @@ def season_table(w: pd.DataFrame, ffo: pd.DataFrame | None, snaps: pd.DataFrame 
     t["ypc"] = t.get("rushing_yards", 0) / t["carries"].replace(0, np.nan)
     t["rec_epa_tgt"] = t.get("receiving_epa", 0) / t["targets"].replace(0, np.nan)
     t["rush_epa_car"] = t.get("rushing_epa", 0) / t["carries"].replace(0, np.nan)
+    if routes is not None and not routes.empty:
+        from .routes import totals as _route_totals
+        rt = _route_totals(routes)
+        t = t.merge(rt[["gsis_id", *ROUTE_COLS]], on="gsis_id", how="left")
+    else:
+        for c in ROUTE_COLS:
+            t[c] = np.nan
+
     att = t.get("attempts", pd.Series(0, index=t.index))
     drop = att + t.get("sacks_suffered", 0)
     t["cmp_pct"] = t.get("completions", 0) / att.replace(0, np.nan)
@@ -199,7 +213,17 @@ CARD = {
     "WR": [("pts_pg", "Pts/game", "{:.1f}", "Half-PPR fantasy points per game."),
            ("xfp_pg", "Expected pts/g", "{:.1f}", "What his targets should score."),
            ("snap_pct", "Snap share", "{:.0%}", "Share of his offense's plays he was on the field for."),
+           ("routes_pg", "Routes/game (est.)", "{:.1f}",
+            "Pass routes run per game. Estimated from snap share × team dropbacks — nflverse has no "
+            "charted route count. Under ~25 is a part-time role."),
+           ("tgt_pg", "Targets/game", "{:.1f}", "Raw target volume — the input everything else starts from."),
            ("tgt_share", "Target share", "{:.1%}", "25%+ is a No. 1 receiver's role."),
+           ("tprr", "Targets per route (est.)", "{:.1%}",
+            "How often he's thrown to when he's actually in a route. Around 20%+ is a featured "
+            "receiver. This is what separates a real role from empty snaps."),
+           ("fd_rr", "1st downs per route (est.)", "{:.1%}",
+            "The single best read on a receiver. 12%+ is the league-winner line for a WR. Tight ends "
+            "read lower — the route estimate counts their blocking snaps, so judge a TE against TEs."),
            ("ay_share", "Air-yards share", "{:.1%}", "Share of the team's downfield targets."),
            ("wopr", "WOPR", "{:.2f}", "1.5 × target share + 0.7 × air-yards share. About 0.5+ is a starter's role."),
            ("adot", "aDOT", "{:.1f}", "Average depth of target, in yards."),
@@ -217,11 +241,20 @@ def ranks(table: pd.DataFrame, gsis_id: str, pos: str) -> dict[str, str]:
     if pool.empty or gsis_id not in set(pool["gsis_id"]):
         return {}
     pool = pool[pool["games"] >= max(1, int(np.ceil(pool["games"].max() / 2)))]
+    # A per-route rate off 12 routes isn't a rank, it's noise. The full 50-route bar would
+    # empty the pool in September, so early on ask instead for a part-timer's load in the
+    # games he did run routes in — enough to exclude a player hurt in the first quarter.
+    route_bar = None
+    if {"routes", "route_games"} <= set(pool.columns) and pool["routes"].notna().any():
+        from .routes import MIN_ROUTES
+        route_bar = np.minimum(MIN_ROUTES, 20 * pd.to_numeric(pool["route_games"], errors="coerce"))
     out = {}
     for col, *_ in CARD.get(pos, []):
         if col not in pool.columns or gsis_id not in set(pool["gsis_id"]):
             continue
         v = pd.to_numeric(pool[col], errors="coerce")
+        if col in ("tprr", "fd_rr") and route_bar is not None:
+            v = v.where(pool["routes"] >= route_bar)
         if v.notna().sum() < 3:
             continue
         # lower is better only for interceptions
@@ -234,7 +267,8 @@ def ranks(table: pd.DataFrame, gsis_id: str, pos: str) -> dict[str, str]:
 
 # ---------------------------------------------------------------- game log
 def game_log(w: pd.DataFrame, gsis_id: str, ffo: pd.DataFrame | None, snaps: pd.DataFrame | None,
-             sched: pd.DataFrame | None, pfr_id: str | None) -> pd.DataFrame:
+             sched: pd.DataFrame | None, pfr_id: str | None,
+             routes: pd.DataFrame | None = None) -> pd.DataFrame:
     w = _reg(w)
     team_week = w.groupby(["team", "week"])[["targets"]].sum().rename(columns={"targets": "tm_tgt"})
     g = w[w["gsis_id"] == gsis_id].sort_values("week").copy()
@@ -253,6 +287,9 @@ def game_log(w: pd.DataFrame, gsis_id: str, ffo: pd.DataFrame | None, snaps: pd.
         g["snap_pct"] = g["week"].map(sp)
     else:
         g["snap_pct"] = np.nan
+    if routes is not None and not routes.empty:
+        rr = routes[routes["gsis_id"] == gsis_id].set_index("week")
+        g["routes"] = g["week"].map(rr["routes"].round(0))
     if sched is not None and not sched.empty:
         home = {(r.week, r.home_team) for r in sched.itertuples()}
         g["game"] = [("vs " if (wk, tm) in home else "@ ") + str(op)
@@ -268,7 +305,8 @@ LOG_COLS = {
            "half_ppr", "xfp", "vs_exp"],
     "RB": ["week", "game", "snap_pct", "carries", "rushing_yards", "rushing_tds", "targets", "tgt_pct",
            "receptions", "receiving_yards", "receiving_tds", "half_ppr", "xfp", "vs_exp"],
-    "WR": ["week", "game", "snap_pct", "targets", "tgt_pct", "receptions", "receiving_yards",
-           "receiving_tds", "receiving_air_yards", "receiving_yards_after_catch", "half_ppr", "xfp", "vs_exp"],
+    "WR": ["week", "game", "snap_pct", "routes", "targets", "tgt_pct", "receptions",
+           "receiving_first_downs", "receiving_yards", "receiving_tds", "receiving_air_yards",
+           "receiving_yards_after_catch", "half_ppr", "xfp", "vs_exp"],
 }
 LOG_COLS["TE"] = LOG_COLS["WR"]
