@@ -1114,6 +1114,9 @@ with tab_wire:
             "he's being added elsewhere."
         )
 
+from mega.config import MY_TEAM as MY_TEAM_LABEL   # noqa: E402  (the trade tab reads it)
+
+
 @st.cache_data(ttl=dt.timedelta(minutes=30), show_spinner=False)
 def _trade_pool() -> pd.DataFrame:
     """Everyone rostered who has a trade value, labelled with who owns him."""
@@ -1124,19 +1127,53 @@ def _trade_pool() -> pd.DataFrame:
     if r.empty:
         return r
     r = r.sort_values("value", ascending=False)
-    from mega.config import MY_TEAM
+    from mega.trade_league import _pid
 
-    who = r["team"].map(lambda t: "yours" if str(t) == MY_TEAM else str(t))
+    who = r["team"].map(lambda t: "yours" if str(t) == MY_TEAM_LABEL else str(t))
     r["label"] = r["player"] + " · " + r["pos"].astype(str) + " · " + who
-    return r[["label", "player", "pos", "team", "value"]]
+    r["pid"] = [_pid(row) for _, row in r.iterrows()]   # same id the engine keys on
+    return r[["label", "player", "pos", "team", "value", "pid"]]
 
 
-@st.cache_data(ttl=dt.timedelta(minutes=30), show_spinner="Working out who'd take the call…")
-def _trade_options(name: str) -> dict:
-    from mega.intel import trade_options
+@st.cache_resource(ttl=dt.timedelta(minutes=30), show_spinner="Building the league's rosters…")
+def _trade_engine(season: int):
+    """The trade engine over this league. Cached as a resource: it holds a memo table that
+    makes the search fast, and rebuilding it per rerun would throw that away."""
+    from mega.trade_engine import create_engine
+    from mega.trade_league import build_league, engine_config
     from mega.yahoo import cached_rosters
 
-    return trade_options(name, cached_rosters())
+    league = build_league(season, cached_rosters())
+    if not league["teams"]:
+        return None, league["report"]
+    return create_engine(league, engine_config()), league["report"]
+
+
+@st.cache_data(ttl=dt.timedelta(minutes=30), show_spinner="Rebuilding both rosters for every trade…")
+def _trade_search(season: int, pid: str, mine: bool, flags: tuple, shapes: tuple,
+                  order: str = "accept") -> dict:
+    from mega.trade_league import find_for_their_player, find_from_my_player
+
+    eng, rep = _trade_engine(season)
+    if eng is None:
+        return {"table": pd.DataFrame(), "results": [], "matched": 0, "evaluated": 0, "padded": 0}
+    me = rep["my_team_id"]
+    if mine:
+        out = find_from_my_player(eng, me, [pid], includeFlags=list(flags), shapes=list(shapes), topN=40)
+    else:
+        out = find_for_their_player(eng, me, pid, include_flags=flags, shapes=shapes, top_n=40)
+    # The engine sorts by what you gain, which puts the biggest raids on top — and those are
+    # the ones nobody accepts. Default to ordering by whether the other manager would say yes,
+    # then by what you gain inside each group.
+    if order == "accept":
+        rank = {"LIKELY": 0, "NEEDS_PITCH": 1, "EXPLOIT": 2, "LONGSHOT": 3}
+        pairs = sorted(zip(out["results"], range(len(out["results"]))),
+                       key=lambda rv: (rank.get(rv[0]["flag"], 9), -rv[0]["dMe"]))
+        out["results"] = [r for r, _ in pairs]
+        from mega.trade_league import _rows
+        out["table"] = _rows(eng, out["results"])
+    out["explain"] = [eng.explain(r) for r in out["results"][:3]]
+    return out
 
 
 with tab_trade:
@@ -1157,31 +1194,46 @@ with tab_trade:
         else:
             _pick = st.selectbox("Player", _pool["label"].tolist(), index=None, key="trade_pick",
                                  placeholder="Search — e.g. Kelce, Bijan, Nabers…")
+            _c1, _c2 = st.columns([2, 1])
+            _flags = _c1.pills("Show", ["Likely", "Exploit", "Needs pitch"],
+                               selection_mode="multi", default=["Likely", "Exploit", "Needs pitch"],
+                               key="trade_flags") or ["Likely", "Exploit", "Needs pitch"]
+            _two = _c2.toggle("Allow two-player packages", value=True, key="trade_two")
+            _order = _c2.radio("Order by", ["Most likely accepted", "Best for me"],
+                               horizontal=True, key="trade_order", label_visibility="collapsed")
             if _pick:
-                _name = _pool[_pool["label"] == _pick]["player"].iloc[0]
-                _res = _trade_options(_name)
-                _side = {"mine": "yours", "theirs": f"on {_res.get('owner')}"}.get(_res["side"], "")
+                _row = _pool[_pool["label"] == _pick].iloc[0]
+                _mine = str(_row["team"]) == MY_TEAM_LABEL
+                _flagset = tuple(f.upper().replace(" ", "_") for f in _flags)
+                _shapes = ("1-for-1", "2-for-1") if _two else ("1-for-1",)
+                _res = _trade_search(int(season), str(_row["pid"]), _mine, _flagset, _shapes,
+                                     "accept" if _order.startswith("Most") else "gain")
                 st.markdown(
-                    f"**{_res['player']}** · {_res.get('pos','')} · {_side} · "
-                    f"trade value **{_res.get('value','—')}**"
+                    f"**{_row['player']}** · {_row['pos']} · "
+                    + ("yours" if _mine else f"on {_row['team']}")
+                    + f" · {_res['evaluated']:,} trades evaluated"
+                    + (f", {_res['padded']} dropped as padding" if _res["padded"] else "")
                 )
-                if _res["ideas"].empty:
-                    st.info(_res["note"])
+                if _res["table"].empty:
+                    st.info(
+                        "Nothing clears the filters. Every offer has to leave your lineup better "
+                        "off — try allowing two-player packages, or widen the likelihood filter."
+                    )
                 else:
-                    _mine_side = _res["side"] == "mine"
+                    _tcols = ["partner", "shape", "give", "get", "d_me", "d_them", "mkt_ratio", "flag"]
                     ui.table(
-                        _res["ideas"],
-                        pos_cols=["POS"], sequential=["FAIR"],
-                        fmt={"GET VAL": "{:.0f}", "GIVE VAL": "{:.0f}", "FAIR": "{:.2f}"},
-                        labels={"MANAGER": "Trade with"},
+                        _res["table"][_tcols], diverging=["THEM ±"], sequential=["YOU ±"],
+                        fmt={"YOU ±": "{:+.2f}", "THEM ±": "{:+.2f}", "MARKET": "{:.2f}"},
+                        labels={"MANAGER": "Trade with"}, logos=False,
                     )
-                    if _res["note"]:
-                        st.warning(_res["note"]) if _mine_side else st.caption(_res["note"])
                     st.caption(
-                        "Everything here is within 25% of his value one-for-one, ordered by what "
-                        "helps you most. **Fairness** near 1.00 is a dead-even swap — the further "
-                        "below, the more you're asking the other manager to swallow."
+                        "Both rosters are rebuilt for every offer — forced back to legal size, "
+                        "re-optimised, and compared with where they started. **Your lineup ±** is "
+                        "what you gain per week; **their lineup ±** is what it costs them, which is "
+                        "what decides whether the offer gets accepted."
                     )
+                    with st.expander("The lineups behind the top offers"):
+                        st.code("\n\n".join(_res["explain"]), language="text")
             st.divider()
 
         ui.h("Offers the league is set up for")
