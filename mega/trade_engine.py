@@ -32,6 +32,11 @@ DEFAULTS: dict[str, Any] = {
     "themTolerance": 1.0,
     "market": {"k": 50, "tolerance": 0.15, "unrankedEcr": 300},
     "faCandidatesPerPos": 3,
+    # Which free agent sets replacement level: 1 = the best one, the JS engine's rule and
+    # what the ported tests pin. The max over a large pool is biased high — it is the single
+    # luckiest estimate of a few hundred — so a caller pricing waiver adds should raise this.
+    # See mega/needs.py, which uses 3 (you rarely win a bid on the pool's very best player).
+    "replacementRank": 1,
     "padTolerance": 0.05,
     "search": {
         "shapes": ["1-for-1", "2-for-1", "1-for-2"],
@@ -230,12 +235,17 @@ def build_context(league: dict, config: dict | None = None) -> Ctx:
     weeks = ([(w, (hz.get("weights") or {}).get(w, 1)) for w in hz["weeks"]]
              if hz and hz.get("weeks") else [(None, 1)])
 
+    rank = max(1, int(cfg.get("replacementRank", 1)))
     repl: dict = {}
     for w in [None, *[w for w, _ in weeks if w is not None]]:
-        r = {pos: 0.0 for pos in valued_pos}
+        by_pos: dict[str, list[float]] = {pos: [] for pos in valued_pos}
         for pid in fa:
             p = players[pid]
-            r[p["pos"]] = max(r[p["pos"]], value_at(p, w))
+            by_pos[p["pos"]].append(value_at(p, w))
+        r = {}
+        for pos, vals in by_pos.items():
+            vals.sort(reverse=True)
+            r[pos] = vals[min(rank, len(vals)) - 1] if vals else 0.0
         repl[w] = r
 
     fa_candidates = []

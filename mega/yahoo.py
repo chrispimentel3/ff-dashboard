@@ -422,6 +422,15 @@ def pull(manual: bool = False, fa_pages: int = 4) -> dict[str, pd.DataFrame]:
             # real team name off each page title and derives the seat from that.
             rosters = [parse_roster(s.get(f"{BASE}/{tid}")) for tid in range(1, N_TEAMS + 1)]
             out["rosters"] = pd.concat(rosters, ignore_index=True)
+            # FAAB. Balances live on the league home page (the standings page has no money
+            # column at all), and the settled claims behind a transactions filter. Keys are
+            # chosen so the loop below writes yahoo_faab.csv / yahoo_faab_bids.csv, which is
+            # where mega.faab looks. Neither page carries manager emails — the /teams page
+            # does, and this repo is public, which is why budgets are not read from there.
+            from . import faab as _faab
+
+            out["faab"] = _faab.parse_budgets(s.get_text(BASE))
+            out["faab_bids"] = _faab.parse_bids(s.get_text(BASE + "?transactionsfilter=faab"))
 
     for name, df in out.items():
         path = DATA / f"yahoo_{name}.csv"

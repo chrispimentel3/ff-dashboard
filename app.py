@@ -1024,13 +1024,30 @@ def _intel_bundle(season: int):
         rostered = set(ros["norm"])
     return dict(
         draft=draft,
-        waivers=_i.waiver_board(season, rostered, top=20),
+        waivers=_waiver_board(season, ros, rostered),
         trades=_i.trade_finder(season, yahoo_rosters=ros),
         draft_delta=_i.draft_value_delta(season),
         buysell=_i.buy_low_sell_high(season),
         basis=_i.season_basis(season),
         roster_src=roster_src,
     )
+
+
+def _waiver_board(season: int, ros, rostered: set) -> pd.DataFrame:
+    """Free agents priced against *this* roster, not against the league in the abstract.
+
+    Falls back to the roster-blind board if the valuation engine can't build (no rosters,
+    no projections), because a worse board still beats an empty tab.
+    """
+    from mega import needs
+
+    try:
+        b = needs.board(season, current_week(season, 1), yahoo_rosters=ros, top=25)
+        if not b.empty:
+            return b
+    except Exception:
+        pass
+    return _i.waiver_board(season, rostered, top=20)
 
 
 try:
@@ -1100,7 +1117,19 @@ with tab_action:
 
     if IB is not None:
         wv = IB["waivers"]
-        if not wv.empty:
+        if not wv.empty and "bid" in wv.columns:
+            ui.h("Best waiver claims")
+            worth = wv[wv["bid"] >= 1]
+            if worth.empty:
+                st.caption(
+                    "Nothing on the wire improves your starting lineup this week, so there's "
+                    "nothing worth bidding on. Your budget keeps."
+                )
+            else:
+                ui.table(worth.head(5)[["player", "pos", "gain", "bid", "max_bid", "drop", "why"]],
+                         sequential=["GAIN"], pos_cols=["POS"],
+                         fmt={"GAIN": "{:+.2f}", "BID": "${:.0f}", "MAX": "${:.0f}"})
+        elif not wv.empty:
             ui.h("Best waiver claims")
             ui.table(wv.head(5)[["player", "pos", "pg_recent", "tgt_pct", "tm_rank", "add_score", "why"]],
                      sequential=["SCORE"], pos_cols=["POS"],
@@ -1128,29 +1157,93 @@ with tab_wire:
         st.warning(f"League intel unavailable: {_intel_err}")
     else:
         wv = IB["waivers"].copy()
-        top3 = wv.head(3)
-        ui.kpi_row([
-            (f"#{i+1} target", ui.short_name(r["player"]), f"{r['pos']} · {r['why'][:38]}")
-            for i, (_, r) in enumerate(top3.iterrows())
-        ] or [("—", "no candidates", "")])
-        st.write("")
-        st.caption(f"Recent form: {IB['basis']['label']} · adds via Sleeper · values via FantasyCalc")
-        ui.lede(
-            "Free agents ranked by <b>whether their role actually changed</b>, not just whether they had one "
-            "good week. Check <b>Team tgt rank</b> and <b>Target share</b> before you spend a claim."
-        )
-        ui.table(
-            wv,
-            sequential=["SCORE", "TGT%"], diverging=["TR30"], pos_cols=["POS"],
-            fmt={"PPG": "{:.1f}", "TGT": "{:.1f}", "CAR": "{:.1f}", "TGT%": "{:.1%}",
-                 "TM#": "{:.0f}", "VAL": "{:.0f}", "ADD#": "{:.0f}", "TR30": "{:+.0f}",
-                 "SCORE": "{:.2f}"},
-        )
-        st.caption(
-            "A **#1–2 team target rank** on a rising **target share** is the strongest sign a role has "
-            "genuinely changed. **Claim score** blends that with recent points, trade value and how fast "
-            "he's being added elsewhere."
-        )
+        need_aware = "bid" in wv.columns
+
+        if need_aware:
+            from mega import faab as _fb
+
+            _r, _m = _fb.rivals(), _fb.market_summary()
+            worth = wv[wv["bid"] >= 1]
+            spec = wv[wv["bid"] < 1]
+            ui.kpi_row([
+                ("Your FAAB", f"${_r['mine']}" if _r.get("known") else "—",
+                 f"of ${_fb.BUDGET} · {_r['richer']} of {_r['teams'] - 1} teams hold more"
+                 if _r.get("known") else "balances not cached"),
+                ("Worth bidding on", str(len(worth)),
+                 "free agents who'd change your lineup" if len(worth) != 1
+                 else "free agent who'd change your lineup"),
+                ("League has paid", f"${_m['median']:.0f}" if _m.get("claims") else "—",
+                 f"median of {_m['claims']} settled claims" if _m.get("claims") else "no claims yet"),
+            ])
+            st.write("")
+            ui.lede(
+                "Free agents priced against <b>your actual lineup</b>. A player is worth what he adds "
+                "to an optimal starting eleven once you account for who he displaces and who you'd cut "
+                "for him — so a third tight end is worth nothing here however good he is, because the "
+                "flex is RB/WR and he can never start."
+            )
+            ui.h("Worth bidding on")
+            if worth.empty:
+                st.info(
+                    "Nothing available improves your starting lineup this week. That is a real "
+                    "answer, not a missing one — hold the budget for a week when it isn't true."
+                )
+            else:
+                ui.table(
+                    worth[["player", "pos", "nfl_team", "ppg", "gain", "bid", "max_bid", "drop", "why"]],
+                    sequential=["GAIN", "BID"], pos_cols=["POS"],
+                    fmt={"PPG": "{:.1f}", "GAIN": "{:+.2f}", "BID": "${:.0f}", "MAX": "${:.0f}"},
+                )
+                st.caption(
+                    "**Bid** spends a share of your budget that scales with the points the player adds "
+                    "between now and week 17; **Walk-away** is the most he could justify. Both are capped "
+                    "by what you actually hold."
+                )
+
+            ui.h("Speculative")
+            ui.lede(
+                "These add nothing to your lineup today, so they're ranked by who is trending instead. "
+                "A dollar at most, and only for a bench spot you don't mind wasting."
+            )
+            ui.table(
+                spec[["player", "pos", "nfl_team", "ppg", "add_score", "upside", "why"]].head(15),
+                sequential=["SCORE"], pos_cols=["POS"],
+                fmt={"PPG": "{:.1f}", "SCORE": "{:.2f}"},
+                labels={"WHY": "Why not now"},
+            )
+            if _m.get("unlisted_spend"):
+                # Escaped dollars: Streamlit reads $...$ in markdown as LaTeX and swallows
+                # both the signs and everything between them.
+                st.caption(
+                    f"Yahoo's FAB feed lists only claims that went to a waiver run, so "
+                    f"\${_m['unlisted_spend']:.0f} of the \${_m['league_spend']:.0f} this league "
+                    f"has actually spent never appears on it. The real market runs dearer than "
+                    f"the \${_m['median']:.0f} median suggests."
+                )
+        else:
+            top3 = wv.head(3)
+            ui.kpi_row([
+                (f"#{i+1} target", ui.short_name(r["player"]), f"{r['pos']} · {r['why'][:38]}")
+                for i, (_, r) in enumerate(top3.iterrows())
+            ] or [("—", "no candidates", "")])
+            st.write("")
+            st.caption(f"Recent form: {IB['basis']['label']} · adds via Sleeper · values via FantasyCalc")
+            ui.lede(
+                "Free agents ranked by <b>whether their role actually changed</b>, not just whether they had one "
+                "good week. Check <b>Team tgt rank</b> and <b>Target share</b> before you spend a claim."
+            )
+            ui.table(
+                wv,
+                sequential=["SCORE", "TGT%"], diverging=["TR30"], pos_cols=["POS"],
+                fmt={"PPG": "{:.1f}", "TGT": "{:.1f}", "CAR": "{:.1f}", "TGT%": "{:.1%}",
+                     "TM#": "{:.0f}", "VAL": "{:.0f}", "ADD#": "{:.0f}", "TR30": "{:+.0f}",
+                     "SCORE": "{:.2f}"},
+            )
+            st.caption(
+                "A **#1–2 team target rank** on a rising **target share** is the strongest sign a role has "
+                "genuinely changed. **Claim score** blends that with recent points, trade value and how fast "
+                "he's being added elsewhere."
+            )
 
 from mega.config import MY_TEAM as MY_TEAM_LABEL   # noqa: E402  (the trade tab reads it)
 

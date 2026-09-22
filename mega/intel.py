@@ -158,18 +158,34 @@ def current_rosters(yahoo_rosters: pd.DataFrame | None = None) -> pd.DataFrame:
 
 # ────────────────────────────────────────────────────────── waiver board
 def _recent_form(season: int, weeks: int = 3) -> pd.DataFrame:
+    """Rolling form over the last `weeks` **regular-season** weeks.
+
+    weekly() keeps the postseason on purpose, and leaving it in here was silently fatal: a
+    2025 season runs to week 22, so the last three weeks were the conference championships
+    and the Super Bowl. Form was therefore measured on the sixty-odd players still playing
+    in late January, which is how a waiver board came to rank Bills and Seahawks starters
+    above everyone else in the league.
+    """
     w = weekly(form_season(season))
+    if w.empty:
+        return pd.DataFrame()
+    if "season_type" in w.columns:
+        w = w[w["season_type"].astype(str).str.upper() == "REG"]
     if w.empty:
         return pd.DataFrame()
     maxwk = int(w["week"].max())
     lo = max(1, maxwk - weeks + 1)
     recent = w[w["week"].between(lo, maxwk)]
-    g = recent.groupby(["norm", "player", "pos"], as_index=False).agg(
+    recent = recent.sort_values("week")
+    agg = dict(
         gms=("week", "nunique"),
         pg_recent=("half_ppr", "mean"),
         tgt_pg=("targets", "mean") if "targets" in recent.columns else ("half_ppr", "size"),
         carry_pg=("carries", "mean") if "carries" in recent.columns else ("half_ppr", "size"),
     )
+    if "team" in recent.columns:
+        agg["team"] = ("team", "last")   # his current offence, for the vacated-volume signal
+    g = recent.groupby(["norm", "player", "pos"], as_index=False).agg(**agg)
     return g.merge(_team_target_share(recent), on="norm", how="left")
 
 
@@ -196,7 +212,17 @@ def _team_target_share(recent: pd.DataFrame, key: str = "norm") -> pd.DataFrame:
     return p[[key, "tgt_pct", "tm_rank"]]
 
 
-def waiver_board(season: int, rostered_norms: set[str], top: int = 20) -> pd.DataFrame:
+def waiver_signals(season: int) -> pd.DataFrame:
+    """Talent-and-trend score for every skill player, with no knowledge of any roster.
+
+    This is the old waiver board's scoring, lifted out so two callers can share it. On its
+    own it answers "who is playing well and who is the industry buying", which is the right
+    question for finding a breakout and the wrong one for deciding whether *you* should add
+    him — that part now lives in mega.needs, which knows your lineup.
+
+    Scored over the whole player population rather than whatever subset happens to be free
+    this week, so a score means the same thing from one week to the next.
+    """
     form = _recent_form(season)
     if form.empty:
         return pd.DataFrame()
@@ -204,17 +230,12 @@ def waiver_board(season: int, rostered_norms: set[str], top: int = 20) -> pd.Dat
     tr = sleeper_trending("add", limit=80)[["norm", "add_rank", "sleeper_adds", "injury_status"]]
 
     b = form.merge(fc, on="norm", how="left").merge(tr, on="norm", how="left")
-    b = b[~b["norm"].isin(rostered_norms)]
     b = b[b["pos"].isin(["QB", "RB", "WR", "TE"])]
     from .status import out_for_season
+
     b = b[~b["norm"].isin(out_for_season())]   # data/player_status.csv
 
-    # vacated volume: teammates ruled out this week
-    inj = injuries(season)
-    hurt = set()
-    if not inj.empty and "report_status" in inj.columns:
-        latest = inj.sort_values("week").groupby("norm").tail(1)
-        hurt = set(latest[latest["report_status"].isin(["Out", "Doubtful", "IR"])]["norm"])
+    b["vacated"] = _vacated_volume(season, b)
 
     def z(s):
         s = s.fillna(s.median() if s.notna().any() else 0)
@@ -226,8 +247,8 @@ def waiver_board(season: int, rostered_norms: set[str], top: int = 20) -> pd.Dat
         + 0.7 * z(-b["add_rank"].fillna(b["add_rank"].max() if b["add_rank"].notna().any() else 999))
         + 0.5 * z(b["trend_30d"])
         + 0.4 * z(b["tgt_pg"] + b["carry_pg"])
+        + 0.6 * z(b["vacated"])
     )
-    b = b.sort_values("add_score", ascending=False).head(top).reset_index(drop=True)
 
     def why(r):
         bits = []
@@ -243,11 +264,53 @@ def waiver_board(season: int, rostered_norms: set[str], top: int = 20) -> pd.Dat
             bits.append(f"#{int(r['tm_rank'])} target on {r['tgt_pct']:.0%} share")
         if pd.notna(r.get("carry_pg")) and r["carry_pg"] >= 10:
             bits.append(f"{r['carry_pg']:.1f} carry/g")
+        if r.get("vacated", 0) >= 1:
+            bits.append(f"{r['vacated']:.0f} tgt/g vacated by an injured teammate")
         return "; ".join(bits) or "role trending up"
 
-    b["why"] = b.apply(why, axis=1)
-    return b[["player", "pos", "pg_recent", "tgt_pg", "tgt_pct", "tm_rank", "carry_pg",
-              "value", "add_rank", "trend_30d", "add_score", "why"]]
+    b["upside"] = b.apply(why, axis=1)
+    return b[["norm", "player", "pos", "pg_recent", "gms", "tgt_pg", "tgt_pct", "tm_rank",
+              "carry_pg", "value", "add_rank", "trend_30d", "vacated", "add_score", "upside"]]
+
+
+def _vacated_volume(season: int, b: pd.DataFrame) -> pd.Series:
+    """Targets per game belonging to teammates who are Out/Doubtful/IR.
+
+    The old board computed this set and then never used it, so the comment promising
+    "vacated volume" was the only part of the feature that shipped. Volume is the thing
+    that actually transfers when someone goes down, so it earns a real weight here.
+    """
+    zero = pd.Series(0.0, index=b.index)
+    inj = injuries(season)
+    if inj.empty or "report_status" not in inj.columns or "team" not in b.columns:
+        return zero
+    latest = inj.sort_values("week").groupby("norm").tail(1)
+    hurt = set(latest[latest["report_status"].isin(["Out", "Doubtful", "IR"])]["norm"])
+    if not hurt:
+        return zero
+    tg = b[["norm", "team", "tgt_pg"]].copy()
+    tg["tgt_pg"] = pd.to_numeric(tg["tgt_pg"], errors="coerce").fillna(0)
+    freed = tg[tg["norm"].isin(hurt)].groupby("team")["tgt_pg"].sum()
+    out = b["team"].map(freed).fillna(0.0)
+    # Only pass-catchers inherit targets. A quarterback whose WR1 is out has lost a weapon,
+    # not gained volume, so crediting him here would have the sign exactly backwards.
+    out = out.where(b["pos"].isin(["WR", "TE", "RB"]), 0.0)
+    return out.where(~b["norm"].isin(hurt), 0.0)
+
+
+def waiver_board(season: int, rostered_norms: set[str], top: int = 20) -> pd.DataFrame:
+    """Roster-blind board: who is available and playing well, in league-wide terms.
+
+    Kept for the league-wide view and for mega/intel.py's own __main__. What it cannot tell
+    you is whether an add helps *your* team — `mega.needs.board` answers that, and it is
+    what the dashboard and the Tuesday digest use.
+    """
+    b = waiver_signals(season)
+    if b.empty:
+        return b
+    b = b[~b["norm"].isin(rostered_norms)]
+    b = b.sort_values("add_score", ascending=False).head(top).reset_index(drop=True)
+    return b.rename(columns={"upside": "why"})
 
 
 # ────────────────────────────────────────────────────────── buy low / sell high

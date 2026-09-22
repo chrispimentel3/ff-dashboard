@@ -189,6 +189,11 @@ COLS = {
     "fd_rr": "1D/RR", "fd": "1D", "receiving_first_downs": "1D", "route_flag": "FLAG",
     "report_status": "ST", "opp": "OPP", "implied": "IMP",
     "value": "VAL", "add_rank": "ADD#", "trend_30d": "TR30", "add_score": "SCORE", "why": "WHY",
+    # waivers priced against your own lineup (mega/needs.py) and FAAB (mega/faab.py)
+    "gain": "GAIN", "fit": "FIT", "bid": "BID", "max_bid": "MAX", "drop": "CUT",
+    "upside": "UPSIDE", "starts": "STARTS", "vacated": "VAC", "season_pts": "SEASON",
+    "faab_left": "FAAB", "faab_spent": "SPENT", "headroom": "ROOM",
+    "worst_starter": "WEAKEST", "replacement": "WIRE", "rostered": "HAVE", "starting": "START",
     "ease_rank": "MU#", "pa_pg": "PA/G", "proj_adj": "PROJ*", "proj": "PROJ", "proj_source": "SRC",
     "start_sit": "GRADE", "close_call": "NOTE", "lineup": "SLOT", "matchup": "MU",
     # draft value
@@ -241,6 +246,10 @@ LABELS = {
     "ST": "Status", "OPP": "Next opp", "IMP": "Vegas pts",
     "VAL": "Trade value", "ADD#": "Add rank", "TR30": "30-day trend", "SCORE": "Claim score",
     "WHY": "Why",
+    "GAIN": "Adds pts/wk", "FIT": "Fit", "BID": "Bid", "MAX": "Walk-away",
+    "CUT": "You'd drop", "UPSIDE": "Upside", "STARTS": "Starts now", "VAC": "Vacated tgt/g",
+    "SEASON": "Season pts", "FAAB": "FAAB left", "SPENT": "FAAB spent", "ROOM": "Headroom",
+    "WEAKEST": "Weakest starter", "WIRE": "Wire level", "HAVE": "Rostered", "START": "Starting",
     "MU#": "Matchup rank", "PA/G": "Pts allowed/g", "PROJ*": "Projection", "PROJ": "Raw proj",
     "SRC": "Source", "GRADE": "FP grade", "NOTE": "Close call", "MU": "Opponent",
     "DRAFTED BY": "Drafted by", "RD": "Round", "VAL±": "Value vs slot",

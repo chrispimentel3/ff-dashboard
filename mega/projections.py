@@ -155,7 +155,26 @@ def fp_rankings(season: int, week: int, positions=SKILL, rank_type: str = "weekl
 
 
 # ---------------------------------------------------------------- nflverse estimate
-PRIOR_GAMES = 3   # last season counts as this many games (WOPR handoff D7)
+# How many games last season is worth when anchoring this season's rate. One flat number
+# (this was 3, from WOPR handoff D7) is wrong in both directions, because positions differ
+# enormously in how noisy a week is relative to how far apart the players actually are.
+#
+# Measured three ways on 2025 — split-half reliability, a direct within/between variance
+# decomposition, and a holdout that predicts each player's second-half mean from his first
+# half shrunk toward a prior. The holdout is the one that matters, since it scores
+# prediction rather than fit, and these are its minima:
+#
+#     pos   split-half   direct   holdout
+#     QB         10.7       7.2      5-8      weekly QB scores swing 5-40 but every QB
+#     RB          1.2       1.2        1      lives in a 15-22 band, so a hot two-game
+#     TE          3.6       1.9        3      start says almost nothing
+#     WR          1.2       1.7        3
+#
+# A flat 3 let two games of Bryce Young (28.3/g against a 14.8/g 2025) price him at 20.0 —
+# above every rostered QB in the league, which then set replacement level for the whole
+# valuation. Rerun tools/calibrate_shrinkage.py against a new season to refresh these.
+PRIOR_GAMES_BY_POS = {"QB": 6.0, "RB": 1.5, "WR": 2.5, "TE": 3.0}
+PRIOR_GAMES = 3   # fallback for K/DEF and anything unmapped
 
 
 def _season_rates(season: int) -> pd.DataFrame:
@@ -219,7 +238,8 @@ def nflverse_estimate(season: int) -> pd.DataFrame:
     has_cur, has_prev = est["est"].notna(), est["prior"].notna()
     prior = est["prior"].where(has_prev, est["pos"].map(pos_median))
     g = pd.to_numeric(est["gms"], errors="coerce").fillna(0)
-    anchored = (g * est["est"].fillna(0) + PRIOR_GAMES * prior.fillna(0)) / (g + PRIOR_GAMES)
+    k = est["pos"].map(PRIOR_GAMES_BY_POS).fillna(PRIOR_GAMES)
+    anchored = (g * est["est"].fillna(0) + k * prior.fillna(0)) / (g + k)
     est["nfl_est"] = anchored.where(has_cur & prior.notna(), est["est"].where(has_cur, est["prior"])).round(2)
     est["gms"] = g.where(has_cur, est["gms_prev"])
     est["basis"] = f"{season - 1} only"

@@ -42,7 +42,7 @@ def build_digest(season: int, my_players: list[str] | None = None,
         my_players = my_players or draft[draft["drafted_by"] == MY_TEAM]["player"].tolist()
         rostered = set(intel._norm(p) for p in draft["player"])
 
-    wb = intel.waiver_board(season, rostered, top=12)
+    wb = _waivers(season, yahoo_rosters if have_ros else None, rostered)
     tr = intel.trade_finder(season, yahoo_rosters=yahoo_rosters if have_ros else None)
     dv = intel.draft_value_delta(season)
     bl = intel.buy_low_sell_high(season)
@@ -59,7 +59,22 @@ def build_digest(season: int, my_players: list[str] | None = None,
     L.append(f"_{SCORING_NAME} · team **{MY_TEAM}** · form data: {intel.form_season(season)} season · rosters: {src}_\n")
 
     L.append("## 🔎 Waiver targets")
-    L.append(_tbl(wb, ["player", "pos", "pg_recent", "tgt_pg", "carry_pg", "add_rank", "why"], 10))
+    if "gain" in wb.columns:
+        # Split on the bid, not the label: a player the model won't spend a dollar on does
+        # not belong under a heading that says he is worth money.
+        fits = wb[wb["bid"] >= 1]
+        L.append("**Worth bidding on** — these change your starting lineup.\n")
+        if fits.empty:
+            L.append("_Nothing on the wire improves your lineup this week. "
+                     "Hold your budget._\n")
+        else:
+            L.append(_tbl(fits, ["player", "pos", "gain", "bid", "max_bid", "drop", "why"], 8))
+        L.append("**Speculative** — no lineup value today, ranked by who is trending. "
+                 "A dollar at most, and only if you have a spot to waste.\n")
+        L.append(_tbl(wb[wb["bid"] < 1], ["player", "pos", "ppg", "upside"], 8))
+        L.append(_faab_line())
+    else:
+        L.append(_tbl(wb, ["player", "pos", "pg_recent", "tgt_pg", "carry_pg", "add_rank", "why"], 10))
 
     L.append("## 🤝 Trade ideas (approximate — verify rosters)")
     L.append(_tbl(tr, ["partner", "give", "give_pos", "get", "get_pos", "addresses", "fairness"], 8))
@@ -85,6 +100,48 @@ def build_digest(season: int, my_players: list[str] | None = None,
 
     return "\n".join(L) + "\n"
 
+
+def _waivers(season: int, rosters, rostered: set) -> pd.DataFrame:
+    """Need-aware board, falling back to the roster-blind one if the engine can't build.
+
+    The old board ranked the wire on talent alone and so kept offering a third tight end to
+    a roster that starts two of them in a RB/WR-flex league. `mega.needs` prices an add by
+    what it does to the actual lineup, which makes that recommendation impossible.
+    """
+    from . import needs
+
+    try:
+        import nflreadpy
+
+        week = int(nflreadpy.get_current_week())
+    except Exception:
+        week = 1
+    try:
+        b = needs.board(season, week, yahoo_rosters=rosters, top=20)
+        if not b.empty:
+            return b
+    except Exception as e:
+        print(f"[digest] need-aware board unavailable ({e}); falling back")
+    return intel.waiver_board(season, rostered, top=12)
+
+
+def _faab_line() -> str:
+    """Budget context under the waiver tables."""
+    from . import faab
+
+    r = faab.rivals()
+    m = faab.market_summary()
+    if not r.get("known"):
+        return "_(no FAAB balances cached — run mega.faab.refresh_budgets)_\n"
+    bits = [f"**Your FAAB: ${r['mine']}** of ${faab.BUDGET}",
+            f"{r['richer']} of {r['teams'] - 1} teams hold more (richest ${r['max_rival']})"]
+    if m.get("claims"):
+        bits.append(f"settled claims so far: {m['claims']}, median ${m['median']:.0f}, "
+                    f"most ${m['max']:.0f}")
+        if m.get("unlisted_spend"):
+            bits.append(f"${m['unlisted_spend']:.0f} of league spend never hit the offers "
+                        f"feed (uncontested adds), so the real market runs dearer")
+    return "_" + " · ".join(bits) + "._\n"
 
 def write_digest(md: str, season: int) -> str:
     iso = dt.date.today().isocalendar()
