@@ -18,6 +18,8 @@ INK = "#12161C"
 INK2 = "#4E5866"
 INK3 = "#8A93A0"
 GOLD = NAVY          # the accent name the rest of the module already reads
+# Broadcast yellow, used for one thing only: the first-down line and clearing it.
+FIRST_DOWN = "#FFC40C"
 MINE_BG = "#F2F6FC"
 
 # Drawn from real team palettes rather than only navy/red — the position column has to
@@ -482,6 +484,62 @@ def line_chart(df: pd.DataFrame, x: str, y: str, color: str, y_title: str = "") 
         .configure_legend(labelFont="Archivo Narrow", labelColor=INK2, labelFontSize=11,
                           symbolStrokeWidth=2.5)
     )
+    st.altair_chart(ch, width="stretch")
+
+
+def route_plot(pool: pd.DataFrame, mine: pd.DataFrame, threshold: float | None = None,
+               x: str = "routes_pg", y: str = "fd_rr", y_title: str = "1st downs per route",
+               x_title: str = "Routes per game (est.)") -> None:
+    """Receivers on two axes: how much he is on the field, and what it is worth when he is.
+
+    The league is the grey backdrop and `mine` is what the eye lands on, because the question
+    is never "who leads the NFL" — it's "where do my guys sit". `threshold` draws the
+    first-down line: 12% of routes, the mark a WR has to clear.
+    """
+    import altair as alt
+
+    if pool.empty:
+        return
+    base = alt.Chart(pool)
+    enc = dict(
+        x=alt.X(f"{x}:Q", axis=alt.Axis(title=x_title, grid=False),
+                scale=alt.Scale(nice=True, zero=False)),
+        y=alt.Y(f"{y}:Q", axis=alt.Axis(title=y_title, format="%", grid=True),
+                scale=alt.Scale(nice=True)),
+    )
+    tip = [alt.Tooltip("player:N", title="Player"), alt.Tooltip("pos:N", title="Pos"),
+           alt.Tooltip("team:N", title="NFL"),
+           alt.Tooltip(f"{x}:Q", title=x_title, format=".1f"),
+           alt.Tooltip(f"{y}:Q", title=y_title, format=".1%")]
+
+    layers = [base.mark_point(size=42, filled=False, strokeWidth=1.3, opacity=.45,
+                              color=INK3).encode(**enc, tooltip=tip)]
+    if threshold is not None:
+        layers.append(alt.Chart(pd.DataFrame({"t": [threshold]}))
+                      .mark_rule(color=FIRST_DOWN, strokeWidth=2.5)
+                      .encode(y=alt.Y("t:Q")))
+    med = pd.to_numeric(pool[x], errors="coerce").median()
+    if pd.notna(med):
+        layers.append(alt.Chart(pd.DataFrame({"m": [med]}))
+                      .mark_rule(color=BORDER, strokeWidth=1, strokeDash=[3, 3])
+                      .encode(x=alt.X("m:Q")))
+    if mine is not None and not mine.empty:
+        m = alt.Chart(mine)
+        # Not POS_COLORS here: its WR gold sits in the same family as the first-down line, and
+        # the line has to be the only thing on the chart wearing that colour.
+        layers.append(m.mark_point(size=110, filled=True, opacity=1)
+                      .encode(**enc, color=alt.Color("pos:N", legend=None,
+                              scale=alt.Scale(domain=["WR", "TE"], range=["#1D5FA8", "#6B3FA0"])),
+                              tooltip=tip))
+        layers.append(m.mark_text(align="left", dx=9, dy=1, font="Archivo", fontSize=11,
+                                  fontWeight=600, color=INK)
+                      .encode(**enc, text=alt.Text("short:N")))
+
+    ch = (alt.layer(*layers).properties(height=340).configure_view(strokeWidth=0)
+          .configure_axis(labelFont="Archivo Narrow", titleFont="Archivo Narrow",
+                          labelColor=INK2, titleColor=INK3, domainColor=BORDER,
+                          tickColor=BORDER, gridColor="#F0F3F8", labelFontSize=11,
+                          titleFontSize=11, titleFontWeight=700, titlePadding=8))
     st.altair_chart(ch, width="stretch")
 
 

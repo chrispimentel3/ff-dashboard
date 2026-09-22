@@ -643,6 +643,23 @@ with tab_over:
                     "and how often that moves the chains. <b>1st downs per route</b> is the one to read "
                     "first — 12%+ is the league-winner line for a WR."
                 )
+
+                # Your receivers against the league, on the two axes the decision actually turns
+                # on: is he on the field, and is it worth anything when he is. The yellow rule is
+                # the first-down line — 12% of routes — drawn the way television draws one.
+                _pool = rz.totals(_rw, weeks=_win)
+                _pool = _pool[_pool["qualified"] & _pool["fd_rr"].notna()]
+                if len(_pool) >= 8:
+                    _me = _pool[_pool["gsis_id"].isin(gsis_list)].copy()
+                    _me["short"] = _me["player"].map(ui.short_name)
+                    ui.route_plot(_pool, _me, threshold=rz.WR_FD_FLAG)
+                    st.caption(
+                        f"Every WR and TE in the league with enough routes over the last {roll} weeks "
+                        "(grey), with yours picked out. **Up** is doing more with each route; **right** is "
+                        "being on the field for more of them. Above the yellow line and right of the dashed "
+                        "median is where you want your starters. Above the line but left of it is a player "
+                        "one role change from a league-winner — the waiver claim to make."
+                    )
                 # The rates lead: they're the point of the table, and on a laptop the last
                 # columns of a wide table sit off the right edge until you scroll.
                 _rcols = [c for c in ["slot", "player", "pos", "team", "fd_rr", "tprr", "tgt_pct",
