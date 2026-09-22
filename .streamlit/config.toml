@@ -7,7 +7,13 @@ primaryColor = "#013369"
 backgroundColor = "#FFFFFF"
 secondaryBackgroundColor = "#F5F7FA"
 textColor = "#12161C"
-font = "sans serif"
+# The dataframe grid is a canvas: the CSS in mega/ui.py never reaches it, so tables were
+# rendering in Streamlit's default sans while every heading around them was Archivo. Naming
+# the families here is what makes the grid, the widgets and the page agree. Both are loaded
+# by the Google Fonts link in mega/ui.py.
+font = "Archivo Narrow"
+headingFont = "Archivo"
+dataframeBorderColor = "#DDE3EC"
 
 [server]
 headless = true

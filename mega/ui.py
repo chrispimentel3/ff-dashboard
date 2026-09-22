@@ -10,6 +10,12 @@ import streamlit as st
 NAVY = "#013369"
 RED = "#D50A0A"
 
+# Two families, one job each: Archivo for names, headings and the figures that lead;
+# Archivo Narrow for labels and data. Named here so the CSS, the charts and the Streamlit
+# theme in .streamlit/config.toml all say the same thing.
+FONT_HEAD = "Archivo"
+FONT_BODY = "Archivo Narrow"
+
 BG = "#FFFFFF"
 SURFACE = "#FFFFFF"
 SURFACE2 = "#F5F7FA"
@@ -43,9 +49,12 @@ def _mix(a, b, t):
 
 
 _CSS = """
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Archivo+Narrow:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root { --navy:#013369; --red:#D50A0A; --gold:#013369; --ink:#12161C; --ink2:#4E5866; --ink3:#8A93A0; --border:#DDE3EC; --surface2:#F5F7FA; }
+:root { --navy:#013369; --red:#D50A0A; --gold:#013369; --ink:#12161C; --ink2:#4E5866; --ink3:#8A93A0; --border:#DDE3EC; --surface2:#F5F7FA;
+  /* One radius scale. Small for chips and pills, medium for every panel, card and alert. */
+  --r-sm:4px; --r-md:8px; }
 .stApp { background:#FFFFFF; }
 html, body, [class*="st-"], .stMarkdown, .stDataFrame { font-family:'Archivo Narrow', system-ui, sans-serif; }
 /* the rule above also catches Streamlit's icon spans, which turns their ligatures into raw text */
@@ -58,23 +67,36 @@ section[data-testid="stSidebar"] { background:var(--surface2); border-right:1px 
 .mb-title { font-weight:800; font-size:26px; color:var(--navy); line-height:1.25; }
 .mb-title em { font-style:normal; color:var(--red); }
 .mb-sub { font-size:12.5px; color:var(--ink3); margin-top:3px; }
-.mb-kpi { background:#fff; border:1px solid var(--border); border-top:3px solid var(--navy); border-radius:6px; padding:11px 14px; height:100%; }
-.mb-kpi-l { font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink3); }
+.mb-kpi { background:#fff; border:1px solid var(--border); border-top:3px solid var(--navy); border-radius:var(--r-md); padding:12px 14px; height:118px; overflow:hidden; }
+.mb-kpi-l { font-size:11.5px; font-weight:700; letter-spacing:.01em; color:var(--ink3); }
+/* The cards are a fixed height rather than a stretched one. Streamlit nests each card six
+   divs deep with no definite height anywhere in the chain, so `height:100%` resolves to auto
+   and the tallest card overflows its row; forcing the row to grid instead collapsed the
+   columns to a character wide. A fixed height is the honest fix: the label is one line, the
+   note is two, and the row is uniform whatever the text says. */
+.mb-kpi-l { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.mb-kpi-s { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+/* Section titles: one size, one weight, one rhythm — see ui.h() */
+.mb-h { font-family:'Archivo', system-ui, sans-serif; font-weight:700; color:var(--ink);
+  letter-spacing:-.005em; margin:22px 0 8px; }
+.mb-h4 { font-size:17px; }
+.mb-h3 { font-size:19px; }
 .mb-kpi-v { font-family:'Archivo',sans-serif; font-weight:800; font-size:22px; color:var(--navy); line-height:1.15; margin-top:3px; }
 .mb-kpi-s { font-size:11.5px; color:var(--ink2); margin-top:2px; }
 .stTabs [data-baseweb="tab-list"] { gap:2px; border-bottom:1px solid var(--border); overflow-x:auto; scrollbar-width:thin; }
 .stTabs [data-baseweb="tab"] { font-weight:700; font-size:13px; color:var(--ink3); padding:6px 12px; white-space:nowrap; }
 .stTabs [aria-selected="true"] { color:var(--navy) !important; border-bottom:3px solid var(--red) !important; }
 .mb-legend { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
-.mb-chip { font-size:10px; font-weight:700; color:#fff; padding:2px 6px; border-radius:3px; }
+.mb-chip { font-size:10px; font-weight:700; color:#fff; padding:2px 6px; border-radius:var(--r-sm); }
 /* column key: label | what it means, one row per column */
 .mb-key { display:grid; grid-template-columns:max-content 1fr; gap:6px 16px; margin:2px 0; font-size:13px; line-height:1.45; }
 .mb-key dt { font-family:'Archivo',sans-serif; font-weight:700; color:var(--navy); white-space:nowrap; }
+[data-testid="stExpander"] { border-radius:var(--r-md); }
 .mb-key dd { margin:0; color:var(--ink2); }
 [data-testid="stExpander"] details summary p { font-size:12.5px; color:var(--ink3); }
 [data-testid="stExpander"] { border-color:var(--border); margin:-4px 0 10px; }
 [data-testid="stDataFrame"] { font-size:12.5px; }
-.stAlert { border-radius:7px; }
+.stAlert { border-radius:var(--r-md); }
 .mb-lede { font-size:13.5px; color:var(--ink2); margin:2px 0 10px; line-height:1.5; }
 .mb-lede b { color:var(--ink); }
 /* player lookup card */
@@ -84,10 +106,10 @@ section[data-testid="stSidebar"] { background:var(--surface2); border-right:1px 
 .mb-card-facts { font-size:13.5px; color:var(--ink2); margin:0 0 10px; }
 .mb-card-logo { height:26px; width:auto; }
 .mb-card-row { font-size:14px; color:var(--ink); margin:3px 0; }
-.mb-card-row span:first-child { display:inline-block; min-width:92px; font-size:11px; font-weight:700;
-  letter-spacing:.06em; text-transform:uppercase; color:var(--ink3); }
+.mb-card-row span:first-child { display:inline-block; min-width:104px; font-size:12px; font-weight:700;
+  letter-spacing:.01em; color:var(--ink3); }
 .mb-flag { background:var(--red); color:#fff; font-weight:700; font-size:11.5px; padding:2px 7px;
-  border-radius:4px; margin-right:6px; }
+  border-radius:var(--r-sm); margin-right:6px; }
 
 /* ---- phone ---------------------------------------------------------------
    Streamlit columns are flex children that never wrap on their own, so a KPI
@@ -96,9 +118,11 @@ section[data-testid="stSidebar"] { background:var(--surface2); border-right:1px 
   .block-container { padding-top:3.2rem; padding-left:.75rem; padding-right:.75rem; }
   [data-testid="stHorizontalBlock"] { flex-wrap:wrap; gap:8px; }
   [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] { min-width:calc(50% - 8px); flex:1 1 calc(50% - 8px); }
+  .mb-kpi { height:126px; }
   .mb-title { font-size:20px; }
   .mb-sub { font-size:11.5px; }
   .mb-kpi-v { font-size:19px; }
+  .mb-h4 { font-size:15.5px; } .mb-h3 { font-size:17px; }
   .stTabs [data-baseweb="tab"] { font-size:12px; padding:6px 9px; }
   [data-testid="stDataFrame"] { font-size:11.5px; }
   .mb-key { grid-template-columns:1fr; gap:1px; font-size:12.5px; }
@@ -138,7 +162,7 @@ def kpi_row(items: list[tuple[str, str, str]]) -> None:
     """items: (label, big value, small sub)."""
     for col, (label, value, sub) in zip(st.columns(len(items)), items):
         col.markdown(
-            f'<div class="mb-kpi"><div class="mb-kpi-l">{label}</div>'
+            f'<div class="mb-kpi"><div class="mb-kpi-l">{title_case(label)}</div>'
             f'<div class="mb-kpi-v">{value}</div><div class="mb-kpi-s">{sub}</div></div>',
             unsafe_allow_html=True,
         )
@@ -332,14 +356,65 @@ GLOSS = {
                "the games of the most-used one.",
 }
 
+# Headers are Title Case across every table. Rather than hand-capitalising ninety strings in
+# LABELS and watching them drift apart again, the rule is applied once at render.
+# Short prepositions stay lowercase, the usual rule. "for" is deliberately not here: PF and
+# PA are "Pts For" and "Pts Against" on every scoreboard ever printed.
+_SMALL = {"a", "an", "and", "at", "by", "in", "of", "on", "or", "per", "the", "to", "vs"}
+
+
+def title_case(label: str) -> str:
+    """'Snap share' -> 'Snap Share'. Words that already carry capitals are left alone: xFP,
+    WOPR, FAAB and TD are names, not prose, and title-casing them would damage them."""
+    def cap(word: str, first: bool) -> str:
+        m = re.search(r"[A-Za-z]", word)
+        if not m:
+            return word                       # "30", "±"
+        i = m.start()
+        if i and word[i - 1].isalnum():
+            return word                       # "1st", "2nd" — the letters belong to the number
+        core = word[i:]
+        if core != core.lower():
+            return word                       # xFP, WOPR, FAAB, TD
+        if not first and core.strip(".,)").lower() in _SMALL:
+            return word
+        return word[:i] + core[0].upper() + core[1:]
+
+    parts = re.split(r"([\s/\-]+)", str(label))
+    out, first = [], True
+    for part in parts:
+        if not part or re.fullmatch(r"[\s/\-]+", part):
+            out.append(part)
+            continue
+        out.append(cap(part, first))
+        first = False
+    return "".join(out)
+
+
 # Ranks read as "#3", so they can't be mistaken for counts.
 RANKS = {"TM#", "MU#", "ADD#", "WOPR#", "DRAFT#", "PWR", "RANK"}
 # Obvious from the header; listing them in the legend is noise.
 _NO_KEY = {"PLAYER", "POS", "LOGO", "GIVE LOGO", "GET LOGO", "AGE", "W", "L", "T", "TEAM",
            "MGR", "WK", "WHEN", "TYPE", "MOVE", "YOU GIVE", "YOU GET", "WHY"}
-_WIDTH = {"PLAYER": "medium", "WHY": "large", "MEANS": "large", "TAGS": "medium", "PLAYERS": "large",
-          "YOU GIVE": "medium", "YOU GET": "medium", "MANAGER": "medium", "TEAM": "medium",
+# Every number column is the same width, so tables line up with each other and a header like
+# "Target Share" isn't clipped in one table and roomy in the next. Text columns are sized to
+# what they hold; anything not named here is a number.
+_NUM_W = 96
+_FLEX = {"WHY", "MEANS", "PLAYERS", "MOVE", "NOTE", "TAGS"}
+_WIDTH = {
+    "PLAYER": 170, "NAME": 170,
+    "YOU GIVE": 150, "YOU GET": 150, "MANAGER": 140, "TEAM": 150, "DRAFTED BY": 140,
+    "MGR": 120, "OWNER": 130, "STAT": 185, "SIGNAL": 115,
+    "VERDICT": 115, "OWN": 130, "SRC": 125, "FILLS": 140, "THEY NEED": 140, "POSRANK": 115,
+    "GAME": 105, "MU": 105, "OPP": 105, "SLOT": 72, "POS": 72, "ST": 105, "WHEN": 115,
+    "TYPE": 115, "RES": 80, "STRK": 80, "W": 60, "L": 60, "T": 60, "G": 72, "WK": 68,
 }
+# Text reads from the left; every figure lines up on the right so columns can be compared
+# down the page without the eye hunting for the decimal point.
+_LEFT = {"PLAYER", "NAME", "WHY", "MEANS", "PLAYERS", "TAGS", "YOU GIVE", "YOU GET", "MANAGER",
+         "TEAM", "DRAFTED BY", "MGR", "OWNER", "STAT", "NOTE", "MOVE", "SIGNAL", "VERDICT",
+         "OWN", "SRC", "FILLS", "THEY NEED", "GAME", "MU", "OPP", "SLOT", "POS", "ST", "WHEN",
+         "TYPE", "RES", "GRADE", "MATCHED"}
 _LOGO_COLS = ("LOGO", "GIVE LOGO", "GET LOGO")
 
 
@@ -398,11 +473,12 @@ def col_config(df: pd.DataFrame, labels: dict | None = None, help: dict | None =
             # "small" is ~75px; a logo needs about half that, and trade rows carry two.
             out[c] = st.column_config.ImageColumn(labels.get(c, ""), help="NFL team", width=44)
             continue
-        kw = {"label": labels.get(c, c)}
+        kw = {"label": title_case(labels.get(c, c)),
+              "alignment": "left" if c in _LEFT else "right"}
+        if c not in _FLEX:
+            kw["width"] = _WIDTH.get(c, _NUM_W)
         if c in gloss:
             kw["help"] = gloss[c]
-        if c in _WIDTH:
-            kw["width"] = _WIDTH[c]
         out[c] = st.column_config.Column(**kw)
     return out
 
@@ -446,7 +522,7 @@ def col_key(*names: str, _labels: dict | None = None, _help: dict | None = None,
     labels, gloss = {**LABELS, **(_labels or {})}, {**GLOSS, **(_help or {}), **custom}
     seen, rows = set(), []
     for n in list(names) + list(custom):
-        lab = labels.get(n, n)
+        lab = title_case(labels.get(n, n))
         if n in _NO_KEY or n not in gloss or lab in seen:
             continue
         seen.add(lab)
@@ -455,6 +531,12 @@ def col_key(*names: str, _labels: dict | None = None, _help: dict | None = None,
         return
     with (_container or st).expander("What these columns mean"):
         st.markdown(f'<dl class="mb-key">{"".join(rows)}</dl>', unsafe_allow_html=True)
+
+
+def h(text: str, level: int = 4) -> None:
+    """Every section title, in one place: Title Case, one size, one rhythm above and below.
+    Before this the app had st.subheader in some tabs and #### markdown in others."""
+    st.markdown(f'<div class="mb-h mb-h{level}">{title_case(text)}</div>', unsafe_allow_html=True)
 
 
 def lede(text: str) -> None:
@@ -478,10 +560,10 @@ def line_chart(df: pd.DataFrame, x: str, y: str, color: str, y_title: str = "") 
         )
         .properties(height=290)
         .configure_view(strokeWidth=0)
-        .configure_axis(labelFont="Archivo Narrow", titleFont="Archivo Narrow",
+        .configure_axis(labelFont=FONT_BODY, titleFont=FONT_BODY,
                         labelColor=INK2, titleColor=INK3, domainColor=BORDER,
                         tickColor=BORDER, gridColor="#F0EEE9", labelFontSize=11)
-        .configure_legend(labelFont="Archivo Narrow", labelColor=INK2, labelFontSize=11,
+        .configure_legend(labelFont=FONT_BODY, labelColor=INK2, labelFontSize=11,
                           symbolStrokeWidth=2.5)
     )
     st.altair_chart(ch, width="stretch")
@@ -531,12 +613,12 @@ def route_plot(pool: pd.DataFrame, mine: pd.DataFrame, threshold: float | None =
                       .encode(**enc, color=alt.Color("pos:N", legend=None,
                               scale=alt.Scale(domain=["WR", "TE"], range=["#1D5FA8", "#6B3FA0"])),
                               tooltip=tip))
-        layers.append(m.mark_text(align="left", dx=9, dy=1, font="Archivo", fontSize=11,
+        layers.append(m.mark_text(align="left", dx=9, dy=1, font=FONT_HEAD, fontSize=11,
                                   fontWeight=600, color=INK)
                       .encode(**enc, text=alt.Text("short:N")))
 
     ch = (alt.layer(*layers).properties(height=340).configure_view(strokeWidth=0)
-          .configure_axis(labelFont="Archivo Narrow", titleFont="Archivo Narrow",
+          .configure_axis(labelFont=FONT_BODY, titleFont=FONT_BODY,
                           labelColor=INK2, titleColor=INK3, domainColor=BORDER,
                           tickColor=BORDER, gridColor="#F0F3F8", labelFontSize=11,
                           titleFontSize=11, titleFontWeight=700, titlePadding=8))
