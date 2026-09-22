@@ -1149,6 +1149,19 @@ def _trade_engine(season: int):
     return create_engine(league, engine_config()), league["report"]
 
 
+def _ppg_note(rep: dict) -> str:
+    """Where the points-per-game behind every number came from — a projection nobody can
+    see the provenance of is a projection nobody should act on."""
+    src = rep.get("ppg_sources") or {}
+    bits = [f"**{src.get('fantasypros_ros', 0)}** from FantasyPros rest-of-season",
+            f"**{src.get('nflverse', 0)}** from nflverse form (FantasyPros' free tier stops at "
+            "each position's top 10)"]
+    if src.get("none"):
+        bits.append(f"**{src['none']}** with no projection at all"
+                    + (" — " + ", ".join(rep.get("unpriced") or []) if rep.get("unpriced") else ""))
+    return "Points per game behind every trade: " + " · ".join(bits) + "."
+
+
 @st.cache_data(ttl=dt.timedelta(minutes=30), show_spinner="Rebuilding both rosters for every trade…")
 def _trade_search(season: int, pid: str, mine: bool, flags: tuple, shapes: tuple,
                   order: str = "accept") -> dict:
@@ -1234,6 +1247,7 @@ with tab_trade:
                     )
                     with st.expander("The lineups behind the top offers"):
                         st.code("\n\n".join(_res["explain"]), language="text")
+                    st.caption(_ppg_note(_trade_engine(int(season))[1]))
             st.divider()
 
         ui.h("Offers the league is set up for")

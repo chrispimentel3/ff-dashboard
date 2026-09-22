@@ -97,6 +97,40 @@ def fp_projections(season: int, week: int, positions=SKILL) -> pd.DataFrame:
     return df
 
 
+def fp_ros(season: int, positions=SKILL) -> pd.DataFrame:
+    """FantasyPros rest-of-season projections, half-PPR **points per game**.
+
+    `week="ros"` is the forward-looking number: the weeks already played are excluded, which
+    is exactly what a trade is decided on — points already banked are sunk. Completed weeks
+    are nflverse's job, and they reach this module through `nflverse_estimate`, which is what
+    prices everyone FantasyPros doesn't cover.
+
+    The free API tier caps each position at its top 10, so expect about 40 players. The
+    result carries `fp_count` on .attrs: how many FantasyPros actually has, against how many
+    it returned, so a caller can tell a thin answer from a complete one.
+    """
+    rows, avail = [], {}
+    for pos in positions:
+        j = _fp_get(f"{season}/projections", {"position": pos, "scoring": "HALF", "week": "ros"})
+        if not j:
+            continue
+        avail[pos] = (len(j.get("players") or []), j.get("count"))
+        for pl in j.get("players", []):
+            pts = (pl.get("stats") or {}).get("points_half")
+            if pts is None:
+                continue
+            rows.append(dict(mflid=pl.get("mflid"), name=pl.get("name"),
+                             pos=pl.get("position_id"), team=pl.get("team_id"),
+                             fp_ros_pg=float(pts)))
+    df = pd.DataFrame(rows)
+    if df.empty:
+        return df
+    df = _to_gsis_via(df, "mflid", "mfl_id")
+    df["norm"] = df["name"].map(_norm)
+    df.attrs["fp_count"] = avail
+    return df
+
+
 def fp_rankings(season: int, week: int, positions=SKILL, rank_type: str = "weekly") -> pd.DataFrame:
     rows = []
     for pos in positions:
