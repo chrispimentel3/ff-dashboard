@@ -6,6 +6,7 @@
   uv run python tuesday.py --no-yahoo      # offline: draft-board approximation only
   uv run python tuesday.py --manual        # parse hand-saved Yahoo HTML in data/manual/
   uv run python tuesday.py --email         # also email the digest (needs .env SMTP_*)
+  uv run python tuesday.py --no-targets    # skip the Targets page rebuild
 """
 from __future__ import annotations
 
@@ -77,6 +78,8 @@ def main(argv=None) -> None:
     ap.add_argument("--no-yahoo", action="store_true", help="offline only")
     ap.add_argument("--manual", action="store_true", help="scrape from hand-saved HTML in data/manual/")
     ap.add_argument("--email", action="store_true")
+    ap.add_argument("--no-targets", action="store_true",
+                    help="skip rebuilding and publishing the Targets page data")
     args = ap.parse_args(argv)
 
     rosters, source = resolve_rosters(args)
@@ -92,6 +95,19 @@ def main(argv=None) -> None:
             send_email(md)
         except Exception as e:
             print(f"[email] {e}", file=sys.stderr)
+
+    # Targets page (chrispimentel3.github.io/MegaBowl2026/power.html). Its data is raw
+    # nflverse counts, no Yahoo involved, so it runs whether or not the scrape worked.
+    if not args.no_targets:
+        try:
+            from scripts.targets_json import main as targets_main
+
+            print("\nrebuilding Targets page data …")
+            targets_main(["--season", str(args.season), "--publish"])
+        except SystemExit as e:
+            print(f"[targets] {e}", file=sys.stderr)
+        except Exception as e:
+            print(f"[targets] skipped: {e}", file=sys.stderr)
 
     print("\n" + md[:1600] + "\n…")
 

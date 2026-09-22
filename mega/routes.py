@@ -27,8 +27,20 @@ import pandas as pd
 
 POS = ("WR", "TE")
 
-MIN_ROUTES = 50      # routes in the window before a rate is worth reading (handoff §4)
-WR_FD_FLAG = 0.12    # 1D/RR at or above this is Chris's league-winner line for a WR
+MIN_ROUTES = 50        # routes in the window before a rate is worth reading (handoff §4)
+PER_GAME_BAR = 20      # ... or this many per game, when the window is shorter than that takes
+WR_FD_FLAG = 0.12      # 1D/RR at or above this is Chris's league-winner line for a WR
+
+
+def route_bar(games) -> float:
+    """How many routes a window needs before its rates mean anything.
+
+    MIN_ROUTES is written for the three-week default. Over one or two games nobody could
+    clear it, so the bar falls back to a part-timer's route load per game — enough to keep
+    out a receiver who left in the first quarter. One rule, used by the season card's ranks,
+    the roster table and the Targets page alike.
+    """
+    return np.minimum(MIN_ROUTES, PER_GAME_BAR * np.asarray(games, dtype=float))
 
 
 def _n(df: pd.DataFrame, c: str) -> pd.Series:
@@ -179,7 +191,7 @@ def totals(w: pd.DataFrame, weeks: range | list[int] | None = None) -> pd.DataFr
     t["tprr"] = t["targets"] / rt
     t["fd_rr"] = t["fd"] / rt
     t["routes_pg"] = t["routes"] / t["route_games"].replace(0, np.nan)
-    t["qualified"] = t["routes"].fillna(0) >= MIN_ROUTES
+    t["qualified"] = t["routes"].fillna(0) >= route_bar(t["route_games"])
     return t
 
 
@@ -192,7 +204,7 @@ def flag(row: pd.Series) -> str:
     if pd.isna(row.get("routes")) or pd.isna(row.get("fd_rr")):
         return "no route data"
     if not row.get("qualified"):
-        return f"under {MIN_ROUTES} routes"
+        return f"under {route_bar(row.get('route_games', 0)):.0f} routes"
     return "league-winner 1D/RR" if row["pos"] == "WR" and row["fd_rr"] >= WR_FD_FLAG else ""
 
 
@@ -213,6 +225,6 @@ if __name__ == "__main__":
     t = totals(wk)
     for p in POS:
         top = t[(t["pos"] == p) & t["qualified"]].nlargest(10, "fd_rr")
-        print(f"\n== top 10 {p} by 1D/RR (>= {MIN_ROUTES} routes) ==")
+        print(f"\n== top 10 {p} by 1D/RR (qualified) ==")
         print(top[["player", "team", "routes", "routes_pg", "targets", "fd", "tprr", "fd_rr"]]
               .to_string(index=False, float_format=lambda v: f"{v:.3f}"))

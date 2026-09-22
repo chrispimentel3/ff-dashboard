@@ -241,20 +241,16 @@ def ranks(table: pd.DataFrame, gsis_id: str, pos: str) -> dict[str, str]:
     if pool.empty or gsis_id not in set(pool["gsis_id"]):
         return {}
     pool = pool[pool["games"] >= max(1, int(np.ceil(pool["games"].max() / 2)))]
-    # A per-route rate off 12 routes isn't a rank, it's noise. The full 50-route bar would
-    # empty the pool in September, so early on ask instead for a part-timer's load in the
-    # games he did run routes in — enough to exclude a player hurt in the first quarter.
-    route_bar = None
-    if {"routes", "route_games"} <= set(pool.columns) and pool["routes"].notna().any():
-        from .routes import MIN_ROUTES
-        route_bar = np.minimum(MIN_ROUTES, 20 * pd.to_numeric(pool["route_games"], errors="coerce"))
+    # A per-route rate off 12 routes isn't a rank, it's noise. `qualified` carries the one
+    # route-sample rule (mega.routes.route_bar) that the roster table and the site use too.
+    ranked = pool["qualified"] if "qualified" in pool.columns else None
     out = {}
     for col, *_ in CARD.get(pos, []):
         if col not in pool.columns or gsis_id not in set(pool["gsis_id"]):
             continue
         v = pd.to_numeric(pool[col], errors="coerce")
-        if col in ("tprr", "fd_rr") and route_bar is not None:
-            v = v.where(pool["routes"] >= route_bar)
+        if col in ("tprr", "fd_rr") and ranked is not None:
+            v = v.where(ranked.fillna(False))
         if v.notna().sum() < 3:
             continue
         # lower is better only for interceptions
