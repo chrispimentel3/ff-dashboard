@@ -246,10 +246,15 @@ def load_rosters(season: int) -> pd.DataFrame:
 
 @st.cache_data(ttl=dt.timedelta(minutes=30), show_spinner=False)
 def _league_scores() -> pd.DataFrame:
-    """Every team's score in every completed week, from the weekly scrape."""
-    from mega.yahoo import cached_scores
+    """Every team's score in every completed week, from the weekly scrape.
 
+    The import is inside the try on purpose. Streamlit Cloud can be serving an older copy of
+    mega/ than of app.py, and an ImportError at module scope takes the whole dashboard down
+    rather than hiding one section — which is exactly what it did the first time.
+    """
     try:
+        from mega.yahoo import cached_scores
+
         return cached_scores()
     except Exception:
         return pd.DataFrame()
