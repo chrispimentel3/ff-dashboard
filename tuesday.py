@@ -58,7 +58,10 @@ def resolve_rosters(args) -> tuple[object, str]:
             from mega import yahoo
 
             res = yahoo.pull(manual=args.manual)
-            df = res.get("rosters")
+            # pull() returns the raw scrape; cached_rosters() re-reads what it just
+            # wrote and applies the shaping the digest expects (norm, normalized pos),
+            # which is what yahoo_api.rosters_df() hands back on the other path.
+            df = yahoo.cached_rosters() if not (res.get("rosters") is None or res["rosters"].empty) else None
             if df is not None and not df.empty:
                 return df, "browser scrape"
         except Exception as e:
