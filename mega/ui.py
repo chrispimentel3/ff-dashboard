@@ -214,6 +214,7 @@ COLS = {
     "shape": "SHAPE", "d_me": "YOU ±", "d_them": "THEM ±", "mkt_ratio": "MARKET", "flag": "ODDS",
     # power rankings
     "power_rank": "PWR", "starters_pg": "LINEUP", "bench_pg": "BENCH",
+    "xwins": "xW", "power": "xW%", "luck_w": "LUCK W", "ppg": "PPG", "cv": "SWING",
     "matched": "MATCHED", "luck": "LUCK",
     # game environment
     "players": "PLAYERS", "total": "TOT", "spread": "SPRD", "implied_pts": "IMP",
@@ -258,6 +259,7 @@ LABELS = {
     "SHAPE": "Shape", "YOU ±": "Your lineup ±", "THEM ±": "Their lineup ±",
     "MARKET": "Market ratio", "ODDS": "Likelihood", "GIVE LOGO": "", "GET LOGO": "",
     "PWR": "Power rank", "LINEUP": "Lineup pts/g", "BENCH": "Bench pts/g",
+    "xW": "Expected wins", "xW%": "Expected win %", "LUCK W": "Luck (wins)", "SWING": "Week-to-week swing",
     "MATCHED": "Players scored", "LUCK": "Luck",
     "PLAYERS": "Your players", "TOT": "Game total", "SPRD": "Spread", "VERDICT": "Verdict",
     "OWN": "Status",
@@ -356,6 +358,14 @@ GLOSS = {
             "costs them lineup points; that's your edge, and the harder sell. NEEDS PITCH = "
             "fine for their lineup but looks lopsided, so lead with the fit.",
     "PWR": "Rank by roster strength alone, ignoring record.",
+    "xW": "Wins his scores were worth against the whole league, not just the one opponent the "
+          "schedule gave him each week. A close score is treated as a coin flip and a blowout "
+          "as near-certain, judged against how spread out scoring was that week.",
+    "xW%": "Expected wins per week played — the power ranking itself. 0.500 is an average team.",
+    "LUCK W": "Real wins minus expected wins. Plus means the schedule has been kind and the "
+              "record should come back; minus means a team is better than its record says.",
+    "SWING": "How much his weekly score bounces around, relative to his own average. Low is a "
+             "team you can predict; high is one that wins big and loses big.",
     "LINEUP": "Points per game his best legal starting lineup is worth.",
     "BENCH": "Points per game from his three best bench players — cover for byes and injuries.",
     "MATCHED": "Roster players with enough stats to score. Low = a rougher estimate.",

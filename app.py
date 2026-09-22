@@ -244,6 +244,17 @@ def load_rosters(season: int) -> pd.DataFrame:
         return pd.DataFrame()
 
 
+@st.cache_data(ttl=dt.timedelta(minutes=30), show_spinner=False)
+def _league_scores() -> pd.DataFrame:
+    """Every team's score in every completed week, from the weekly scrape."""
+    from mega.yahoo import cached_scores
+
+    try:
+        return cached_scores()
+    except Exception:
+        return pd.DataFrame()
+
+
 def current_week(season: int, fallback: int) -> int:
     """The week you're setting a lineup for: the first regular-season week with a game
     still to play. Box scores arrive game by game, so "latest week with stats + 1" jumps
@@ -703,12 +714,34 @@ with tab_league:
             _scraped[["rank", "team", "manager", "wins", "losses", "ties"]],
             rename={"team": "TEAM"}, fmt={c: "{:.0f}" for c in ["W", "L", "T"]}, logos=False,
         )
-        st.caption(
-            "Points for / against and weekly results need the Yahoo API, which is "
-            "currently blocked — see the note below. Records and ranks come from the scrape."
-        )
+        st.caption("Records and ranks come from the weekly scrape.")
 
-        ui.h("Power rankings — who's actually good")
+        _scores = _league_scores()
+        if not _scores.empty:
+            ui.h("Power rankings — expected wins")
+            ui.lede(
+                "A fantasy record is mostly schedule. This throws the schedule out and asks what "
+                "each week's score was worth <b>against the whole league</b>: a close score counts "
+                "as a coin flip, a blowout as near-certain. <b>Luck</b> is real wins minus expected "
+                "ones — plus means the record is flattering them and should come back."
+            )
+            from mega.xwins import power_table
+
+            _xw = power_table(_scores).rename(columns={"luck": "luck_w"})
+            ui.table(
+                _xw[["power_rank", "team", "xwins", "power", "wins", "luck_w", "pf", "ppg", "cv"]],
+                rename={"team": "TEAM"}, diverging=["LUCK W"], sequential=["xW%"],
+                fmt={"xW": "{:.2f}", "xW%": "{:.1%}", "W": "{:.0f}", "LUCK W": "{:+.2f}",
+                     "PF": "{:.1f}", "PPG": "{:.1f}", "SWING": "{:.0%}"},
+                logos=False,
+            )
+            st.caption(
+                f"Through week {int(_scores['week'].max())}. The model is the one from Chris's "
+                "Expected Wins workbook — a logistic on the score gap, scaled to that week's own "
+                "spread — and this implementation reproduces the workbook's 2025 numbers exactly."
+            )
+
+        ui.h("Power rankings — roster strength")
         ui.lede(
             "Every roster scored by what its <b>best legal lineup</b> is worth per game, ignoring "
             "record entirely. <b>Luck</b> is the gap between where a team sits and how good it is: "

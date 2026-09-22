@@ -9,3 +9,4 @@ playwright>=1.44         # browser-scrape fallback; run `playwright install chro
 html5lib>=1.1            # pandas.read_html backend — the scrape's standings/FA parsing
 beautifulsoup4>=4.12     # ditto; pandas needs both, and names neither in its own deps
 pytest>=8.0                # tests/ — the trade engine's ported suite
+openpyxl>=3.1              # reading the Expected Wins workbook (mega.xwins self-check)

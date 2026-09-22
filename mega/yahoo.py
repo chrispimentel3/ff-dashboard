@@ -303,6 +303,97 @@ def _nfl_season() -> int:
     return today.year if today.month >= 3 else today.year - 1
 
 
+# ────────────────────────────────────────────────────────── weekly scores
+SCORES_CSV = DATA / "yahoo_scores.csv"
+
+# A matchup page renders as lines, not a table, and the numbers carry stray tabs:
+#   … / TaylorMade / Christopher / 1-1-0 | 6th / Compare Managers / 122.66 / vs / 118.42 /
+#   102.95  Orig Proj  107.24 / Heartbreak Drake / Yasser / 1-1-0 | 4th / …
+# Anchoring on the two fixed labels is steadier than one long regex over that.
+_RECORD = re.compile(r"^\d+-\d+-\d+ \|")
+_SCORE = re.compile(r"^\d+\.\d+$")
+
+
+def parse_matchup(page_text: str) -> dict | None:
+    """One matchup page -> {team_a, points_a, team_b, points_b}, or None if it didn't render."""
+    lines = [l.strip().strip("\t") for l in page_text.split("\n")]
+    lines = [l for l in lines if l]
+    try:
+        i = lines.index("Compare Managers")
+        j = next(k for k, l in enumerate(lines[i:], i) if "Orig Proj" in l)
+    except (ValueError, StopIteration):
+        return None
+    # team A is the name above its own manager and record, just before the scores
+    rec = next((k for k in range(i - 1, -1, -1) if _RECORD.match(lines[k])), None)
+    if rec is None or rec < 2 or j + 1 >= len(lines):
+        return None
+    pts = [float(l) for l in lines[i:j] if _SCORE.match(l)]
+    if len(pts) < 2:
+        return None
+    return {"team_a": lines[rec - 2], "points_a": pts[0],
+            "team_b": lines[j + 1], "points_b": pts[1]}
+
+
+def scores(weeks: list[int], session: "LeagueSession | None" = None) -> pd.DataFrame:
+    """Every team's score in each of `weeks`, long: team, week, points.
+
+    Yahoo has no league-wide scoreboard we can read, so this walks the per-matchup pages:
+    for each week, ask for team 1's matchup, note both sides, and skip anyone already seen.
+    Six or seven page loads a week rather than twelve.
+    """
+    own = session is None
+    s = session or LeagueSession()
+    rows = []
+    try:
+        for wk in weeks:
+            seen: set[str] = set()
+            for mid in range(1, N_TEAMS + 1):
+                if len(seen) >= N_TEAMS:
+                    break
+                try:
+                    m = parse_matchup(s.get_text(f"{BASE}/matchup?week={wk}&mid1={mid}"))
+                except AuthExpired:
+                    raise
+                except Exception:
+                    continue
+                if not m or m["team_a"] in seen:
+                    continue
+                # Keep the opponent and their score: the actual record then comes from the
+                # same rows as xWins, over the same weeks, instead of a standings file that
+                # may have been scraped a week earlier.
+                for side, other in (("a", "b"), ("b", "a")):
+                    rows.append({"team": m[f"team_{side}"], "week": wk,
+                                 "points": m[f"points_{side}"],
+                                 "opponent": m[f"team_{other}"], "opp_points": m[f"points_{other}"]})
+                    seen.add(m[f"team_{side}"])
+    finally:
+        if own:
+            s.close()
+    out = pd.DataFrame(rows)
+    return out.drop_duplicates(["team", "week"]).reset_index(drop=True) if not out.empty else out
+
+
+def cached_scores() -> pd.DataFrame:
+    if not SCORES_CSV.is_file():
+        return pd.DataFrame(columns=["team", "week", "points", "opponent", "opp_points"])
+    df = pd.read_csv(SCORES_CSV)
+    return df.astype({"week": int, "points": float})
+
+
+def refresh_scores(through_week: int, session: "LeagueSession | None" = None) -> pd.DataFrame:
+    """Fetch any weeks not already stored, keep the rest. Completed weeks never change,
+    so this costs one week's page loads on a normal Tuesday rather than the whole season."""
+    have = cached_scores()
+    done = set(have["week"].unique()) if not have.empty else set()
+    want = [w for w in range(1, through_week + 1) if w not in done]
+    if want:
+        fresh = scores(want, session)
+        if not fresh.empty:
+            have = pd.concat([have, fresh], ignore_index=True).drop_duplicates(["team", "week"], keep="last")
+            have.sort_values(["week", "team"]).to_csv(SCORES_CSV, index=False, lineterminator="\n")
+    return have.sort_values(["week", "team"]).reset_index(drop=True)
+
+
 def pull(manual: bool = False, fa_pages: int = 4) -> dict[str, pd.DataFrame]:
     out: dict[str, pd.DataFrame] = {}
 
