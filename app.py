@@ -1114,14 +1114,79 @@ with tab_wire:
             "he's being added elsewhere."
         )
 
+@st.cache_data(ttl=dt.timedelta(minutes=30), show_spinner=False)
+def _trade_pool() -> pd.DataFrame:
+    """Everyone rostered who has a trade value, labelled with who owns him."""
+    from mega.intel import _valued_rosters
+    from mega.yahoo import cached_rosters
+
+    r = _valued_rosters(cached_rosters())
+    if r.empty:
+        return r
+    r = r.sort_values("value", ascending=False)
+    from mega.config import MY_TEAM
+
+    who = r["team"].map(lambda t: "yours" if str(t) == MY_TEAM else str(t))
+    r["label"] = r["player"] + " · " + r["pos"].astype(str) + " · " + who
+    return r[["label", "player", "pos", "team", "value"]]
+
+
+@st.cache_data(ttl=dt.timedelta(minutes=30), show_spinner="Working out who'd take the call…")
+def _trade_options(name: str) -> dict:
+    from mega.intel import trade_options
+    from mega.yahoo import cached_rosters
+
+    return trade_options(name, cached_rosters())
+
+
 with tab_trade:
     if IB is None:
         st.warning("League intel unavailable.")
     elif IB["trades"].empty:
         st.info("No trade ideas cleared the fairness filter this run.")
     else:
+        ui.h("Trade around one player")
         ui.lede(
-            "Offers built from <b>your league's actual rosters</b> — who has a surplus where you're "
+            "Pick anyone in the league. If he's <b>yours</b>, this is what could come back for him. "
+            "If he's <b>someone else's</b>, it's what it would take to get him — and whether giving "
+            "that up opens a hole you can't afford."
+        )
+        _pool = _trade_pool()
+        if _pool.empty:
+            st.caption("No rosters with trade values yet — run the Tuesday scrape.")
+        else:
+            _pick = st.selectbox("Player", _pool["label"].tolist(), index=None, key="trade_pick",
+                                 placeholder="Search — e.g. Kelce, Bijan, Nabers…")
+            if _pick:
+                _name = _pool[_pool["label"] == _pick]["player"].iloc[0]
+                _res = _trade_options(_name)
+                _side = {"mine": "yours", "theirs": f"on {_res.get('owner')}"}.get(_res["side"], "")
+                st.markdown(
+                    f"**{_res['player']}** · {_res.get('pos','')} · {_side} · "
+                    f"trade value **{_res.get('value','—')}**"
+                )
+                if _res["ideas"].empty:
+                    st.info(_res["note"])
+                else:
+                    _mine_side = _res["side"] == "mine"
+                    ui.table(
+                        _res["ideas"],
+                        pos_cols=["POS"], sequential=["FAIR"],
+                        fmt={"GET VAL": "{:.0f}", "GIVE VAL": "{:.0f}", "FAIR": "{:.2f}"},
+                        labels={"MANAGER": "Trade with"},
+                    )
+                    if _res["note"]:
+                        st.warning(_res["note"]) if _mine_side else st.caption(_res["note"])
+                    st.caption(
+                        "Everything here is within 25% of his value one-for-one, ordered by what "
+                        "helps you most. **Fairness** near 1.00 is a dead-even swap — the further "
+                        "below, the more you're asking the other manager to swallow."
+                    )
+            st.divider()
+
+        ui.h("Offers the league is set up for")
+        ui.lede(
+            "Built from <b>your league's actual rosters</b> — who has a surplus where you're "
             "thin, and what they're short of in return. This is the part a generic ranking site "
             "can't do for you."
         )

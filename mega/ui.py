@@ -210,6 +210,7 @@ COLS = {
     "partner": "MANAGER", "give": "YOU GIVE", "give_val": "GIVE VAL",
     "get": "YOU GET", "get_val": "GET VAL", "fairness": "FAIR",
     "edge": "EDGE", "addresses": "FILLS", "they_need": "THEY NEED",
+    "why_them": "THEY WANT", "costs_you": "COSTS YOU", "get_pos": "POS", "give_pos": "POS",
     # power rankings
     "power_rank": "PWR", "starters_pg": "LINEUP", "bench_pg": "BENCH",
     "matched": "MATCHED", "luck": "LUCK",
@@ -251,7 +252,8 @@ LABELS = {
     "WHEN": "When", "TYPE": "Type", "MOVE": "Move",
     "MANAGER": "Manager", "YOU GIVE": "You give", "GIVE VAL": "Give value",
     "YOU GET": "You get", "GET VAL": "Get value", "FAIR": "Fairness", "EDGE": "Value gained",
-    "FILLS": "Fixes", "THEY NEED": "They need", "GIVE LOGO": "", "GET LOGO": "",
+    "FILLS": "Fixes", "THEY NEED": "They need",
+    "THEY WANT": "Why they'd say yes", "COSTS YOU": "What it costs you", "GIVE LOGO": "", "GET LOGO": "",
     "PWR": "Power rank", "LINEUP": "Lineup pts/g", "BENCH": "Bench pts/g",
     "MATCHED": "Players scored", "LUCK": "Luck",
     "PLAYERS": "Your players", "TOT": "Game total", "SPRD": "Spread", "VERDICT": "Verdict",
@@ -336,6 +338,10 @@ GLOSS = {
     "EDGE": "Trade value you gain. Plus = the deal favours you.",
     "FILLS": "The weak spot on your roster this trade fixes.",
     "THEY NEED": "Their weakest positions — lead with these when you pitch it.",
+    "THEY WANT": "The reason this manager takes the call: a hole at that position, or simply "
+                 "that the values match.",
+    "COSTS YOU": "Flagged when the player you'd send is one you can't spare — giving him up "
+                 "opens a hole where you were already below league average.",
     "PWR": "Rank by roster strength alone, ignoring record.",
     "LINEUP": "Points per game his best legal starting lineup is worth.",
     "BENCH": "Points per game from his three best bench players — cover for byes and injuries.",
