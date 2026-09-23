@@ -449,8 +449,8 @@ ui.masthead([
 # Grouped by the decision you're making, not by where the data came from. Streamlit
 # tabs are containers, so the `with tab_*:` bodies further down render into these
 # wherever they appear in the file.
-sec_now, sec_team, sec_get, sec_league, sec_players, sec_more = st.tabs(
-    ["This Week", "My Team", "Get Better", "League", "Players", "More"]
+sec_now, sec_team, sec_get, sec_league, sec_players, sec_ask, sec_more = st.tabs(
+    ["This Week", "My Team", "Get Better", "League", "Players", "Ask", "More"]
 )
 with sec_now:
     tab_action, tab_start, tab_match = st.tabs(["Action Board", "Start / Sit", "Matchups"])
@@ -1844,4 +1844,86 @@ with tab_raw:
             "Use `nfl.load_team_stats()` / special-teams play-by-play for those, or track them manually.\n"
             "- Snap share joins via `pfr_id` from `ff_playerids`; rookies can lag a week.\n"
             "- `xFP` uses the nflverse `ff_opportunity` model scored with the half-PPR weights in `SCORING`."
+        )
+
+
+# ---- Ask ------------------------------------------------------------------------------
+# A question box over the nflverse tables. Deterministic (mega/ask.py) rather than a
+# language model: no API key, nothing to pay per question, and — the reason it is built
+# this way — it can always print how it read the question, so a misparse is visible on
+# screen instead of arriving as a confident wrong table.
+@st.cache_data(ttl=CACHE_TTL, show_spinner="Indexing every player-week…")
+def _ask_pw(season: int) -> pd.DataFrame:
+    from mega import ask as ASK
+
+    return ASK.player_week(load_player_stats(season), load_snaps(season),
+                           load_ff_opportunity(season), load_routes(season),
+                           player_ids.crosswalk())
+
+
+with sec_ask:
+    from mega import ask as ASK
+
+    ui.lede(
+        "Ask for any list this data can produce — <b>“list WRs by snap %”</b>, “top 10 RB by "
+        "targets last 3 weeks”, “who leads the Rams in target share”. It repeats the question "
+        "back in plain English before answering, so you can see how it was read."
+    )
+
+    _aq = st.text_input("Question", key="ask_q", label_visibility="collapsed",
+                        placeholder="list WRs by snap %")
+    _ax = st.pills("Or start from one of these", list(ASK.EXAMPLES), key="ask_ex")
+    _text = (_aq or "").strip() or (_ax or "")
+
+    if not _text:
+        st.caption("Type a question, or pick an example. Positions, NFL teams, week windows "
+                   "(“last 3 weeks”, “in week 2”), a minimum (“min 20 targets”) and "
+                   "“my team” / “free agents” all work.")
+    else:
+        try:
+            _pw = _ask_pw(int(season))
+        except Exception as e:
+            _pw = pd.DataFrame()
+            st.warning(f"Could not build the player-week index: {e}")
+
+        _wks = tuple(sorted(int(w) for w in _pw["week"].dropna().unique())) if not _pw.empty else ()
+        try:
+            _own, _ = _ownership()
+        except Exception:
+            _own = {}
+
+        try:
+            _res = ASK.answer(_pw, _text, weeks_available=_wks, mine=set(gsis_list),
+                              rostered={g: t for g, (t, _sl) in _own.items()})
+        except ASK.AskError as e:
+            _res = None
+            st.warning(str(e))
+
+        if _res is not None:
+            _hdr = ASK.headers(_res.query)
+            st.caption(f"**Read as:** {_res.restated}")
+            if _res.df.empty:
+                st.info("No rows. " + (" ".join(_res.warnings) or "Try widening the filters."))
+            else:
+                _metric = _hdr[_res.query.field.key]
+                ui.table(_res.df, rename=_hdr,
+                         fmt={_metric: _res.query.field.fmt},
+                         sequential=[_metric], legend=False)
+                st.download_button("Download this answer (.csv)",
+                                   _res.df.to_csv(index=False),
+                                   "answer.csv", key="ask_dl")
+            for _w in _res.warnings:
+                st.caption("⚠︎ " + _w)
+            if _res.note:
+                st.caption(_res.note)
+
+    with st.expander("What can I ask?"):
+        st.caption("Every stat the box understands. Say any of the spellings in the last "
+                   "column and it will find the same number.")
+        st.dataframe(ASK.catalogue(), width="stretch", hide_index=True)
+        st.caption(
+            "Rates are summed numerator over summed denominator — a player's season catch "
+            "rate is his catches over his targets, never the average of his weekly rates. "
+            "Routes are estimated (snap share × team dropbacks), so read route-based rates "
+            "as a ranking rather than a measurement."
         )
