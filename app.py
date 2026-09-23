@@ -1039,14 +1039,22 @@ def _waiver_board(season: int, ros, rostered: set) -> pd.DataFrame:
     Falls back to the roster-blind board if the valuation engine can't build (no rosters,
     no projections), because a worse board still beats an empty tab.
     """
+    # intel is imported here, not borrowed from _intel_bundle's local scope. It was, and the
+    # fallback below then raised NameError instead of falling back — which took out the whole
+    # intel bundle and blanked every tab that reads it.
+    from mega import intel as _i
     from mega import needs
 
     try:
         b = needs.board(season, current_week(season, 1), yahoo_rosters=ros, top=25)
         if not b.empty:
             return b
-    except Exception:
-        pass
+        st.caption("Waiver board: the valuation engine returned nothing; showing the "
+                   "roster-blind board.")
+    except Exception as e:
+        # Say why. A silent except here once hid the real failure behind a fallback that
+        # then failed for an unrelated reason.
+        st.caption(f"Waiver board fell back to the roster-blind view: {type(e).__name__}: {e}")
     return _i.waiver_board(season, rostered, top=20)
 
 
@@ -1215,10 +1223,10 @@ with tab_wire:
                 # Escaped dollars: Streamlit reads $...$ in markdown as LaTeX and swallows
                 # both the signs and everything between them.
                 st.caption(
-                    f"Yahoo's FAB feed lists only claims that went to a waiver run, so "
-                    f"\${_m['unlisted_spend']:.0f} of the \${_m['league_spend']:.0f} this league "
-                    f"has actually spent never appears on it. The real market runs dearer than "
-                    f"the \${_m['median']:.0f} median suggests."
+                    rf"Yahoo's FAB feed lists only claims that went to a waiver run, so "
+                    rf"\${_m['unlisted_spend']:.0f} of the \${_m['league_spend']:.0f} this league "
+                    rf"has actually spent never appears on it. The real market runs dearer than "
+                    rf"the \${_m['median']:.0f} median suggests."
                 )
         else:
             top3 = wv.head(3)
