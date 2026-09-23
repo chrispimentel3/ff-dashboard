@@ -50,31 +50,13 @@ def _n(df: pd.DataFrame, c: str) -> pd.Series:
 # ---------------------------------------------------------------- team dropbacks
 def team_dropbacks(season: int) -> pd.DataFrame:
     """team, week, dropbacks — regular season, spikes and two-point plays removed."""
-    import nflreadpy as nfl
     import polars as pl
 
-    # Play-by-play is ~100 MB a season and nflreadpy caches in memory by default, which
-    # would pin all of it for a frame that reduces to ~570 rows. Cache it on disk instead.
-    prev = None
-    try:
-        from nflreadpy import config as _cfg
-        prev = _cfg.get_config().cache_mode
-        _cfg.update_config(cache_mode="filesystem")
-    except Exception:
-        prev = None
-    try:
-        pbp = nfl.load_pbp([season])
-    finally:
-        if prev is not None:
-            try:
-                from nflreadpy import config as _cfg
-                _cfg.update_config(cache_mode=prev)
-            except Exception:
-                pass
+    from . import pbp as _pbp
 
     keep = ["season_type", "week", "posteam", "qb_dropback", "qb_spike", "two_point_attempt"]
     out = (
-        pbp.select([c for c in keep if c in pbp.columns])
+        _pbp.load(season, keep)
         .filter(
             (pl.col("season_type") == "REG")
             & (pl.col("qb_dropback").fill_null(0) == 1)

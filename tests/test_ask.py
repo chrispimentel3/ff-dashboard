@@ -310,3 +310,129 @@ def test_every_alias_resolves_to_its_own_field():
         for a in f.aliases:
             got = ask.parse(f"players by {a}").field
             assert got.key == f.key, f"{a!r} -> {got.key}, expected {f.key}"
+
+
+# ---------------------------------------------------------------- red zone
+def _redzone() -> pd.DataFrame:
+    """Adams and Nacua see red zone targets; McCaffrey does the goal-line work."""
+    rows = [
+        # gsis, wk, rz_car, rz_tgt, i10_car, i10_tgt, gl_car, gl_tgt
+        ("A", 1, 0, 3, 0, 2, 0, 1), ("A", 2, 0, 1, 0, 1, 0, 0),
+        ("B", 1, 0, 1, 0, 0, 0, 0), ("B", 2, 0, 4, 0, 2, 0, 1),
+        ("D", 1, 6, 1, 4, 1, 3, 0), ("D", 2, 4, 0, 3, 0, 2, 0),
+        ("E", 1, 1, 0, 0, 0, 0, 0), ("E", 2, 2, 0, 1, 0, 1, 0),
+    ]
+    df = pd.DataFrame(rows, columns=["gsis_id", "week", "rz_carries", "rz_targets",
+                                     "i10_carries", "i10_targets", "gl_carries", "gl_targets"])
+    for tag in ("rz", "i10", "gl"):
+        df[f"{tag}_touches"] = df[f"{tag}_carries"] + df[f"{tag}_targets"]
+    team = {"A": "LA", "B": "LA", "D": "SF", "E": "SF"}
+    df["_t"] = df["gsis_id"].map(team)
+    cols = [c for c in df.columns if c.startswith(("rz_", "i10_", "gl_"))]
+    tt = df.groupby(["_t", "week"])[cols].sum()
+    tt.columns = [f"team_{c}" for c in cols]
+    return df.merge(tt.reset_index(), on=["_t", "week"], how="left").drop(columns=["_t"])
+
+
+@pytest.fixture(scope="module")
+def pwrz() -> pd.DataFrame:
+    return ask.player_week(_stats(), _snaps(), None, _routes(), _crosswalk(), _redzone())
+
+
+def test_red_zone_carries(pwrz):
+    r = ask.answer(pwrz, "red zone carries by RB")
+    assert r.df.set_index("player")["rz_carries"]["McCaff"] == 10   # 6 + 4
+
+
+def test_goal_line_carries_are_inside_the_5_not_the_20(pwrz):
+    r = ask.answer(pwrz, "top 5 RB by goal line carries")
+    v = r.df.set_index("player")["gl_carries"]
+    assert v["McCaff"] == 5 and v["Guerend"] == 1
+    assert ask.parse("goal line carries").field.key == "gl_carries"
+    assert ask.parse("red zone carries").field.key == "rz_carries"
+
+
+def test_red_zone_target_share(pwrz):
+    """Adams 4 RZ targets of LA's 9."""
+    r = ask.answer(pwrz, "red zone target share for WR min 5")
+    assert r.df.set_index("player")["rz_target_share"]["Adams"] == pytest.approx(4 / 9)
+
+
+def test_absent_from_the_red_zone_is_a_zero_not_a_blank(pwrz):
+    """A player with no red zone work must still appear when asked for the fewest —
+    filling with NaN would drop exactly the player that question is looking for."""
+    r = ask.answer(pwrz, "fewest red zone carries by WR")
+    assert r.df.iloc[0]["rz_carries"] == 0
+
+
+def test_red_zone_columns_are_zero_when_no_frame_is_given(pw):
+    r = ask.answer(pw, "red zone carries by RB")
+    assert r.df.empty or set(r.df["rz_carries"]) == {0}
+
+
+# ---------------------------------------------------------------- generic catalogue
+def test_unknown_stat_without_a_loader_says_where_it_lives(pw):
+    r = ask.answer(pw, "top 5 WR by average separation")
+    assert r.query.source == "nextgen_stats_receiving"
+    assert any("not loaded here" in w for w in r.warnings)
+
+
+def test_curated_alias_does_not_hijack_an_exact_column_name():
+    """'over expected' is an xFP± alias. 'rush yards over expected' is a real nflverse
+    column, and the longer exact match has to win or the answer is a different stat."""
+    assert ask.parse("points over expected").field.key == "xfp_diff"
+    q = ask.parse("top 5 RB by rush yards over expected")
+    assert q.source == "nextgen_stats_rushing"
+    assert q.field.col == "rush_yards_over_expected"
+
+
+def test_generic_hit_reports_its_source_and_carries_a_caveat():
+    q = ask.parse("WR by average cushion")
+    assert q.source == "nextgen_stats_receiving"
+    assert "nextgen_stats_receiving" in ask.restate(q)
+    assert "vetted" in q.field.note
+
+
+def test_a_rate_column_is_averaged_not_summed():
+    assert ask.parse("WR by average separation").field.kind == "mean"
+    assert ask.parse("RB by rush yards over expected").field.kind == "total"
+
+
+# ---------------------------------------------------------------- raw-table execution
+def _fake_nextgen() -> pd.DataFrame:
+    """Shaped like nflverse nextgen: a week 0 row holding the SEASON TOTAL."""
+    return pd.DataFrame({
+        "player_gsis_id": ["A", "A", "A", "B", "B", "B"],
+        "player_display_name": ["Adams"] * 3 + ["Nacua"] * 3,
+        "team_abbr": ["LA"] * 6,
+        "week": [0, 1, 2, 0, 1, 2],
+        "avg_separation": [3.0, 2.0, 4.0, 5.0, 6.0, 4.0],
+    })
+
+
+def test_week_zero_season_totals_are_dropped(pw):
+    """Summing week 0 with the weeks that make it up double-counts every player."""
+    q = ask.parse("WR by average separation")
+    out, warns = ask.run_table(_fake_nextgen(), q, pos_map={"A": "WR", "B": "WR"})
+    assert out.set_index("player")["avg_separation"]["Adams"] == pytest.approx(3.0)  # (2+4)/2
+    assert out.set_index("player")["games"]["Adams"] == 2
+    assert any("week 0" in w for w in warns)
+
+
+def test_positions_resolve_through_ids_when_the_table_has_no_position_column():
+    q = ask.parse("top 5 WR by average separation")
+    out, _ = ask.run_table(_fake_nextgen(), q, pos_map={"A": "WR", "B": "TE"})
+    assert set(out["player"]) == {"Adams"}
+
+
+def test_table_query_without_a_position_map_says_so():
+    q = ask.parse("top 5 WR by average separation")
+    out, warns = ask.run_table(_fake_nextgen(), q, pos_map={})
+    assert any("every position is shown" in w for w in warns)
+    assert set(out["player"]) == {"Adams", "Nacua"}
+
+
+def test_missing_column_in_a_raw_table_is_explained():
+    q = ask.parse("WR by average separation")
+    out, warns = ask.run_table(_fake_nextgen().drop(columns=["avg_separation"]), q)
+    assert out.empty and any("not in" in w for w in warns)

@@ -1852,13 +1852,34 @@ with tab_raw:
 # language model: no API key, nothing to pay per question, and — the reason it is built
 # this way — it can always print how it read the question, so a misparse is visible on
 # screen instead of arriving as a confident wrong table.
+@st.cache_data(ttl=CACHE_TTL, show_spinner="Reading the red zone…")
+def load_redzone(season: int) -> pd.DataFrame:
+    """Carries and targets inside the 20, the 10 and the 5, from play-by-play.
+
+    It has to come from play-by-play: the weekly `rushing_10` / `rushing_20` columns look
+    like red zone stats and count runs of 10+ and 20+ YARDS. See mega/redzone.py."""
+    from mega import redzone as rzn
+    try:
+        return rzn.weekly(season)
+    except Exception:
+        return pd.DataFrame()
+
+
 @st.cache_data(ttl=CACHE_TTL, show_spinner="Indexing every player-week…")
 def _ask_pw(season: int) -> pd.DataFrame:
     from mega import ask as ASK
 
     return ASK.player_week(load_player_stats(season), load_snaps(season),
                            load_ff_opportunity(season), load_routes(season),
-                           player_ids.crosswalk())
+                           player_ids.crosswalk(), load_redzone(season))
+
+
+@st.cache_data(ttl=CACHE_TTL, show_spinner="Fetching that nflverse table…")
+def _nflverse_table(table: str, season: int) -> pd.DataFrame:
+    """Any catalogued nflverse table, for questions outside the curated metrics."""
+    from mega import catalog
+
+    return catalog.load(table, season)
 
 
 with sec_ask:
@@ -1894,7 +1915,9 @@ with sec_ask:
 
         try:
             _res = ASK.answer(_pw, _text, weeks_available=_wks, mine=set(gsis_list),
-                              rostered={g: t for g, (t, _sl) in _own.items()})
+                              rostered={g: t for g, (t, _sl) in _own.items()},
+                              loader=lambda t: _nflverse_table(t, int(season)),
+                              xwalk=player_ids.crosswalk())
         except ASK.AskError as e:
             _res = None
             st.warning(str(e))
@@ -1918,12 +1941,33 @@ with sec_ask:
                 st.caption(_res.note)
 
     with st.expander("What can I ask?"):
-        st.caption("Every stat the box understands. Say any of the spellings in the last "
-                   "column and it will find the same number.")
-        st.dataframe(ASK.catalogue(), width="stretch", hide_index=True)
-        st.caption(
-            "Rates are summed numerator over summed denominator — a player's season catch "
-            "rate is his catches over his targets, never the average of his weekly rates. "
-            "Routes are estimated (snap share × team dropbacks), so read route-based rates "
-            "as a ranking rather than a measurement."
-        )
+        from mega import catalog as CAT
+
+        _t1, _t2, _t3 = st.tabs(["Curated stats", "Every nflverse column", "Tables"])
+        with _t1:
+            st.caption("These are computed the way this app computes them everywhere else — "
+                       "the right denominator, a sensible minimum volume, the positions the "
+                       "stat applies to. Say any spelling in the last column.")
+            st.dataframe(ASK.catalogue(), width="stretch", hide_index=True)
+            st.caption(
+                "Rates are summed numerator over summed denominator — a player's season "
+                "catch rate is his catches over his targets, never the average of his "
+                "weekly rates. Routes are estimated (snap share × team dropbacks), so read "
+                "route-based rates as a ranking rather than a measurement."
+            )
+        with _t2:
+            _sc = CAT.schema()
+            st.caption(f"Anything else in nflverse — {sum(r['n_cols'] for r in _sc.values()):,} "
+                       f"columns across {len(_sc)} tables — is reachable by name. Those are "
+                       "aggregated generically (summed, or averaged when the name says the "
+                       "column is already a rate), and the answer says so.")
+            _find = st.text_input("Search columns", key="ask_colsearch",
+                                  placeholder="separation, air yards, epa, cushion…")
+            _cols = CAT.columns(query=_find)
+            st.caption(f"{len(_cols):,} column(s)")
+            st.dataframe(_cols.head(400), width="stretch", hide_index=True)
+        with _t3:
+            st.caption("Where it all comes from. Rebuild the catalogue with "
+                       "`PYTHONPATH=. .venv/bin/python tools/build_schema.py` when nflverse "
+                       "adds columns.")
+            st.dataframe(CAT.tables(), width="stretch", hide_index=True)

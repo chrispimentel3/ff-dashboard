@@ -147,6 +147,43 @@ FIELDS: tuple[Field, ...] = (
        pos=("RB", "WR"), aliases=("touches", "opportunities", "opps"),
        note="Carries plus targets."),
 
+    # ------------------------------------------------------------ scoring position
+    # Derived from play-by-play (mega/redzone.py). No nflverse column holds these: the
+    # weekly `rushing_10` / `rushing_20` columns look like red zone stats and are not —
+    # they count runs of 10+ and 20+ YARDS.
+    _f(key="rz_carries", label="RZ carries", kind="total", col="rz_carries", fmt="{:.0f}",
+       pos=("RB", "QB"), aliases=("red zone carries", "redzone carries", "rz carries",
+                                  "carries inside the 20", "red zone rushing attempts",
+                                  "red zone rush attempts"),
+       note="Carries inside the opponent's 20. From play-by-play; two-point plays excluded."),
+    _f(key="rz_targets", label="RZ targets", kind="total", col="rz_targets", fmt="{:.0f}",
+       pos=("WR", "TE", "RB"), aliases=("red zone targets", "redzone targets", "rz targets",
+                                        "targets inside the 20")),
+    _f(key="rz_touches", label="RZ touches", kind="total", col="rz_touches", fmt="{:.0f}",
+       pos=("RB", "WR", "TE"), aliases=("red zone touches", "redzone touches", "rz touches",
+                                        "red zone opportunities", "red zone work", "red zone"),
+       note="Red zone carries plus red zone targets."),
+    _f(key="rz_carry_share", label="RZ carry share", kind="rate", num="rz_carries",
+       den="team_rz_carries", pct=True, fmt="{:.1%}", pos=("RB",),
+       show=("rz_carries", "team_rz_carries"), min_den=5, den_label="team RZ carries",
+       aliases=("red zone carry share", "red zone rush share", "rz carry share")),
+    _f(key="rz_target_share", label="RZ target share", kind="rate", num="rz_targets",
+       den="team_rz_targets", pct=True, fmt="{:.1%}", pos=("WR", "TE", "RB"),
+       show=("rz_targets", "team_rz_targets"), min_den=5, den_label="team RZ targets",
+       aliases=("red zone target share", "rz target share")),
+    _f(key="i10_carries", label="carries in-10", kind="total", col="i10_carries", fmt="{:.0f}",
+       pos=("RB", "QB"), aliases=("carries inside the 10", "inside the 10 carries",
+                                  "rushes inside the 10")),
+    _f(key="i10_targets", label="targets in-10", kind="total", col="i10_targets", fmt="{:.0f}",
+       pos=("WR", "TE", "RB"), aliases=("targets inside the 10", "inside the 10 targets")),
+    _f(key="gl_carries", label="goal line carries", kind="total", col="gl_carries", fmt="{:.0f}",
+       pos=("RB", "QB"), aliases=("goal line carries", "goalline carries", "goal-line carries",
+                                  "carries inside the 5", "goal line work"),
+       note="Carries inside the 5 — the touches that actually become touchdowns."),
+    _f(key="gl_touches", label="goal line touches", kind="total", col="gl_touches", fmt="{:.0f}",
+       pos=("RB", "WR", "TE"), aliases=("goal line touches", "goalline touches",
+                                        "touches inside the 5")),
+
     # ------------------------------------------------------------ passing
     _f(key="passing_yards", label="pass yards", kind="total", col="passing_yards", fmt="{:.0f}",
        pos=("QB",), aliases=("passing yards", "pass yards", "passing yds", "yards passing")),
@@ -271,6 +308,8 @@ class Query:
     scope: str = ""                      # "", "mine", "fa", "rostered"
     window_label: str = "the season"
     unmatched: tuple[str, ...] = ()
+    source: str = "pw"                   # "pw" = the curated player-week table,
+    hit: object = None                   # otherwise an nflverse table name + its Hit
 
 
 class AskError(ValueError):
@@ -359,17 +398,9 @@ def parse(text: str, weeks_available: tuple[int, ...] = ()) -> Query:
                 teams.append(abbr)
             s = re.sub(_w(re.escape(name)), " ", s)
 
-    # --- metric (longest alias first)
-    fld = None
-    for alias, f in _ALIASES:
-        if re.search(_w(re.escape(alias)), s):
-            fld = f
-            s = re.sub(_w(re.escape(alias)), " ", s, count=1)
-            break
-    if fld is None:
-        raise AskError(_suggest_for(text))
-
-    # --- positions
+    # --- positions. Before the metric, so that when no curated metric matches, what is
+    # left to look up in the catalogue is the stat phrase alone: "wr by average separation"
+    # found nothing, "average separation" finds it.
     positions: list[str] = []
     for word, ps in _POS_WORDS:
         if re.search(_w(re.escape(word)), s):
@@ -377,20 +408,90 @@ def parse(text: str, weeks_available: tuple[int, ...] = ()) -> Query:
                 if p not in positions:
                     positions.append(p)
             s = re.sub(_w(re.escape(word)), " ", s)
+
+    # --- metric (longest alias first)
+    stat_phrase = _phrase(s)
+    fld, after = None, s
+    for alias, f in _ALIASES:
+        if re.search(_w(re.escape(alias)), s):
+            fld = f
+            after = re.sub(_w(re.escape(alias)), " ", s, count=1)
+            break
+
+    source, hit = "pw", None
+    if fld is None:
+        fld, source, hit, after = _generic(s, text, tuple(positions))
+    elif _phrase(after):
+        # A curated alias matched only part of the phrase. "rush yards over expected" hit
+        # the xFP± alias "over expected" and answered with points over expected — a wrong
+        # number, confidently formatted. If the whole phrase is the exact name of a real
+        # nflverse column, that column is what was asked for.
+        from . import catalog
+        exact = catalog.search(stat_phrase, limit=1, positions=tuple(positions), min_score=90.0)
+        if exact:
+            fld, source, hit, after = _generic(s, text, tuple(positions), forced=exact[0])
+    s = after
     pos = tuple(positions) if positions else fld.pos
 
     leftover = tuple(w for w in s.split() if len(w) > 2 and w not in _STOP)
     return Query(field=fld, positions=pos, teams=tuple(teams), weeks=weeks, top=top,
                  ascending=ascending, min_den=fld.min_den if min_den < 0 else min_den,
-                 scope=scope, window_label=label, unmatched=leftover)
+                 scope=scope, window_label=label, unmatched=leftover,
+                 source=source, hit=hit)
 
 
+_JOIN = {"by", "in", "on", "of", "at", "to", "vs", "is", "a", "an", "it", "or", "up"}
+
+
+def _phrase(s: str) -> str:
+    """What is left of a question once the scaffolding is gone — the stat, or nothing."""
+    return " ".join(w for w in s.split() if w not in _STOP and w not in _JOIN).strip()
+
+
+def _generic(remainder: str, original: str, positions: tuple[str, ...] = (),
+             forced=None) -> tuple[Field, str, object, str]:
+    """No curated metric matched: look the phrase up in the full nflverse catalogue.
+
+    Returns a Field synthesised from the column. It is honest but blunt — a plain sum, or
+    a plain mean when the column name says it is already a rate — because nobody has
+    vetted what the right denominator for that column would be. Everything built this way
+    is labelled on screen so the number is never mistaken for a curated one.
+    """
+    from . import catalog
+
+    phrase = _phrase(remainder)
+    if forced is not None:
+        h = forced
+    else:
+        hits = (catalog.search(phrase, limit=1, positions=positions) if phrase else [])
+        if not hits:
+            hits = catalog.search(original, limit=1, positions=positions)
+        if not hits:
+            raise AskError(_suggest_for(original))
+        h = hits[0]
+    rec = catalog.schema().get(h.table, {})
+    weekly = bool(rec.get("week_key"))
+    return (
+        Field(key=h.column, label=h.label, aliases=(),
+              kind="mean" if h.is_rate else ("total" if weekly else "max"),
+              col=h.column, fmt="{:.3f}" if h.is_rate else "{:.1f}", pos=POS_ALL,
+              note=(f"`{h.column}` from nflverse `{h.table}`, found by name rather than "
+                    + ("averaged across the weeks in range. " if h.is_rate else
+                       ("summed across the weeks in range. " if weekly else "as recorded. "))
+                    + "Nobody has vetted the right way to aggregate this one — check it "
+                      "before you trade on it.")),
+        h.table, h, "")
+
+
+# "over", "above", "under" and "below" are deliberately NOT here: they carry meaning inside
+# stat names ("rush yards over expected"), and the minimum-volume regex has already taken
+# the "over 20" sense out of the string by the time this is used.
 _STOP = {"list", "show", "give", "the", "and", "for", "with", "who", "what", "which", "has",
          "have", "had", "leads", "leading", "most", "best", "top", "all", "players", "player",
          "this", "that", "season", "year", "them", "their", "his", "from", "each", "per",
          "are", "was", "were", "get", "sorted", "sort", "rank", "ranked", "ranking", "order",
          "ordered", "worst", "lowest", "fewest", "least", "bottom", "ascending", "smallest",
-         "highest", "many", "much", "there", "over", "under", "above", "below", "out", "than",
+         "highest", "many", "much", "there", "out", "than",
          "only", "just", "guys", "everyone", "anyone", "table", "chart", "data", "stats"}
 
 
@@ -441,7 +542,7 @@ def _normalize(stats: pd.DataFrame) -> pd.DataFrame:
 
 def player_week(stats: pd.DataFrame, snaps: pd.DataFrame | None = None,
                 ffo: pd.DataFrame | None = None, routes: pd.DataFrame | None = None,
-                crosswalk: pd.DataFrame | None = None,
+                crosswalk: pd.DataFrame | None = None, redzone: pd.DataFrame | None = None,
                 season_type: str = "REG") -> pd.DataFrame:
     """One row per player per game, with everything a question can ask about.
 
@@ -478,6 +579,34 @@ def player_week(stats: pd.DataFrame, snaps: pd.DataFrame | None = None,
     out = _join_snaps(out, snaps, crosswalk)
     out = _join_routes(out, routes)
     out = _join_ffo(out, ffo)
+    out = _join_redzone(out, redzone)
+    return out
+
+
+_RZ_COLS = ("rz_carries", "rz_targets", "rz_touches", "i10_carries", "i10_targets",
+            "i10_touches", "gl_carries", "gl_targets", "gl_touches",
+            "team_rz_carries", "team_rz_targets", "team_rz_touches",
+            "team_i10_carries", "team_i10_targets", "team_gl_carries", "team_gl_targets")
+
+
+def _join_redzone(out: pd.DataFrame, rz) -> pd.DataFrame:
+    """Scoring-position work, from mega/redzone.py.
+
+    A player-week absent from the red zone frame played no snap inside the 20, which is a
+    real zero, not a missing value — so these fill with 0 rather than NaN. Filling with
+    NaN would have dropped every such player out of an ascending 'fewest red zone carries'
+    answer, which is precisely the player that question is looking for.
+    """
+    if rz is None or getattr(rz, "empty", True):
+        for c in _RZ_COLS:
+            out[c] = np.nan
+        return out
+    r = rz.copy()
+    r["week"] = pd.to_numeric(r["week"], errors="coerce").astype("Int64")
+    keep = ["gsis_id", "week"] + [c for c in _RZ_COLS if c in r.columns]
+    out = out.merge(r[keep], on=["gsis_id", "week"], how="left")
+    for c in _RZ_COLS:
+        out[c] = out[c].fillna(0.0) if c in out.columns else 0.0
     return out
 
 
@@ -619,6 +748,8 @@ def run(pw: pd.DataFrame, q: Query, mine: set | None = None,
                              "handful of chances is noise, not a reading.")
     elif f.kind == "per_game":
         rows["value"] = rows[f.col] / rows["games"].replace(0, np.nan)
+    elif f.kind == "mean":
+        rows["value"] = d.groupby("gsis_id")[f.col].mean().reindex(rows["gsis_id"]).to_numpy()
     elif f.kind == "max":
         rows["value"] = d.groupby("gsis_id")[f.col].max().reindex(rows["gsis_id"]).to_numpy()
     else:
@@ -635,11 +766,134 @@ def run(pw: pd.DataFrame, q: Query, mine: set | None = None,
     return out.rename(columns={"value": f.key}), warns
 
 
+def run_table(df: pd.DataFrame, q: Query, xwalk: pd.DataFrame | None = None,
+              mine: set | None = None, rostered: dict | None = None,
+              pos_map: dict | None = None) -> tuple[pd.DataFrame, list[str]]:
+    """Apply a query to a raw nflverse table the catalogue pointed at.
+
+    Every table names its own keys differently — nextgen calls the player `player_gsis_id`,
+    PFR and the snap counts use `pfr_player_id` — so the columns to group and filter on are
+    read from the schema rather than assumed.
+    """
+    from . import catalog
+
+    warns: list[str] = []
+    rec = catalog.schema().get(q.source, {})
+    if df is None or df.empty:
+        return pd.DataFrame(), [f"`{q.source}` came back empty."]
+    col = q.field.col
+    if col not in df.columns:
+        return pd.DataFrame(), [f"`{col}` is not in `{q.source}` for this season."]
+
+    key = rec.get("player_key") or rec.get("team_key")
+    if not key or key not in df.columns:
+        return pd.DataFrame(), [f"`{q.source}` has no player or team key to group by."]
+    name_col = rec.get("name_key") if rec.get("name_key") in df.columns else key
+    team_col = rec.get("team_key") if rec.get("team_key") in df.columns else None
+    week_col = rec.get("week_key") if rec.get("week_key") in df.columns else None
+    pos_col = catalog.pos_key(q.source)
+    pos_col = pos_col if pos_col in df.columns else None
+
+    d = df.copy()
+
+    # Most of these tables carry no position column — nextgen and the PFR advanced splits
+    # identify a player and nothing else — so positions are resolved through the ids we
+    # already hold rather than abandoned. Without this, "top 5 WR by average separation"
+    # came back led by a tight end.
+    gid = None
+    if key in ("player_id", "gsis_id", "player_gsis_id"):
+        gid = d[key]
+    elif key in ("pfr_player_id", "pfr_id") and xwalk is not None and not xwalk.empty:
+        xw = xwalk.dropna(subset=["gsis_id", "pfr_id"]).drop_duplicates("pfr_id")
+        gid = d[key].map(dict(zip(xw["pfr_id"], xw["gsis_id"])))
+
+    if week_col:
+        wk = pd.to_numeric(d[week_col], errors="coerce")
+        # nflverse ships a week 0 row in the nextgen tables holding the SEASON TOTAL.
+        # Left in, every season-long sum counts each player twice over — Kenneth Walker's
+        # rush yards over expected read 251 when the real figure for the weeks played
+        # was 125.6, which is week 0 plus the two weeks that make it up.
+        pre = len(d)
+        d = d[wk != 0]
+        if len(d) < pre and not q.weeks:
+            warns.append(f"Dropped {pre - len(d)} season-total rows (week 0) that "
+                         f"`{q.source}` carries alongside the weekly ones.")
+        if q.weeks:
+            d = d[pd.to_numeric(d[week_col], errors="coerce").isin(list(q.weeks))]
+        gid = gid.loc[d.index] if gid is not None else None
+    elif q.weeks:
+        warns.append(f"`{q.source}` is not weekly, so the week filter was ignored.")
+    if q.positions and set(q.positions) != set(POS_ALL):
+        if pos_col:
+            keep_pos = d[pos_col].astype(str).str.upper().isin(list(q.positions))
+            d, gid = d[keep_pos], (gid[keep_pos] if gid is not None else None)
+        elif gid is not None and pos_map:
+            keep_pos = gid.map(pos_map).isin(list(q.positions))
+            d, gid = d[keep_pos], gid[keep_pos]
+        else:
+            warns.append(f"`{q.source}` carries no position column and its players could not "
+                         "be matched to one, so every position is shown.")
+    if q.teams and team_col:
+        d = d[d[team_col].map(_canon_team).isin(list(q.teams))]
+
+    # Ownership filters need gsis ids too — same resolution as the position filter above.
+    if q.scope:
+        if gid is None:
+            warns.append(f"`{q.source}` is not keyed on a player id we can match to your "
+                         "league, so the roster filter was ignored.")
+        elif q.scope == "mine":
+            d = d[gid.isin(mine or set())]
+        elif q.scope == "fa":
+            d = d[~gid.isin(set(rostered or {}))]
+        elif q.scope == "rostered":
+            d = d[gid.isin(set(rostered or {}))]
+
+    if d.empty:
+        return pd.DataFrame(), warns + ["Nothing matched those filters."]
+
+    d = d.assign(_v=pd.to_numeric(d[col], errors="coerce"))
+    g = d.groupby(key, dropna=True)
+    agg = {"total": "sum", "mean": "mean", "max": "max", "per_game": "sum"}.get(q.field.kind, "sum")
+    rows = g["_v"].agg(agg).rename("value").reset_index()
+    rows["games"] = g["_v"].size().to_numpy()
+    if q.field.kind == "per_game":
+        rows["value"] = rows["value"] / rows["games"].replace(0, np.nan)
+    meta = g.agg(player=(name_col, "last"), **({"team": (team_col, "last")} if team_col else {}),
+                 **({"pos": (pos_col, "last")} if pos_col else {}))
+    rows = rows.merge(meta.reset_index(), on=key, how="left")
+
+    rows = rows.dropna(subset=["value"]).sort_values("value", ascending=q.ascending)
+    if rows.empty:
+        return pd.DataFrame(), warns + [f"No values for `{col}` in that window."]
+    rows["rank"] = range(1, len(rows) + 1)
+    keep = ["rank", "player"] + [c for c in ("pos", "team") if c in rows.columns] + ["games", "value"]
+    out = rows[keep].head(max(1, q.top)).reset_index(drop=True)
+    return out.rename(columns={"value": q.field.key}), warns
+
+
 def answer(pw: pd.DataFrame, text: str, weeks_available: tuple[int, ...] = (),
-           mine: set | None = None, rostered: dict | None = None) -> Result:
-    """Parse, run, and hand back a frame plus the sentence that says how it was read."""
+           mine: set | None = None, rostered: dict | None = None,
+           loader=None, xwalk: pd.DataFrame | None = None) -> Result:
+    """Parse, run, and hand back a frame plus the sentence that says how it was read.
+
+    `loader(table) -> DataFrame` fetches an nflverse table when the question names a stat
+    outside the curated set. Without it, such a question is answered with a pointer to
+    where the stat lives rather than a number.
+    """
     q = parse(text, weeks_available)
-    df, warns = run(pw, q, mine=mine, rostered=rostered)
+    if q.source == "pw":
+        df, warns = run(pw, q, mine=mine, rostered=rostered)
+    elif loader is None:
+        df, warns = pd.DataFrame(), [
+            f"`{q.field.col}` lives in the nflverse `{q.source}` table, which is not loaded here."]
+    else:
+        pos_map = (dict(zip(pw["gsis_id"], pw["pos"]))
+                   if pw is not None and not pw.empty and "pos" in pw.columns else {})
+        try:
+            df, warns = run_table(loader(q.source), q, xwalk=xwalk, mine=mine,
+                                  rostered=rostered, pos_map=pos_map)
+        except Exception as e:
+            df, warns = pd.DataFrame(), [f"Could not load `{q.source}`: {type(e).__name__}: {e}"]
     if q.unmatched:
         warns.append("Ignored: " + ", ".join(q.unmatched) + ".")
     return Result(query=q, df=df, restated=restate(q), fmt={q.field.key: q.field.fmt},
@@ -663,6 +917,8 @@ def restate(q: Query) -> str:
     s = ", ".join(bits)
     if q.min_den > 0 and f.kind == "rate":
         s += f", minimum {q.min_den:g} {f.den_label or f.den}"
+    if q.source != "pw":
+        s += f" (from nflverse `{q.source}`)"
     return s + "."
 
 
@@ -686,14 +942,16 @@ def headers(q: Query) -> dict[str, str]:
 
 EXAMPLES = (
     "list WRs by snap %",
+    "red zone carries by RB",
+    "top 10 RB by goal line carries",
     "top 10 RB by targets last 3 weeks",
     "who leads the Rams in target share",
     "top 15 WR by yards per route run",
     "best free agent WR by points per game",
     "worst catch rate, min 20 targets",
-    "top 10 TE by routes this season",
-    "RB by yards per carry, min 30 carries",
-    "top 12 QB by expected points",
+    "top 10 WR by average separation",
+    "top 10 RB by rush yards over expected",
+    "top 12 QB by completion percentage above expectation",
     "my team by points over expected",
 )
 
