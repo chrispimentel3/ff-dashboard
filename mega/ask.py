@@ -19,7 +19,7 @@ Pure pandas over frames the caller supplies, so it can be tested without Streaml
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field as _field
+from dataclasses import dataclass, field as _field, replace
 
 import numpy as np
 import pandas as pd
@@ -310,13 +310,17 @@ class Query:
     unmatched: tuple[str, ...] = ()
     source: str = "pw"                   # "pw" = the curated player-week table,
     hit: object = None                   # otherwise an nflverse table name + its Hit
+    seasons: tuple[int, ...] = ()        # more than one = compare them side by side
+    seasons_named: bool = False          # the question said so, rather than a picker default
+    by_change: bool = False              # rank by the year-on-year move, not the level
 
 
 class AskError(ValueError):
     """The question named no metric we hold."""
 
 
-def parse(text: str, weeks_available: tuple[int, ...] = ()) -> Query:
+def parse(text: str, weeks_available: tuple[int, ...] = (),
+          default_season: int | None = None) -> Query:
     """Read a question into a Query. Raises AskError if no metric matches.
 
     Each matcher removes what it consumed, so "top 10 RB by targets" does not let the
@@ -337,6 +341,32 @@ def parse(text: str, weeks_available: tuple[int, ...] = ()) -> Query:
         scope = "rostered"
     s = re.sub(r"\b(my (team|roster|guys|players)|i own|i have|on my|free agents?|waiver wire"
                r"|waivers|available|unowned|unrostered|rostered|owned|taken)\b", " ", s)
+
+    # --- seasons. First, because "2024" would otherwise be swallowed by a later matcher,
+    # and because a year range must not be mistaken for a week range.
+    seasons: tuple[int, ...] = ()
+    _YR = r"(?:19|20)\d{2}"
+    if m := re.search(rf"\b({_YR})\s*(?:-|to|thru|through)\s*({_YR})\b", s):
+        a, b = int(m.group(1)), int(m.group(2))
+        seasons = tuple(range(min(a, b), max(a, b) + 1))
+        s = s[: m.start()] + " " + s[m.end():]
+    elif found := re.findall(rf"\b{_YR}\b", s):
+        # "2024 vs 2025" and "2023, 2025" list those years; only a dash or "to" means a span
+        seasons = tuple(sorted({int(x) for x in found}))
+        s = re.sub(rf"\b{_YR}\b", " ", s)
+    elif m := re.search(r"\b(?:last|past) (\d+|" + "|".join(_WORDS_TO_N) + r") (?:seasons?|years?)\b", s):
+        g = m.group(1)
+        n = int(g) if g.isdigit() else _WORDS_TO_N[g]
+        if default_season:
+            seasons = tuple(range(int(default_season) - n + 1, int(default_season) + 1))
+        s = s[: m.start()] + " " + s[m.end():]
+    seasons_named = bool(seasons)        # a year in the question beats any picker default
+    if not seasons and default_season:
+        seasons = (int(default_season),)
+
+    # rank by the move between years rather than the level in the latest one
+    by_change = bool(re.search(r"\b(improv\w*|declin\w*|regress\w*|changed?|difference|"
+                               r"biggest (?:gain|drop|jump|fall)|fell|rose)\b", s))
 
     # --- weeks. Ordered most specific first; each returns and strips.
     weeks: tuple[int, ...] = ()
@@ -430,6 +460,8 @@ def parse(text: str, weeks_available: tuple[int, ...] = ()) -> Query:
         exact = catalog.search(stat_phrase, limit=1, positions=tuple(positions), min_score=90.0)
         if exact:
             fld, source, hit, after = _generic(s, text, tuple(positions), forced=exact[0])
+    # now that the metric has claimed what it needs, the comparison words are scaffolding
+    after = re.sub(r"\b(improv\w*|declin\w*|regress\w*|changed?|difference|biggest)\b", " ", after)
     s = after
     pos = tuple(positions) if positions else fld.pos
 
@@ -437,7 +469,8 @@ def parse(text: str, weeks_available: tuple[int, ...] = ()) -> Query:
     return Query(field=fld, positions=pos, teams=tuple(teams), weeks=weeks, top=top,
                  ascending=ascending, min_den=fld.min_den if min_den < 0 else min_den,
                  scope=scope, window_label=label, unmatched=leftover,
-                 source=source, hit=hit)
+                 source=source, hit=hit, seasons=seasons, by_change=by_change,
+                 seasons_named=seasons_named)
 
 
 _JOIN = {"by", "in", "on", "of", "at", "to", "vs", "is", "a", "an", "it", "or", "up"}
@@ -487,6 +520,7 @@ def _generic(remainder: str, original: str, positions: tuple[str, ...] = (),
 # stat names ("rush yards over expected"), and the minimum-volume regex has already taken
 # the "over 20" sense out of the string by the time this is used.
 _STOP = {"list", "show", "give", "the", "and", "for", "with", "who", "what", "which", "has",
+         "compare", "compared", "versus", "vs", "between", "across", "against",
          "have", "had", "leads", "leading", "most", "best", "top", "all", "players", "player",
          "this", "that", "season", "year", "them", "their", "his", "from", "each", "per",
          "are", "was", "were", "get", "sorted", "sort", "rank", "ranked", "ranking", "order",
@@ -543,7 +577,7 @@ def _normalize(stats: pd.DataFrame) -> pd.DataFrame:
 def player_week(stats: pd.DataFrame, snaps: pd.DataFrame | None = None,
                 ffo: pd.DataFrame | None = None, routes: pd.DataFrame | None = None,
                 crosswalk: pd.DataFrame | None = None, redzone: pd.DataFrame | None = None,
-                season_type: str = "REG") -> pd.DataFrame:
+                season_type: str = "REG", season: int | None = None) -> pd.DataFrame:
     """One row per player per game, with everything a question can ask about.
 
     Accepts either the app's normalized weekly frame (gsis_id / player / pos / team) or
@@ -562,6 +596,8 @@ def player_week(stats: pd.DataFrame, snaps: pd.DataFrame | None = None,
 
     out = pd.DataFrame({"gsis_id": w["gsis_id"], "player": w["player"], "pos": w["pos"],
                         "team": w["team"].map(_canon_team), "week": w["week"]})
+    out["season"] = (pd.to_numeric(w["season"], errors="coerce").astype("Int64")
+                     if "season" in w.columns else season)
     for c in _STAT_COLS:
         out[c] = _num(w, c)
     if "half_ppr" not in w.columns:
@@ -695,7 +731,7 @@ class Result:
 
 
 def run(pw: pd.DataFrame, q: Query, mine: set | None = None,
-        rostered: dict | None = None) -> tuple[pd.DataFrame, list[str]]:
+        rostered: dict | None = None, with_id: bool = False) -> tuple[pd.DataFrame, list[str]]:
     """Apply the query to the player-week table. Returns (rows, warnings)."""
     warns: list[str] = []
     if pw is None or pw.empty:
@@ -761,14 +797,17 @@ def run(pw: pd.DataFrame, q: Query, mine: set | None = None,
     rows = rows.sort_values("value", ascending=q.ascending)
     rows["rank"] = range(1, len(rows) + 1)
 
-    keep = ["rank", "player", "pos", "team", "games", "value", *[c for c in f.show if c in rows.columns]]
+    keep = (["gsis_id"] if with_id else []) + \
+        ["rank", "player", "pos", "team", "games", "value",
+         *[c for c in f.show if c in rows.columns]]
     out = rows[keep].head(max(1, q.top)).reset_index(drop=True)
-    return out.rename(columns={"value": f.key}), warns
+    return out.rename(columns={"value": f.key, "gsis_id": "_id"}), warns
 
 
 def run_table(df: pd.DataFrame, q: Query, xwalk: pd.DataFrame | None = None,
               mine: set | None = None, rostered: dict | None = None,
-              pos_map: dict | None = None) -> tuple[pd.DataFrame, list[str]]:
+              pos_map: dict | None = None, with_id: bool = False
+              ) -> tuple[pd.DataFrame, list[str]]:
     """Apply a query to a raw nflverse table the catalogue pointed at.
 
     Every table names its own keys differently — nextgen calls the player `player_gsis_id`,
@@ -866,38 +905,129 @@ def run_table(df: pd.DataFrame, q: Query, xwalk: pd.DataFrame | None = None,
     if rows.empty:
         return pd.DataFrame(), warns + [f"No values for `{col}` in that window."]
     rows["rank"] = range(1, len(rows) + 1)
-    keep = ["rank", "player"] + [c for c in ("pos", "team") if c in rows.columns] + ["games", "value"]
+    rows = rows.rename(columns={key: "_id"})
+    keep = (["_id"] if with_id else []) + ["rank", "player"] + \
+        [c for c in ("pos", "team") if c in rows.columns] + ["games", "value"]
     out = rows[keep].head(max(1, q.top)).reset_index(drop=True)
     return out.rename(columns={"value": q.field.key}), warns
 
 
+def compare(per_season: dict, q: Query) -> tuple[pd.DataFrame, list[str]]:
+    """One row per player, one column per season, plus the move between the outer two.
+
+    Players are lined up on their id, never their name — a name changes spelling between
+    nflverse seasons ("Marquise Brown" / "Hollywood Brown") and merging on it silently
+    splits one player into two rows, each half-empty.
+    """
+    key = q.field.key
+    years = sorted(per_season)
+    wide = None
+    for yr in years:
+        d = per_season[yr]
+        if d is None or d.empty or "_id" not in d.columns:
+            continue
+        part = d[["_id", "player", "pos", "team", key]].rename(columns={key: str(yr)})
+        if wide is None:
+            wide = part
+        else:
+            # later seasons win on name/team: that is where the player is now
+            wide = wide.merge(part, on="_id", how="outer", suffixes=("_old", ""))
+            for c in ("player", "pos", "team"):
+                wide[c] = wide[c].fillna(wide.pop(f"{c}_old"))
+    if wide is None or wide.empty:
+        return pd.DataFrame(), ["Nothing to compare — no season returned any rows."]
+
+    have = [str(y) for y in years if str(y) in wide.columns]
+    if len(have) < 2:
+        return pd.DataFrame(), [f"Only {have[0] if have else 'one'} returned any rows, "
+                                "so there is nothing to compare it against."]
+    wide["change"] = wide[have[-1]] - wide[have[0]]
+
+    sort_on = "change" if q.by_change else have[-1]
+    wide = wide.dropna(subset=[sort_on]).sort_values(sort_on, ascending=q.ascending)
+    if wide.empty:
+        return pd.DataFrame(), [f"No player has a {q.field.label} in {sort_on}."]
+    wide.insert(0, "rank", range(1, len(wide) + 1))
+    cols = ["rank", "player", "pos", "team", *have, "change"]
+    return wide[cols].head(max(1, q.top)).reset_index(drop=True), []
+
+
 def answer(pw: pd.DataFrame, text: str, weeks_available: tuple[int, ...] = (),
            mine: set | None = None, rostered: dict | None = None,
-           loader=None, xwalk: pd.DataFrame | None = None) -> Result:
+           loader=None, xwalk: pd.DataFrame | None = None,
+           pw_loader=None, default_season: int | None = None,
+           default_seasons: tuple[int, ...] = ()) -> Result:
     """Parse, run, and hand back a frame plus the sentence that says how it was read.
 
-    `loader(table) -> DataFrame` fetches an nflverse table when the question names a stat
-    outside the curated set. Without it, such a question is answered with a pointer to
-    where the stat lives rather than a number.
+    `loader(table, season)` fetches an nflverse table when the question names a stat
+    outside the curated set; `pw_loader(season)` fetches the curated player-week table for
+    a season other than the one already in hand. Without them, such a question is answered
+    with a pointer to what is missing rather than a number.
+
+    One season answers normally. More than one is compared side by side.
     """
-    q = parse(text, weeks_available)
-    if q.source == "pw":
-        df, warns = run(pw, q, mine=mine, rostered=rostered)
-    elif loader is None:
-        df, warns = pd.DataFrame(), [
-            f"`{q.field.col}` lives in the nflverse `{q.source}` table, which is not loaded here."]
-    else:
+    q = parse(text, weeks_available, default_season)
+    # A year written into the question wins; otherwise whatever the picker is set to.
+    years = (list(q.seasons) if q.seasons_named
+             else (sorted(int(y) for y in default_seasons) or list(q.seasons)))
+    q = replace(q, seasons=tuple(years))
+    multi = len(years) > 1
+
+    def _for(season, want_id: bool, use_q: Query | None = None):
+        """One season's answer, from whichever source the question pointed at.
+
+        `season` is None when the caller named no year and supplied no default: the frame
+        in hand is then used exactly as given, which is how this was called before years
+        were a thing.
+        """
+        if q.source == "pw":
+            frame = pw
+            if season is not None and pw_loader is not None and (
+                    multi or default_season is None or season != default_season):
+                frame = pw_loader(season)
+            elif season is not None and frame is not None and not frame.empty \
+                    and "season" in frame.columns:
+                got = pd.to_numeric(frame["season"], errors="coerce")
+                if got.notna().any() and season in set(got.dropna().astype(int)):
+                    frame = frame[got == season]
+            return run(frame, use_q or q, mine=mine, rostered=rostered, with_id=want_id)
+        if loader is None:
+            return pd.DataFrame(), [f"`{q.field.col}` lives in the nflverse `{q.source}` "
+                                    "table, which is not loaded here."]
         pos_map = (dict(zip(pw["gsis_id"], pw["pos"]))
                    if pw is not None and not pw.empty and "pos" in pw.columns else {})
         try:
-            df, warns = run_table(loader(q.source), q, xwalk=xwalk, mine=mine,
-                                  rostered=rostered, pos_map=pos_map)
+            return run_table(loader(q.source, season), use_q or q, xwalk=xwalk, mine=mine,
+                             rostered=rostered, pos_map=pos_map, with_id=want_id)
         except Exception as e:
-            df, warns = pd.DataFrame(), [f"Could not load `{q.source}`: {type(e).__name__}: {e}"]
+            return pd.DataFrame(), [f"Could not load `{q.source}` for {season}: "
+                                    f"{type(e).__name__}: {e}"]
+
+    warns: list[str] = []
+    if multi:
+        # Each season is run WITHOUT the row limit. Applying it per season first and
+        # merging afterwards compares one year's top 25 against another's, and a player
+        # who placed 30th in the earlier year comes back blank rather than lower.
+        per, wide_q = {}, replace(q, top=10 ** 6)
+        for yr in years:
+            d, w = _for(yr, want_id=True, use_q=wide_q)
+            per[yr] = d
+            warns += [f"{yr}: {x}" for x in w if "Ignored:" not in x]
+            if d is None or d.empty:
+                warns.append(f"{yr} returned no rows.")
+        df, cw = compare({y: per[y] for y in years}, q)
+        warns += cw
+        fmt = {str(y): q.field.fmt for y in years}
+        fmt["change"] = q.field.fmt.replace("{:.", "{:+.") if "{:+" not in q.field.fmt else q.field.fmt
+    else:
+        df, warns = _for(years[0] if years else None, want_id=False)
+        warns = list(warns)
+        fmt = {q.field.key: q.field.fmt}
+
     if q.unmatched:
         warns.append("Ignored: " + ", ".join(q.unmatched) + ".")
-    return Result(query=q, df=df, restated=restate(q), fmt={q.field.key: q.field.fmt},
-                  warnings=warns, note=q.field.note)
+    return Result(query=q, df=df, restated=restate(q), fmt=fmt, warnings=warns,
+                  note=q.field.note)
 
 
 def restate(q: Query) -> str:
@@ -913,6 +1043,11 @@ def restate(q: Query) -> str:
         bits.append("among free agents")
     elif q.scope == "rostered":
         bits.append("among rostered players")
+    if len(q.seasons) > 1:
+        yrs = ", ".join(str(y) for y in q.seasons)
+        bits.append(f"compared across {yrs}" + (", ranked by the change" if q.by_change else ""))
+    elif q.seasons:
+        bits.append(f"in {q.seasons[0]}")
     bits.append("over " + q.window_label)
     s = ", ".join(bits)
     if q.min_den > 0 and f.kind == "rate":

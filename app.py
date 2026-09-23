@@ -1893,6 +1893,12 @@ with sec_ask:
 
     _aq = st.text_input("Question", key="ask_q", label_visibility="collapsed",
                         placeholder="list WRs by snap %")
+    _all_yrs = list(range(int(season), 2014, -1))
+    _yrs = st.multiselect("Seasons", _all_yrs, default=[int(season)], key="ask_years",
+                          help="Pick two or more to compare them side by side, with the "
+                               "change between the outer two. Naming a year in the question "
+                               "itself (\u201ctargets in 2024\u201d, \u201c2023-2025\u201d) "
+                               "overrides this.")
     _ax = st.pills("Or start from one of these", list(ASK.EXAMPLES), key="ask_ex")
     _text = (_aq or "").strip() or (_ax or "")
 
@@ -1916,8 +1922,10 @@ with sec_ask:
         try:
             _res = ASK.answer(_pw, _text, weeks_available=_wks, mine=set(gsis_list),
                               rostered={g: t for g, (t, _sl) in _own.items()},
-                              loader=lambda t: _nflverse_table(t, int(season)),
-                              xwalk=player_ids.crosswalk())
+                              loader=_nflverse_table,
+                              xwalk=player_ids.crosswalk(),
+                              pw_loader=_ask_pw, default_season=int(season),
+                              default_seasons=tuple(_yrs))
         except ASK.AskError as e:
             _res = None
             st.warning(str(e))
@@ -1928,10 +1936,17 @@ with sec_ask:
             if _res.df.empty:
                 st.info("No rows. " + (" ".join(_res.warnings) or "Try widening the filters."))
             else:
-                _metric = _hdr[_res.query.field.key]
-                ui.table(_res.df, rename=_hdr,
-                         fmt={_metric: _res.query.field.fmt},
-                         sequential=[_metric], legend=False)
+                if len(_res.query.seasons) > 1:      # one column per season, plus the move
+                    _cmp = {**_hdr, "change": "CHANGE",
+                            **{str(y): str(y) for y in _res.query.seasons}}
+                    ui.table(_res.df, rename=_cmp, fmt=_res.fmt,
+                             sequential=[str(_res.query.seasons[-1])],
+                             diverging=["CHANGE"], legend=False)
+                else:
+                    _metric = _hdr[_res.query.field.key]
+                    ui.table(_res.df, rename=_hdr,
+                             fmt={_metric: _res.query.field.fmt},
+                             sequential=[_metric], legend=False)
                 st.download_button("Download this answer (.csv)",
                                    _res.df.to_csv(index=False),
                                    "answer.csv", key="ask_dl")

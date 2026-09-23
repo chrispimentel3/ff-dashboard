@@ -436,3 +436,95 @@ def test_missing_column_in_a_raw_table_is_explained():
     q = ask.parse("WR by average separation")
     out, warns = ask.run_table(_fake_nextgen().drop(columns=["avg_separation"]), q)
     assert out.empty and any("not in" in w for w in warns)
+
+
+# ---------------------------------------------------------------- seasons
+@pytest.mark.parametrize("text,years", [
+    ("WR by targets in 2024", (2024,)),
+    ("WR by targets 2023-2025", (2023, 2024, 2025)),
+    ("compare 2024 and 2025 WR target share", (2024, 2025)),
+    ("WR by targets 2022 vs 2025", (2022, 2025)),
+    ("WR by targets 2023 to 2025", (2023, 2024, 2025)),
+])
+def test_season_parsing(text, years):
+    assert ask.parse(text).seasons == years
+
+
+def test_last_n_seasons_anchors_on_the_current_one():
+    assert ask.parse("WR by targets last 3 seasons", default_season=2026).seasons == (2024, 2025, 2026)
+
+
+def test_a_year_is_not_mistaken_for_a_week_or_a_row_limit():
+    q = ask.parse("top 10 WR by targets in 2024")
+    assert q.seasons == (2024,) and q.top == 10 and q.weeks == ()
+    q2 = ask.parse("WR by targets weeks 2-4 in 2024")
+    assert q2.seasons == (2024,) and q2.weeks == (2, 3, 4)
+
+
+def test_a_year_in_the_question_beats_the_picker(pw):
+    r = ask.answer(pw, "WR by targets in 2024", default_seasons=(2019, 2020))
+    assert r.query.seasons == (2024,)
+
+
+def test_the_picker_supplies_years_when_the_question_does_not(pw):
+    r = ask.answer(pw, "WR by targets", default_seasons=(2024, 2025),
+                   pw_loader=lambda s: pw.assign(season=s))
+    assert r.query.seasons == (2024, 2025)
+
+
+def test_most_improved_ranks_by_the_change_not_the_level():
+    assert ask.parse("most improved WR by targets 2024 vs 2025").by_change
+    assert not ask.parse("top WR by targets 2024 vs 2025").by_change
+
+
+def test_xfp_difference_still_resolves_despite_the_change_words():
+    """'difference' signals a change ranking AND is part of an alias; the alias wins."""
+    assert ask.parse("WR by xfp difference").field.key == "xfp_diff"
+
+
+def _season_pw(season: int) -> pd.DataFrame:
+    """Same players, different volumes, so a change is checkable by eye."""
+    bump = {2024: 1.0, 2025: 2.0}[season]
+    st = _stats().copy()
+    st["targets"] = (st["targets"] * bump).astype(int)
+    st["season"] = season
+    return ask.player_week(st, season=season)
+
+
+def test_two_seasons_come_back_side_by_side_with_the_change():
+    r = ask.answer(None, "compare 2024 and 2025 WR by targets", pw_loader=_season_pw)
+    assert list(r.df.columns) == ["rank", "player", "pos", "team", "2024", "2025", "change"]
+    row = r.df.set_index("player").loc["Nacua"]
+    assert row["2024"] == 18 and row["2025"] == 36 and row["change"] == 18
+
+
+def test_each_season_is_ranked_without_the_row_limit_before_merging():
+    """Applying the limit per season and merging afterwards compares one year's top N
+    against another's, and a player just outside it comes back blank instead of lower."""
+    r = ask.answer(None, "top 2 WR by targets 2024 vs 2025", pw_loader=_season_pw)
+    assert len(r.df) == 2
+    assert r.df[["2024", "2025"]].notna().all().all()
+
+
+def test_comparison_lines_players_up_on_id_not_name():
+    """A name can change spelling between nflverse seasons; an id does not."""
+    def loader(season):
+        d = _season_pw(season)
+        if season == 2025:                       # same player, different spelling
+            d["player"] = d["player"].replace({"Nacua": "Puka Nacua"})
+        return d
+    r = ask.answer(None, "compare 2024 and 2025 WR by targets", pw_loader=loader)
+    assert len(r.df[r.df["player"].str.contains("Nacua")]) == 1
+
+
+def test_restate_names_the_years():
+    assert "in 2024" in ask.restate(ask.parse("WR by targets in 2024"))
+    s = ask.restate(ask.parse("most improved WR by targets 2024 vs 2025"))
+    assert "2024, 2025" in s and "ranked by the change" in s
+
+
+def test_a_season_with_no_rows_is_reported_not_silently_dropped():
+    def loader(season):
+        return _season_pw(2024) if season == 2024 else pd.DataFrame()
+    r = ask.answer(None, "compare 2024 and 2025 WR by targets", pw_loader=loader)
+    assert any("2025 returned no rows" in w for w in r.warnings)
