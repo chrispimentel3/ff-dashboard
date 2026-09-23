@@ -102,6 +102,12 @@ def ff_opportunity(season: int) -> pd.DataFrame:
     df["norm"] = df["player"].map(_norm)
     # Half-PPR expected points, scored here once. projections.nflverse_estimate looked for
     # this column and never found it, so its 25% xFP weight silently fell back to points.
+    #
+    # nflverse ships its own total_fantasy_points_exp and we deliberately ignore it: theirs
+    # is FULL PPR and scores an interception at -2, where Mega Bowl is half-PPR at -1. The
+    # components are what we want; the scoring has to be ours.
+    # docs/expected-points.md has the whole pipeline — the eight models, their features, and
+    # what the expected side does not cover (no fumble model, no return TDs).
     s = SCORING
     df["half_ppr_exp"] = (
         s["pass_yd"] * _n(df, "pass_yards_gained_exp") + s["pass_td"] * _n(df, "pass_touchdown_exp")
