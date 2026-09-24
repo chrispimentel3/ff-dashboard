@@ -1767,6 +1767,47 @@ with sec_players:
                 ])
                 st.write("")
 
+                # ---- role context (HANDOFF §12): what he is, and how his usage reads
+                # against the baseline for that role and the NFL average at his position.
+                # A 20% target share is a strong WR3 and a poor WR1 — the number alone
+                # cannot tell you which, so the baselines sit beside it.
+                if int(_season_pick) == _cur:
+                    from mega import roles as RL
+                    try:
+                        _RC = _role_ctx(_cur)
+                    except Exception as _e:
+                        _RC = None
+                        st.caption(f"Role context unavailable: {_e}")
+                    if _RC is not None and not _RC["table"].empty:
+                        _line = RL.describe(_RC["table"], gid)
+                        if _line:
+                            ui.h("Role", 5)
+                            st.markdown(_line)
+                            _cd = RL.card(_RC["table"], _RC["baselines"], gid)
+                            if not _cd.empty:
+                                _fmts = dict(zip(_cd["metric"], _cd["_fmt"]))
+                                _show = _cd.drop(columns=["_fmt"])
+                                _val_cols = [c for c in _show.columns if c != "metric"]
+                                _sty = _show.style.format(
+                                    {c: (lambda v, c=c: "—" if pd.isna(v) else
+                                         (f"{v:.0f}" if c.startswith("vs ") else f"{v:,.3f}"))
+                                     for c in _val_cols})
+                                st.dataframe(_sty, width="stretch", hide_index=True,
+                                             column_config={
+                                                 "vs role": st.column_config.NumberColumn(
+                                                     "VS ROLE", help="100 = average for his role. "
+                                                     "120+ is the §12.5 flag line."),
+                                                 "vs NFL": st.column_config.NumberColumn(
+                                                     "VS NFL", help="100 = the NFL average at his "
+                                                     "position, across every player-game this season."),
+                                             })
+                                st.caption(
+                                    "Shrunk toward his role's baseline, so a two-game sample is "
+                                    "pulled to the middle rather than believed. **vs role** and "
+                                    "**vs NFL** are 100 at the average."
+                                )
+                st.write("")
+
                 # ---- this week
                 if int(_season_pick) == _cur and pteam:
                     wk = sched[(sched["week"] == next_week) & ((sched["home_team"] == pteam) | (sched["away_team"] == pteam))]
@@ -1852,6 +1893,33 @@ with tab_raw:
 # language model: no API key, nothing to pay per question, and — the reason it is built
 # this way — it can always print how it read the question, so a misparse is visible on
 # screen instead of arriving as a confident wrong table.
+@st.cache_data(ttl=CACHE_TTL, show_spinner=False)
+def load_nextgen(season: int, kind: str) -> pd.DataFrame:
+    try:
+        return to_pandas(nfl.load_nextgen_stats(seasons=[season], stat_type=kind))
+    except Exception:
+        return pd.DataFrame()
+
+
+@st.cache_data(ttl=CACHE_TTL, show_spinner=False)
+def load_depth_charts(season: int) -> pd.DataFrame:
+    try:
+        return to_pandas(nfl.load_depth_charts(seasons=[season]))
+    except Exception:
+        return pd.DataFrame()
+
+
+@st.cache_data(ttl=dt.timedelta(hours=6), show_spinner="Working out everyone's role…")
+def _role_ctx(season: int) -> dict:
+    """§12 role context: role per player, role baselines, NFL positional averages and the
+    shrunk index of each against both."""
+    from mega import roles as RL
+
+    return RL.build(_ask_pw(season), load_ff_opportunity(season),
+                    load_nextgen(season, "receiving"), load_nextgen(season, "rushing"),
+                    load_depth_charts(season))
+
+
 @st.cache_data(ttl=CACHE_TTL, show_spinner="Reading the red zone…")
 def load_redzone(season: int) -> pd.DataFrame:
     """Carries and targets inside the 20, the 10 and the 5, from play-by-play.
@@ -1954,6 +2022,53 @@ with sec_ask:
                 st.caption("⚠︎ " + _w)
             if _res.note:
                 st.caption(_res.note)
+
+    with st.expander("Role baselines — what an average WR1, TE1 or lead back looks like"):
+        from mega import roles as RL
+
+        try:
+            _RCB = _role_ctx(int(season))
+        except Exception as _e:
+            _RCB = None
+            st.caption(f"Unavailable: {_e}")
+        if _RCB is not None and _RCB["baselines"]:
+            st.caption(
+                "Every figure is a summed numerator over a summed denominator across every "
+                "player-game in the group this season — never the average of weekly rates. "
+                "These are the numbers a player's own usage is read against."
+            )
+            _bt1, _bt2 = st.tabs(["By role", "NFL average by position"])
+            _cols = ["target_share", "air_share", "snap_pct", "carry_share",
+                     "inside10_share", "tprr", "fd_rr", "xfp_share"]
+            _pcts = {"target_share", "air_share", "snap_pct", "carry_share",
+                     "inside10_share", "xfp_share"}
+            _lbl = {m.key: m.label for m in RL.METRICS}
+
+            def _show_base(which: str, first: str):
+                _b = RL.baseline_table(_RCB["baselines"], which)
+                if _b.empty:
+                    st.info("Not enough games yet to build baselines.")
+                    return
+                _keep = [first, "players"] + [c for c in _cols if c in _b.columns]
+                _d = _b[_keep].rename(columns={**_lbl, first: first.upper(),
+                                               "players": "PLAYERS"})
+                st.dataframe(
+                    _d.style.format({_lbl[c]: ("{:.1%}" if c in _pcts else "{:.3f}")
+                                     for c in _cols if c in _b.columns}, na_rep="—"),
+                    width="stretch", hide_index=True)
+
+            with _bt1:
+                _show_base("role", "role")
+                st.caption(
+                    "Roles come from the last 3 games played (§12.1): WRs rank by target "
+                    "share on their own team, tight ends split on whether they are actually "
+                    "targeted (12%), backs on carry share. A player with under 2 games is "
+                    "placed from the depth chart instead."
+                )
+            with _bt2:
+                _show_base("pos", "pos")
+                st.caption("Across every player-game at the position this season — the line "
+                           "a player's **vs NFL** index is measured against.")
 
     with st.expander("What can I ask?"):
         from mega import catalog as CAT

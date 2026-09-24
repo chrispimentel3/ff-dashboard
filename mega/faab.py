@@ -32,6 +32,10 @@ import pandas as pd
 from .config import DATA, N_TEAMS, SEAT_BY_TEAM
 
 BUDGET = 100           # season FAAB allowance, per team
+# Chris confirmed the league accepts $0 claims (2026-09-23), so an uncontested add costs
+# nothing. The $1 floor below still applies to anything a rival would also want: a $0 bid
+# loses every tie, and the tiebreak is reverse standings, which does not favour him.
+MIN_BID = 0
 LAST_WEEK = 17         # Mega Bowl playoffs are weeks 15-17, so nothing is bought after 17
 FAAB_CSV = DATA / "yahoo_faab.csv"
 BIDS_CSV = DATA / "yahoo_faab_bids.csv"
