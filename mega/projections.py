@@ -20,6 +20,7 @@ from pathlib import Path
 
 import httpx
 import nflreadpy as nfl
+import numpy as np
 import pandas as pd
 
 from .config import DATA
@@ -269,9 +270,42 @@ def blended_week(season: int, week: int) -> pd.DataFrame:
             base[c] = pd.NA
     if "nfl_est" not in base.columns:
         base["nfl_est"] = pd.NA
-    # projection: prefer FantasyPros where present, else the nflverse estimate
-    base["proj"] = base["fp_proj"].where(base["fp_proj"].notna(), base["nfl_est"])
-    base["proj_source"] = base["fp_proj"].notna().map({True: "FantasyPros", False: "nflverse-est"})
+    # HANDOFF §3.1 — ffanalytics' robust average across six sources is the preferred
+    # projection: a consensus is harder to fool than any one site, and `sd_pts` says how
+    # much the sources disagree. It only exists where R has run, so the order below is a
+    # preference, not a requirement.
+    try:
+        from . import ffa
+
+        ffp = ffa.projections(season, week)
+    except Exception:
+        ffp = pd.DataFrame()
+    if not ffp.empty:
+        cols = [c for c in ("gsis_id", "proj", "sd_pts", "floor", "ceiling") if c in ffp.columns]
+        base = base.merge(ffp[cols].rename(columns={"proj": "ffa_proj"}).dropna(subset=["gsis_id"]),
+                          on="gsis_id", how="outer")
+    for c in ("ffa_proj", "sd_pts", "floor", "ceiling"):
+        if c not in base.columns:
+            base[c] = pd.NA
+
+    # ffanalytics -> FantasyPros -> the nflverse usage estimate, first one present wins
+    base["proj"] = base["ffa_proj"].where(
+        base["ffa_proj"].notna(),
+        base["fp_proj"].where(base["fp_proj"].notna(), base["nfl_est"]))
+    base["proj_source"] = np.where(
+        base["ffa_proj"].notna(), "ffanalytics",
+        np.where(base["fp_proj"].notna(), "FantasyPros", "nflverse-est"))
+
+    # §6.2 — rest-of-season ECR is what a league-mate actually sees. Where ffanalytics
+    # supplied one it beats the weekly rank, which measures a different question.
+    try:
+        ros = ffa.ecr_ros(season)
+        if not ros.empty:
+            base = base.merge(ros, on="gsis_id", how="left")
+            base["ecr"] = base["ecr_ros"].where(base["ecr_ros"].notna(), base["ecr"])
+    except Exception:
+        pass
+
     base = base.dropna(subset=["proj"]).sort_values("proj", ascending=False).reset_index(drop=True)
     return base
 

@@ -30,7 +30,9 @@ DEFAULTS: dict[str, Any] = {
     "depthWeights": {"QB": [0.10], "RB": [0.15, 0.05], "WR": [0.15, 0.05], "TE": [0.10]},
     "horizon": None,
     "themTolerance": 1.0,
-    "market": {"k": 50, "tolerance": 0.15, "unrankedEcr": 300},
+    # `bias`: {teamId: {pos: multiplier}} from §17. Empty means every manager is priced
+    # neutrally, which is the v1 behaviour the ported tests pin.
+    "market": {"k": 50, "tolerance": 0.15, "unrankedEcr": 300, "bias": {}},
     "faCandidatesPerPos": 3,
     # Which free agent sets replacement level: 1 = the best one, the JS engine's rule and
     # what the ported tests pin. The max over a large pool is biased high — it is the single
@@ -70,10 +72,24 @@ def value_at(p: dict, week: int | None) -> float:
     return wk if wk is not None else (p.get("ppg") or 0.0)
 
 
-def market_value(p: dict, cfg: dict) -> float:
+def market_value(p: dict, cfg: dict, bias: dict | None = None) -> float:
+    """Perceived value of a player, on the 100-at-the-top curve.
+
+    `p["ecr"]` is the perceived rank (HANDOFF §6.2 and §7): a blend of rest-of-season
+    consensus with how his box scores have actually read, because a league-mate sees
+    rankings and points, not expected points.
+
+    `bias` is one manager's positional multipliers (§17) — some managers pay up for backs
+    and some will not touch a tight end, and a trade has to clear the market test THEY
+    apply, not a neutral one. Absent or empty, this is exactly the v1 function, which is
+    what keeps the eleven ported tests green.
+    """
     r = p.get("ecr")
     r = cfg["market"]["unrankedEcr"] if r is None else r
-    return 100 * math.exp(-(r - 1) / cfg["market"]["k"])
+    mv = 100 * math.exp(-(r - 1) / cfg["market"]["k"])
+    if bias:
+        mv *= float(bias.get(p.get("pos"), 1.0))
+    return mv
 
 
 @dataclass
@@ -288,9 +304,19 @@ def evaluate_core(ctx: Ctx, my_id, their_id, give_ids, get_ids) -> dict:
     d_me = a_me.value - b_me.value
     d_them = a_them.value - b_them.value
 
-    mv_give = sum(market_value(players[i], cfg) for i in give_ids)   # what they receive
-    mv_get = sum(market_value(players[i], cfg) for i in get_ids)     # what they give up
+    # §17 — the market test is the one THEY apply. Their positional bias scales both
+    # sides, so a manager who overrates running backs both pays more for one and wants
+    # more for one. `explain()` reports the neutral ratio alongside the biased one.
+    bias = (cfg.get("market", {}).get("bias") or {}).get(str(their_id)) or {}
+    mv_give = sum(market_value(players[i], cfg, bias) for i in give_ids)   # what they receive
+    mv_get = sum(market_value(players[i], cfg, bias) for i in get_ids)     # what they give up
     ratio = mv_give / mv_get if mv_get > 0 else math.inf
+    if bias:
+        n_give = sum(market_value(players[i], cfg) for i in give_ids)
+        n_get = sum(market_value(players[i], cfg) for i in get_ids)
+        neutral = n_give / n_get if n_get > 0 else math.inf
+    else:
+        neutral = ratio
 
     lineup_ok = d_them >= -cfg["themTolerance"] - EPS
     market_ok = ratio >= 1 - cfg["market"]["tolerance"] - EPS
@@ -301,7 +327,8 @@ def evaluate_core(ctx: Ctx, my_id, their_id, give_ids, get_ids) -> dict:
             "dMe": d_me, "dThem": d_them,
             "lineupOK": lineup_ok, "marketOK": market_ok,
             "flag": flag_for(lineup_ok, market_ok),
-            "market": {"mvYouGive": mv_give, "mvYouGet": mv_get, "ratio": ratio},
+            "market": {"mvYouGive": mv_give, "mvYouGet": mv_get, "ratio": ratio,
+                       "neutralRatio": neutral, "biased": bool(bias)},
             "_after": {"me": a_me, "them": a_them}}
 
 
