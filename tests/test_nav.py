@@ -1,0 +1,107 @@
+"""The six pages.
+
+app.py used to be 2,400 lines that ran top to bottom with every tab body inline, so a
+helper defined below its call site did not exist yet when the body ran. That reached the
+page four separate times. Each body is now a function, which means the whole module exists
+before any of it executes — the hazard is designed out rather than guarded against.
+
+These tests read the source. They cannot run the pages (Streamlit's AppTest can only switch
+between FILE-based pages, not the function-based ones st.navigation takes here), so
+tests/test_app_smoke.py runs the default page and this file checks the wiring of the rest.
+"""
+from __future__ import annotations
+
+import ast
+import pathlib
+
+import pytest
+
+APP = pathlib.Path(__file__).resolve().parent.parent / "app.py"
+
+
+def _tree() -> ast.Module:
+    return ast.parse(APP.read_text())
+
+
+def _funcs(prefix: str) -> dict[str, ast.FunctionDef]:
+    return {n.name: n for n in _tree().body
+            if isinstance(n, ast.FunctionDef) and n.name.startswith(prefix)}
+
+
+def _pages() -> list[ast.Call]:
+    return [n for n in ast.walk(_tree())
+            if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+            and n.func.attr == "Page"]
+
+
+def test_there_are_six_pages_and_exactly_one_opens_first():
+    pages = _pages()
+    assert len(pages) == 6
+    defaults = [p for p in pages
+                if any(k.arg == "default" and getattr(k.value, "value", False) for k in p.keywords)]
+    assert len(defaults) == 1, "exactly one page may be the landing page"
+
+
+def test_every_page_is_a_question_or_an_instruction_not_a_feature_name():
+    """The old tabs were named after features and data sources — WOPR, Archetypes, Raw
+    Data — which only works if you already know what is in them."""
+    titles = [k.value.value for p in _pages() for k in p.keywords if k.arg == "title"]
+    assert len(titles) == 6
+    for t in titles:
+        assert t[0].isupper() and len(t.split()) >= 3, f"{t!r} reads like a feature name"
+    assert sum(t.endswith("?") for t in titles) >= 4
+
+
+def test_every_page_has_a_url_of_its_own():
+    """So that sending someone your Start/Sit is a link, not 'click the third tab'."""
+    paths = [k.value.value for p in _pages() for k in p.keywords if k.arg == "url_path"]
+    assert len(paths) == 6 and len(set(paths)) == 6
+    assert all(p.islower() and p.isalpha() for p in paths)
+
+
+def test_every_content_block_is_reachable_from_exactly_one_page():
+    """Eighteen blocks came across from the old tab tree. A block nobody calls is a
+    feature that silently disappeared in the move."""
+    tabs = set(_funcs("_tab_"))
+    pages = _funcs("_page_")
+    assert tabs, "no content functions found"
+    called: dict[str, list[str]] = {t: [] for t in tabs}
+    for pname, node in pages.items():
+        for n in ast.walk(node):
+            if isinstance(n, ast.Name) and n.id in tabs:
+                called[n.id].append(pname)
+    orphans = sorted(t for t, where in called.items() if not where)
+    assert not orphans, f"content blocks no page renders: {orphans}"
+    twice = {t: w for t, w in called.items() if len(w) > 1}
+    assert not twice, f"blocks rendered by more than one page: {twice}"
+
+
+def test_the_navigation_is_built_after_every_page_exists():
+    """st.navigation must be the last thing the script does."""
+    tree = _tree()
+    nav = [n.lineno for n in ast.walk(tree)
+           if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+           and n.func.attr == "navigation"]
+    assert len(nav) == 1
+    last_def = max(n.lineno for n in tree.body if isinstance(n, ast.FunctionDef))
+    assert nav[0] > last_def, "navigation runs before some page is defined"
+
+
+def test_no_tab_container_variables_survive_the_move():
+    """The old `with tab_x:` containers are gone; a leftover reference would be a name
+    bound nowhere."""
+    src = APP.read_text()
+    for stale in ("sec_now", "sec_team", "sec_get", "sec_more", "sec_players",
+                  "with tab_", "st.tabs(["):
+        if stale == "st.tabs([":
+            continue          # sub-tabs are built by the _tabs helper, which is fine
+        assert stale not in src, f"{stale!r} still referenced after the page split"
+
+
+def test_sub_tabs_go_through_the_one_helper():
+    """One place decides how a page's sub-tabs are built, so they cannot drift apart."""
+    pages = _funcs("_page_")
+    for name, node in pages.items():
+        calls = {n.func.id for n in ast.walk(node)
+                 if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)}
+        assert "_tabs" in calls, f"{name} builds its tabs by hand"

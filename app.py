@@ -598,23 +598,7 @@ ui.masthead([
     BASIS["label"],
 ])
 
-# Grouped by the decision you're making, not by where the data came from. Streamlit
-# tabs are containers, so the `with tab_*:` bodies further down render into these
-# wherever they appear in the file.
-sec_now, sec_team, sec_get, sec_league, sec_players, sec_ask, sec_more = st.tabs(
-    ["This Week", "My Team", "Get Better", "League", "Players", "Ask", "More"]
-)
-with sec_now:
-    tab_action, tab_start, tab_match = st.tabs(["Action Board", "Start / Sit", "Matchups"])
-with sec_team:
-    tab_over, tab_axe, tab_use = st.tabs(["Roster", "Points vs Opportunity", "Usage Trends"])
-with sec_get:
-    tab_wire, tab_trade, tab_wopr, tab_arch = st.tabs(
-        ["Waiver Wire", "Trade Finder", "WOPR", "Archetypes"])
-with sec_league:
-    tab_league, tab_draft = st.tabs(["Standings", "Draft Value"])
-with sec_more:
-    tab_digest, tab_news, tab_raw = st.tabs(["Weekly Digest", "News", "Raw Data"])
+# The navigation is assembled at the foot of this file, once every page exists.
 
 
 @st.cache_data(ttl=dt.timedelta(hours=6), show_spinner="Scoring league-winner archetypes…")
@@ -751,7 +735,7 @@ def _build_agg() -> pd.DataFrame:
 agg = _build_agg()
 
 # ---- Roster --------------------------------------------------------------------------
-with tab_over:
+def _tab_over():
     if agg.empty:
         st.info("No stats yet for this season/week range.")
     else:
@@ -863,7 +847,7 @@ with tab_over:
                 )
 
 # ---- League (live Yahoo API) ---------------------------------------------------------
-with tab_league:
+def _tab_league():
     # §18.2 — where this is all heading. Points per week is the working currency; this is
     # the one that decides the season.
     try:
@@ -1048,7 +1032,7 @@ with tab_league:
             ui.table(tx.head(40), rename={"team": "TEAM"}, logos=False)
 
 # ---- Start / Sit -------------------------------------------------------------------
-with tab_start:
+def _tab_start():
     st.caption(
         f"Projections: FantasyPros (studs) + nflverse estimate (everyone else), "
         f"matchup-adjusted via defense-vs-position. Optimizing week {next_week}."
@@ -1140,7 +1124,7 @@ with tab_start:
                     "of a starter in the same slot. Worth an injury and matchup check before lock.")
 
 # ---- Actual vs expected ------------------------------------------------------------
-with tab_axe:
+def _tab_axe():
     if ffo.empty:
         st.info("ff_opportunity data unavailable for this season.")
     else:
@@ -1167,7 +1151,7 @@ with tab_axe:
                  fmt={"xFP": "{:.1f}", "ACT": "{:.1f}", "xFP±": "{:+.1f}"})
 
 # ---- Usage trends ----------------------------------------------------------------
-with tab_use:
+def _tab_use():
     metric = st.selectbox("Metric", ["snap share", "target share", "half-PPR points", "targets", "carries"])
     players_sel = st.multiselect("Players", skill["name"].tolist(), default=skill[skill["slot"] != "BN"]["name"].tolist())
     sel_ids = [k for k, v in name_by_id.items() if v in players_sel]
@@ -1218,7 +1202,7 @@ with tab_use:
             st.info(f"Column '{field}' not available.")
 
 # ---- Matchups ------------------------------------------------------------------
-with tab_match:
+def _tab_match():
     if sched.empty:
         st.info("Schedule unavailable.")
     else:
@@ -1381,7 +1365,7 @@ except Exception as e:  # network / dependency issue — keep the core dashboard
 
 
 # ---- Action board --------------------------------------------------------------------
-with tab_action:
+def _tab_action():
     ui.lede(
         "What's worth doing this week, and why. Everything here is pulled from the other "
         "tabs — the one idea running through it is that <b>opportunity is sticky and points "
@@ -1475,7 +1459,7 @@ with tab_action:
     else:
         st.warning(f"League intel unavailable: {_intel_err}")
 
-with tab_wire:
+def _tab_wire():
     if IB is None:
         st.warning(f"League intel unavailable: {_intel_err}")
     else:
@@ -1646,7 +1630,7 @@ def _trade_search(season: int, pid: str, mine: bool, flags: tuple, shapes: tuple
     return out
 
 
-with tab_trade:
+def _tab_trade():
     if IB is None:
         st.warning("League intel unavailable.")
     elif IB["trades"].empty:
@@ -1768,7 +1752,7 @@ with tab_trade:
             "offers below ~0.85 get filtered out, so everything here should at least get a reply."
         )
 
-with tab_draft:
+def _tab_draft():
     if IB is None:
         st.warning("League intel unavailable.")
     else:
@@ -1797,7 +1781,7 @@ with tab_draft:
             ui.table(mine_bs, diverging=["xFP±/G"], pos_cols=["POS"],
                      fmt={"ACT": "{:.1f}", "xFP": "{:.1f}", "xFP±/G": "{:+.1f}"})
 
-with tab_arch:
+def _tab_arch():
     st.caption(
         "Every player scored 0–100 against the Mega Bowl **league-winner blueprint**, "
         "with thresholds prorated **per game**. WR uses a labeled first-down proxy (routes-run isn't in free data)."
@@ -1841,7 +1825,7 @@ with tab_arch:
                  sequential=["ARCH FIT"], fmt={"ARCH FIT": "{:.0f}", "PPG": "{:.1f}", "PROJ": "{:.1f}", "TGT%": "{:.1%}"},
                  labels={"PROJ": "Proj pts/g"}, help={"PROJ": "Projected fantasy points per game this season."})
 
-with tab_wopr:
+def _tab_wopr():
     st.caption(
         "**Weighted Opportunity Rating** — how much receiving opportunity each WR/TE earns "
         "(target share + air-yards share), split by who owns them. **WOPR** blends last season "
@@ -1914,7 +1898,7 @@ with tab_wopr:
             file_name=f"wopr_targets_{int(season)}.csv", mime="text/csv",
         )
 
-with tab_digest:
+def _tab_digest():
     ui.lede(
         "One page you can read on Tuesday morning — waivers, trades, and regression watch "
         "in plain text. Generate it here, or run <code>tuesday.py --email</code> to have it sent."
@@ -1942,7 +1926,7 @@ with tab_digest:
                 st.markdown(_prev[-1].read_text(encoding="utf-8"))
 
 
-with tab_news:
+def _tab_news():
     from mega.sources import news_for_players, news_items
 
     scope = st.radio("Scope", ["My roster", "Watchlist + roster", "All NFL"], horizontal=True)
@@ -2005,52 +1989,50 @@ def _height(v) -> str:
         return ""
 
 
-with sec_players:
-    from mega import glossary as GL
-    from mega import logos as _logos
-    from mega import lookup as LK
-    from mega.config import MY_TEAM
-    from mega.status import note_for, out_for_week
+from mega import glossary as GL
+from mega import logos as _logos
+from mega import lookup as LK
+from mega.config import MY_TEAM
+from mega.status import note_for, out_for_week
 
-    tab_lookup, tab_gloss = st.tabs(["Player Lookup", "Glossary"])
 
-    with tab_gloss:
-        ui.lede(
-            "Every tag the dashboard puts next to a player, in plain English. "
-            "If a label anywhere needs this page to make sense, that is a fault in the "
-            "label \u2014 tell me and I will fix the wording, not the glossary."
-        )
-        st.markdown(GL.HEADLINE)
+def _tab_gloss():
+    ui.lede(
+        "Every tag the dashboard puts next to a player, in plain English. "
+        "If a label anywhere needs this page to make sense, that is a fault in the "
+        "label \u2014 tell me and I will fix the wording, not the glossary."
+    )
+    st.markdown(GL.HEADLINE)
+    st.write("")
+    _g = GL.frame()
+    for _grp, _title, _lede in (
+        ("Role", "Roles \u2014 the job he has",
+         "One per player. Worked out from his last three games, not from where he was "
+         "drafted, so it changes during the season when his usage does."),
+        ("Flag", "Flags \u2014 what he is doing well",
+         "A player can carry several. These are measured against others in the SAME "
+         "role, so a third receiver is judged against other third receivers."),
+        ("How long", "How long it has held",
+         "The difference between a pattern and a good afternoon."),
+        ("Vegas", "Vegas — what the betting market says",
+         GL.VEGAS_HEADLINE),
+    ):
+        ui.h(_title, 5)
+        st.caption(_lede)
+        _sub = _g[_g["group"] == _grp][["tag", "what it means", "why it matters"]]
+        st.dataframe(_sub, width="stretch", hide_index=True,
+                     column_config={
+                         "tag": st.column_config.TextColumn("TAG", width=150),
+                         "what it means": st.column_config.TextColumn("WHAT IT MEANS", width=380),
+                         "why it matters": st.column_config.TextColumn("WHY IT MATTERS", width=340),
+                     })
         st.write("")
-        _g = GL.frame()
-        for _grp, _title, _lede in (
-            ("Role", "Roles \u2014 the job he has",
-             "One per player. Worked out from his last three games, not from where he was "
-             "drafted, so it changes during the season when his usage does."),
-            ("Flag", "Flags \u2014 what he is doing well",
-             "A player can carry several. These are measured against others in the SAME "
-             "role, so a third receiver is judged against other third receivers."),
-            ("How long", "How long it has held",
-             "The difference between a pattern and a good afternoon."),
-            ("Vegas", "Vegas — what the betting market says",
-             GL.VEGAS_HEADLINE),
-        ):
-            ui.h(_title, 5)
-            st.caption(_lede)
-            _sub = _g[_g["group"] == _grp][["tag", "what it means", "why it matters"]]
-            st.dataframe(_sub, width="stretch", hide_index=True,
-                         column_config={
-                             "tag": st.column_config.TextColumn("TAG", width=150),
-                             "what it means": st.column_config.TextColumn("WHAT IT MEANS", width=380),
-                             "why it matters": st.column_config.TextColumn("WHY IT MATTERS", width=340),
-                         })
-            st.write("")
-        st.caption(
-            "Roles and flags are computed once and shared, so the tag beside a player in "
-            "the Waiver Wire, the Trade Finder and his own card is always the same tag."
-        )
+    st.caption(
+        "Roles and flags are computed once and shared, so the tag beside a player in "
+        "the Waiver Wire, the Trade Finder and his own card is always the same tag."
+    )
 
-with tab_lookup:
+def _tab_lookup():
     ui.lede(
         "Look up any QB, RB, WR or TE — who has him in Mega Bowl, how he's actually being used, "
         "and every game he's played. <b>Type part of a name.</b>"
@@ -2282,7 +2264,7 @@ with tab_lookup:
                                                "on end is a player due a correction up."))
 
 # ---- Raw ---------------------------------------------------------------------
-with tab_raw:
+def _tab_raw():
     st.write("Mapped roster")
     st.caption(f"Yahoo → nflverse id match: {player_ids.report_line(MATCH)}")
     st.dataframe(mapped, width="stretch", hide_index=True)
@@ -2298,7 +2280,7 @@ with tab_raw:
         )
 
 
-with sec_ask:
+def _tab_ask():
     from mega import ask as ASK
 
     ui.lede(
@@ -2449,3 +2431,70 @@ with sec_ask:
                        "`PYTHONPATH=. .venv/bin/python tools/build_schema.py` when nflverse "
                        "adds columns.")
             st.dataframe(CAT.tables(), width="stretch", hide_index=True)
+
+
+# ---- Navigation ----------------------------------------------------------------------
+# Every section is a question, because that is how anyone arrives at this page: not
+# thinking "I would like the waiver wire" but "who should I pick up". The old tabs were
+# named after features and data sources — "WOPR", "Archetypes", "Raw Data" — which only
+# works if you already know what is in them.
+#
+# st.navigation rather than st.tabs, for three reasons that are not cosmetic:
+#   * only one page body runs per rerun, and each body is a function, so the whole module
+#     exists before any of it executes. app.py used to run top to bottom with the tab
+#     bodies inline, and a helper defined below its call site simply did not exist yet —
+#     a bug that reached the page four separate times.
+#   * each page gets a URL, so sending someone your Start/Sit is a link rather than
+#     "click the third tab, then the second one".
+#   * the two groups below are the league seam. Everything under Mega Bowl reads this
+#     league; everything under Any NFL player runs on modules that have never heard of it
+#     (ask, catalog, lookup, roles, glossary). Pointing this at a second league later
+#     means touching the first group only.
+
+def _tabs(*pairs) -> None:
+    """Sub-tabs for a page: (label, function) in the order they should read."""
+    for tab, (_, fn) in zip(st.tabs([lab for lab, _ in pairs]), pairs):
+        with tab:
+            fn()
+
+
+def _page_week() -> None:
+    _tabs(("What to do", _tab_action), ("Weekly digest", _tab_digest))
+
+
+def _page_start() -> None:
+    _tabs(("Lineup", _tab_start), ("Matchups", _tab_match))
+
+
+def _page_upgrade() -> None:
+    _tabs(("Waivers", _tab_wire), ("Trades", _tab_trade),
+          ("Receiving opportunity", _tab_wopr), ("Blueprint fit", _tab_arch))
+
+
+def _page_review() -> None:
+    _tabs(("My roster", _tab_over), ("Points vs opportunity", _tab_axe),
+          ("Usage trends", _tab_use), ("The league", _tab_league),
+          ("Draft value", _tab_draft))
+
+
+def _page_player() -> None:
+    _tabs(("Player card", _tab_lookup), ("What the labels mean", _tab_gloss),
+          ("News", _tab_news))
+
+
+def _page_ask() -> None:
+    _tabs(("Ask anything", _tab_ask), ("Downloads", _tab_raw))
+
+
+st.navigation({
+    "Mega Bowl": [
+        st.Page(_page_week, title="What do I do this week?", url_path="week", default=True),
+        st.Page(_page_start, title="Who do I start?", url_path="start"),
+        st.Page(_page_upgrade, title="Who should I get?", url_path="upgrade"),
+        st.Page(_page_review, title="How am I doing?", url_path="review"),
+    ],
+    "Any NFL player": [
+        st.Page(_page_player, title="Look up a player", url_path="player"),
+        st.Page(_page_ask, title="Ask the data", url_path="ask"),
+    ],
+}).run()
