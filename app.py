@@ -427,6 +427,36 @@ try:
 except Exception:
     pass  # logos are decoration; never block the dashboard on them
 
+
+@st.cache_data(ttl=dt.timedelta(hours=6), show_spinner="Working out everyone's role…")
+def _player_roles(season: int) -> dict[str, str]:
+    """normalized name -> "WR3 · ROLE+, TGT", for the role column beside every player.
+
+    Read from mega.season.role_lookup — the same role context the waiver board prices
+    with — so a flag on a table and a flag on the board can never disagree."""
+    from mega.needs import _flag_text
+    from mega.season import role_lookup
+
+    rl = role_lookup(season)
+    if not rl:
+        return {}
+    xw = player_ids.crosswalk()
+    xw = xw[xw["gsis_id"].isin(rl.keys())].drop_duplicates("gsis_id")
+    out = {}
+    for gid, n in zip(xw["gsis_id"], xw["norm"]):
+        rc = rl[gid]
+        if not rc.get("role"):
+            continue
+        fl = _flag_text(rc)
+        out[n] = rc["role"] + (f" · {fl}" if fl else "")
+    return out
+
+
+try:
+    ui.set_player_roles(_player_roles(int(season)))
+except Exception:
+    pass  # role context is enrichment; a missing season must not blank the tables
+
 @st.cache_data(ttl=CACHE_TTL, show_spinner=False)
 def _season_basis(season: int) -> dict:
     from mega.intel import season_basis

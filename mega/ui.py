@@ -260,6 +260,7 @@ LABELS = {
     "PF": "Pts for", "PA": "Pts against", "STRK": "Streak", "FAAB": "FAAB left",
     "MOV": "Moves", "TRD": "Trades",
     "WK": "Week", "PTS": "Pts", "OPP PTS": "Opp pts", "RES": "Result",
+    "ROLE": "Role", "GIVE ROLE": "Their role", "GET ROLE": "Their role",
     "WHEN": "When", "TYPE": "Type", "MOVE": "Move",
     "MANAGER": "Manager", "YOU GIVE": "You give", "GIVE VAL": "Give value",
     "YOU GET": "You get", "GET VAL": "Get value", "FAIR": "Fairness", "EDGE": "Value gained",
@@ -338,6 +339,9 @@ GLOSS = {
     "WOPR#": "His WOPR rank at his position.",
     "DRAFT#": "Where the draft board ranked him at his position.",
     "GAP": "Draft rank minus opportunity rank. Plus = his role is bigger than his price.",
+    "ROLE": "His job on his own offence over his last 3 games (WR1-WR4+, TE1-REC/BLK, RB "
+            "LEAD/COMMITTEE/RECEIVING/BACKUP, QB STARTER). Flags after it: ROLE+ = producing "
+            "like the rung above him; a + on a flag means it held across the window, not once.",
     "xPPG±": "Points per game above or below what his WOPR predicts. Plus = running hot; minus = due.",
     "RANK": "Place in the league standings.",
     "PF": "Points scored all season.", "PA": "Points scored against him all season.",
@@ -439,8 +443,9 @@ _NO_KEY = {"PLAYER", "POS", "LOGO", "GIVE LOGO", "GET LOGO", "AGE", "W", "L", "T
 # what they hold; anything not named here is a number.
 _NUM_W = 96
 _FLEX = {"WHY", "MEANS", "PLAYERS", "MOVE", "NOTE", "TAGS"}
+_ROLE_W = 130
 _WIDTH = {
-    "PLAYER": 170, "NAME": 170,
+    "PLAYER": 170, "NAME": 170, "ROLE": _ROLE_W, "GIVE ROLE": _ROLE_W, "GET ROLE": _ROLE_W,
     "YOU GIVE": 150, "YOU GET": 150, "MANAGER": 140, "TEAM": 150, "DRAFTED BY": 140,
     "MGR": 120, "OWNER": 130, "STAT": 185, "SIGNAL": 115,
     "VERDICT": 115, "OWN": 130, "SRC": 125, "FILLS": 140, "THEY NEED": 140, "POSRANK": 115,
@@ -452,7 +457,7 @@ _WIDTH = {
 _LEFT = {"PLAYER", "NAME", "WHY", "MEANS", "PLAYERS", "TAGS", "YOU GIVE", "YOU GET", "MANAGER",
          "TEAM", "DRAFTED BY", "MGR", "OWNER", "STAT", "NOTE", "MOVE", "SIGNAL", "VERDICT",
          "OWN", "SRC", "FILLS", "THEY NEED", "GAME", "MU", "OPP", "SLOT", "POS", "ST", "WHEN",
-         "TYPE", "RES", "GRADE", "MATCHED"}
+         "TYPE", "RES", "GRADE", "MATCHED", "ROLE", "GIVE ROLE", "GET ROLE"}
 _LOGO_COLS = ("LOGO", "GIVE LOGO", "GET LOGO")
 
 
@@ -479,6 +484,43 @@ def _logo_for_name(name: object) -> str:
     # trade cells read "Name (WR)"
     n = norm(re.sub(r"\s*\([A-Z/]+\)\s*$", "", str(name)))
     return logo_url(_PLAYER_TEAM.get(n)) or ""
+
+
+# ---------------------------------------------------------------- roles (HANDOFF §12)
+_PLAYER_ROLE: dict[str, str] = {}
+
+
+def set_player_roles(mapping: dict[str, str]) -> None:
+    """normalized player name -> "WR3 · ROLE+", so every table that lists a player says
+    what his job is without each tab having to join it in. app.py fills this once per run."""
+    _PLAYER_ROLE.clear()
+    _PLAYER_ROLE.update({k: v for k, v in mapping.items() if k and v})
+
+
+def _role_for_cell(cell: object) -> str:
+    """A cell is one name, or a trade package "A (WR, 9.1) + B (RB, 6.0)"."""
+    from .ids import norm
+
+    parts = [re.sub(r"\s*\([^)]*\)\s*$", "", p) for p in str(cell).split(" + ")]
+    roles = [_PLAYER_ROLE.get(norm(p), "") for p in parts]
+    return " + ".join(r or "—" for r in roles) if any(roles) else ""
+
+
+def _with_roles(d: pd.DataFrame) -> pd.DataFrame:
+    """Put a role column after each player column — after POS when that follows him."""
+    d = d.copy()
+    for src, dst in (("PLAYER", "ROLE"), ("YOU GIVE", "GIVE ROLE"), ("YOU GET", "GET ROLE")):
+        if src not in d.columns or dst in d.columns:
+            continue
+        vals = d[src].map(_role_for_cell)
+        if not vals.ne("").any():
+            continue
+        cols = list(d.columns)
+        at = cols.index(src) + 1
+        if at < len(cols) and cols[at] == "POS":
+            at += 1
+        d.insert(at, dst, vals.values)
+    return d
 
 
 def _with_logos(d: pd.DataFrame) -> pd.DataFrame:
@@ -534,12 +576,15 @@ def table(
     legend: bool = True,
     logos: bool = True,
     container=None,
+    roles: bool = True,
 ) -> pd.DataFrame:
     """The one way to put a table on screen: internal codes -> readable headers,
     tooltips, team logos, heat shading, and a plain-English column key underneath.
     Returns the frame as rendered (codes as column names)."""
     box = container or st
     d = cols(df, **(rename or {}))
+    if roles and _PLAYER_ROLE:
+        d = _with_roles(d)
     if logos:
         d = _with_logos(d)
     fmt = {**(fmt or {}), **{r: "#{:.0f}" for r in RANKS if r in d.columns}}
