@@ -748,6 +748,21 @@ def _tab_over():
             int(starters["report_status"].isin(["Out", "Doubtful", "Questionable", "IR"]).sum())
             if "report_status" in starters.columns else 0
         )
+        # The one sentence the whole tab is for: is anyone's scoring out of line with the
+        # work they are getting, and in which direction. Derived, so it cannot go stale.
+        _hot = starters.nlargest(1, "xfp_diff") if "xfp_diff" in starters.columns else None
+        _cold = starters.nsmallest(1, "xfp_diff") if "xfp_diff" in starters.columns else None
+        _said = f"Your starters are averaging {proj:.0f} points a week."
+        if _hot is not None and not _hot.empty and float(_hot.iloc[0]["xfp_diff"]) > 2:
+            _said = (f"{ui.short_name(_hot.iloc[0]['player'])} is scoring "
+                     f"{float(_hot.iloc[0]['xfp_diff']):+.0f} points above what his usage earns "
+                     f"— the one to shop.")
+        ui.answer(_said, (
+            f"{ui.short_name(_cold.iloc[0]['player'])} is the other way round at "
+            f"{float(_cold.iloc[0]['xfp_diff']):+.0f}: hold him, the work is there."
+            if _cold is not None and not _cold.empty
+            and float(_cold.iloc[0]["xfp_diff"]) < -1.5 else
+            "Red is scoring above the work, navy is below it."))
         ui.kpi_row([
             (f"Starters · L{roll} proj", f"{proj:.0f}", "sum of rolling avg"),
             ("Roster Act−xFP", f"{xdelta:+.0f}" if xdelta is not None else "—",
@@ -854,7 +869,7 @@ def _tab_league():
         _o = _odds(int(season))
     except Exception as _e:
         _o = pd.DataFrame()
-        st.caption(f"Playoff odds unavailable: {type(_e).__name__}: {_e}")
+        ui.unavailable("Playoff odds", _e)
     if not _o.empty:
         from mega.config import MY_TEAM as _MT
         from mega.sim import schedule_note as _sched_note
@@ -942,7 +957,7 @@ def _tab_league():
             _rs = _power(int(season))
         except Exception as e:
             _rs = pd.DataFrame()
-            st.caption(f"Power rankings unavailable: {e}")
+            ui.unavailable("Power rankings", e)
 
         if not _rs.empty:
             _rs = _rs.merge(_scraped[["team", "rank"]], on="team", how="left")
@@ -959,17 +974,21 @@ def _tab_league():
         st.divider()
 
     if not _ya.available():
-        st.info(
-            "No live Yahoo data yet.\n\n"
-            "**The official API is blocked** — Yahoo removed Fantasy Sports from the app "
-            "permissions console, so new apps can't be granted the scope and every token comes "
-            "back `additional_authorization_required`. `pull_league.py` is ready if that ever "
-            "changes.\n\n"
-            "**Use the browser scrape instead** — sign in once, then pull:\n\n"
-            "```\n.venv/bin/python -m mega.yahoo login\n.venv/bin/python -m mega.yahoo pull\n```\n\n"
-            "That fills ownership for Waiver wire, Trades and WOPR (replacing the draft-board "
-            "approximation). Standings and weekly results below need the API and stay empty."
-        )
+        # Was a hundred and ten words and a block of shell commands, in a coloured box, on
+        # the page. That is operator documentation — it belongs in the README, and here it
+        # is one line with the detail folded away for whoever needs it.
+        ui.note("Standings and weekly results come from the weekly scrape; the live Yahoo "
+                "API is blocked.")
+        with st.expander("Why, and how to turn the live feed on"):
+            st.markdown(
+                "Yahoo removed Fantasy Sports from the app permissions console, so a new "
+                "app cannot be granted the scope and every token comes back "
+                "`additional_authorization_required`. `pull_league.py` is ready if that "
+                "ever changes.\n\nUntil then the browser scrape fills ownership for "
+                "waivers, trades and receiving opportunity — sign in once, then pull:\n\n"
+                "```\n.venv/bin/python -m mega.yahoo login\n"
+                ".venv/bin/python -m mega.yahoo pull\n```"
+            )
     else:
         from mega.config import LEAGUE_ID, LEAGUE_URL, MY_SEAT
 
@@ -1031,12 +1050,23 @@ def _tab_league():
             ui.h("Recent transactions")
             ui.table(tx.head(40), rename={"team": "TEAM"}, logos=False)
 
+def _worth_claiming(wv: pd.DataFrame) -> pd.DataFrame:
+    """Free agents who would actually change your lineup.
+
+    One definition, because two surfaces had their own and contradicted each other on the
+    same week: the action board counted any positive gain and said "6 free agents would
+    start for you", while the waiver page counted a bid of a dollar or more and said "0
+    would change your lineup". A gain too small to be worth a dollar is not a claim.
+    """
+    if wv is None or wv.empty:
+        return wv
+    if "bid" in wv.columns:
+        return wv[wv["bid"] >= 1]
+    return wv[pd.to_numeric(wv.get("gain"), errors="coerce").fillna(0) > 0]
+
+
 # ---- Start / Sit -------------------------------------------------------------------
 def _tab_start():
-    st.caption(
-        f"Projections: FantasyPros (studs) + nflverse estimate (everyone else), "
-        f"matchup-adjusted via defense-vs-position. Optimizing week {next_week}."
-    )
     try:
         from mega.lineup import optimize_lineup
         rp = _my_roster_projected(int(season), int(next_week)).copy()
@@ -1049,22 +1079,13 @@ def _tab_start():
         lu = optimize_lineup(rp, int(season), int(next_week))
     except Exception as e:
         lu = None
-        st.warning(f"Projections unavailable: {e}")
+        ui.unavailable("Projections", e)
 
     _vg = _vegas(int(season), int(next_week))
     if _vg.empty:
         from mega import odds as _O
-        st.caption(
-            "Vegas column is off — " + ("no ODDS_API_KEY is set." if not _O.available()
-                                        else f"no props swept for week {next_week} yet.")
-        )
-    else:
-        _full = int(_vg["vegas_complete"].sum())
-        st.caption(
-            f"**Vegas** = this week's sportsbook player props scored in half-PPR: "
-            f"{len(_vg):,} players priced, {_full:,} with every market posted. Lines are read as "
-            "medians and corrected to means, so a projection sits above its own posted line."
-        )
+        ui.note("No Vegas column this week — " + ("no ODDS_API_KEY is set."
+                if not _O.available() else f"props for week {next_week} have not been swept."))
 
     if lu is not None and not lu.empty:
         starters = lu[lu["start"]]
@@ -1072,6 +1093,18 @@ def _tab_start():
         proj_total = starters["proj_adj"].sum()
         n_close = int((bench["close_call"] != "").sum())
         fp_cov = int((starters["proj_source"] == "FantasyPros").sum())
+        _moved = [r for _, r in lu.iterrows()
+                  if str(r.get("lineup", "")) != "BENCH" and str(r.get("slot", "")) == "BN"]
+        _est = int((starters["proj_source"] != "FantasyPros").sum())
+        ui.answer(
+            (f"Your best legal lineup projects {proj_total:.0f} points in week {next_week}."
+             if not _moved else
+             f"Start {', '.join(ui.short_name(r['player']) for r in _moved[:2])} — that is "
+             f"worth {proj_total:.0f} points in week {next_week}, more than your current nine."),
+            (f"{n_close} call{'s' if n_close != 1 else ''} within two points"
+             + (f", and {_est} of {len(starters)} starters run on estimates rather than real "
+                "projections — break those on target share." if _est else "."))
+        )
         ui.kpi_row([
             (f"Wk {next_week} proj total", f"{proj_total:.1f}", "optimal starting 9 (skill)"),
             ("Close calls", str(n_close), "bench within 2 pts of a starter"),
@@ -1110,18 +1143,16 @@ def _tab_start():
         ui.table(bview, diverging=["VEG±"], pos_cols=["POS"], fmt=lu_fmt, help=lu_help,
                  view="startsit_bench")
 
-        _est = int((starters["proj_source"] != "FantasyPros").sum())
-        if _est:
-            st.warning(
-                f"**{_est} of {len(starters)} starters are running on estimates, not real projections.** "
-                "FantasyPros' free tier stops at the top 10 per position, so everyone below that is "
-                "modelled from usage. Two estimates within ~2 points of each other is a coin flip, not "
-                "a recommendation — when it's that close, start the player with the bigger **target share** "
-                "and the better **team target rank**, because volume holds up week to week and points don't."
+        with st.expander("Where these projections come from"):
+            st.markdown(
+                "FantasyPros for the top ten at each position; everyone below that is "
+                "modelled from his own usage, then adjusted for the matchup. Two estimates "
+                "within about two points of each other is a coin flip, not a "
+                "recommendation — when it is that close, start the player with the bigger "
+                "**target share** and the better **team target rank**, because volume holds "
+                "up week to week and points do not. Close calls are marked in the **Close "
+                "call** column; those are worth an injury check before lock."
             )
-        if n_close:
-            st.info("**Close calls** are flagged in the **Close call** column — a bench player projecting within ~2 points "
-                    "of a starter in the same slot. Worth an injury and matchup check before lock.")
 
 # ---- Actual vs expected ------------------------------------------------------------
 def _tab_axe():
@@ -1246,14 +1277,6 @@ def _tab_match():
             )
         else:
             ui.h(f"Week {next_week} — Vegas player projections")
-            st.caption(
-                "Half-PPR points implied by the sportsbook's own player props. A posted line is "
-                "the **median** outcome, so it is corrected to a **mean** before scoring — which is "
-                "why a projection sits above the line you would see on the app. "
-                "**MKTS** counts how many markets were actually priced; anything the book did not "
-                "post is filled from the player's own expected-points rate, and **FULL** marks the "
-                "players whose number is entirely the market's."
-            )
             _vb = _vb.copy()
             _own = {}
             try:
@@ -1366,11 +1389,22 @@ except Exception as e:  # network / dependency issue — keep the core dashboard
 
 # ---- Action board --------------------------------------------------------------------
 def _tab_action():
-    ui.lede(
-        "What's worth doing this week, and why. Everything here is pulled from the other "
-        "tabs — the one idea running through it is that <b>opportunity is sticky and points "
-        "are noisy</b>, so a gap between the two is usually a chance to buy or sell."
-    )
+    if IB:
+        _w = IB.get("waivers")
+        _tr = IB.get("trades")
+        _nw = 0 if _w is None or _w.empty else len(_worth_claiming(_w))
+        _nt = 0 if _tr is None or _tr.empty else len(_tr)
+        _bits = []
+        if _nw:
+            _bits.append(f"{_nw} free agent{'' if _nw == 1 else 's'} would start for you")
+        if _nt:
+            _bits.append(f"{_nt} trade{'' if _nt == 1 else 's'} clear the fairness filter")
+        _said = " and ".join(_bits)
+        ui.answer(
+            f"{_said[0].upper()}{_said[1:]}." if _said else
+            "Nothing on the wire or the trade board beats what you already have.",
+            "Everything below is ranked by what it adds to your starting nine, not by name.",
+        )
 
     if not BASIS["current"]:
         st.info(
@@ -1457,11 +1491,11 @@ def _tab_action():
             st.caption(f"Full list, grouped by manager, under **Get better → Trade finder**. "
                        f"Rosters: {IB['roster_src']}.")
     else:
-        st.warning(f"League intel unavailable: {_intel_err}")
+        ui.unavailable("League intel", _intel_err)
 
 def _tab_wire():
     if IB is None:
-        st.warning(f"League intel unavailable: {_intel_err}")
+        ui.unavailable("League intel", _intel_err)
     else:
         wv = IB["waivers"].copy()
         need_aware = "bid" in wv.columns
@@ -1470,8 +1504,18 @@ def _tab_wire():
             from mega import faab as _fb
 
             _r, _m = _fb.rivals(), _fb.market_summary()
-            worth = wv[wv["bid"] >= 1]
-            spec = wv[wv["bid"] < 1]
+            worth = _worth_claiming(wv)
+            spec = wv[~wv.index.isin(worth.index)]
+            _top = worth.iloc[0] if len(worth) else None
+            ui.answer(
+                (f"Put ${int(_top['bid'])} on {ui.short_name(_top['player'])} — "
+                 f"he adds {float(_top['gain']):.1f} points a game to your starting nine."
+                 if _top is not None else
+                 "Nothing on the wire would start for you. Hold the budget."),
+                (f"{len(worth)} free agent{'' if len(worth) == 1 else 's'} would change your "
+                 f"lineup" + (f"; the league has been settling claims around "
+                              f"${_m['median']:.0f}." if _m.get("claims") else ".")),
+            )
             ui.kpi_row([
                 ("Your FAAB", f"${_r['mine']}" if _r.get("known") else "—",
                  f"of ${_fb.BUDGET} · {_r['richer']} of {_r['teams'] - 1} teams hold more"
@@ -1797,7 +1841,7 @@ def _tab_arch():
         arch = _archetypes(int(season))
     except Exception as e:
         arch = pd.DataFrame()
-        st.warning(f"Archetype scoring unavailable: {e}")
+        ui.unavailable("Blueprint scores", e)
 
     if not arch.empty:
         from mega.intel import _norm as _an
@@ -1836,7 +1880,7 @@ def _tab_wopr():
         W = _wopr(int(season))
     except Exception as e:
         W = None
-        st.warning(f"WOPR unavailable: {e}")
+        ui.unavailable("Receiving opportunity", e)
 
     if W and not W["df"].empty:
         from mega.wopr import SCHEMA
@@ -1945,7 +1989,7 @@ def _tab_news():
                          "link": st.column_config.LinkColumn("Link", display_text="Open"),
                      })
     except Exception as e:
-        st.warning(f"News feeds unavailable: {e}")
+        ui.unavailable("News", e)
 
 
 # ---- Player lookup -------------------------------------------------------------------
@@ -2042,7 +2086,7 @@ def _tab_lookup():
         _idx = _player_index(_cur)
     except Exception as e:
         _idx = pd.DataFrame()
-        st.warning(f"Player index unavailable: {e}")
+        ui.unavailable("The player index", e)
 
     if not _idx.empty:
         c_pick, c_season = st.columns([3, 1])
@@ -2146,7 +2190,7 @@ def _tab_lookup():
                         _RC = _role_ctx(_cur)
                     except Exception as _e:
                         _RC = None
-                        st.caption(f"Role context unavailable: {_e}")
+                        ui.unavailable("Role context", _e)
                     if _RC is not None and not _RC["table"].empty:
                         _rrow = _RC["table"][_RC["table"]["gsis_id"] == gid]
                         if not _rrow.empty:

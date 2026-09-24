@@ -97,6 +97,12 @@ section[data-testid="stSidebar"] { background:var(--surface2); border-right:1px 
 [data-testid="stExpander"] { border-color:var(--border); margin:-4px 0 10px; }
 [data-testid="stDataFrame"] { font-size:12.5px; }
 .stAlert { border-radius:var(--r-md); }
+.mb-ans { border-left:3px solid var(--navy); padding:2px 0 2px 12px; margin:2px 0 16px; }
+.mb-ans-warn { border-left-color:var(--red); }
+.mb-ans-v { font-family:'Archivo',sans-serif; font-weight:600; font-size:16px;
+            color:var(--ink); line-height:1.35; }
+.mb-ans-b { font-family:'Archivo Narrow',sans-serif; font-size:13px; color:var(--ink2);
+            margin-top:3px; }
 .mb-lede { font-size:13.5px; color:var(--ink2); margin:2px 0 10px; line-height:1.5; }
 .mb-lede b { color:var(--ink); }
 /* player lookup card */
@@ -795,6 +801,43 @@ def _render(ch, caption: str | None) -> None:
     st.altair_chart(ch, width="stretch")
     if caption:
         st.caption(caption)
+
+
+def answer(verdict: str, because: str = "", tone: str = "neutral") -> None:
+    """The conclusion, in one sentence, before any evidence. One per page, at the top.
+
+    The page used to open with a table and explain it underneath — sixty-five captions,
+    most of them below the thing they describe, so a reader met the numbers first and the
+    meaning second. `verdict` is a sentence someone could say out loud: "Start Kittle over
+    Egbuka", not "Lineup optimiser output". `because` is the one figure it rests on.
+
+    Derived, never written by hand. A sentence typed into the source goes stale the week
+    after and an outsider has no way to tell.
+    """
+    body = f'<div class="mb-ans-v">{verdict}</div>'
+    if because:
+        body += f'<div class="mb-ans-b">{because}</div>'
+    st.markdown(f'<div class="mb-ans mb-ans-{tone}">{body}</div>', unsafe_allow_html=True)
+
+
+def note(text: str, kind: str = "caveat") -> None:
+    """The one place a caveat is allowed: under the evidence, small and grey.
+
+    `st.info` and `st.warning` paint a coloured box, which a reader reads as "something is
+    wrong". Most of the seventeen st.info calls on this page were not warnings at all —
+    they were sample-size notes and provenance lines wearing a warning's clothes.
+    """
+    st.caption(("⚠︎ " if kind == "missing" else "") + text)
+
+
+def unavailable(what: str, exc: Exception | str) -> None:
+    """One voice for the eight `f"{what} unavailable: {e}"` handlers.
+
+    An outsider should not be reading raw Python exception names off the page, and whether
+    a feed is down is the app's problem, not something to alarm them about.
+    """
+    detail = exc if isinstance(exc, str) else f"{type(exc).__name__}: {exc}"
+    st.caption(f"{what} isn't available right now — {detail}")
 
 
 def line_chart(df: pd.DataFrame, x: str, y: str, color: str, y_title: str = "", *,
