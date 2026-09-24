@@ -15,7 +15,7 @@ def test_every_role_the_engine_can_assign_has_plain_english():
 
 
 def test_every_flag_the_engine_can_raise_has_plain_english():
-    emitted = set(roles.FLAG_METRIC) | {"ROLE+", "ROLE-", "1D/RR"}
+    emitted = set(roles.FLAG_METRIC) | {"ROLE+", "ROLE-", "1D/RR", "CUFF"}
     missing = sorted(emitted - set(g.FLAGS))
     assert not missing, f"flags with no glossary entry: {missing}"
 
@@ -23,7 +23,8 @@ def test_every_flag_the_engine_can_raise_has_plain_english():
 def test_nothing_is_defined_that_the_engine_never_emits():
     """A glossary entry for a tag nobody produces is a lie waiting to be believed."""
     assert set(g.ROLES) <= set(roles.ROLES)
-    assert set(g.FLAGS) <= set(roles.FLAG_METRIC) | {"ROLE+", "ROLE-", "1D/RR"}
+    # CUFF is raised by mega/needs.py from the handcuff table, not by roles.py
+    assert set(g.FLAGS) <= set(roles.FLAG_METRIC) | {"ROLE+", "ROLE-", "1D/RR", "CUFF"}
 
 
 # ---------------------------------------------------------------- readable
@@ -92,20 +93,6 @@ def test_extra_flags_are_counted_not_dropped_silently():
 def test_an_unknown_code_passes_through_rather_than_vanishing():
     assert g.role_label("WR9") == "WR9"
     assert g.flag_label("NEWFLAG") == "NEWFLAG"
-
-
-def test_the_sentence_covers_the_role_and_each_flag():
-    s = g.sentence("WR3", ["ROLE+"], {"ROLE+": "sustained"})
-    assert "third receiver" in s.lower()
-    assert "playing up" in s.lower()
-    assert "two of his last three" in s
-
-
-def test_the_sentence_distinguishes_a_pattern_from_an_afternoon():
-    held = g.sentence("LEAD", ["GL"], {"GL": "sustained"})
-    once = g.sentence("LEAD", ["GL"], {"GL": "spike"})
-    assert "two of his last three games" in held
-    assert "one game only" in once
 
 
 def test_the_glossary_frame_is_complete_and_grouped():

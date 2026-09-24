@@ -212,3 +212,89 @@ def arms_rival(my_delta: float, their_delta: float, my_p: float, their_p: float)
     likely to take the last playoff place off you."""
     return (their_delta >= ARMS_RIVAL
             and BAND[0] <= my_p <= BAND[1] and BAND[0] <= their_p <= BAND[1])
+
+
+# ---------------------------------------------------------------- building it from league data
+PLAYOFF_TEAMS = 6           # Mega Bowl: 6 of 12 make it, weeks 15-17
+PLAYOFF_BYES = 2
+
+
+def from_league(scores: pd.DataFrame, standings: pd.DataFrame, team_ppw: dict,
+                weeks_left, playoff_teams: int = PLAYOFF_TEAMS,
+                byes: int = PLAYOFF_BYES) -> Season:
+    """A Season from what the scrape already holds.
+
+    `team_ppw` is each team's expected STARTER points per week — bench points are excluded
+    because they do not score. sigma is this league's own weekly spread, not a league-average
+    guess: a 12-team half-PPR league with these rosters is the only relevant population.
+    """
+    if standings is None or standings.empty:
+        return Season(teams=[], means={}, schedule=[])
+    teams = [str(t) for t in standings["team"]]
+    wins = {str(r["team"]): float(r.get("wins") or 0) for _, r in standings.iterrows()}
+    pf = {}
+    if scores is not None and not scores.empty:
+        pf = scores.groupby("team")["points"].sum().to_dict()
+    weeks = [int(w) for w in weeks_left]
+    means = {(t, w): float(team_ppw.get(t, 0.0)) for t in teams for w in weeks}
+    sched = _round_robin(teams, weeks)
+    return Season(teams=teams, means=means, schedule=sched, wins=wins,
+                  points_for={str(k): float(v) for k, v in pf.items()},
+                  sigma=weekly_sigma(scores), playoff_teams=playoff_teams, byes=byes)
+
+
+def _round_robin(teams: list, weeks: list) -> list:
+    """A stand-in schedule when the real one has not been scraped.
+
+    Stated plainly because it matters: this is NOT Chris's actual remaining fixtures. It
+    keeps everyone playing the same number of games so the odds are not nonsense, but a
+    team's real strength of schedule is not in here. Odds built on it are for comparing
+    two versions of the SAME roster, which is what a trade delta needs, and not for
+    reading as a forecast.
+    """
+    n = len(teams)
+    if n < 2:
+        return []
+    out = []
+    for i, w in enumerate(weeks):
+        rot = teams[:1] + teams[1:][i % max(1, n - 1):] + teams[1:][: i % max(1, n - 1)]
+        for a, b in zip(rot[: n // 2], rot[n // 2:][::-1]):
+            out.append({"week": int(w), "home": a, "away": b})
+    return out
+
+
+SCHEDULE_IS_APPROXIMATE = (
+    "Remaining fixtures are a stand-in, not Chris's real schedule — Yahoo's future "
+    "matchups are not in the scrape. Use these odds to compare two versions of your own "
+    "roster, not as a forecast of where you finish."
+)
+
+
+def trade_delta(season: Season, my_team: str, their_team: str, d_me: float, d_them: float,
+                n: int = 2000, seed: int = SEED) -> dict:
+    """§18.3 — what a trade does to both teams' odds.
+
+    The engine already answers "how many points per week does this add", for both sides.
+    That IS the change to each team's weekly mean, so it drops straight into the season
+    without re-deriving anything: shift the two means, replay on the same draws, subtract.
+
+    Returns the mover's change and the partner's, because a deal can be good for you in
+    points and still be a mistake if it lifts the team you are racing for the last spot.
+    """
+    after = dict(season.means)
+    for (t, w) in list(after):
+        if t == my_team:
+            after[(t, w)] = after[(t, w)] + float(d_me)
+        elif t == their_team:
+            after[(t, w)] = after[(t, w)] + float(d_them)
+    out = delta(season, after, n=n, seed=seed)
+    mine, theirs = out.get(my_team, {}), out.get(their_team, {})
+    return {
+        "d_playoffs": mine.get("d_playoffs", 0.0), "d_title": mine.get("d_title", 0.0),
+        "p_playoffs": mine.get("p_playoffs", 0.0),
+        "their_d_playoffs": theirs.get("d_playoffs", 0.0),
+        "their_p_playoffs": theirs.get("p_playoffs", 0.0),
+        "their_tag": partner_tag(theirs.get("p_playoffs", 0.0)),
+        "arms_rival": arms_rival(mine.get("d_playoffs", 0.0), theirs.get("d_playoffs", 0.0),
+                                 mine.get("p_playoffs", 0.0), theirs.get("p_playoffs", 0.0)),
+    }

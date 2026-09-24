@@ -179,6 +179,9 @@ def kpi_row(items: list[tuple[str, str, str]]) -> None:
 # The same idea gets the same name on every tab. Before this, points-vs-usage was
 # xFP±, xFP±/G, diff_pg and xPPG± depending on where you looked.
 COLS = {
+    "odds": "ODDS±", "their_odds": "THEIR ODDS±", "watch": "WATCH",
+    "p_playoffs": "PLAYOFFS", "p_bye": "BYE", "p_title": "TITLE", "mean_seed": "SEED",
+    "opp_score": "OPP",
     "slot": "SLOT", "player": "PLAYER", "pos": "POS", "team": "TM", "nfl_team": "TM",
     "games": "G", "gms": "G", "half_ppr_pg": "PPG", "last_wk": "LAST", "pg_recent": "PPG",
     "xfp_tot": "xFP", "expected": "xFP", "actual": "ACT", "xfp_diff": "xFP±", "diff": "xFP±",
@@ -261,6 +264,9 @@ LABELS = {
     "MOV": "Moves", "TRD": "Trades",
     "WK": "Week", "PTS": "Pts", "OPP PTS": "Opp pts", "RES": "Result",
     "ROLE": "Role", "GIVE ROLE": "Their role", "GET ROLE": "Their role",
+    "ODDS±": "Your playoff odds", "THEIR ODDS±": "Their playoff odds", "WATCH": "Watch out",
+    "PLAYOFFS": "Make playoffs", "BYE": "First-round bye", "TITLE": "Win it all",
+    "SEED": "Average seed", "OPP": "Opportunity",
     "WHEN": "When", "TYPE": "Type", "MOVE": "Move",
     "MANAGER": "Manager", "YOU GIVE": "You give", "GIVE VAL": "Give value",
     "YOU GET": "You get", "GET VAL": "Get value", "FAIR": "Fairness", "EDGE": "Value gained",
@@ -339,6 +345,17 @@ GLOSS = {
     "WOPR#": "His WOPR rank at his position.",
     "DRAFT#": "Where the draft board ranked him at his position.",
     "GAP": "Draft rank minus opportunity rank. Plus = his role is bigger than his price.",
+    "ODDS±": "How much this deal moves your chance of making the playoffs, from simulated "
+             "seasons run on identical dice before and after. A deal that changes nothing "
+             "reads as exactly zero.",
+    "THEIR ODDS±": "The same for the other manager. A deal can be good for you in points "
+                   "and still be a mistake if it lifts a team you are racing.",
+    "WATCH": "CONTENDER / BUBBLE / OUT is how much the other side still has to play for. "
+             "\"Arms a rival\" means the deal meaningfully helps someone in your own race.",
+    "PLAYOFFS": "Share of simulated seasons this team makes the 6-team field.",
+    "TITLE": "Share of simulated seasons this team wins it.",
+    "OPP": "Opportunity score: how well he earns the role he has, against others in the "
+           "same role. 100 is average, 115 is a standard deviation better.",
     "ROLE": "The job he actually has on his own team right now, from his last 3 games — "
             "not where he was drafted. Anything after the dot is something he is doing "
             "unusually well for that job. \"(1 game)\" means it happened once; without it, "

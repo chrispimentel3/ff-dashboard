@@ -37,6 +37,7 @@ HERE = Path(__file__).parent
 ROSTER_CSV = HERE / "roster.csv"
 SEASON_DEFAULT = 2025
 CACHE_TTL = dt.timedelta(hours=6)
+SIM_TOP = 12   # §18.3: only the best candidates by pts/wk are worth simulating
 
 # Yahoo default half-PPR scoring. Edit if your league differs.
 SCORING = dict(
@@ -322,6 +323,50 @@ def _nflverse_table(table: str, season: int) -> pd.DataFrame:
     from mega import catalog
 
     return catalog.load(table, season)
+@st.cache_data(ttl=dt.timedelta(hours=6), show_spinner="Simulating the rest of the season…")
+def _season_model(season: int):
+    """§18 — this league's remaining season, ready to simulate."""
+    from mega import sim as SIM
+    from mega.yahoo import cached_scores
+
+    sc = cached_scores()
+    st_path = HERE / "data" / "yahoo_standings.csv"
+    if sc is None or sc.empty or not st_path.is_file():
+        return None
+    stand = pd.read_csv(st_path)
+    ppw = sc.groupby("team")["points"].mean().to_dict()
+    left = range(int(next_week), 15)
+    return SIM.from_league(sc, stand, ppw, left)
+
+
+@st.cache_data(ttl=dt.timedelta(hours=6), show_spinner=False)
+def _odds(season: int) -> pd.DataFrame:
+    from mega import sim as SIM
+
+    s = _season_model(season)
+    return SIM.simulate(s, n=6000) if s is not None else pd.DataFrame()
+
+
+@st.cache_data(ttl=dt.timedelta(minutes=30), show_spinner="Pricing trades in playoff odds…")
+def _trade_odds(season: int, rows: tuple) -> dict:
+    """(give, get, dMe, dThem) -> what the deal does to your chances.
+
+    Points per week is the ranking; this is the thing that actually matters. A point added
+    to a team already 99% safe is worth less than the same point on the bubble."""
+    from mega import sim as SIM
+    from mega.config import MY_TEAM
+
+    s = _season_model(season)
+    if s is None or MY_TEAM not in s.teams:
+        return {}
+    out = {}
+    for key, partner, d_me, d_them in rows:
+        if partner not in s.teams:
+            continue
+        out[key] = SIM.trade_delta(s, MY_TEAM, partner, float(d_me), float(d_them), n=1500)
+    return out
+
+
 
 
 
@@ -795,6 +840,40 @@ with tab_over:
 
 # ---- League (live Yahoo API) ---------------------------------------------------------
 with tab_league:
+    # §18.2 — where this is all heading. Points per week is the working currency; this is
+    # the one that decides the season.
+    try:
+        _o = _odds(int(season))
+    except Exception as _e:
+        _o = pd.DataFrame()
+        st.caption(f"Playoff odds unavailable: {type(_e).__name__}: {_e}")
+    if not _o.empty:
+        from mega.config import MY_TEAM as _MT
+        from mega.sim import SCHEDULE_IS_APPROXIMATE as _SCHED_NOTE
+
+        ui.h("Playoff odds")
+        _mine_odds = _o[_o["team"] == _MT]
+        if not _mine_odds.empty:
+            _r = _mine_odds.iloc[0]
+            ui.kpi_row([
+                ("Make the playoffs", f"{_r['p_playoffs']:.0%}", "6 of 12 get in"),
+                ("First-round bye", f"{_r['p_bye']:.0%}", "top 2 seeds"),
+                ("Win it all", f"{_r['p_title']:.0%}", ""),
+                ("Average seed", f"{_r['mean_seed']:.1f}", "across the simulations"),
+            ])
+        # logos off: these are fantasy teams, and the NFL logo lookup blanks the column
+        # rather than admitting it cannot match "Crabcakes and Football" to a shield.
+        # "team" would map to TM and render under an "NFL" header; these are fantasy teams
+        ui.table(_o[["team", "p_playoffs", "p_bye", "p_title", "mean_seed"]],
+                 rename={"team": "TEAM"}, sequential=["PLAYOFFS", "TITLE"],
+                 fmt={"PLAYOFFS": "{:.0%}", "BYE": "{:.0%}", "TITLE": "{:.0%}",
+                      "SEED": "{:.1f}"}, legend=False, logos=False, roles=False)
+        st.caption(
+            "6,000 simulated seasons. Each week's score is drawn around the team's own "
+            f"average, with this league's own spread. **{_SCHED_NOTE}**"
+        )
+        st.write("")
+
     from mega import yahoo_api as _ya
     from mega.yahoo import cached_standings as _cs
 
@@ -1354,6 +1433,8 @@ with tab_wire:
 from mega.config import MY_TEAM as MY_TEAM_LABEL   # noqa: E402  (the trade tab reads it)
 
 
+
+
 @st.cache_data(ttl=dt.timedelta(minutes=30), show_spinner=False)
 def _trade_pool() -> pd.DataFrame:
     """Everyone rostered who has a trade value, labelled with who owns him."""
@@ -1470,12 +1551,40 @@ with tab_trade:
                         "off — try allowing two-player packages, or widen the likelihood filter."
                     )
                 else:
-                    _tcols = ["partner", "shape", "give", "get", "d_me", "d_them", "mkt_ratio", "flag"]
+                    _tt = _res["table"].copy()
+                    # §18.3 — rank on points per week, then price the survivors in the only
+                    # currency that counts. The top rows get the sim; the rest do not need it.
+                    try:
+                        _keyrows = tuple(
+                            (i, str(r["partner"]), float(r["d_me"]), float(r["d_them"]))
+                            for i, r in _tt.head(SIM_TOP).iterrows())
+                        _od = _trade_odds(int(season), _keyrows)
+                    except Exception:
+                        _od = {}
+                    if _od:
+                        _tt["odds"] = _tt.index.map(lambda i: _od.get(i, {}).get("d_playoffs"))
+                        _tt["their_odds"] = _tt.index.map(
+                            lambda i: _od.get(i, {}).get("their_d_playoffs"))
+                        _tt["watch"] = _tt.index.map(
+                            lambda i: ("arms a rival" if _od.get(i, {}).get("arms_rival")
+                                       else _od.get(i, {}).get("their_tag", "")))
+                    _tcols = ["partner", "shape", "give", "get", "d_me", "d_them"] + \
+                        (["odds", "their_odds", "watch"] if _od else []) + ["mkt_ratio", "flag"]
                     ui.table(
-                        _res["table"][_tcols], diverging=["THEM ±"], sequential=["YOU ±"],
-                        fmt={"YOU ±": "{:+.2f}", "THEM ±": "{:+.2f}", "MARKET": "{:.2f}"},
+                        _tt[_tcols], diverging=["THEM ±", "ODDS±", "THEIR ODDS±"],
+                        sequential=["YOU ±"],
+                        fmt={"YOU ±": "{:+.2f}", "THEM ±": "{:+.2f}", "MARKET": "{:.2f}",
+                             "ODDS±": "{:+.1%}", "THEIR ODDS±": "{:+.1%}"},
                         labels={"MANAGER": "Trade with"}, logos=False,
                     )
+                    if _od:
+                        st.caption(
+                            "**ODDS±** is what the deal does to your chance of making the "
+                            "playoffs, from 1,500 simulated seasons run on the same dice "
+                            "before and after — so an offer that changes nothing reads as "
+                            "exactly zero. **THEIR ODDS±** is the same for the other side; "
+                            "*arms a rival* means it helps someone you are actually racing."
+                        )
                     st.caption(
                         "Both rosters are rebuilt for every offer — forced back to legal size, "
                         "re-optimised, and compared with where they started. **Your lineup ±** is "
@@ -1921,15 +2030,19 @@ with tab_lookup:
 
                             _r0 = _rrow.iloc[0]
                             ui.h("Role", 5)
-                            st.markdown(GL.sentence(
+                            # The tag, not a paragraph. What each one means lives once, in
+                            # Players -> Glossary; repeating it on every card is noise the
+                            # second time you read it.
+                            st.markdown("### " + GL.cell(
                                 _r0.get("role"),
                                 _r0.get("flags") if isinstance(_r0.get("flags"), list) else [],
                                 _r0.get("tags") if isinstance(_r0.get("tags"), dict) else {}))
                             _src = _r0.get("role_src")
                             st.caption(
-                                f"Worked out from his last {int(_r0.get('games') or 0)} games."
-                                if _src == "usage" else
-                                "Too few games to read his usage, so this is his depth-chart spot.")
+                                (f"From his last {int(_r0.get('games') or 0)} games."
+                                 if _src == "usage" else
+                                 "Too few games to read his usage, so this is his depth-chart spot.")
+                                + "  Tags explained under **Players → Glossary**.")
                             _cd = RL.card(_RC["table"], _RC["baselines"], gid)
                             if not _cd.empty:
                                 _fmts = dict(zip(_cd["metric"], _cd["_fmt"]))

@@ -116,6 +116,10 @@ FLAGS: dict[str, Term] = {
                "He is the one getting the ball inside the ten-yard line.",
                "This is where touchdowns come from, and touchdowns are six points.",
                kind="flag"),
+    "CUFF": Term("CUFF", "next man up",
+                 "He is the one who would take over if the starter ahead of him got hurt.",
+                 "Worth a bench spot even while he does nothing, and worth more if you "
+                 "already own the starter.", kind="flag"),
     "1D/RR": Term("1D/RR", "moves chains",
                   "When he is thrown to, it tends to produce a first down.",
                   "Chain-movers keep drives alive, so offences keep going back to them.",
@@ -175,20 +179,6 @@ def cell(role: object, flags=None, tags: dict | None = None, max_flags: int = 2)
     if extra > 0:
         shown.append(f"+{extra} more")
     return " · ".join(parts + shown)
-
-
-def sentence(role: object, flags=None, tags: dict | None = None, name: str = "He") -> str:
-    """A full plain-English line for the player card."""
-    r = ROLES.get(str(role or "").strip())
-    out = [f"**{role_label(role)}.** " + (r.plain if r else UNKNOWN_ROLE.plain)]
-    tags = tags or {}
-    for f in (flags or []):
-        t = FLAGS.get(f)
-        if not t:
-            continue
-        how = SUSTAINED.plain if tags.get(f) == "sustained" else SPIKE.plain
-        out.append(f"**{t.label.capitalize()}** — {t.plain} {how}")
-    return "  \n".join(out)
 
 
 def frame(kind: str = "all") -> pd.DataFrame:

@@ -135,17 +135,62 @@ def role_context(season: int) -> dict:
                     depth_charts(season))
 
 
+@functools.lru_cache(maxsize=4)
+def handcuffs(season: int) -> pd.DataFrame:
+    """§15.2 — who inherits each starter's job, and what the option is worth.
+
+    Only the next man up gets it: a job can be done by one player at a time, so spreading
+    contingent value across a backfield counts the same carries twice.
+    """
+    from . import contingency as cg
+
+    rc = role_context(season)
+    tab = rc.get("table")
+    if tab is None or tab.empty:
+        return pd.DataFrame()
+    return cg.next_man_up(player_week(season), tab)
+
+
+def cuff_lookup(season: int) -> dict[str, dict]:
+    """gsis_id -> who he backs up, for the CUFF flag on the waiver board."""
+    cu = handcuffs(season)
+    if cu is None or cu.empty:
+        return {}
+    pw = player_week(season)
+    name = dict(zip(pw["gsis_id"], pw["player"]))
+    return {r["gsis_id"]: {"cuff_of": r["cuff_of"], "cuff_of_name": name.get(r["cuff_of"], ""),
+                           "clear_two": bool(r["share"] >= 0.60), "pos": r["pos"]}
+            for _, r in cu.iterrows()}
+
+
+@functools.lru_cache(maxsize=4)
+def opportunity(season: int) -> pd.DataFrame:
+    """§14 — does he earn the role he has? gsis_id, z_earn, earn_adj, opp_score."""
+    from . import forward as fw
+
+    tab = role_context(season).get("table")
+    if tab is None or tab.empty:
+        return pd.DataFrame()
+    return fw.earned(tab)
+
+
 def role_lookup(season: int) -> dict[str, dict]:
     """gsis_id -> the handful of role fields the waiver board and trade finder want."""
     rc = role_context(season)
     tab = rc.get("table")
     if tab is None or tab.empty:
         return {}
+    try:
+        _o = opportunity(season)
+        opp = dict(zip(_o["gsis_id"], _o["opp_score"])) if not _o.empty else {}
+    except Exception:
+        opp = {}
     out = {}
     for _, r in tab.iterrows():
         fl = r.get("flags") if isinstance(r.get("flags"), list) else []
         tags = r.get("tags") if isinstance(r.get("tags"), dict) else {}
         out[r["gsis_id"]] = {
+            "opp_score": opp.get(r["gsis_id"]),
             "role": r.get("role"), "role_src": r.get("role_src"),
             "flags": fl, "tags": tags,
             "role_plus": "ROLE+" in fl, "role_minus": "ROLE-" in fl,
@@ -158,5 +203,5 @@ def role_lookup(season: int) -> dict[str, dict]:
 def clear() -> None:
     """Drop every memo — the scheduled task calls this after a fresh scrape."""
     for f in (stats, snaps, ff_opportunity, nextgen, depth_charts, schedules, injuries,
-              player_week, role_context):
+              player_week, role_context, handcuffs, opportunity):
         f.cache_clear()

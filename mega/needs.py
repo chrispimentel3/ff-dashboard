@@ -39,7 +39,8 @@ DEPTH = 0.02              # ...and at which it is worth anything at all
 # HANDOFF §12.5: a role flag is worth more than a raw-talent score among the many players
 # whose lineup gain is zero, because it says the offence has started treating him
 # differently. ROLE+ is the strongest of them — he is producing like the rung above him.
-ROLE_BONUS = {"ROLE+": 1.50, "TGT": 0.60, "AIR": 0.40, "SNAP": 0.40, "LEAD": 0.80, "GL": 0.60}
+ROLE_BONUS = {"ROLE+": 1.50, "TGT": 0.60, "AIR": 0.40, "SNAP": 0.40, "LEAD": 0.80,
+              "GL": 0.60, "CUFF": 0.70}
 SUSTAINED = 1.0           # a flag that held across the window counts fully...
 SPIKE = 0.35              # ...one big afternoon counts for much less (§4.2)
 ROLE_MINUS = -1.00        # share at risk: a sell / do-not-add signal
@@ -141,10 +142,19 @@ def board(season: int, week: int, yahoo_rosters: pd.DataFrame | None = None,
     # this joins directly. A player who never resolved simply has no role — he is still
     # addable, he just gets no role bonus.
     try:
-        from .season import role_lookup
+        from .season import cuff_lookup, role_lookup
         rl = role_lookup(season)
+        cu = cuff_lookup(season)
     except Exception:
-        rl = {}
+        rl, cu = {}, {}
+
+    # §15.2 — the man who would inherit a starter's job carries an option on it. That is
+    # worth something on a bench even while he is doing nothing, and it is the single
+    # reason to hold a player whose current role prices at zero.
+    for gid, c in (cu or {}).items():
+        if gid in rl:
+            rl[gid] = {**rl[gid], "flags": list(rl[gid].get("flags") or []) + ["CUFF"],
+                       "cuff_of_name": c["cuff_of_name"], "clear_two": c["clear_two"]}
 
     bud = fb.cached_budgets()
     mine = bud[bud["team"] == ctx.teams[my]["name"]]["faab_left"]
@@ -165,10 +175,12 @@ def board(season: int, week: int, yahoo_rosters: pd.DataFrame | None = None,
             gain=g, fit=label(g), starts=av.get("starts", False),
             drop=av["drop"], bid=bid["bid"], max_bid=bid["max_worth"],
             season_pts=bid["season_pts"],
-            role=_role_text(rc), role_flags=_flag_text(rc),
+            role=_role_text(rc), role_flags=_flag_text(rc), behind=rc.get("cuff_of_name", ""),
+            opp_score=rc.get("opp_score"),
             role_score=role_score(rc),
-            why=why_zero(ctx, my, pid) if g < DEPTH else
-                ("steps straight into your lineup" if av.get("starts") else "real bench value"),
+            why=(f"first man up behind {rc['cuff_of_name']}" if g < DEPTH and rc.get("cuff_of_name")
+                 else why_zero(ctx, my, pid) if g < DEPTH else
+                 ("steps straight into your lineup" if av.get("starts") else "real bench value")),
             norm=p["name"],
         ))
     df = pd.DataFrame(rows)

@@ -76,6 +76,23 @@ def build_league(season: int, yahoo_rosters: pd.DataFrame | None = None) -> dict
     fc = fantasycalc_values()
     ecr_by_norm = dict(zip(fc["norm"], fc["overall_rank"]))
 
+    # HANDOFF §6.2 — a league-mate values a player on what he can SEE: a consensus ranking
+    # and the box scores. Not expected points, not target share. Pricing his side of a
+    # trade on our model and calling the result fair is how a deal that is plainly good for
+    # us reads as plainly good for him too. `perceived_rank` blends the rest-of-season
+    # consensus with how the player's actual points have read, leaning on the box score as
+    # the season gives it more to say. It replaces `ecr` outright (§7 says to, so the v1
+    # code paths keep working), and falls back to FantasyCalc wherever it cannot be built.
+    perceived_by_gsis: dict = {}
+    try:
+        from . import ffa, market
+        from .season import player_week
+
+        perceived = market.perceived(ffa.ecr_ros(season), market.box_rank(player_week(season)))
+        perceived_by_gsis = dict(zip(perceived["gsis_id"], perceived["perceived_rank"]))
+    except Exception:
+        perceived_by_gsis = {}
+
     players: dict[str, dict] = {}
     unpriced: list[str] = []
     sources = {"fantasypros_ros": 0, "nflverse": 0, "none": 0}
@@ -101,7 +118,9 @@ def build_league(season: int, yahoo_rosters: pd.DataFrame | None = None) -> dict
                 unpriced.append(_s(row.get("player")))
         if pos in ("QB", "RB", "WR", "TE"):
             sources[src] = sources.get(src, 0) + 1
-        ecr = ecr_by_norm.get(nrm)
+        ecr = perceived_by_gsis.get(gid)
+        if ecr is None or pd.isna(ecr):
+            ecr = ecr_by_norm.get(nrm)
         players[pid] = {
             "id": pid, "name": _s(row.get("player")), "pos": pos,
             "nfl": _s(row.get("nfl_team")) or None,
