@@ -105,6 +105,14 @@ def test_no_role_context_scores_nothing_rather_than_failing():
     assert needs._flag_text(None) == ""
 
 
-def test_flag_text_marks_which_flags_held():
-    txt = needs._flag_text({"flags": ["TGT", "GL"], "tags": {"TGT": "sustained"}})
-    assert txt == "TGT+, GL"
+def test_flag_text_is_plain_english_and_marks_the_one_off():
+    """The board, the tables and the player card all word flags through mega.glossary,
+    so "TGT" never reaches a human. A one-game flag says so; anything else held."""
+    txt = needs._flag_text({"flags": ["TGT", "GL"],
+                            "tags": {"TGT": "sustained", "GL": "spike"}})
+    assert txt == "target hog, goal line (1 game)"
+
+
+def test_role_text_is_plain_english_too():
+    assert needs._role_text({"role": "COMMITTEE"}) == "Committee back"
+    assert needs._role_text({}) == ""

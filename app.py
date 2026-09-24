@@ -258,6 +258,74 @@ def _league_scores() -> pd.DataFrame:
         return cached_scores()
     except Exception:
         return pd.DataFrame()
+# ---- shared loaders: role context, red zone, and the Ask index ------------------------
+# Defined here with the other cached loaders rather than beside the Ask tab, because the
+# player card reads _role_ctx long before that tab's code is reached and Streamlit runs
+# this file top to bottom — a loader defined below its first use does not exist yet.
+
+# A question box over the nflverse tables. Deterministic (mega/ask.py) rather than a
+# language model: no API key, nothing to pay per question, and — the reason it is built
+# this way — it can always print how it read the question, so a misparse is visible on
+# screen instead of arriving as a confident wrong table.
+@st.cache_data(ttl=CACHE_TTL, show_spinner=False)
+def load_nextgen(season: int, kind: str) -> pd.DataFrame:
+    try:
+        return to_pandas(nfl.load_nextgen_stats(seasons=[season], stat_type=kind))
+    except Exception:
+        return pd.DataFrame()
+
+
+@st.cache_data(ttl=CACHE_TTL, show_spinner=False)
+def load_depth_charts(season: int) -> pd.DataFrame:
+    try:
+        return to_pandas(nfl.load_depth_charts(seasons=[season]))
+    except Exception:
+        return pd.DataFrame()
+
+
+@st.cache_data(ttl=dt.timedelta(hours=6), show_spinner="Working out everyone's role…")
+def _role_ctx(season: int) -> dict:
+    """§12 role context: role per player, role baselines, NFL positional averages and the
+    shrunk index of each against both."""
+    from mega import roles as RL
+
+    return RL.build(_ask_pw(season), load_ff_opportunity(season),
+                    load_nextgen(season, "receiving"), load_nextgen(season, "rushing"),
+                    load_depth_charts(season))
+
+
+@st.cache_data(ttl=CACHE_TTL, show_spinner="Reading the red zone…")
+def load_redzone(season: int) -> pd.DataFrame:
+    """Carries and targets inside the 20, the 10 and the 5, from play-by-play.
+
+    It has to come from play-by-play: the weekly `rushing_10` / `rushing_20` columns look
+    like red zone stats and count runs of 10+ and 20+ YARDS. See mega/redzone.py."""
+    from mega import redzone as rzn
+    try:
+        return rzn.weekly(season)
+    except Exception:
+        return pd.DataFrame()
+
+
+@st.cache_data(ttl=CACHE_TTL, show_spinner="Indexing every player-week…")
+def _ask_pw(season: int) -> pd.DataFrame:
+    from mega import ask as ASK
+
+    return ASK.player_week(load_player_stats(season), load_snaps(season),
+                           load_ff_opportunity(season), load_routes(season),
+                           player_ids.crosswalk(), load_redzone(season))
+
+
+@st.cache_data(ttl=CACHE_TTL, show_spinner="Fetching that nflverse table…")
+def _nflverse_table(table: str, season: int) -> pd.DataFrame:
+    """Any catalogued nflverse table, for questions outside the curated metrics."""
+    from mega import catalog
+
+    return catalog.load(table, season)
+
+
+
+
 
 
 def current_week(season: int, fallback: int) -> int:
@@ -430,11 +498,12 @@ except Exception:
 
 @st.cache_data(ttl=dt.timedelta(hours=6), show_spinner="Working out everyone's role…")
 def _player_roles(season: int) -> dict[str, str]:
-    """normalized name -> "WR3 · ROLE+, TGT", for the role column beside every player.
+    """normalized name -> "WR3 · playing up", for the role column beside every player.
 
     Read from mega.season.role_lookup — the same role context the waiver board prices
-    with — so a flag on a table and a flag on the board can never disagree."""
-    from mega.needs import _flag_text
+    with — so a flag on a table and a flag on the board can never disagree. Worded by
+    mega.glossary, which is the one place that decides what a code says in English."""
+    from mega.glossary import cell as role_cell
     from mega.season import role_lookup
 
     rl = role_lookup(season)
@@ -447,8 +516,7 @@ def _player_roles(season: int) -> dict[str, str]:
         rc = rl[gid]
         if not rc.get("role"):
             continue
-        fl = _flag_text(rc)
-        out[n] = rc["role"] + (f" · {fl}" if fl else "")
+        out[n] = role_cell(rc["role"], rc.get("flags"), rc.get("tags"))
     return out
 
 
@@ -1689,11 +1757,49 @@ def _height(v) -> str:
 
 
 with sec_players:
+    from mega import glossary as GL
     from mega import logos as _logos
     from mega import lookup as LK
     from mega.config import MY_TEAM
     from mega.status import note_for, out_for_week
 
+    tab_lookup, tab_gloss = st.tabs(["Player Lookup", "Glossary"])
+
+    with tab_gloss:
+        ui.lede(
+            "Every tag the dashboard puts next to a player, in plain English. "
+            "If a label anywhere needs this page to make sense, that is a fault in the "
+            "label \u2014 tell me and I will fix the wording, not the glossary."
+        )
+        st.markdown(GL.HEADLINE)
+        st.write("")
+        _g = GL.frame()
+        for _grp, _title, _lede in (
+            ("Role", "Roles \u2014 the job he has",
+             "One per player. Worked out from his last three games, not from where he was "
+             "drafted, so it changes during the season when his usage does."),
+            ("Flag", "Flags \u2014 what he is doing well",
+             "A player can carry several. These are measured against others in the SAME "
+             "role, so a third receiver is judged against other third receivers."),
+            ("How long", "How long it has held",
+             "The difference between a pattern and a good afternoon."),
+        ):
+            ui.h(_title, 5)
+            st.caption(_lede)
+            _sub = _g[_g["group"] == _grp][["tag", "what it means", "why it matters"]]
+            st.dataframe(_sub, width="stretch", hide_index=True,
+                         column_config={
+                             "tag": st.column_config.TextColumn("TAG", width=150),
+                             "what it means": st.column_config.TextColumn("WHAT IT MEANS", width=380),
+                             "why it matters": st.column_config.TextColumn("WHY IT MATTERS", width=340),
+                         })
+            st.write("")
+        st.caption(
+            "Roles and flags are computed once and shared, so the tag beside a player in "
+            "the Waiver Wire, the Trade Finder and his own card is always the same tag."
+        )
+
+with tab_lookup:
     ui.lede(
         "Look up any QB, RB, WR or TE — who has him in Mega Bowl, how he's actually being used, "
         "and every game he's played. <b>Type part of a name.</b>"
@@ -1809,10 +1915,21 @@ with sec_players:
                         _RC = None
                         st.caption(f"Role context unavailable: {_e}")
                     if _RC is not None and not _RC["table"].empty:
-                        _line = RL.describe(_RC["table"], gid)
-                        if _line:
+                        _rrow = _RC["table"][_RC["table"]["gsis_id"] == gid]
+                        if not _rrow.empty:
+                            from mega import glossary as GL
+
+                            _r0 = _rrow.iloc[0]
                             ui.h("Role", 5)
-                            st.markdown(_line)
+                            st.markdown(GL.sentence(
+                                _r0.get("role"),
+                                _r0.get("flags") if isinstance(_r0.get("flags"), list) else [],
+                                _r0.get("tags") if isinstance(_r0.get("tags"), dict) else {}))
+                            _src = _r0.get("role_src")
+                            st.caption(
+                                f"Worked out from his last {int(_r0.get('games') or 0)} games."
+                                if _src == "usage" else
+                                "Too few games to read his usage, so this is his depth-chart spot.")
                             _cd = RL.card(_RC["table"], _RC["baselines"], gid)
                             if not _cd.empty:
                                 _fmts = dict(zip(_cd["metric"], _cd["_fmt"]))
@@ -1916,68 +2033,6 @@ with tab_raw:
             "- Snap share joins via `pfr_id` from `ff_playerids`; rookies can lag a week.\n"
             "- `xFP` uses the nflverse `ff_opportunity` model scored with the half-PPR weights in `SCORING`."
         )
-
-
-# ---- Ask ------------------------------------------------------------------------------
-# A question box over the nflverse tables. Deterministic (mega/ask.py) rather than a
-# language model: no API key, nothing to pay per question, and — the reason it is built
-# this way — it can always print how it read the question, so a misparse is visible on
-# screen instead of arriving as a confident wrong table.
-@st.cache_data(ttl=CACHE_TTL, show_spinner=False)
-def load_nextgen(season: int, kind: str) -> pd.DataFrame:
-    try:
-        return to_pandas(nfl.load_nextgen_stats(seasons=[season], stat_type=kind))
-    except Exception:
-        return pd.DataFrame()
-
-
-@st.cache_data(ttl=CACHE_TTL, show_spinner=False)
-def load_depth_charts(season: int) -> pd.DataFrame:
-    try:
-        return to_pandas(nfl.load_depth_charts(seasons=[season]))
-    except Exception:
-        return pd.DataFrame()
-
-
-@st.cache_data(ttl=dt.timedelta(hours=6), show_spinner="Working out everyone's role…")
-def _role_ctx(season: int) -> dict:
-    """§12 role context: role per player, role baselines, NFL positional averages and the
-    shrunk index of each against both."""
-    from mega import roles as RL
-
-    return RL.build(_ask_pw(season), load_ff_opportunity(season),
-                    load_nextgen(season, "receiving"), load_nextgen(season, "rushing"),
-                    load_depth_charts(season))
-
-
-@st.cache_data(ttl=CACHE_TTL, show_spinner="Reading the red zone…")
-def load_redzone(season: int) -> pd.DataFrame:
-    """Carries and targets inside the 20, the 10 and the 5, from play-by-play.
-
-    It has to come from play-by-play: the weekly `rushing_10` / `rushing_20` columns look
-    like red zone stats and count runs of 10+ and 20+ YARDS. See mega/redzone.py."""
-    from mega import redzone as rzn
-    try:
-        return rzn.weekly(season)
-    except Exception:
-        return pd.DataFrame()
-
-
-@st.cache_data(ttl=CACHE_TTL, show_spinner="Indexing every player-week…")
-def _ask_pw(season: int) -> pd.DataFrame:
-    from mega import ask as ASK
-
-    return ASK.player_week(load_player_stats(season), load_snaps(season),
-                           load_ff_opportunity(season), load_routes(season),
-                           player_ids.crosswalk(), load_redzone(season))
-
-
-@st.cache_data(ttl=CACHE_TTL, show_spinner="Fetching that nflverse table…")
-def _nflverse_table(table: str, season: int) -> pd.DataFrame:
-    """Any catalogued nflverse table, for questions outside the curated metrics."""
-    from mega import catalog
-
-    return catalog.load(table, season)
 
 
 with sec_ask:

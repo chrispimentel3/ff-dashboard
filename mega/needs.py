@@ -165,7 +165,7 @@ def board(season: int, week: int, yahoo_rosters: pd.DataFrame | None = None,
             gain=g, fit=label(g), starts=av.get("starts", False),
             drop=av["drop"], bid=bid["bid"], max_bid=bid["max_worth"],
             season_pts=bid["season_pts"],
-            role=rc.get("role") or "", role_flags=_flag_text(rc),
+            role=_role_text(rc), role_flags=_flag_text(rc),
             role_score=role_score(rc),
             why=why_zero(ctx, my, pid) if g < DEPTH else
                 ("steps straight into your lineup" if av.get("starts") else "real bench value"),
@@ -199,6 +199,13 @@ def board(season: int, week: int, yahoo_rosters: pd.DataFrame | None = None,
               .head(top).reset_index(drop=True))
 
 
+def _role_text(rc: dict) -> str:
+    """"Committee back" rather than "COMMITTEE"."""
+    from .glossary import role_label
+
+    return role_label((rc or {}).get("role")) if (rc or {}).get("role") else ""
+
+
 def role_score(rc: dict) -> float:
     """§12.5 flags as a single number, discounted when a flag is only a spike."""
     if not rc:
@@ -217,14 +224,16 @@ def role_score(rc: dict) -> float:
 
 
 def _flag_text(rc: dict) -> str:
-    """"TGT+, GL" — a plus marks a flag that held across the window rather than once."""
+    """The flags in plain English: "target hog, goal line (1 game)".
+
+    Worded by mega.glossary so the board, the tables and the player card cannot end up
+    describing the same flag three different ways."""
     if not rc:
         return ""
+    from .glossary import flag_label
+
     tags = rc.get("tags") or {}
-    out = []
-    for f in rc.get("flags") or []:
-        out.append(f + ("+" if tags.get(f) == "sustained" else ""))
-    return ", ".join(out)
+    return ", ".join(flag_label(f, tags.get(f)) for f in (rc.get("flags") or []))
 
 
 # ---------------------------------------------------------------- §5.3-5.5 FAAB

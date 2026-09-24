@@ -339,9 +339,10 @@ GLOSS = {
     "WOPR#": "His WOPR rank at his position.",
     "DRAFT#": "Where the draft board ranked him at his position.",
     "GAP": "Draft rank minus opportunity rank. Plus = his role is bigger than his price.",
-    "ROLE": "His job on his own offence over his last 3 games (WR1-WR4+, TE1-REC/BLK, RB "
-            "LEAD/COMMITTEE/RECEIVING/BACKUP, QB STARTER). Flags after it: ROLE+ = producing "
-            "like the rung above him; a + on a flag means it held across the window, not once.",
+    "ROLE": "The job he actually has on his own team right now, from his last 3 games — "
+            "not where he was drafted. Anything after the dot is something he is doing "
+            "unusually well for that job. \"(1 game)\" means it happened once; without it, "
+            "it held across the window. Full glossary under Players \u2192 Glossary.",
     "xPPG±": "Points per game above or below what his WOPR predicts. Plus = running hot; minus = due.",
     "RANK": "Place in the league standings.",
     "PF": "Points scored all season.", "PA": "Points scored against him all season.",

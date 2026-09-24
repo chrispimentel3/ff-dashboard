@@ -57,8 +57,14 @@ def main(season: int = 2026) -> int:
     print(spec[[c for c in SPEC_COLS if c in spec.columns]].head(6).to_string(index=False)
           if not spec.empty else "  none")
     print()
-    print("role: his job on his own offence (HANDOFF §12). A flag with a + held across the")
-    print("window; one without it happened once. ROLE+ = producing like the rung above him.")
+    from mega.glossary import FLAGS
+
+    print("WHAT THE TAGS MEAN")
+    print("  role  — the job he actually has on his team now, from his last 3 games.")
+    for code in ("ROLE+", "ROLE-", "TGT", "GL", "SNAP", "LEAD", "AIR", "1D/RR"):
+        t = FLAGS[code]
+        print(f"  {t.label:<13}— {t.plain}")
+    print("  (1 game)     — it happened once, not across the window.")
     return 0
 
 
