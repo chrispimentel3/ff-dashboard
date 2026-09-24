@@ -329,6 +329,8 @@ def _season_model(season: int):
     from mega import sim as SIM
     from mega.yahoo import cached_scores
 
+    from mega.yahoo import cached_fixtures
+
     sc = cached_scores()
     st_path = HERE / "data" / "yahoo_standings.csv"
     if sc is None or sc.empty or not st_path.is_file():
@@ -336,7 +338,11 @@ def _season_model(season: int):
     stand = pd.read_csv(st_path)
     ppw = sc.groupby("team")["points"].mean().to_dict()
     left = range(int(next_week), 15)
-    return SIM.from_league(sc, stand, ppw, left)
+    try:
+        fx = cached_fixtures()
+    except Exception:
+        fx = None
+    return SIM.from_league(sc, stand, ppw, left, fixtures=fx)
 
 
 @st.cache_data(ttl=dt.timedelta(hours=6), show_spinner=False)
@@ -849,7 +855,7 @@ with tab_league:
         st.caption(f"Playoff odds unavailable: {type(_e).__name__}: {_e}")
     if not _o.empty:
         from mega.config import MY_TEAM as _MT
-        from mega.sim import SCHEDULE_IS_APPROXIMATE as _SCHED_NOTE
+        from mega.sim import schedule_note as _sched_note
 
         ui.h("Playoff odds")
         _mine_odds = _o[_o["team"] == _MT]
@@ -870,7 +876,8 @@ with tab_league:
                       "SEED": "{:.1f}"}, legend=False, logos=False, roles=False)
         st.caption(
             "6,000 simulated seasons. Each week's score is drawn around the team's own "
-            f"average, with this league's own spread. **{_SCHED_NOTE}**"
+            "average, with this league's own spread. "
+            + f"**{_sched_note(_season_model(int(season)))}**"
         )
         st.write("")
 

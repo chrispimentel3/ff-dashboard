@@ -102,6 +102,7 @@ class Season:
     sigma: float = 25.0
     playoff_teams: int = 6
     byes: int = 0
+    approx_weeks: tuple = ()      # weeks with no real fixture on file
 
 
 def _draws(season: Season, n: int, rng: np.random.Generator) -> dict:
@@ -220,13 +221,19 @@ PLAYOFF_BYES = 2
 
 
 def from_league(scores: pd.DataFrame, standings: pd.DataFrame, team_ppw: dict,
-                weeks_left, playoff_teams: int = PLAYOFF_TEAMS,
-                byes: int = PLAYOFF_BYES) -> Season:
+                weeks_left, fixtures: pd.DataFrame | None = None,
+                playoff_teams: int = PLAYOFF_TEAMS, byes: int = PLAYOFF_BYES) -> Season:
     """A Season from what the scrape already holds.
 
     `team_ppw` is each team's expected STARTER points per week — bench points are excluded
-    because they do not score. sigma is this league's own weekly spread, not a league-average
-    guess: a 12-team half-PPR league with these rosters is the only relevant population.
+    because they do not score. sigma is this league's own weekly spread, not a
+    league-average guess: a 12-team half-PPR league with these rosters is the only
+    relevant population.
+
+    `fixtures` is the real remaining schedule where it has been scraped. Strength of
+    schedule is most of a fantasy season, so a real fixture beats an invented one every
+    time; weeks with no fixture on file fall back to a round robin and `approx_weeks`
+    records exactly which, so the caption can say so rather than imply more than is known.
     """
     if standings is None or standings.empty:
         return Season(teams=[], means={}, schedule=[])
@@ -237,10 +244,24 @@ def from_league(scores: pd.DataFrame, standings: pd.DataFrame, team_ppw: dict,
         pf = scores.groupby("team")["points"].sum().to_dict()
     weeks = [int(w) for w in weeks_left]
     means = {(t, w): float(team_ppw.get(t, 0.0)) for t in teams for w in weeks}
-    sched = _round_robin(teams, weeks)
+
+    known = set(teams)
+    sched, real_weeks = [], set()
+    if fixtures is not None and not fixtures.empty:
+        fx = fixtures.assign(week=pd.to_numeric(fixtures["week"], errors="coerce"))
+        for w in weeks:
+            rows = fx[fx["week"] == w]
+            rows = rows[rows["home"].isin(known) & rows["away"].isin(known)]
+            if len(rows) >= len(teams) // 2:
+                sched += [{"week": int(w), "home": str(r["home"]), "away": str(r["away"])}
+                          for _, r in rows.iterrows()]
+                real_weeks.add(int(w))
+    missing = [w for w in weeks if w not in real_weeks]
+    sched += _round_robin(teams, missing)
     return Season(teams=teams, means=means, schedule=sched, wins=wins,
                   points_for={str(k): float(v) for k, v in pf.items()},
-                  sigma=weekly_sigma(scores), playoff_teams=playoff_teams, byes=byes)
+                  sigma=weekly_sigma(scores), playoff_teams=playoff_teams, byes=byes,
+                  approx_weeks=tuple(missing))
 
 
 def _round_robin(teams: list, weeks: list) -> list:
@@ -263,11 +284,21 @@ def _round_robin(teams: list, weeks: list) -> list:
     return out
 
 
-SCHEDULE_IS_APPROXIMATE = (
-    "Remaining fixtures are a stand-in, not Chris's real schedule — Yahoo's future "
-    "matchups are not in the scrape. Use these odds to compare two versions of your own "
-    "roster, not as a forecast of where you finish."
-)
+def schedule_note(season: Season) -> str:
+    """Say exactly how much of the schedule is real — the honest version of a caveat."""
+    weeks = sorted({g["week"] for g in season.schedule})
+    if not weeks:
+        return ""
+    n_approx = len(season.approx_weeks)
+    if not n_approx:
+        return "Run on your real remaining fixtures."
+    if n_approx == len(weeks):
+        return ("Fixtures are a stand-in — none of the remaining schedule has been scraped "
+                "yet. Use these to compare two versions of your own roster, not as a "
+                "forecast of where you finish.")
+    return (f"Real fixtures through week {max(w for w in weeks if w not in season.approx_weeks)}; "
+            f"weeks {min(season.approx_weeks)}-{max(season.approx_weeks)} are a stand-in "
+            "until the scrape reaches them.")
 
 
 def trade_delta(season: Season, my_team: str, their_team: str, d_me: float, d_them: float,

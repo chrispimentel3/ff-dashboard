@@ -31,7 +31,8 @@ DATA = ROOT / "data"
 
 # Written by the scrape, and restored together — a half-updated set is worse than a stale one.
 FILES = ("yahoo_rosters.csv", "yahoo_free_agents.csv", "yahoo_standings.csv",
-         "yahoo_transactions.csv", "yahoo_faab.csv", "yahoo_faab_bids.csv", "yahoo_scores.csv")
+         "yahoo_transactions.csv", "yahoo_faab.csv", "yahoo_faab_bids.csv", "yahoo_scores.csv",
+         "yahoo_fixtures.csv")
 # Projections are rebuilt, not restored: a failed R scrape leaves the previous build in
 # place on its own, and rolling it back would throw away a good file to fix a bad one.
 
@@ -278,6 +279,18 @@ def main(argv=None) -> int:
                     print(f"[scores] {n} rows on file through week {wk}")
             except Exception as e:
                 print(f"[scores] skipped: {e}")
+
+        # The remaining fixtures. The schedule is fixed for the season, so this only costs
+        # page loads for weeks not already on file — and Yahoo throttles a burst, so it
+        # fills in over several runs rather than all at once.
+        try:
+            from mega.yahoo import refresh_fixtures
+
+            fx = refresh_fixtures(int(nflp.get_current_week()) + 4)
+            print(f"[fixtures] {len(fx)} on file, weeks {sorted(set(fx['week']))[:1]}"
+                  f"-{sorted(set(fx['week']))[-1:]}" if len(fx) else "[fixtures] none yet")
+        except Exception as e:
+            print(f"[fixtures] skipped: {e}")
 
         # ffanalytics projections + ROS ECR (HANDOFF §3.1 / §6.2). R only runs here, not
         # on Streamlit Cloud, so this build is what the hosted app reads until the next one.

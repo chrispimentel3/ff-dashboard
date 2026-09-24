@@ -198,3 +198,63 @@ def test_weekly_sigma_comes_from_this_leagues_own_scores():
     scores = pd.DataFrame({"points": [100, 120, 80, 110, 90]})
     assert sim.weekly_sigma(scores) == pytest.approx(float(np.std([100, 120, 80, 110, 90], ddof=1)))
     assert sim.weekly_sigma(pd.DataFrame()) == 0.0
+
+
+# ---------------------------------------------------------------- real fixtures
+def _standings(teams):
+    return pd.DataFrame({"team": teams, "wins": [1] * len(teams)})
+
+
+def _scores(teams):
+    return pd.DataFrame([{"team": t, "week": 1, "points": 100.0 + i}
+                         for i, t in enumerate(teams)])
+
+
+def test_real_fixtures_are_used_where_they_exist():
+    teams = [f"t{i}" for i in range(4)]
+    fx = pd.DataFrame([{"week": 5, "home": "t0", "away": "t3"},
+                       {"week": 5, "home": "t1", "away": "t2"}])
+    s = sim.from_league(_scores(teams), _standings(teams), {t: 100.0 for t in teams},
+                        [5], fixtures=fx)
+    assert s.approx_weeks == ()
+    assert {(g["home"], g["away"]) for g in s.schedule} == {("t0", "t3"), ("t1", "t2")}
+    assert "real remaining fixtures" in sim.schedule_note(s)
+
+
+def test_weeks_without_fixtures_fall_back_and_are_named():
+    """The caveat has to say WHICH weeks are invented, not just that some are."""
+    teams = [f"t{i}" for i in range(4)]
+    fx = pd.DataFrame([{"week": 5, "home": "t0", "away": "t3"},
+                       {"week": 5, "home": "t1", "away": "t2"}])
+    s = sim.from_league(_scores(teams), _standings(teams), {t: 100.0 for t in teams},
+                        [5, 6, 7], fixtures=fx)
+    assert s.approx_weeks == (6, 7)
+    note = sim.schedule_note(s)
+    assert "through week 5" in note and "6-7" in note
+
+
+def test_no_fixtures_at_all_says_so_plainly():
+    teams = [f"t{i}" for i in range(4)]
+    s = sim.from_league(_scores(teams), _standings(teams), {t: 100.0 for t in teams},
+                        [5, 6], fixtures=pd.DataFrame())
+    assert s.approx_weeks == (5, 6)
+    assert "stand-in" in sim.schedule_note(s)
+
+
+def test_a_partial_week_of_fixtures_is_not_trusted():
+    """Half a week's fixtures would leave teams with no game, which silently changes
+    everyone's record. Better to approximate the whole week."""
+    teams = [f"t{i}" for i in range(6)]
+    fx = pd.DataFrame([{"week": 5, "home": "t0", "away": "t1"}])   # 1 of 3
+    s = sim.from_league(_scores(teams), _standings(teams), {t: 100.0 for t in teams},
+                        [5], fixtures=fx)
+    assert s.approx_weeks == (5,)
+
+
+def test_fixtures_naming_an_unknown_team_are_ignored():
+    teams = [f"t{i}" for i in range(4)]
+    fx = pd.DataFrame([{"week": 5, "home": "t0", "away": "GHOST"},
+                       {"week": 5, "home": "t1", "away": "t2"}])
+    s = sim.from_league(_scores(teams), _standings(teams), {t: 100.0 for t in teams},
+                        [5], fixtures=fx)
+    assert s.approx_weeks == (5,)

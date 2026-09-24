@@ -334,6 +334,75 @@ def parse_matchup(page_text: str) -> dict | None:
             "team_b": lines[j + 1], "points_b": pts[1]}
 
 
+def _walk_matchups(weeks, s: "LeagueSession"):
+    """Yield (week, parsed matchup) for every fixture in `weeks`.
+
+    Yahoo has no league-wide scoreboard we can read, so this walks the per-matchup pages:
+    for each week ask for one team's matchup, note BOTH sides, and skip anyone already
+    seen. Six or seven page loads a week rather than twelve.
+    """
+    for wk in weeks:
+        seen: set[str] = set()
+        for mid in range(1, N_TEAMS + 1):
+            if len(seen) >= N_TEAMS:
+                break
+            try:
+                m = parse_matchup(s.get_text(f"{BASE}/matchup?week={wk}&mid1={mid}"))
+            except AuthExpired:
+                raise
+            except Exception:
+                continue
+            if not m or m["team_a"] in seen:
+                continue
+            seen.add(m["team_a"])
+            seen.add(m["team_b"])
+            yield int(wk), m
+
+
+FIXTURES_CSV = DATA / "yahoo_fixtures.csv"
+
+
+def fixtures(weeks: list[int], session: "LeagueSession | None" = None) -> pd.DataFrame:
+    """week, home, away — who plays whom, including weeks not yet played.
+
+    A future matchup page renders with projected points instead of real ones, which parses
+    the same way; only the pairing is kept. This is what lets the playoff odds run on the
+    real remaining schedule rather than a stand-in — strength of schedule is most of a
+    fantasy season, so a round-robin approximation answers a different question.
+    """
+    own = session is None
+    s = session or LeagueSession()
+    rows = []
+    try:
+        for wk, m in _walk_matchups(weeks, s):
+            rows.append({"week": wk, "home": m["team_a"], "away": m["team_b"]})
+    finally:
+        if own:
+            s.close()
+    out = pd.DataFrame(rows)
+    return out.drop_duplicates(["week", "home", "away"]).reset_index(drop=True) if not out.empty else out
+
+
+def cached_fixtures() -> pd.DataFrame:
+    if not FIXTURES_CSV.is_file():
+        return pd.DataFrame(columns=["week", "home", "away"])
+    return pd.read_csv(FIXTURES_CSV).astype({"week": int})
+
+
+def refresh_fixtures(through_week: int = 17, session: "LeagueSession | None" = None) -> pd.DataFrame:
+    """Fetch the fixtures we do not already hold. The schedule is fixed at the start of
+    the season, so this costs nothing after the first run."""
+    have = cached_fixtures()
+    done = set(have["week"].unique()) if not have.empty else set()
+    want = [w for w in range(1, int(through_week) + 1) if w not in done]
+    if want:
+        fresh = fixtures(want, session)
+        if not fresh.empty:
+            have = pd.concat([have, fresh], ignore_index=True).drop_duplicates(["week", "home", "away"])
+            have.sort_values(["week", "home"]).to_csv(FIXTURES_CSV, index=False, lineterminator="\n")
+    return have.sort_values(["week", "home"]).reset_index(drop=True)
+
+
 def scores(weeks: list[int], session: "LeagueSession | None" = None) -> pd.DataFrame:
     """Every team's score in each of `weeks`, long: team, week, points.
 
@@ -345,27 +414,14 @@ def scores(weeks: list[int], session: "LeagueSession | None" = None) -> pd.DataF
     s = session or LeagueSession()
     rows = []
     try:
-        for wk in weeks:
-            seen: set[str] = set()
-            for mid in range(1, N_TEAMS + 1):
-                if len(seen) >= N_TEAMS:
-                    break
-                try:
-                    m = parse_matchup(s.get_text(f"{BASE}/matchup?week={wk}&mid1={mid}"))
-                except AuthExpired:
-                    raise
-                except Exception:
-                    continue
-                if not m or m["team_a"] in seen:
-                    continue
-                # Keep the opponent and their score: the actual record then comes from the
-                # same rows as xWins, over the same weeks, instead of a standings file that
-                # may have been scraped a week earlier.
-                for side, other in (("a", "b"), ("b", "a")):
-                    rows.append({"team": m[f"team_{side}"], "week": wk,
-                                 "points": m[f"points_{side}"],
-                                 "opponent": m[f"team_{other}"], "opp_points": m[f"points_{other}"]})
-                    seen.add(m[f"team_{side}"])
+        for wk, m in _walk_matchups(weeks, s):
+            # Keep the opponent and their score: the actual record then comes from the
+            # same rows as xWins, over the same weeks, instead of a standings file that
+            # may have been scraped a week earlier.
+            for side, other in (("a", "b"), ("b", "a")):
+                rows.append({"team": m[f"team_{side}"], "week": wk,
+                             "points": m[f"points_{side}"],
+                             "opponent": m[f"team_{other}"], "opp_points": m[f"points_{other}"]})
     finally:
         if own:
             s.close()
