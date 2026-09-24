@@ -303,7 +303,7 @@ GLOSS = {
     "LAST": "Fantasy points in his most recent game.",
     "xFP": "Points his usage should have produced — targets, carries, depth and red-zone looks, scored half-PPR.",
     "ACT": "Fantasy points he actually scored.",
-    "xFP±": "Actual minus expected, season total. Plus = scoring above his usage (likely to cool off). "
+    "xFP±": "Actual minus expected, season total. Shaded red above his usage and navy below. Plus = scoring above his usage (likely to cool off). "
             "Minus = below it (the points should come).",
     "xFP±/G": "Actual minus expected, per game. +2 or more: sell-high candidate. "
               "−1.5 or less: hold or buy — the work is there, the points will follow.",
@@ -311,7 +311,7 @@ GLOSS = {
     "TGT": "Targets per game.",
     "CAR": "Carries per game.",
     "TGT%": "His share of his NFL team's targets. 25%+ is a No. 1 receiver's role; under 15% is a part-timer.",
-    "TM#": "Where he ranks in targets on his own NFL team. #1 = the go-to option.",
+    "TM#": "Where he ranks in targets on his own NFL team. #1 = the go-to option. A #1 or #2 rank on a rising target share is the strongest sign a role has genuinely changed.",
     "RTE": "Pass routes run. Estimated — his snap share × his team's dropbacks, because nflverse "
            "has no charted route count. It runs high for anyone who blocks or sits on passing downs.",
     "RTE/G": "Estimated pass routes run per game. Under ~25 is a part-time role.",
@@ -344,7 +344,7 @@ GLOSS = {
     "GAIN": "Points per game he would ADD to your starting nine, after the lineup is "
             "re-optimised with him on the roster. Zero means he does not crack it.",
     "BID": "What to bid from your FAAB budget — a share that scales with the points he adds "
-           "and with what the league has been paying.",
+           "and with what the league has been paying. Capped by what you actually hold.",
     "MAX": "The most he is worth to you. Above this you are paying for someone else's week.",
     "CUT": "Who you would drop to make room for him.",
     "POS": "Position, as the league rosters him.",
@@ -858,7 +858,13 @@ def line_chart(df: pd.DataFrame, x: str, y: str, color: str, y_title: str = "", 
 
     if df is None or df.empty:
         return
+    # The tooltip wants a decimal; the axis does not. Forcing .1f on both gave a points
+    # axis reading "180.0, 160.0, 140.0" — a decimal place on every tick that never varies.
+    # The tooltip wants a decimal; the axis does not. Forcing .1f on both gave a points
+    # axis reading "180.0, 160.0, 140.0" — a decimal place on every tick that never varies.
+    # Altair rejects format=None rather than ignoring it, so the key has to be absent.
     fmt = ".0%" if percent else ".1f"
+    axis_fmt = {"format": ".0%"} if percent else {}
     names = list(pd.Series(df[color]).dropna().unique())
     crowded = len(names) > CROWDED
     # Labelling a line at its last point only works while the labels have room. Highlighting
@@ -869,7 +875,7 @@ def line_chart(df: pd.DataFrame, x: str, y: str, color: str, y_title: str = "", 
         picked = []
 
     enc_x = alt.X(f"{x}:O", axis=alt.Axis(title=x_title, labelAngle=0, grid=False))
-    enc_y = alt.Y(f"{y}:Q", axis=alt.Axis(title=y_title or None, grid=True, format=fmt))
+    enc_y = alt.Y(f"{y}:Q", axis=alt.Axis(title=y_title or None, grid=True, **axis_fmt))
     tip = [alt.Tooltip(f"{color}:N", title=""), alt.Tooltip(f"{x}:O"),
            alt.Tooltip(f"{y}:Q", format=fmt)]
     scale = alt.Scale(range=list(palette or SERIES))

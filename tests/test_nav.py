@@ -105,3 +105,54 @@ def test_sub_tabs_go_through_the_one_helper():
         calls = {n.func.id for n in ast.walk(node)
                  if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)}
         assert "_tabs" in calls, f"{name} builds its tabs by hand"
+
+
+# ---------------------------------------------------------------- the league seam
+LEAGUE_NAMES = {"MY_TEAM", "LEAGUE_ID", "LEAGUE_URL", "TEAM_BY_SEAT", "SEAT_BY_TEAM", "MY_SEAT"}
+
+
+def _reachable_league_refs(page: str) -> dict[str, list[str]]:
+    """Every league constant a page can reach, and the function it sits in."""
+    tree = _tree()
+    funcs = {n.name: n for n in tree.body if isinstance(n, ast.FunctionDef)}
+    found: dict[str, list[str]] = {}
+    seen: set[str] = set()
+
+    def walk(fn: ast.FunctionDef) -> None:
+        for node in ast.walk(fn):
+            if isinstance(node, ast.Name) and node.id in LEAGUE_NAMES:
+                found.setdefault(fn.name, []).append(node.id)
+            elif isinstance(node, ast.Name) and node.id in funcs and node.id not in seen:
+                seen.add(node.id)
+                walk(funcs[node.id])
+            elif isinstance(node, ast.alias) and node.name in LEAGUE_NAMES:
+                found.setdefault(fn.name, []).append(node.name)
+
+    walk(funcs[page])
+    return found
+
+
+def test_the_ask_page_never_touches_the_league():
+    """It runs on ask, catalog and roles, none of which have heard of Mega Bowl."""
+    assert _reachable_league_refs("_page_ask") == {}
+
+
+def test_the_player_page_touches_the_league_in_exactly_one_place():
+    """The card names who holds him, which is the one league-aware thing on an otherwise
+    league-free page. Keeping it in a single named function is what makes pointing this at
+    a second league — or at none — a contained change rather than a hunt."""
+    refs = _reachable_league_refs("_page_player")
+    assert set(refs) == {"_owner_badge"}, (
+        f"league constants have spread beyond the ownership badge: {refs}"
+    )
+
+
+def test_the_ownership_badge_disappears_when_there_is_no_league():
+    """With no scraped rosters the card must be a plain NFL player card, not a broken
+    Mega Bowl one — so the very first thing it does is give up."""
+    fn = {n.name: n for n in _tree().body
+          if isinstance(n, ast.FunctionDef)}["_owner_badge"]
+    first = next(s for s in fn.body if not isinstance(s, ast.Expr))   # skip the docstring
+    assert isinstance(first, ast.If), "the no-league case must be handled before anything else"
+    assert isinstance(first.body[0], ast.Return)
+    assert first.body[0].value.value == "", "with no league the badge renders nothing"

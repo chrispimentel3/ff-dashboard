@@ -92,7 +92,16 @@ def test_a_share_reads_as_a_percentage_on_both_axis_and_tooltip(drawn):
 
 def test_a_points_chart_is_not_forced_into_percentages(drawn):
     ui.line_chart(_weeks(["A"], value=14.2), x="week", y="val", color="who")
-    assert ".1f" in _find(drawn["spec"]["encoding"]["y"], "format")
+    assert ".0%" not in _find(drawn["spec"]["encoding"]["y"], "format")
+    assert ".1f" in _find(drawn["spec"]["encoding"]["tooltip"], "format")
+
+
+def test_the_axis_does_not_carry_a_decimal_the_tooltip_needs(drawn):
+    """A points axis formatted .1f ticks "180.0, 160.0, 140.0" — a decimal place on every
+    label that never varies. The tooltip still wants it; the axis does not."""
+    ui.line_chart(_weeks(["A"], value=151.7), x="week", y="val", color="who")
+    assert not _find(drawn["spec"]["encoding"]["y"], "format")
+    assert ".1f" in _find(drawn["spec"]["encoding"]["tooltip"], "format")
 
 
 # ---------------------------------------------------------------- crowding

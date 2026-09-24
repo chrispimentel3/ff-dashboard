@@ -360,8 +360,7 @@ def _trade_odds(season: int, rows: tuple) -> dict:
     Points per week is the ranking; this is the thing that actually matters. A point added
     to a team already 99% safe is worth less than the same point on the bubble."""
     from mega import sim as SIM
-    from mega.config import MY_TEAM
-
+    
     s = _season_model(season)
     if s is None or MY_TEAM not in s.teams:
         return {}
@@ -797,11 +796,7 @@ def _tab_over():
             # too few games to have a role would otherwise show none at all
             essential=["POS", roll_lbl, "xFP±", "TGT%", "ST"],
         )
-        st.caption(
-            f"**Target share** and **Team tgt rank** cover the last {roll} weeks. A #1 target rank on a high "
-            "share is a true alpha. Good points on a low target share is usually touchdown luck that won't "
-            "hold. **Vs expected**: red = scoring above his usage (sell high) · navy = below it (hold or buy)."
-        )
+        ui.note(f"Target share and team rank cover the last {roll} weeks.", kind="method")
 
         # ---- route usage: WR and TE only. Routes are estimated (mega/routes.py), and the
         # estimate is too crude for backs, who are on the field for runs they never route on.
@@ -1017,38 +1012,62 @@ def _tab_league():
                 logos=False,
             )
 
-        mu = _ya.matchups_df()
-        if not mu.empty:
-            ui.h("Weekly results")
-            wk_pick = st.selectbox("Week", sorted(mu["week"].unique(), reverse=True))
-            wv = mu[mu["week"] == wk_pick]
-            mcols = [c for c in ["team", "opponent", "points", "opp_points", "proj", "result"]
-                     if c in wv.columns]
-            ui.table(
-                wv[mcols].sort_values("points", ascending=False), rename={"team": "TEAM"},
-                sequential=["PTS"], fmt={"PTS": "{:.1f}", "OPP PTS": "{:.1f}", "PROJ": "{:.1f}"},
-                logos=False,
-            )
-
-            _mu = mu.dropna(subset=["points"])
-            _teams = sorted(_mu["team"].dropna().unique())
-            # imported here, not borrowed from the playoff-odds block above: that one sits
-            # inside `if not _o.empty`, so it is unbound whenever the sim returns nothing
-            from mega.config import MY_TEAM as _MINE
-            _pick = st.multiselect(
-                "Follow", _teams, key="pbw",
-                default=[t for t in (_MINE,) if t in _teams] or _teams[:1],
-                help="Every team is drawn; the ones you pick here are the ones named.")
-            ui.line_chart(
-                _mu, x="week", y="points", color="team", y_title="Points", x_title="Week",
-                height=340, highlight=_pick, title="Points by week",
-                caption=("The rest of the league is the grey backdrop. Flat and high beats "
-                         "spiky and high — a team that swings wildly loses weeks it should win."))
-
         tx = _ya.transactions_df()
         if not tx.empty:
             ui.h("Recent transactions")
             ui.table(tx.head(40), rename={"team": "TEAM"}, logos=False)
+
+    # Weekly scores, from whichever source this machine has. These used to sit inside the
+    # live-API branch, and the API has been blocked at Yahoo's end all season — so the
+    # results table and the points chart were unreachable code on every run, even though
+    # the weekly scrape has had exactly the columns they need on disk the whole time.
+    mu, mu_src = _matchup_log()
+    if not mu.empty:
+        ui.h("Weekly results")
+        wk_pick = st.selectbox("Week", sorted(mu["week"].unique(), reverse=True))
+        wv = mu[mu["week"] == wk_pick]
+        mcols = [c for c in ["team", "opponent", "points", "opp_points", "proj", "result"]
+                 if c in wv.columns]
+        ui.table(
+            wv[mcols].sort_values("points", ascending=False), rename={"team": "TEAM"},
+            sequential=["PTS"], fmt={"PTS": "{:.1f}", "OPP PTS": "{:.1f}", "PROJ": "{:.1f}"},
+            logos=False,
+        )
+
+        _mu = mu.dropna(subset=["points"])
+        _teams = sorted(_mu["team"].dropna().unique())
+        from mega.config import MY_TEAM as _MINE
+        _pick = st.multiselect(
+            "Follow", _teams, key="pbw",
+            default=[t for t in (_MINE,) if t in _teams] or _teams[:1],
+            help="Every team is drawn; the ones you pick here are the ones named.")
+        ui.line_chart(
+            _mu, x="week", y="points", color="team", y_title="Points", x_title="Week",
+            height=340, highlight=_pick, title="Points by week",
+            caption=("The rest of the league is the grey backdrop. Flat and high beats "
+                     "spiky and high — a team that swings wildly loses weeks it should win."))
+        ui.note(f"Scores from the {mu_src}.", kind="method")
+
+def _matchup_log() -> tuple[pd.DataFrame, str]:
+    """Team-week scores, from the live API if it answers and the weekly scrape if not.
+
+    Says which, because the two are not identical: the API carries a projection per
+    matchup and the scrape does not.
+    """
+    try:
+        from mega import yahoo_api as _y
+        if _y.available():
+            mu = _y.matchups_df()
+            if mu is not None and not mu.empty:
+                return mu, "live Yahoo API"
+    except Exception:
+        pass
+    try:
+        from mega.yahoo import cached_scores
+        return cached_scores(), "weekly scrape"
+    except Exception:
+        return pd.DataFrame(), "no source"
+
 
 def _worth_claiming(wv: pd.DataFrame) -> pd.DataFrame:
     """Free agents who would actually change your lineup.
@@ -1545,11 +1564,6 @@ def _tab_wire():
                     sequential=["GAIN", "BID"], pos_cols=["POS"],
                     fmt={"PPG": "{:.1f}", "GAIN": "{:+.2f}", "BID": "${:.0f}", "MAX": "${:.0f}"},
                 )
-                st.caption(
-                    "**Bid** spends a share of your budget that scales with the points the player adds "
-                    "between now and week 17; **Walk-away** is the most he could justify. Both are capped "
-                    "by what you actually hold."
-                )
 
             ui.h("Speculative")
             ui.lede(
@@ -1590,11 +1604,6 @@ def _tab_wire():
                      "TM#": "{:.0f}", "VAL": "{:.0f}", "ADD#": "{:.0f}", "TR30": "{:+.0f}",
                      "SCORE": "{:.2f}"},
                 view="waivers_blind",
-            )
-            st.caption(
-                "A **#1–2 team target rank** on a rising **target share** is the strongest sign a role has "
-                "genuinely changed. **Claim score** blends that with recent points, trade value and how fast "
-                "he's being added elsewhere."
             )
 
 from mega.config import MY_TEAM as MY_TEAM_LABEL   # noqa: E402  (the trade tab reads it)
@@ -1791,10 +1800,7 @@ def _tab_trade():
         else:
             ui.table(tt[["partner"] + tcols], sequential=["FAIR"], diverging=["EDGE"], fmt=tfmt)
 
-        st.caption(
-            f"Rosters: {IB['roster_src']}. **Fairness** near 1.00 means an even swap by FantasyCalc value — "
-            "offers below ~0.85 get filtered out, so everything here should at least get a reply."
-        )
+        ui.note(f"Rosters: {IB['roster_src']}.", kind="method")
 
 def _tab_draft():
     if IB is None:
@@ -2009,6 +2015,28 @@ def _season_table(season: int) -> pd.DataFrame:
 
 
 @st.cache_data(ttl=dt.timedelta(minutes=30), show_spinner=False)
+def _owner_badge(gid: str, pteam: str, own: dict, fa: dict) -> str:
+    """Who holds him in this league — or nothing at all when there is no league on file.
+
+    The player card is the one league-aware thing on a page that otherwise runs entirely
+    on league-free modules (lookup, roles, glossary). Keeping that in a single function
+    means pointing this at a second league, or at none, touches one place: with no scraped
+    rosters the card is simply an NFL player card, not a broken Mega Bowl one.
+    """
+    if not own and not fa:
+        return ""
+    from mega.config import MY_TEAM
+
+    if gid in own:
+        team, slot = own[gid]
+        return f"<b>{'Yours' if team == MY_TEAM else team}</b> · {'bench' if slot == 'BN' else slot}"
+    if str(fa.get(gid, "")).startswith("W"):
+        return f"<b>On waivers</b> until {str(fa[gid])[1:].strip(' ()')}"   # "W (Sep 19)"
+    if not pteam:
+        return "<b>No NFL team</b>"
+    return "<b>Free agent</b>"
+
+
 def _ownership() -> tuple[dict, dict]:
     """gsis_id -> (fantasy team, slot) from the scraped rosters, and gsis_id -> Yahoo FA
     status. Both go through the id resolver: matching the FA list by name missed players
@@ -2036,7 +2064,6 @@ def _height(v) -> str:
 from mega import glossary as GL
 from mega import logos as _logos
 from mega import lookup as LK
-from mega.config import MY_TEAM
 from mega.status import note_for, out_for_week
 
 
@@ -2109,15 +2136,7 @@ def _tab_lookup():
             # ---- who he is, and whose he is
             own, fa = _ownership()
             n = player_ids.norm(prow["name"])
-            if gid in own:
-                t, sl = own[gid]
-                owner = f"<b>{'Yours' if t == MY_TEAM else t}</b> · {'bench' if sl == 'BN' else sl}"
-            elif str(fa.get(gid, "")).startswith("W"):
-                owner = f"<b>On waivers</b> until {str(fa[gid])[1:].strip(' ()')}"   # "W (Sep 19)"
-            elif not pteam:
-                owner = "<b>No NFL team</b>"
-            else:
-                owner = "<b>Free agent</b> in Mega Bowl"
+            owner = _owner_badge(gid, pteam, own, fa)
             _out_now = out_for_week(int(next_week)).get(n)
             nfl_status = LK.STATUS_WORDS.get(str(b.get("status") or ""), str(b.get("status") or ""))
             if not inj.empty and "gsis_id" in inj.columns:

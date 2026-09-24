@@ -27,7 +27,7 @@ APP = pathlib.Path(__file__).resolve().parent.parent / "app.py"
 SRC = APP.read_text()
 
 # Ceilings, not goals. Beat one and lower it.
-CEILING = {"st.caption": 58, "st.info": 15, "st.warning": 4, "ui.lede": 13}
+CEILING = {"st.caption": 54, "st.info": 15, "st.warning": 4, "ui.lede": 13}
 
 
 @pytest.mark.parametrize("call,ceiling", sorted(CEILING.items()))
