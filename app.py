@@ -2508,7 +2508,13 @@ def _tab_ask():
 #     bodies inline, and a helper defined below its call site simply did not exist yet —
 #     a bug that reached the page four separate times.
 #   * each page gets a URL, so sending someone your Start/Sit is a link rather than
-#     "click the third tab, then the second one".
+#     "click the third tab, then the second one". Loading one of those links directly puts
+#     two 404s in the browser console — /player/_stcore/health and host-config — before the
+#     same two succeed at the root. That is Streamlit probing, not a fault: a single-path
+#     segment is genuinely ambiguous, since it cannot know whether `player` is a deployment
+#     prefix or a page name, so it tries the longest candidate first and falls back. It is
+#     bounded to two attempts and resolves correctly at any prefix depth. There is no
+#     supported way to switch it off short of giving up the URLs.
 #   * the two groups below are the league seam. Everything under Mega Bowl reads this
 #     league; everything under Any NFL player runs on modules that have never heard of it
 #     (ask, catalog, lookup, roles, glossary). Pointing this at a second league later
