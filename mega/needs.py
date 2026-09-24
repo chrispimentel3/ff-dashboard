@@ -25,6 +25,7 @@ Two deliberate choices:
 from __future__ import annotations
 
 import functools
+import math
 
 import pandas as pd
 
@@ -224,3 +225,131 @@ def _flag_text(rc: dict) -> str:
     for f in rc.get("flags") or []:
         out.append(f + ("+" if tags.get(f) == "sustained" else ""))
     return ", ".join(out)
+
+
+# ---------------------------------------------------------------- §5.3-5.5 FAAB
+POOL_PER_WEEK = 11.0      # (J) weekly lineup gain the remaining budget expects to buy
+HYPE_SCALE = 20.0         # points of % owned movement that doubles the hype term
+HYPE_MAX = 0.5
+
+
+def max_bid(gain: float, faab_left: float, pool_per_week: float = POOL_PER_WEEK) -> int:
+    """§5.3 — the most a claim can be worth to you.
+
+        rate   = FAAB_left / (poolPerWeek * H)
+        maxBid = gain * H * rate = FAAB_left * gain / poolPerWeek
+
+    The horizon cancels, which is the neat part: what a player is worth is his weekly gain
+    as a fraction of the total weekly gain the rest of your budget can buy. $100 left and
+    +3 pts/wk is $27.
+    """
+    if pool_per_week <= 0 or faab_left <= 0:
+        return 0
+    raw = float(faab_left) * max(0.0, float(gain)) / float(pool_per_week)
+    return int(min(float(faab_left), round(raw)))
+
+
+def rival_bid(gain_t: float, faab_t: float, pct_owned_delta: float = 0.0,
+              pool_per_week: float = POOL_PER_WEEK,
+              history_scale: float = 1.0) -> float:
+    """§5.4 — what one rival would plausibly bid.
+
+    `hype` is the Yahoo ownership jump: a player everybody is adding draws bids above what
+    a model says he is worth, and ignoring that is how you lose a claim by a dollar.
+    `history_scale` is the league's own correction once enough settled bids exist.
+    """
+    if faab_t <= 0 or gain_t <= 0:
+        return 0.0
+    hype = 1.0 + HYPE_MAX * min(max(float(pct_owned_delta) / HYPE_SCALE, 0.0), 1.0)
+    raw = min(float(faab_t), float(faab_t) * float(gain_t) / float(pool_per_week))
+    return raw * hype * float(history_scale)
+
+
+def recommend(gain_mine: float, faab_mine: float, rivals: list[tuple[float, float]],
+              pct_owned_delta: float = 0.0, pool_per_week: float = POOL_PER_WEEK,
+              min_bid: int | None = None, history_scale: float = 1.0) -> dict:
+    """§5.4 — beat the best rival by a dollar, or walk away.
+
+    `rivals` is [(their gain from this player, their FAAB left)]. A claim nobody else
+    wants costs the league minimum; one that would cost more than it is worth to you is
+    reported as a pass WITH the number, because "don't bid" is only useful advice when it
+    says what the player was going to go for.
+    """
+    from . import faab as fb
+
+    floor = fb.MIN_BID if min_bid is None else int(min_bid)
+    mine = max_bid(gain_mine, faab_mine, pool_per_week)
+    bids = [rival_bid(g, f, pct_owned_delta, pool_per_week, history_scale) for g, f in rivals]
+    top = max(bids) if bids else 0.0
+    if top <= 0:
+        rec = max(floor, 0)
+        return {"bid": rec, "max_bid": mine, "top_rival": 0.0, "pass": False,
+                "why": "nobody else gains from him — the league minimum wins it"}
+    rec = int(math.ceil(top + 1))
+    if rec > mine:
+        return {"bid": 0, "max_bid": mine, "top_rival": round(top, 1), "pass": True,
+                "why": f"likely outbid at about ${top:.0f}, which is over your ${mine} ceiling"}
+    return {"bid": rec, "max_bid": mine, "top_rival": round(top, 1), "pass": False,
+            "why": f"clears the best rival bid of about ${top:.0f}"}
+
+
+def history_scale(settled: pd.DataFrame, modelled: dict, min_rows: int = 5,
+                  clamp: tuple = (0.5, 2.0)) -> float:
+    """§5.4 — what this league actually pays, against what the model said it would.
+
+    The median ratio of winning bid to modelled bid, once there are enough settled claims
+    to mean anything. Clamped, because five observations can produce any ratio at all.
+    """
+    if settled is None or settled.empty or not modelled:
+        return 1.0
+    rows = []
+    for _, r in settled.iterrows():
+        m = modelled.get(r.get("player"))
+        bid = pd.to_numeric(pd.Series([r.get("bid")]), errors="coerce").iloc[0]
+        if m and m > 0 and pd.notna(bid):
+            rows.append(float(bid) / float(m))
+    if len(rows) < min_rows:
+        return 1.0
+    return float(min(max(pd.Series(rows).median(), clamp[0]), clamp[1]))
+
+
+def claim_plan(season: int, week: int, yahoo_rosters: pd.DataFrame | None = None,
+               max_claims: int = 3, aggression: float = 1.0) -> pd.DataFrame:
+    """§5.5 — a running order, not a wish list.
+
+    Take the best claim, apply its add and its drop to a copy of the roster, spend its
+    bid, then re-price everything against the roster you would then have. Two targets that
+    both want the same player cut get resolved this way, and Yahoo processes claims by bid
+    within a drop, so the order matters.
+    """
+    from . import faab as fb
+
+    st = build(season, yahoo_rosters)
+    if not st.get("ok"):
+        return pd.DataFrame()
+    ctx, my = st["ctx"], st["my_id"]
+    roster = list(ctx.teams[my]["roster"])
+    bud = fb.cached_budgets()
+    mine_b = bud[bud["team"] == ctx.teams[my]["name"]]["faab_left"]
+    budget = float(mine_b.iloc[0]) if not mine_b.empty else float(fb.BUDGET)
+
+    pool = [p for p in st["league"]["freeAgents"] if ctx.players[p]["pos"] in ctx.valued_pos]
+    out = []
+    for _ in range(max(1, int(max_claims))):
+        ctx.teams[my]["roster"] = roster
+        base = te.team_value(roster, ctx)
+        best, best_av = None, None
+        for pid in pool:
+            av = add_value(ctx, my, pid, base)
+            if best_av is None or av["gain"] > best_av["gain"]:
+                best, best_av = pid, av
+        if best is None or best_av["gain"] < DEPTH:
+            break
+        bid = fb.suggest(best_av["gain"], budget, week, aggression)["bid"]
+        out.append({"order": len(out) + 1, "player": ctx.players[best]["name"],
+                    "pos": ctx.players[best]["pos"], "gain": round(best_av["gain"], 3),
+                    "drop": best_av["drop"], "bid": bid, "budget_after": int(budget - bid)})
+        roster = [i for i in roster if i != best_av.get("drop_id", best_av["drop"])] + [best]
+        pool = [p for p in pool if p != best]
+        budget = max(0.0, budget - bid)
+    return pd.DataFrame(out)

@@ -31,6 +31,8 @@ DATA = ROOT / "data"
 # Written by the scrape, and restored together — a half-updated set is worse than a stale one.
 FILES = ("yahoo_rosters.csv", "yahoo_free_agents.csv", "yahoo_standings.csv",
          "yahoo_transactions.csv", "yahoo_faab.csv", "yahoo_faab_bids.csv", "yahoo_scores.csv")
+# Projections are rebuilt, not restored: a failed R scrape leaves the previous build in
+# place on its own, and rolling it back would throw away a good file to fix a bad one.
 
 OK, AUTH, INVALID, ERROR = 0, 2, 3, 4
 
@@ -167,6 +169,8 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--season", type=int, default=2026)
     ap.add_argument("--no-scores", action="store_true", help="skip the weekly score fetch")
+    ap.add_argument("--no-projections", action="store_true",
+                    help="skip the ffanalytics (R) projection scrape")
     args = ap.parse_args(argv)
 
     from mega.yahoo import STATE
@@ -228,6 +232,24 @@ def main(argv=None) -> int:
                     print(f"[scores] {n} rows on file through week {wk}")
             except Exception as e:
                 print(f"[scores] skipped: {e}")
+
+        # ffanalytics projections + ROS ECR (HANDOFF §3.1 / §6.2). R only runs here, not
+        # on Streamlit Cloud, so this build is what the hosted app reads until the next one.
+        if not args.no_projections:
+            try:
+                import nflreadpy as nflp
+
+                from mega import ffa
+
+                if not ffa.available():
+                    print("[proj] R/ffanalytics not installed — keeping the FantasyPros path")
+                else:
+                    wk = int(nflp.get_current_week())
+                    res = ffa.run(args.season, wk)
+                    print(f"[proj] {'ok' if res['ok'] else 'FAILED'} — {res.get('why','')}")
+                    print("[proj] " + ffa.line(args.season, wk))
+            except Exception as e:
+                print(f"[proj] skipped: {e}")
 
         print("\nCHANGES")
         ch = changes(saved)
