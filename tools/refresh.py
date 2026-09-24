@@ -20,6 +20,7 @@ Exit codes
 from __future__ import annotations
 
 import argparse
+import re
 import shutil
 import sys
 import tempfile
@@ -112,6 +113,24 @@ def warnings_() -> list[str]:
     return out
 
 
+_TX_TEAM = re.compile(r"\b([A-Za-z]{2,3}) - (QB|RB|WR|TE|K|DEF)\b")
+_TX_MONEY = re.compile(r"\$\d+")
+_TX_WHEN = re.compile(r"\b[A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} ?[ap]m\b", re.I)
+
+
+def _tx_key(row) -> tuple:
+    """A transaction's identity, ignoring how Yahoo spelled the teams that day.
+
+    The row is one blob of free text and Yahoo rewrites defense names between scrapes
+    ("Green Bay" one run, "Packers" the next), so comparing the whole string reports the
+    same three transactions as new every time the spelling flips. What is stable is the
+    abbreviation+position pairs, the money, and the timestamp — so the key is those.
+    """
+    text = " ".join(str(x) for x in row if x)
+    return (tuple(_TX_TEAM.findall(text)), tuple(_TX_MONEY.findall(text)),
+            tuple(m.lower() for m in _TX_WHEN.findall(text)))
+
+
 def changes(saved: dict[str, Path]) -> list[str]:
     """What moved since the last run, in the order Chris cares about."""
     import pandas as pd
@@ -130,8 +149,8 @@ def changes(saved: dict[str, Path]) -> list[str]:
         if old is None:
             out.append(f"transactions: {len(new)} rows (no previous file to compare)")
         else:
-            seen = set(map(tuple, old.astype(str).values.tolist()))
-            fresh = [r for r in new.astype(str).values.tolist() if tuple(r) not in seen]
+            seen = {_tx_key(r) for r in old.astype(str).values.tolist()}
+            fresh = [r for r in new.astype(str).values.tolist() if _tx_key(r) not in seen]
             out.append(f"transactions: {len(fresh)} new since the last run")
             for row in fresh[:12]:
                 out.append("   · " + " | ".join(x for x in row if x)[:160])

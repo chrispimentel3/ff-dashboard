@@ -90,3 +90,39 @@ def test_validation_catches_the_failures_that_have_actually_happened(tmp_path):
     (tmp_path / "yahoo_rosters.csv").write_text("player,team,slot,seat\n")
     bad = refresh.validate()
     assert any("rosters" in b for b in bad)
+
+
+# ---------------------------------------------------------------- transactions
+def _tx(tmp_path, rows, name="a"):
+    d = tmp_path / name
+    d.mkdir(parents=True, exist_ok=True)
+    p = d / "yahoo_transactions.csv"
+    pd.DataFrame({"text": rows}).to_csv(p, index=False)
+    return p
+
+
+def test_a_reworded_transaction_is_not_a_new_one(tmp_path):
+    """Yahoo rewrites defense names between scrapes, so the same three transactions came
+    back as "3 new" every time the spelling flipped."""
+    old = _tx(tmp_path, [" Carolina Car - DEF $1 Waiver Tampa Bay TB - DEF To Waivers TaylorMade Sep 23, 5:24 am"], "a")
+    _tx(tmp_path, [" Panthers Car - DEF $1 Waiver Buccaneers TB - DEF To Waivers TaylorMade Sep 23, 5:24 am"], "b")
+    refresh.DATA = tmp_path / "b"
+    out = refresh.changes({"yahoo_transactions.csv": old})
+    assert any("transactions: 0 new" in c for c in out), out
+
+
+def test_a_genuinely_new_transaction_still_reports(tmp_path):
+    old = _tx(tmp_path, [" Panthers Car - DEF $1 Waiver TaylorMade Sep 23, 5:24 am"], "a")
+    _tx(tmp_path, [" Panthers Car - DEF $1 Waiver TaylorMade Sep 23, 5:24 am",
+                   " Bijan Robinson Atl - RB $14 Waiver deez nuts Sep 24, 4:01 am"], "b")
+    refresh.DATA = tmp_path / "b"
+    out = refresh.changes({"yahoo_transactions.csv": old})
+    assert any("transactions: 1 new" in c for c in out), out
+    assert any("Bijan" in c for c in out), out
+
+
+def test_two_different_bids_on_the_same_player_are_different_transactions(tmp_path):
+    """The key must not collapse genuinely distinct rows."""
+    a = " Panthers Car - DEF $1 Waiver TaylorMade Sep 23, 5:24 am"
+    b = " Panthers Car - DEF $9 Waiver L'Omar Sep 23, 5:24 am"
+    assert refresh._tx_key([a]) != refresh._tx_key([b])
