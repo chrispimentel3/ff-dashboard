@@ -35,6 +35,14 @@ REPLACEMENT_RANK = 3      # see module docstring
 UPGRADE = 0.25            # pts/wk at which a pickup is a real lineup improvement
 DEPTH = 0.02              # ...and at which it is worth anything at all
 
+# HANDOFF §12.5: a role flag is worth more than a raw-talent score among the many players
+# whose lineup gain is zero, because it says the offence has started treating him
+# differently. ROLE+ is the strongest of them — he is producing like the rung above him.
+ROLE_BONUS = {"ROLE+": 1.50, "TGT": 0.60, "AIR": 0.40, "SNAP": 0.40, "LEAD": 0.80, "GL": 0.60}
+SUSTAINED = 1.0           # a flag that held across the window counts fully...
+SPIKE = 0.35              # ...one big afternoon counts for much less (§4.2)
+ROLE_MINUS = -1.00        # share at risk: a sell / do-not-add signal
+
 
 def build(season: int, yahoo_rosters: pd.DataFrame | None = None) -> dict:
     """League, engine context and my team id, ready for the functions below."""
@@ -128,6 +136,15 @@ def board(season: int, week: int, yahoo_rosters: pd.DataFrame | None = None,
         return pd.DataFrame()
     ctx, my, base = st["ctx"], st["my_id"], st["base"]
 
+    # §12.5 role context. The league player id IS the gsis id wherever one resolved, so
+    # this joins directly. A player who never resolved simply has no role — he is still
+    # addable, he just gets no role bonus.
+    try:
+        from .season import role_lookup
+        rl = role_lookup(season)
+    except Exception:
+        rl = {}
+
     bud = fb.cached_budgets()
     mine = bud[bud["team"] == ctx.teams[my]["name"]]["faab_left"]
     budget_left = int(mine.iloc[0]) if not mine.empty else fb.BUDGET
@@ -140,12 +157,15 @@ def board(season: int, week: int, yahoo_rosters: pd.DataFrame | None = None,
         av = add_value(ctx, my, pid, base)
         g = av["gain"]
         bid = fb.suggest(g, budget_left, week, aggression)
+        rc = rl.get(pid) or {}
         rows.append(dict(
             # nfl_team, not nfl: ui.COLS maps it to TM, which ui.table turns into the logo.
             player=p["name"], pos=p["pos"], nfl_team=p["nfl"], ppg=p["ppg"],
             gain=g, fit=label(g), starts=av.get("starts", False),
             drop=av["drop"], bid=bid["bid"], max_bid=bid["max_worth"],
             season_pts=bid["season_pts"],
+            role=rc.get("role") or "", role_flags=_flag_text(rc),
+            role_score=role_score(rc),
             why=why_zero(ctx, my, pid) if g < DEPTH else
                 ("steps straight into your lineup" if av.get("starts") else "real bench value"),
             norm=p["name"],
@@ -170,5 +190,37 @@ def board(season: int, week: int, yahoo_rosters: pd.DataFrame | None = None,
     if "upside" not in df.columns:
         df["upside"] = ""
     df["upside"] = df["upside"].fillna("no snaps in the form window")
+    # Role signal rides on top of the talent score for the speculative tail. It never
+    # reorders the players who actually improve the lineup — `gain` is a measurement and a
+    # flag is an opinion, so the measurement sorts first.
+    df["add_score"] = df["add_score"] + df["role_score"].fillna(0.0)
     return (df.sort_values(["gain", "add_score"], ascending=[False, False])
               .head(top).reset_index(drop=True))
+
+
+def role_score(rc: dict) -> float:
+    """§12.5 flags as a single number, discounted when a flag is only a spike."""
+    if not rc:
+        return 0.0
+    tags = rc.get("tags") or {}
+    total = 0.0
+    for f in rc.get("flags") or []:
+        if f == "ROLE-":
+            total += ROLE_MINUS
+            continue
+        w = ROLE_BONUS.get(f)
+        if w is None:
+            continue
+        total += w * (SPIKE if tags.get(f) == "spike" else SUSTAINED)
+    return round(total, 3)
+
+
+def _flag_text(rc: dict) -> str:
+    """"TGT+, GL" — a plus marks a flag that held across the window rather than once."""
+    if not rc:
+        return ""
+    tags = rc.get("tags") or {}
+    out = []
+    for f in rc.get("flags") or []:
+        out.append(f + ("+" if tags.get(f) == "sustained" else ""))
+    return ", ".join(out)
