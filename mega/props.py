@@ -72,9 +72,18 @@ CV = {
 TD_MULT = ((0.0752, 1.0375), (0.1376, 1.1018), (0.2207, 1.1289),
            (0.2983, 1.1531), (0.3875, 1.2065), (0.5574, 1.3056))
 
-# A book that posts only the "Yes" side is still holding vig. Typical two-way hold on NFL
-# props is 4-6%; half of it sits on the side we can see. (J) until §19.4 has prop history.
-ONE_SIDED_HOLD = 0.025
+# Every book posts anytime-TD as "Yes" only — all six of them, on all 16 games of the first
+# real sweep — so there is no other side to de-vig against and this haircut is doing the
+# whole job on the single biggest component. It is therefore calibrated, not guessed, by
+# the one constraint that can check it: a team's players' expected touchdowns have to add
+# up to the touchdowns its Vegas total implies (0.1085 offensive TD per implied point,
+# fitted over 2,689 team-games). At 0.025 the sum ran 3.4% hot; 0.0306 centres it, which
+# implies a ~6.1% two-way hold — high, and normal for this market.
+#
+# Calibrated on one week (16 games, 32 teams), so it is rounded to 0.030 rather than
+# carrying a precision that week cannot support. `python -m tools.fit_props --hold` re-runs
+# the check against whatever props are on file; re-run it monthly.
+ONE_SIDED_HOLD = 0.030
 
 MARKETS = {
     "player_pass_yds": "pass_yds", "player_pass_tds": "pass_tds",
@@ -91,6 +100,25 @@ WEIGHTS = {
 }
 COUNT = ("pass_tds", "pass_int", "rec")
 YARDS = ("pass_yds", "rush_yds", "rec_yds")
+
+# Which markets a book could plausibly post for each position. This decides two things and
+# neither is about scoring: what to fill when the book stayed silent, and what "complete"
+# means. A quarterback has no receptions market and never will, so counting its absence as
+# a gap marked every quarterback in the league incomplete — which made the flag useless on
+# the first real sweep, where 332 of 420 players read as patched when almost none were.
+# Anything actually priced is still scored, whatever the position: receivers do carry
+# rushing lines on jet sweeps.
+RELEVANT = {
+    "QB": ("pass_yds", "pass_tds", "pass_int", "rush_yds", "anytime_td"),
+    "RB": ("rush_yds", "rec_yds", "rec", "anytime_td"),
+    "WR": ("rec_yds", "rec", "anytime_td"),
+    "TE": ("rec_yds", "rec", "anytime_td"),
+}
+
+
+def relevant_for(pos: object) -> tuple:
+    """The markets that position can have. An unknown position asks for everything."""
+    return RELEVANT.get(str(pos).upper().strip(), tuple(WEIGHTS))
 
 
 def _interp(x: float, anchors) -> float:
@@ -293,13 +321,19 @@ def project(means: pd.DataFrame, fill: pd.DataFrame | None = None) -> pd.DataFra
     filled is counted in `vegas_parts` so the caller can say how much of the number is
     really the market's.
     """
-    out_cols = ["gsis_id", "player", "team", "vegas", "vegas_parts", "vegas_filled",
+    out_cols = ["gsis_id", "player", "team", "pos", "vegas", "vegas_parts", "vegas_filled",
                 "vegas_complete"]
     if means is None or means.empty:
         return pd.DataFrame(columns=out_cols)
     wide = means.pivot_table(index="gsis_id", columns="component", values="mean",
-                             aggfunc="first")
-    who = means.groupby("gsis_id").agg(player=("player", "first"), team=("team", "first"))
+                            aggfunc="first")
+    agg = {"player": ("player", "first"), "team": ("team", "first")}
+    if "pos" in means.columns:
+        agg["pos"] = ("pos", "first")
+    who = means.groupby("gsis_id").agg(**agg)
+    if "pos" not in who.columns:
+        who["pos"] = ""
+    want = who["pos"].reindex(wide.index).map(relevant_for)
 
     fills = pd.DataFrame(index=wide.index)
     if fill is not None and not fill.empty and "gsis_id" in fill.columns:
@@ -311,17 +345,22 @@ def project(means: pd.DataFrame, fill: pd.DataFrame | None = None) -> pd.DataFra
     total = pd.Series(0.0, index=wide.index)
     parts = pd.Series(0, index=wide.index, dtype=int)
     filled = pd.Series(0, index=wide.index, dtype=int)
+    missing = pd.Series(0, index=wide.index, dtype=int)
     for comp, w in WEIGHTS.items():
-        have = pd.to_numeric(wide[comp], errors="coerce") if comp in wide.columns else pd.Series(np.nan, index=wide.index)
-        parts += have.notna().astype(int)
+        have = (pd.to_numeric(wide[comp], errors="coerce") if comp in wide.columns
+                else pd.Series(np.nan, index=wide.index))
+        applies = want.map(lambda r, c=comp: c in r)
+        parts += have.notna().astype(int)          # anything priced counts, and is scored
+        gap = have.isna() & applies
+        missing += gap.astype(int)
         if comp in fills.columns:
-            use = have.fillna(fills[comp])
-            filled += (have.isna() & fills[comp].notna()).astype(int)
+            use = have.where(~gap, fills[comp])
+            filled += (gap & fills[comp].notna()).astype(int)
         else:
             use = have
         total += w * use.fillna(0.0)
 
     out = pd.DataFrame({"vegas": total.round(2), "vegas_parts": parts,
                         "vegas_filled": filled}).join(who)
-    out["vegas_complete"] = out["vegas_filled"] == 0
+    out["vegas_complete"] = missing == 0
     return out.reset_index()[out_cols]

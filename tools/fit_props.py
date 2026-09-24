@@ -118,10 +118,74 @@ def count_check(d: pd.DataFrame) -> None:
               f"{(gg.rec > 3.5).mean():12.3f} {poi_sf(3, m):9.3f}")
 
 
+TD_PER_POINT = 0.1085          # offensive (rush+rec) TDs per point, 2,689 team-games
+
+
+def hold_check(season: int, week: int) -> None:
+    """Calibrate ONE_SIDED_HOLD against the one constraint that can test it.
+
+    Every book posts anytime touchdown as "Yes" only, so there is no other side to de-vig
+    against and the haircut is pure assumption — on the biggest single component of the
+    projection. But it is not unfalsifiable: a team's players' expected touchdowns have to
+    add up to the touchdowns its own Vegas total implies. If the haircut is too small every
+    team runs hot, and by a measurable amount.
+    """
+    import numpy as np
+    import pandas as pd
+
+    from mega import forward as fw
+    from mega import odds as O
+    from mega import props as P
+    from mega import season as S
+
+    df = O.cached(season, week)
+    if df is None or df.empty:
+        print(f"no props on file for {season} week {week} — sweep one first")
+        return
+    df = df[df["gsis_id"].notna()]
+    tmap = S.player_week(season).sort_values("week").groupby("gsis_id")["team"].last().to_dict()
+    td = df[df["market"] == "player_anytime_td"].copy()
+    td["t"] = td["gsis_id"].map(tmap)
+    td = td[td["t"].notna()]
+    imp = fw.implied(S.schedules(season))
+    imp = imp[imp["week"] == int(week)].set_index("team")["implied"]
+
+    def ratio(hold: float) -> float:
+        old = P.ONE_SIDED_HOLD
+        P.ONE_SIDED_HOLD = hold
+        try:
+            m = P.to_means(td)
+        finally:
+            P.ONE_SIDED_HOLD = old
+        m["t"] = m["gsis_id"].map(tmap)
+        c = pd.DataFrame({"s": m.groupby("t")["mean"].sum()}).join(
+            imp.rename("i"), how="inner").dropna()
+        return float((c.s / (c.i * TD_PER_POINT)).median())
+
+    print()
+    print(f"--- one-sided hold, {season} week {week} ({td['t'].nunique()} teams) ---")
+    print(f"{'hold':>8} {'median sum/implied':>20}")
+    for h in (0.020, 0.025, 0.030, 0.035, 0.040):
+        print(f"{h:8.3f} {ratio(h):20.3f}")
+    lo, hi = 0.005, 0.12
+    for _ in range(40):
+        mid = (lo + hi) / 2
+        lo, hi = (mid, hi) if ratio(mid) > 1.0 else (lo, mid)
+    fit = (lo + hi) / 2
+    print()
+    print(f"centres at {fit:.4f} (two-way hold ~{2 * fit:.1%}); "
+          f"module carries {P.ONE_SIDED_HOLD:.3f}")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--seasons", type=int, nargs="+", default=DEFAULT_SEASONS)
+    ap.add_argument("--hold", nargs=2, type=int, metavar=("SEASON", "WEEK"),
+                    help="calibrate ONE_SIDED_HOLD against swept props instead of fitting")
     a = ap.parse_args()
+    if a.hold:
+        hold_check(a.hold[0], a.hold[1])
+        return
     d = load(a.seasons)
     print(f"{len(d):,} player-weeks, seasons {min(a.seasons)}-{max(a.seasons)}")
     skew_table(d, "receiving_yards", ["WR", "TE"], [(20, 40), (40, 55), (55, 70), (70, 200)])

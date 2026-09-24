@@ -140,16 +140,16 @@ def test_expected_td_is_monotone_and_bounded():
 
 
 # ---------------------------------------------------------------- assembly
-def _lines(**kw) -> pd.DataFrame:
+def _lines(pos: str = "WR", **kw) -> pd.DataFrame:
     rows = []
     for market, (line, po, pu) in kw.items():
-        rows.append({"gsis_id": "00-X", "player": "Test Guy", "team": "MIN",
+        rows.append({"gsis_id": "00-X", "player": "Test Guy", "team": "MIN", "pos": pos,
                      "market": market, "line": line, "price_over": po, "price_under": pu})
     return pd.DataFrame(rows)
 
 
 def test_a_full_receiver_line_scores_end_to_end():
-    lines = _lines(player_reception_yds=(68.5, -115, -105),
+    lines = _lines("WR", player_reception_yds=(68.5, -115, -105),
                    player_receptions=(4.5, -120, 100),
                    player_anytime_td=(None, 150, -190))
     means = P.to_means(lines)
@@ -193,7 +193,7 @@ def test_fill_never_overrides_a_real_posted_line():
 
 
 def test_a_quarterback_scores_on_the_passing_weights():
-    lines = _lines(player_pass_yds=(245.5, -110, -110),
+    lines = _lines("QB", player_pass_yds=(245.5, -110, -110),
                    player_pass_tds=(1.5, -115, -105),
                    player_pass_interceptions=(0.5, 105, -130),
                    player_rush_yds=(22.5, -110, -110))
@@ -250,3 +250,53 @@ def test_position_reaches_the_maths_through_to_means():
              "price_under": -110}]
     m = P.to_means(pd.DataFrame(rows)).set_index("gsis_id")["mean"]
     assert m["00-Q"] < m["00-R"]
+
+
+# ---------------------------------------------------------------- completeness
+def test_a_quarterback_is_complete_without_a_receptions_market():
+    """Books never post receptions for a QB. Counting that absence as a gap marked every
+    quarterback patched — on the first real sweep it flagged 332 of 420 players as filled
+    in when almost none were, which made the flag worth nothing."""
+    lines = _lines("QB", player_pass_yds=(245.5, -110, -110),
+                   player_pass_tds=(1.5, -115, -105),
+                   player_pass_interceptions=(0.5, 105, -130),
+                   player_rush_yds=(33.5, -110, -110),
+                   player_anytime_td=(None, 260, -340))
+    out = P.project(P.to_means(lines)).iloc[0]
+    assert bool(out["vegas_complete"]) and out["vegas_filled"] == 0
+
+
+def test_a_back_missing_his_receiving_markets_is_not_complete():
+    """The real case that must still be caught: a receiving back priced on carries alone."""
+    lines = _lines("RB", player_rush_yds=(55.5, -110, -110),
+                   player_anytime_td=(None, -155, 130))
+    out = P.project(P.to_means(lines)).iloc[0]
+    assert not bool(out["vegas_complete"])
+
+
+def test_an_unknown_position_expects_everything():
+    """Conservative on purpose: if we cannot say what he plays, we cannot say his card
+    is full."""
+    lines = _lines("", player_reception_yds=(68.5, -115, -105))
+    assert not bool(P.project(P.to_means(lines)).iloc[0]["vegas_complete"])
+
+
+def test_a_market_outside_his_position_is_still_scored():
+    """Receivers carry rushing lines on jet sweeps. Relevance decides what gets filled and
+    what counts as complete — never what counts."""
+    lines = _lines("WR", player_reception_yds=(68.5, -115, -105),
+                   player_receptions=(4.5, -120, 100),
+                   player_anytime_td=(None, 150, -190),
+                   player_rush_yds=(12.5, -110, -110))
+    m = P.to_means(lines)
+    out = P.project(m).iloc[0]
+    rush = m.set_index("component")["mean"]["rush_yds"]
+    bare = P.project(m[m["component"] != "rush_yds"]).iloc[0]
+    assert out["vegas"] - bare["vegas"] == pytest.approx(0.10 * rush, abs=0.01)
+    assert bool(out["vegas_complete"])
+
+
+def test_relevant_markets_are_defined_for_every_scoring_position():
+    for pos in ("QB", "RB", "WR", "TE"):
+        assert P.relevant_for(pos)
+        assert set(P.relevant_for(pos)) <= set(P.WEIGHTS)

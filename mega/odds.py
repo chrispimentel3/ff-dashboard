@@ -25,8 +25,17 @@ import os
 import httpx
 import pandas as pd
 
-from .config import DATA
+from .config import DATA, ROOT
 from .ids import canon_team
+
+# Read at call time, not import time, so the key can be added without a restart — and
+# loaded here rather than relying on whichever module happened to be imported first.
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(ROOT / ".env")
+except Exception:
+    pass
 
 BASE = "https://api.the-odds-api.com/v4"
 SPORT = "americanfootball_nfl"

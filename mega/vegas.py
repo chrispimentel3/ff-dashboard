@@ -58,7 +58,7 @@ def fill_frame(season: int) -> pd.DataFrame:
     return out.reset_index().rename(columns={"player_id": "gsis_id"})
 
 
-COLS = ["gsis_id", "player", "team", "vegas", "vegas_parts", "vegas_filled",
+COLS = ["gsis_id", "player", "team", "pos", "vegas", "vegas_parts", "vegas_filled",
         "vegas_complete"]
 
 
