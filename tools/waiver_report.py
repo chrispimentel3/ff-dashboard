@@ -9,12 +9,18 @@ failure mode is a weekly job that silently skips the one section with a deadline
 `gain` is points per week added to the *optimal lineup*, after accounting for who the player
 displaces and who gets cut to fit him. A player who cannot crack the lineup is worth 0 no
 matter how well he has been scoring, which is why a third tight end never appears.
+
+`role` and `role_flags` come from the role-context layer (HANDOFF §12). They are printed
+because the scheduled task is told to report them: a column the task is asked to read and
+the tool does not print produces a confident "no flags this week" over a board that had
+them, which is exactly what happened on 2026-09-23.
 """
 from __future__ import annotations
 
 import sys
 
-COLS = ["player", "pos", "gain", "bid", "max_bid", "drop"]
+COLS = ["player", "pos", "role", "role_flags", "gain", "bid", "max_bid", "drop"]
+SPEC_COLS = ["player", "pos", "role", "role_flags", "ppg", "upside"]
 
 
 def main(season: int = 2026) -> int:
@@ -48,8 +54,11 @@ def main(season: int = 2026) -> int:
     print()
     print("SPECULATIVE (a dollar at most)")
     spec = board[board["bid"] < 1]
-    print(spec[["player", "pos", "ppg", "upside"]].head(6).to_string(index=False)
+    print(spec[[c for c in SPEC_COLS if c in spec.columns]].head(6).to_string(index=False)
           if not spec.empty else "  none")
+    print()
+    print("role: his job on his own offence (HANDOFF §12). A flag with a + held across the")
+    print("window; one without it happened once. ROLE+ = producing like the rung above him.")
     return 0
 
 

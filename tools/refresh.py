@@ -149,9 +149,20 @@ def changes(saved: dict[str, Path]) -> list[str]:
         def _real(df):
             return df[~df["player"].str.strip().str.fullmatch(r"\(Empty\)", case=False, na=False)]
 
+        def _key(df):
+            """Identity for the diff. Defenses key on their NFL team, not their name:
+            Yahoo writes some as a city ("Green Bay") and some as a nickname ("Packers"),
+            and when that flips between scrapes the same defense reads as one player added
+            and another dropped. Reported as a roster move on 2026-09-23; it never was."""
+            name = df["player"].astype(str).str.strip()
+            if "pos" in df.columns and "nfl_team" in df.columns:
+                is_def = df["pos"].astype(str).str.upper().isin(("DEF", "DST", "D/ST"))
+                return name.mask(is_def, df["nfl_team"].astype(str).str.upper() + " DEF")
+            return name
+
         nr, orr = _real(nr), _real(orr)
-        now = dict(zip(nr["player"], nr["team"]))
-        was = dict(zip(orr["player"], orr["team"]))
+        now = dict(zip(_key(nr), nr["team"]))
+        was = dict(zip(_key(orr), orr["team"]))
         added = [p for p in now if p not in was]
         dropped = [p for p in was if p not in now]
         moved = [(p, was[p], now[p]) for p in now if p in was and was[p] != now[p]]
