@@ -2515,10 +2515,17 @@ def _tab_ask():
 #     prefix or a page name, so it tries the longest candidate first and falls back. It is
 #     bounded to two attempts and resolves correctly at any prefix depth. There is no
 #     supported way to switch it off short of giving up the URLs.
-#   * the two groups below are the league seam. Everything under Mega Bowl reads this
-#     league; everything under Any NFL player runs on modules that have never heard of it
-#     (ask, catalog, lookup, roles, glossary). Pointing this at a second league later
-#     means touching the first group only.
+#   * the order below is the league seam. The first four pages read this league; the last
+#     two run on modules that have never heard of it (ask, catalog, lookup, roles,
+#     glossary), so pointing this at a second league later means touching the first four
+#     only. That used to be two named nav groups, which said it on screen; the bar says it
+#     by order now, and test_nav.py is what actually holds it.
+#
+# position="top" puts the six across the top rather than down the sidebar, which leaves the
+# sidebar to the four settings that rewrite every screen. Below roughly 700px Streamlit
+# folds the bar back into the sidebar drawer on its own — that is the right answer on a
+# phone, not a regression. Titles are on a width budget now: six links have to sit in one
+# row, which is why the landing page is "This week" and not the question it used to ask.
 
 def _tabs(*pairs) -> None:
     """Sub-tabs for a page: (label, function) in the order they should read."""
@@ -2555,15 +2562,11 @@ def _page_ask() -> None:
     _tabs(("Ask anything", _tab_ask), ("Downloads", _tab_raw))
 
 
-st.navigation({
-    "Mega Bowl": [
-        st.Page(_page_week, title="What do I do this week?", url_path="week", default=True),
-        st.Page(_page_start, title="Who do I start?", url_path="start"),
-        st.Page(_page_upgrade, title="Who should I get?", url_path="upgrade"),
-        st.Page(_page_review, title="How am I doing?", url_path="review"),
-    ],
-    "Any NFL player": [
-        st.Page(_page_player, title="Look up a player", url_path="player"),
-        st.Page(_page_ask, title="Ask the data", url_path="ask"),
-    ],
-}).run()
+st.navigation([
+    st.Page(_page_week, title="This week", url_path="week", default=True),
+    st.Page(_page_start, title="Who do I start?", url_path="start"),
+    st.Page(_page_upgrade, title="Who should I get?", url_path="upgrade"),
+    st.Page(_page_review, title="How am I doing?", url_path="review"),
+    st.Page(_page_player, title="Look up a player", url_path="player"),
+    st.Page(_page_ask, title="Ask the data", url_path="ask"),
+], position="top").run()

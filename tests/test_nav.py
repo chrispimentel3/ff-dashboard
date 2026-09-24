@@ -42,14 +42,49 @@ def test_there_are_six_pages_and_exactly_one_opens_first():
     assert len(defaults) == 1, "exactly one page may be the landing page"
 
 
+# Names that describe where the data came from or what the code is called, rather than what
+# the reader wants. Every one of these was a tab label before the rebuild.
+FEATURE_NAMES = ("wopr", "archetype", "raw data", "waiver", "standings", "draft value",
+                 "glossary", "news", "trade finder", "start/sit", "matchups", "digest")
+
+# Six links have to sit in one row of the top bar. Nothing else stops a title growing until
+# the bar wraps, and a wrapped bar is the thing this whole rebuild was about.
+TITLE_CAP = 20
+
+
 def test_every_page_is_a_question_or_an_instruction_not_a_feature_name():
     """The old tabs were named after features and data sources — WOPR, Archetypes, Raw
     Data — which only works if you already know what is in them."""
     titles = [k.value.value for p in _pages() for k in p.keywords if k.arg == "title"]
     assert len(titles) == 6
     for t in titles:
-        assert t[0].isupper() and len(t.split()) >= 3, f"{t!r} reads like a feature name"
-    assert sum(t.endswith("?") for t in titles) >= 4
+        assert t[0].isupper(), f"{t!r} should read as a sentence"
+        bad = [f for f in FEATURE_NAMES if f in t.lower()]
+        assert not bad, f"{t!r} is named after the feature inside it, not the question"
+    assert sum(t.endswith("?") for t in titles) >= 3
+
+
+def test_no_title_is_wide_enough_to_wrap_the_top_bar():
+    """The nav moved from the sidebar, where a title could be any length, to a single row."""
+    titles = [k.value.value for p in _pages() for k in p.keywords if k.arg == "title"]
+    long = [t for t in titles if len(t) > TITLE_CAP]
+    assert not long, f"too wide for one row of the top bar (cap {TITLE_CAP}): {long}"
+
+
+def test_the_navigation_sits_at_the_top():
+    """Not decoration: the sidebar is left to the four settings that rewrite every screen."""
+    nav = [n for n in ast.walk(_tree())
+           if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+           and n.func.attr == "navigation"]
+    assert len(nav) == 1
+    pos = [k.value.value for k in nav[0].keywords if k.arg == "position"]
+    assert pos == ["top"], "st.navigation must be given position='top'"
+
+
+def test_the_league_free_pages_come_last():
+    """With the nav groups gone, order is the only thing on screen that shows the seam."""
+    paths = [k.value.value for p in _pages() for k in p.keywords if k.arg == "url_path"]
+    assert paths[-2:] == ["player", "ask"], f"league-free pages are no longer last: {paths}"
 
 
 def test_every_page_has_a_url_of_its_own():
