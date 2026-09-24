@@ -653,39 +653,157 @@ def lede(text: str) -> None:
     st.markdown(f'<div class="mb-lede">{text}</div>', unsafe_allow_html=True)
 
 
-def line_chart(df: pd.DataFrame, x: str, y: str, color: str, y_title: str = "") -> None:
-    """Long-form line chart with the dashboard's type and grid, not Streamlit's default."""
+# One grid colour. The two chart helpers had drifted to a warm #F0EEE9 and a cool #F0F3F8,
+# which reads as two different page backgrounds when the charts sit on the same tab.
+GRID = "#EEF1F5"
+
+# One ordered series ramp, drawn from the shield palette and POS_COLORS, so a line, a table
+# cell and a position chip are never three different blues. Twelve entries — one per team in
+# this league — ordered so neighbours differ in hue AND lightness, which keeps them apart in
+# greyscale and under the common colour deficiencies. Before this every multi-series chart
+# fell through to Altair's defaults while the app had a palette it never used.
+SERIES = [NAVY, RED, "#B8860B", "#4B2E83", "#1F5C34", "#1D5FA8",
+          "#A85B00", "#6B3FA0", "#0F766E", "#8C1C13", "#5A7080", "#8A93A0"]
+
+# Above this many lines, a legend stops being a key and becomes a puzzle: twelve entries at
+# labelLimit=140 truncates half the team names, and no reader matches twelve hues to twelve
+# labels anyway. Past it, charts switch to the grey-backdrop mode route_plot already uses.
+CROWDED = 6
+# How many lines can be named at their endpoint before the labels start colliding.
+LABELLED = 4
+
+
+def _theme(ch, *, title: str | None = None, height: int = 290):
+    """The one place a chart's type, grid and legend are set."""
     import altair as alt
 
-    ch = (
-        alt.Chart(df)
-        .mark_line(strokeWidth=2, point=alt.OverlayMarkDef(size=34, filled=True))
-        .encode(
-            x=alt.X(f"{x}:O", axis=alt.Axis(title=None, labelAngle=0, grid=False)),
-            y=alt.Y(f"{y}:Q", axis=alt.Axis(title=y_title or None, grid=True)),
-            color=alt.Color(f"{color}:N", legend=alt.Legend(title=None, orient="bottom",
-                                                            columns=4, labelLimit=140)),
-            tooltip=[color, x, alt.Tooltip(f"{y}:Q", format=".1f")],
-        )
-        .properties(height=290)
-        .configure_view(strokeWidth=0)
-        .configure_axis(labelFont=FONT_BODY, titleFont=FONT_BODY,
-                        labelColor=INK2, titleColor=INK3, domainColor=BORDER,
-                        tickColor=BORDER, gridColor="#F0EEE9", labelFontSize=11)
-        .configure_legend(labelFont=FONT_BODY, labelColor=INK2, labelFontSize=11,
-                          symbolStrokeWidth=2.5)
-    )
+    # A layered spec does not inherit the container's width the way a single view does —
+    # Vega-Lite falls back to its own 200px default, which is why the route scatter has
+    # always rendered at about a fifth of the page. "container" makes both cases stretch.
+    props: dict = {"height": height, "width": "container"}
+    if title:
+        props["title"] = alt.TitleParams(text=title, font=FONT_HEAD, fontSize=15,
+                                         fontWeight=700, color=INK, anchor="start", offset=8)
+    return (ch.properties(**props)
+            .configure_view(strokeWidth=0)
+            .configure_axis(labelFont=FONT_BODY, titleFont=FONT_BODY, labelColor=INK2,
+                            titleColor=INK3, domainColor=BORDER, tickColor=BORDER,
+                            gridColor=GRID, labelFontSize=11, titleFontSize=11,
+                            titleFontWeight=700, titlePadding=8)
+            .configure_legend(labelFont=FONT_BODY, labelColor=INK2, labelFontSize=11,
+                              titleFont=FONT_BODY, titleColor=INK3, symbolStrokeWidth=2.5))
+
+
+def _render(ch, caption: str | None) -> None:
     st.altair_chart(ch, width="stretch")
+    if caption:
+        st.caption(caption)
+
+
+def line_chart(df: pd.DataFrame, x: str, y: str, color: str, y_title: str = "", *,
+               percent: bool = False, height: int = 290, x_title: str | None = None,
+               palette=None, highlight=(), title: str | None = None,
+               caption: str | None = None) -> None:
+    """Long-form line chart with the dashboard's type and grid, not Streamlit's default.
+
+    `percent` matters more than it sounds: snap share and target share are 0-1 fractions,
+    and without it they render and tooltip as "0.8" where every other surface in the app
+    says 80%.
+
+    Past `CROWDED` series the legend is dropped entirely and the picked lines are labelled
+    at their last point instead — twelve teams on one 290px canvas is not a chart anyone
+    reads, and the legend was truncating the names it was meant to disambiguate.
+    """
+    import altair as alt
+
+    if df is None or df.empty:
+        return
+    fmt = ".0%" if percent else ".1f"
+    names = list(pd.Series(df[color]).dropna().unique())
+    crowded = len(names) > CROWDED
+    # Labelling a line at its last point only works while the labels have room. Highlighting
+    # everything is not highlighting, and past a handful the labels sit on top of each other
+    # where the lines converge — which is worse than the legend it replaced.
+    picked = [n for n in (highlight or []) if n in names]
+    if len(picked) > LABELLED or len(picked) == len(names):
+        picked = []
+
+    enc_x = alt.X(f"{x}:O", axis=alt.Axis(title=x_title, labelAngle=0, grid=False))
+    enc_y = alt.Y(f"{y}:Q", axis=alt.Axis(title=y_title or None, grid=True, format=fmt))
+    tip = [alt.Tooltip(f"{color}:N", title=""), alt.Tooltip(f"{x}:O"),
+           alt.Tooltip(f"{y}:Q", format=fmt)]
+    scale = alt.Scale(range=list(palette or SERIES))
+
+    if crowded and picked:
+        back = (alt.Chart(df[~df[color].isin(picked)])
+                .mark_line(strokeWidth=1.2, opacity=0.35, color=BORDER)
+                .encode(x=enc_x, y=enc_y, detail=f"{color}:N"))
+        front = df[df[color].isin(picked)]
+        fg = (alt.Chart(front)
+              .mark_line(strokeWidth=2.4, point=alt.OverlayMarkDef(size=34, filled=True))
+              .encode(x=enc_x, y=enc_y,
+                      color=alt.Color(f"{color}:N", scale=scale, legend=None), tooltip=tip))
+        last = front.sort_values(x).groupby(color, as_index=False).tail(1)
+        lab = (alt.Chart(last).mark_text(align="left", dx=7, font=FONT_HEAD, fontSize=11,
+                                         fontWeight=600)
+               .encode(x=enc_x, y=enc_y, text=alt.Text(f"{color}:N"),
+                       color=alt.Color(f"{color}:N", scale=scale, legend=None)))
+        ch = alt.layer(back, fg, lab)
+    else:
+        ch = (alt.Chart(df)
+              .mark_line(strokeWidth=2, point=alt.OverlayMarkDef(size=34, filled=True))
+              .encode(x=enc_x, y=enc_y, tooltip=tip,
+                      color=alt.Color(f"{color}:N", scale=scale,
+                                      legend=alt.Legend(title=None, orient="bottom",
+                                                        columns=min(4, max(1, len(names))),
+                                                        labelLimit=160))))
+    _render(_theme(ch, title=title, height=height), caption)
+
+
+def bar_compare(df: pd.DataFrame, category: str, series: str, value: str, *,
+                height: int | None = None, x_title: str = "", sort=None, domain=None,
+                palette=(INK3, NAVY), title: str | None = None,
+                caption: str | None = None) -> None:
+    """Two numbers per row, side by side — NOT stacked.
+
+    `st.bar_chart` stacks a multi-column frame, so "actual vs expected" rendered as actual
+    PLUS expected: a total nobody asked for, under a heading promising a comparison. Grouped
+    bars are the honest shape, and the category goes on the Y axis because fifteen full
+    player names do not fit across an X axis.
+    """
+    import altair as alt
+
+    if df is None or df.empty:
+        return
+    n = df[category].nunique()
+    # Altair rejects domain=None rather than ignoring it, so the key has to be absent
+    scale = alt.Scale(range=list(palette), **({"domain": list(domain)} if domain else {}))
+    ch = (alt.Chart(df).mark_bar(cornerRadiusEnd=2)
+          .encode(
+              y=alt.Y(f"{category}:N", sort=sort, axis=alt.Axis(title=None, labelLimit=170)),
+              x=alt.X(f"{value}:Q", axis=alt.Axis(title=x_title or None, grid=True)),
+              yOffset=alt.YOffset(f"{series}:N"),
+              color=alt.Color(f"{series}:N", scale=scale,
+                              legend=alt.Legend(title=None, orient="top",
+                                                direction="horizontal")),
+              tooltip=[category, series, alt.Tooltip(f"{value}:Q", format=".1f")]))
+    _render(_theme(ch, title=title, height=height or max(240, 22 * n)), caption)
 
 
 def route_plot(pool: pd.DataFrame, mine: pd.DataFrame, threshold: float | None = None,
                x: str = "routes_pg", y: str = "fd_rr", y_title: str = "1st downs per route",
-               x_title: str = "Routes per game (est.)") -> None:
+               x_title: str = "Routes per game (est.)", *, title: str | None = None,
+               caption: str | None = None) -> None:
     """Receivers on two axes: how much he is on the field, and what it is worth when he is.
 
     The league is the grey backdrop and `mine` is what the eye lands on, because the question
     is never "who leads the NFL" — it's "where do my guys sit". `threshold` draws the
     first-down line: 12% of routes, the mark a WR has to clear.
+
+    Both rules label themselves. This chart had no legend of any kind: the yellow line, the
+    dashed median and the blue/purple of the highlighted points were explained only in a
+    caption underneath, so anyone who scrolled past the prose was looking at four unexplained
+    visual codes.
     """
     import altair as alt
 
@@ -705,33 +823,44 @@ def route_plot(pool: pd.DataFrame, mine: pd.DataFrame, threshold: float | None =
 
     layers = [base.mark_point(size=42, filled=False, strokeWidth=1.3, opacity=.45,
                               color=INK3).encode(**enc, tooltip=tip)]
+    # Both rules label themselves, anchored to real data coordinates. Pinning a label to
+    # the panel edge with alt.value() looks tempting and silently widens the shared x scale
+    # to reach that pixel, which squashed every real point into a sliver.
+    _xs = pd.to_numeric(pool[x], errors="coerce")
+    _ys = pd.to_numeric(pool[y], errors="coerce")
     if threshold is not None:
-        layers.append(alt.Chart(pd.DataFrame({"t": [threshold]}))
-                      .mark_rule(color=FIRST_DOWN, strokeWidth=2.5)
+        _t = pd.DataFrame({"t": [threshold], "xr": [_xs.max()],
+                           "lab": [f"league-winner line · {threshold:.0%}"]})
+        layers.append(alt.Chart(_t).mark_rule(color=FIRST_DOWN, strokeWidth=2.5)
                       .encode(y=alt.Y("t:Q")))
-    med = pd.to_numeric(pool[x], errors="coerce").median()
+        layers.append(alt.Chart(_t).mark_text(align="right", dy=-7, font=FONT_BODY,
+                                              fontSize=10, fontWeight=600, color="#8A6D00")
+                      .encode(y=alt.Y("t:Q"), x=alt.X("xr:Q"), text=alt.Text("lab:N")))
+    med = _xs.median()
     if pd.notna(med):
-        layers.append(alt.Chart(pd.DataFrame({"m": [med]}))
-                      .mark_rule(color=BORDER, strokeWidth=1, strokeDash=[3, 3])
+        _m = pd.DataFrame({"m": [med], "yt": [_ys.max()],
+                           "lab": ["league median routes"]})
+        layers.append(alt.Chart(_m).mark_rule(color=INK3, strokeWidth=1, strokeDash=[3, 3])
                       .encode(x=alt.X("m:Q")))
+        layers.append(alt.Chart(_m).mark_text(align="left", dx=5, font=FONT_BODY,
+                                              fontSize=10, color=INK3)
+                      .encode(x=alt.X("m:Q"), y=alt.Y("yt:Q"), text=alt.Text("lab:N")))
     if mine is not None and not mine.empty:
         m = alt.Chart(mine)
         # Not POS_COLORS here: its WR gold sits in the same family as the first-down line, and
         # the line has to be the only thing on the chart wearing that colour.
         layers.append(m.mark_point(size=110, filled=True, opacity=1)
-                      .encode(**enc, color=alt.Color("pos:N", legend=None,
-                              scale=alt.Scale(domain=["WR", "TE"], range=["#1D5FA8", "#6B3FA0"])),
-                              tooltip=tip))
+                      .encode(**enc, tooltip=tip,
+                              color=alt.Color("pos:N",
+                                  scale=alt.Scale(domain=["WR", "TE"],
+                                                  range=["#1D5FA8", "#6B3FA0"]),
+                                  legend=alt.Legend(title="Yours", orient="bottom",
+                                                    direction="horizontal"))))
         layers.append(m.mark_text(align="left", dx=9, dy=1, font=FONT_HEAD, fontSize=11,
                                   fontWeight=600, color=INK)
                       .encode(**enc, text=alt.Text("short:N")))
 
-    ch = (alt.layer(*layers).properties(height=340).configure_view(strokeWidth=0)
-          .configure_axis(labelFont=FONT_BODY, titleFont=FONT_BODY,
-                          labelColor=INK2, titleColor=INK3, domainColor=BORDER,
-                          tickColor=BORDER, gridColor="#F0F3F8", labelFontSize=11,
-                          titleFontSize=11, titleFontWeight=700, titlePadding=8))
-    st.altair_chart(ch, width="stretch")
+    _render(_theme(alt.layer(*layers), title=title, height=340), caption)
 
 
 def pos_legend() -> None:

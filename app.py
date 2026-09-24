@@ -813,7 +813,7 @@ with tab_over:
                     _rt = _rt.merge(agg[["gsis_id", "tgt_pct"]], on="gsis_id", how="left")
                 # small samples last: a half-game cameo can top any per-route rate
                 _rt = _rt.sort_values(["qualified", "fd_rr"], ascending=False, na_position="last")
-                ui.h(f"Route usage — your WRs and TEs, last {roll} weeks")
+                ui.h("Route usage")
                 ui.lede(
                     "Target share tells you how big his slice is. These tell you <b>how good the slice "
                     "is</b>: how often he's on the field in a route, how often the ball comes when he is, "
@@ -829,14 +829,14 @@ with tab_over:
                 if len(_pool) >= 8:
                     _me = _pool[_pool["gsis_id"].isin(gsis_list)].copy()
                     _me["short"] = _me["player"].map(ui.short_name)
-                    ui.route_plot(_pool, _me, threshold=rz.WR_FD_FLAG)
-                    st.caption(
-                        f"Every WR and TE in the league with enough routes over the last {roll} weeks "
-                        "(grey), with yours picked out. **Up** is doing more with each route; **right** is "
-                        "being on the field for more of them. Above the yellow line and right of the dashed "
-                        "median is where you want your starters. Above the line but left of it is a player "
-                        "one role change from a league-winner — the waiver claim to make."
-                    )
+                    ui.route_plot(
+                        _pool, _me, threshold=rz.WR_FD_FLAG,
+                        title=f"Route usage — every qualified WR and TE, last {roll} weeks",
+                        caption=(
+                            "**Up** is doing more with each route; **right** is being on the field for "
+                            "more of them. Top-right is where you want your starters. Top-left is a "
+                            "player one role change from a league-winner — the waiver claim to make."
+                        ))
                 # The rates lead: they're the point of the table, and on a laptop the last
                 # columns of a wide table sit off the right edge until you scroll.
                 _rcols = [c for c in ["slot", "player", "pos", "team", "fd_rr", "tprr", "tgt_pct",
@@ -1021,9 +1021,20 @@ with tab_league:
                 logos=False,
             )
 
-            ui.h("Points by week")
-            ui.line_chart(mu.dropna(subset=["points"]), x="week", y="points", color="team",
-                          y_title="points")
+            _mu = mu.dropna(subset=["points"])
+            _teams = sorted(_mu["team"].dropna().unique())
+            # imported here, not borrowed from the playoff-odds block above: that one sits
+            # inside `if not _o.empty`, so it is unbound whenever the sim returns nothing
+            from mega.config import MY_TEAM as _MINE
+            _pick = st.multiselect(
+                "Follow", _teams, key="pbw",
+                default=[t for t in (_MINE,) if t in _teams] or _teams[:1],
+                help="Every team is drawn; the ones you pick here are the ones named.")
+            ui.line_chart(
+                _mu, x="week", y="points", color="team", y_title="Points", x_title="Week",
+                height=340, highlight=_pick, title="Points by week",
+                caption=("The rest of the league is the grey backdrop. Flat and high beats "
+                         "spiky and high — a team that swings wildly loses weeks it should win."))
 
         tx = _ya.transactions_df()
         if not tx.empty:
@@ -1132,8 +1143,19 @@ with tab_axe:
         cmp["player"] = cmp["gsis_id"].map(name_by_id)
         cmp["diff"] = cmp["actual"] - cmp["expected"]
         cmp = cmp.dropna(subset=["player"]).sort_values("diff")
-        ui.h(f"Season total: actual half-PPR vs expected (through wk {week})")
-        st.bar_chart(cmp.set_index("player")[["expected", "actual"]])
+        _long = cmp.melt(id_vars="player", value_vars=["expected", "actual"],
+                         var_name="kind", value_name="pts")
+        _long["kind"] = _long["kind"].map({"expected": "Expected", "actual": "Actual"})
+        _long["player"] = _long["player"].map(ui.short_name)
+        ui.bar_compare(
+            _long, category="player", series="kind", value="pts",
+            sort=cmp["player"].map(ui.short_name).tolist(),  # keeps the diff order
+            domain=["Expected", "Actual"],
+            palette=(ui.INK3, ui.NAVY), x_title="half-PPR points",
+            title=f"Actual vs expected, through week {week}",
+            caption=("Grey is what his usage should have produced; navy is what he scored. "
+                     "A navy bar well short of grey is a hold, not a cut — the work is there "
+                     "and the points normally follow."))
         ui.table(cmp[["player", "expected", "actual", "diff"]], diverging=["xFP±"],
                  fmt={"xFP": "{:.1f}", "ACT": "{:.1f}", "xFP±": "{:+.1f}"})
 
@@ -1143,27 +1165,48 @@ with tab_use:
     players_sel = st.multiselect("Players", skill["name"].tolist(), default=skill[skill["slot"] != "BN"]["name"].tolist())
     sel_ids = [k for k, v in name_by_id.items() if v in players_sel]
 
+    # A share is a fraction between 0 and 1; a count is not. One y_title used to serve
+    # both, and neither axis said "%", so snap share read as 0.8 where every other surface
+    # in the app says 80%.
+    _pct = metric in ("snap share", "target share")
+    _cap = {
+        "snap share": "How much of his offence's snaps he is on the field for. The floor "
+                      "under everything else — a player off the field cannot be targeted.",
+        "target share": "His cut of his team's targets. The stickiest week-to-week signal "
+                        "there is; points move around it, not the other way.",
+        "half-PPR points": "What he actually scored. Spiky is not the same as good.",
+        "targets": "Raw looks per game, before any share maths.",
+        "carries": "Raw carries per game.",
+    }[metric]
+
     if metric == "snap share" and not snaps.empty:
         pfr_map = dict(zip(skill["pfr_id"], skill["name"]))
-        s = snaps[snaps["pfr_id"].isin([p for p in skill["pfr_id"] if p])].copy()
+        # honour the Players picker here too: this branch used to plot the whole roster
+        # whatever was selected, so on this one metric the control did nothing
+        _want = [p for p, n in pfr_map.items() if p and n in players_sel]
+        s = snaps[snaps["pfr_id"].isin(_want)].copy()
         col = first_col(s, "offense_pct", "off_pct")
         if col:
             s["value"] = pd.to_numeric(s[col], errors="coerce")
-            s["player"] = s["pfr_id"].map(pfr_map)
+            s["player"] = s["pfr_id"].map(pfr_map).map(ui.short_name)
             ui.line_chart(s.dropna(subset=["value"]), x="week", y="value", color="player",
-                          y_title="snap share")
+                          y_title="Snap share", x_title="Week", percent=True, height=320,
+                          title=f"Snap share by week — {season}", caption=_cap)
         else:
             st.info("No snap-share column found.")
     else:
         base = sw[sw["gsis_id"].isin(sel_ids)].copy()
-        base["player"] = base["gsis_id"].map(name_by_id)
+        base["player"] = base["gsis_id"].map(name_by_id).map(ui.short_name)
         field = {
             "target share": "target_share", "half-PPR points": "half_ppr",
             "targets": "targets", "carries": "carries", "snap share": None,
         }[metric]
         if field and field in base.columns:
-            ui.line_chart(base.dropna(subset=[field]), x="week", y=field, color="player",
-                          y_title=metric)
+            _d = base.dropna(subset=[field])
+            ui.line_chart(_d, x="week", y=field, color="player",
+                          y_title=ui.title_case(metric), x_title="Week", percent=_pct,
+                          height=320,
+                          title=f"{ui.title_case(metric)} by week — {season}", caption=_cap)
         else:
             st.info(f"Column '{field}' not available.")
 
@@ -2219,7 +2262,15 @@ with tab_lookup:
                             log[["week", "half_ppr"]].rename(columns={"half_ppr": "pts"}).assign(series="Actual pts"),
                             log[["week", "xfp"]].rename(columns={"xfp": "pts"}).assign(series="Expected pts"),
                         ]).dropna(subset=["pts"])
-                        ui.line_chart(lg, x="week", y="pts", color="series", y_title="half-PPR points")
+                        # navy = actual, grey = expected, exactly as in the season
+                        # comparison under My Team — one encoding for one idea
+                        ui.line_chart(lg, x="week", y="pts", color="series",
+                                      y_title="Half-PPR points", x_title="Week",
+                                      palette=[ui.NAVY, ui.INK3],
+                                      title="Actual vs expected, week by week",
+                                      caption=("Navy is what he scored, grey is what his "
+                                               "usage was worth. Navy under grey for weeks "
+                                               "on end is a player due a correction up."))
 
 # ---- Raw ---------------------------------------------------------------------
 with tab_raw:
