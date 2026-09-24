@@ -470,6 +470,9 @@ with st.sidebar:
                           help="The week Start/Sit and Matchups plan for. Defaults to the first week "
                                "with games still to play.")
     roll = st.slider("Rolling window (weeks)", 2, 6, 3)
+    # Read by ui.table below, so it has to be rendered before the first one — app.py runs
+    # top to bottom every rerun.
+    ui.detail_toggle()
     if st.button("♻️ Clear data cache"):
         st.cache_data.clear()
         try:
@@ -791,6 +794,9 @@ with tab_over:
                 | {"TGT%": "{:.1%}"},
             labels={roll_lbl: f"Last {roll}/g"},
             help={roll_lbl: f"Fantasy points per game over his last {roll} games."},
+            # POS stays: the role tag usually carries the position, but a player with
+            # too few games to have a role would otherwise show none at all
+            essential=["POS", roll_lbl, "xFP±", "TGT%", "ST"],
         )
         st.caption(
             f"**Target share** and **Team tgt rank** cover the last {roll} weeks. A #1 target rank on a high "
@@ -1113,11 +1119,12 @@ with tab_start:
         ui.h("✅ Recommended starters")
         sview = starters.assign(_o=starters["lineup"].map(slot_order)).sort_values("_o")[cols]
         ui.table(sview, sequential=["PROJ*"], diverging=["VEG±"], pos_cols=["POS"],
-                 fmt=lu_fmt, help=lu_help)
+                 fmt=lu_fmt, help=lu_help, view="startsit_start")
 
         ui.h("🪑 Bench")
         bview = bench.sort_values("proj_adj", ascending=False)[cols]
-        ui.table(bview, diverging=["VEG±"], pos_cols=["POS"], fmt=lu_fmt, help=lu_help)
+        ui.table(bview, diverging=["VEG±"], pos_cols=["POS"], fmt=lu_fmt, help=lu_help,
+                 view="startsit_bench")
 
         _est = int((starters["proj_source"] != "FantasyPros").sum())
         if _est:
@@ -1554,6 +1561,7 @@ with tab_wire:
                 fmt={"PPG": "{:.1f}", "TGT": "{:.1f}", "CAR": "{:.1f}", "TGT%": "{:.1%}",
                      "TM#": "{:.0f}", "VAL": "{:.0f}", "ADD#": "{:.0f}", "TR30": "{:+.0f}",
                      "SCORE": "{:.2f}"},
+                view="waivers_blind",
             )
             st.caption(
                 "A **#1–2 team target rank** on a rising **target share** is the strongest sign a role has "
@@ -1817,7 +1825,7 @@ with tab_arch:
         mine = arch[arch["mine"]].sort_values("arch_fit", ascending=False)
         acols = ["player", "pos", "team", "arch_fit", "tags", "carries_pg", "tgt_share",
                  "tm_rank", "age", "exp_yrs", "why"]
-        ui.table(mine[acols], sequential=["ARCH FIT"], pos_cols=["POS"],
+        ui.table(mine[acols], sequential=["ARCH FIT"], pos_cols=["POS"], view="archetypes",
                  fmt={"ARCH FIT": "{:.0f}", "CAR": "{:.1f}", "TGT%": "{:.1%}", "AGE": "{:.0f}", "EXP": "{:.0f}"})
 
         # target board by position
@@ -1880,7 +1888,8 @@ with tab_wopr:
                 st.info("Nothing flagged here right now.")
                 return
             ui.table(frame[cols], pos_cols=["POS"], sequential=["WOPR"], diverging=["GAP", "xPPG±"],
-                     fmt=_fmt, help={"TAGS": "Opportunity flags — see 'How to read this' above."})
+                     fmt=_fmt, view="wopr",
+                     help={"TAGS": "Opportunity flags — see 'How to read this' above."})
 
         ui.h("Your WR/TE — sell / hold")
         st.caption("`SELL_HIGH` / `FADE` = points ran ahead of opportunity, shop them. "

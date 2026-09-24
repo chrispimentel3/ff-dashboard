@@ -321,6 +321,27 @@ GLOSS = {
     "ST": "Out, doubtful, questionable or IR — from the NFL injury report, or from Chris's own list (data/player_status.csv), which wins when the report hasn't caught up.",
     "PLAY AS": "Where this lineup says to play him — a recommendation, not your "
                "current lineup. BENCH means sit him.",
+    # §20 Vegas props. These lived as help= dicts at two call sites and as a paragraph
+    # repeated near-verbatim on two tabs; here they reach every table that shows them.
+    "VEGAS": "Half-PPR points implied by this week's sportsbook player props. A posted line "
+             "is the MIDDLE outcome, not the average one, and is corrected to a mean — which "
+             "is why this sits above the line you would see in a betting app.",
+    "VEG±": "Vegas minus our own projection. Positive = the market likes him more than the "
+            "usage model does. The two share no inputs, so a wide gap means one of them "
+            "knows something worth a look before you set the lineup.",
+    "MKTS": "How many prop markets the book actually posted for him. A number built on one "
+            "market is a much thinner read than one built on four.",
+    "FULL": "True when every scoring market a player of his position can have was priced, so "
+            "the number is entirely the market's. False means a gap was filled from his own "
+            "season rate.",
+    # waivers, priced against your own lineup (mega/needs.py, mega/faab.py)
+    "GAIN": "Points per game he would ADD to your starting nine, after the lineup is "
+            "re-optimised with him on the roster. Zero means he does not crack it.",
+    "BID": "What to bid from your FAAB budget — a share that scales with the points he adds "
+           "and with what the league has been paying.",
+    "MAX": "The most he is worth to you. Above this you are paying for someone else's week.",
+    "CUT": "Who you would drop to make room for him.",
+    "POS": "Position, as the league rosters him.",
     "OPP": "Next opponent (@ = away game).",
     "VS": "The fantasy team you played that week.",
     "IMP": "Vegas's expected points for his offense next game. Higher = more scoring to go around.",
@@ -460,6 +481,67 @@ def title_case(label: str) -> str:
 
 
 # Ranks read as "#3", so they can't be mistaken for counts.
+# ---------------------------------------------------------------- the column budget
+# The fourth layer of the same model COLS/LABELS/GLOSS describe: not what a column is
+# called, but whether a table leads with it. The three most-read tables render eighteen
+# columns each, which on a laptop means the last six sit off the right edge and on a phone
+# means a horizontal scroll with no way to know what you are missing.
+#
+# The rule for an essential set: who he is, what to do, the number the call rests on, and
+# at most two supporting figures. Everything else stays one radio click away, and the panel
+# under each table names what is hidden — so the columns are demoted, never lost.
+ESSENTIAL: dict[str, tuple[str, ...]] = {
+    "startsit_start": ("PLAY AS", "POS", "ST", "PROJ*", "VEGAS", "NOTE"),
+    # the bench answers a different question from the starters — who is closest to breaking
+    # in — so it leads with the market's disagreement rather than the market's level
+    "startsit_bench": ("POS", "ST", "PROJ*", "VEG±", "NOTE"),
+    "waivers_priced": ("POS", "PPG", "GAIN", "BID", "CUT", "WHY"),
+    "waivers_blind": ("POS", "PPG", "TGT%", "TM#", "SCORE", "WHY"),
+    "archetypes": ("POS", "ARCH FIT", "TAGS", "TGT%", "WHY"),
+    # WOPR sits at nine columns and only two would hide, which _WORTH_HIDING refuses —
+    # the policy is here so it starts working the day that table grows.
+    "wopr": ("POS", "WOPR", "GAP", "xPPG±", "TAGS"),
+}
+
+# A row without these has no subject. A policy that forgets one is a bug, not a choice.
+_ALWAYS = {"PLAYER", "NAME", "LOGO", "ROLE", "SLOT",
+           "YOU GIVE", "YOU GET", "GIVE LOGO", "GET LOGO", "GIVE ROLE", "GET ROLE"}
+
+# Below this, narrowing costs the reader more in "where did that column go" than it returns
+# in width.
+_WORTH_HIDING = 3
+
+
+def detail() -> str:
+    """Essentials or Everything, for the whole app. One control, not one per table."""
+    return st.session_state.get("mb_detail", "Essentials")
+
+
+def detail_toggle(container=None) -> None:
+    """The one switch. Rendered once in the sidebar, before anything reads `detail()`."""
+    (container or st.sidebar).radio(
+        "Table detail", ["Essentials", "Everything"], key="mb_detail",
+        captions=["The columns the call rests on", "Every column the table has"],
+    )
+
+
+def _budget(d: pd.DataFrame, view: str | None, essential) -> tuple[pd.DataFrame, list[str]]:
+    """Narrow a table to the columns carrying the decision. Returns (frame, hidden codes).
+
+    A call passing neither argument gets its frame back untouched, which is why this could
+    be added under thirty-seven existing call sites without changing any of them.
+    """
+    keep = tuple(essential) if essential is not None else ESSENTIAL.get(view or "", ())
+    if not keep or detail() == "Everything":
+        return d, []
+    wanted = set(keep) | _ALWAYS
+    out = [c for c in d.columns if c in wanted]
+    hidden = [c for c in d.columns if c not in wanted]
+    if len(hidden) < _WORTH_HIDING:
+        return d, []
+    return d[out], hidden
+
+
 RANKS = {"TM#", "MU#", "ADD#", "WOPR#", "DRAFT#", "PWR", "RANK"}
 # Obvious from the header; listing them in the legend is noise.
 _NO_KEY = {"PLAYER", "POS", "LOGO", "GIVE LOGO", "GET LOGO", "AGE", "W", "L", "T", "TEAM",
@@ -603,6 +685,8 @@ def table(
     logos: bool = True,
     container=None,
     roles: bool = True,
+    view: str | None = None,
+    essential=None,
 ) -> pd.DataFrame:
     """The one way to put a table on screen: internal codes -> readable headers,
     tooltips, team logos, heat shading, and a plain-English column key underneath.
@@ -613,6 +697,7 @@ def table(
         d = _with_roles(d)
     if logos:
         d = _with_logos(d)
+    d, hidden = _budget(d, view, essential)
     fmt = {**(fmt or {}), **{r: "#{:.0f}" for r in RANKS if r in d.columns}}
     box.dataframe(
         style_df(d, diverging=diverging, sequential=sequential, pos_cols=pos_cols, fmt=fmt),
@@ -621,13 +706,18 @@ def table(
         **({"height": height} if height else {}),
     )
     if legend:
-        col_key(*d.columns, _labels=labels, _help=help, _container=box)
+        col_key(*d.columns, _labels=labels, _help=help, _container=box, _hidden=hidden)
     return d
 
 
 def col_key(*names: str, _labels: dict | None = None, _help: dict | None = None,
-            _container=None, **custom: str) -> None:
-    """'What these columns mean' panel. Collapsed, so it costs one line until it's needed."""
+            _container=None, _hidden=(), **custom: str) -> None:
+    """'What these columns mean' panel. Collapsed, so it costs one line until it's needed.
+
+    When a table is showing its essentials, the panel title carries the count of what is
+    hidden and the body names them. A narrowed table that does not say it has been narrowed
+    is a table that looks like it is missing data.
+    """
     labels, gloss = {**LABELS, **(_labels or {})}, {**GLOSS, **(_help or {}), **custom}
     seen, rows = set(), []
     for n in list(names) + list(custom):
@@ -636,10 +726,17 @@ def col_key(*names: str, _labels: dict | None = None, _help: dict | None = None,
             continue
         seen.add(lab)
         rows.append(f"<dt>{lab}</dt><dd>{gloss[n]}</dd>")
-    if not rows:
+    if not rows and not _hidden:
         return
-    with (_container or st).expander("What these columns mean"):
-        st.markdown(f'<dl class="mb-key">{"".join(rows)}</dl>', unsafe_allow_html=True)
+    title = "What these columns mean"
+    if _hidden:
+        title += f" · {len(_hidden)} more under Table detail → Everything"
+    with (_container or st).expander(title):
+        if rows:
+            st.markdown(f'<dl class="mb-key">{"".join(rows)}</dl>', unsafe_allow_html=True)
+        if _hidden:
+            st.caption("Hidden right now: " + ", ".join(
+                title_case(labels.get(n, n)) for n in _hidden))
 
 
 def h(text: str, level: int = 4) -> None:
