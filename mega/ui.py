@@ -181,7 +181,7 @@ def kpi_row(items: list[tuple[str, str, str]]) -> None:
 COLS = {
     "odds": "ODDS±", "their_odds": "THEIR ODDS±", "watch": "WATCH",
     "p_playoffs": "PLAYOFFS", "p_bye": "BYE", "p_title": "TITLE", "mean_seed": "SEED",
-    "opp_score": "OPP",
+    "opp_score": "OPP SCORE",
     "slot": "SLOT", "player": "PLAYER", "pos": "POS", "team": "TM", "nfl_team": "TM",
     "games": "G", "gms": "G", "half_ppr_pg": "PPG", "last_wk": "LAST", "pg_recent": "PPG",
     "xfp_tot": "xFP", "expected": "xFP", "actual": "ACT", "xfp_diff": "xFP±", "diff": "xFP±",
@@ -200,11 +200,11 @@ COLS = {
     "ease_rank": "MU#", "pa_pg": "PA/G", "proj_adj": "PROJ*", "proj": "PROJ", "proj_source": "SRC",
     # §20 Vegas props
     "vegas": "VEGAS", "vegas_edge": "VEG±", "vegas_parts": "MKTS", "vegas_complete": "FULL",
-    "start_sit": "GRADE", "close_call": "NOTE", "lineup": "SLOT", "matchup": "MU",
+    "start_sit": "GRADE", "close_call": "NOTE", "lineup": "PLAY AS", "matchup": "MU",
     # draft value
     "drafted_by": "DRAFTED BY", "round": "RD", "value_delta": "VAL±",
     # archetypes
-    "arch_fit": "FIT", "tags": "TAGS", "tgt_share": "TGT%", "age": "AGE", "carries_pg": "CAR",
+    "arch_fit": "ARCH FIT", "tags": "TAGS", "tgt_share": "TGT%", "age": "AGE", "carries_pg": "CAR",
     "exp_yrs": "EXP", "proj_ppg": "PROJ", "vor": "VOR",
     # WOPR
     "owner": "OWNER", "team_2026_nfl": "TM", "wopr_anchored": "WOPR", "name": "PLAYER",
@@ -214,7 +214,7 @@ COLS = {
     "rank": "RANK", "wins": "W", "losses": "L", "ties": "T", "manager": "MGR",
     "points_for": "PF", "points_against": "PA", "streak": "STRK",
     "faab_balance": "FAAB", "moves": "MOV", "trades": "TRD",
-    "week": "WK", "opponent": "OPP", "points": "PTS", "opp_points": "OPP PTS",
+    "week": "WK", "opponent": "VS", "points": "PTS", "opp_points": "OPP PTS",
     "result": "RES", "when": "WHEN", "tx_type": "TYPE", "move": "MOVE",
     # trades
     "partner": "MANAGER", "give": "YOU GIVE", "give_val": "GIVE VAL",
@@ -240,7 +240,7 @@ COLS = {
 }
 
 LABELS = {
-    "SLOT": "Slot", "PLAYER": "Player", "POS": "Pos", "TM": "NFL", "LOGO": "NFL",
+    "SLOT": "Slot", "PLAY AS": "Play as", "PLAYER": "Player", "POS": "Pos", "TM": "NFL", "LOGO": "NFL",
     "G": "Games", "PPG": "Pts/game", "LAST": "Last game",
     "xFP": "Expected pts", "ACT": "Actual pts", "xFP±": "Vs expected", "xFP±/G": "Vs expected/g",
     "SIGNAL": "Signal", "TGT": "Targets/g", "CAR": "Carries/g",
@@ -259,17 +259,17 @@ LABELS = {
     "VEGAS": "Vegas pts", "VEG±": "Vegas vs proj", "MKTS": "Markets priced", "FULL": "All markets",
     "SRC": "Source", "GRADE": "FP grade", "NOTE": "Close call", "MU": "Opponent",
     "DRAFTED BY": "Drafted by", "RD": "Round", "VAL±": "Value vs slot",
-    "FIT": "Blueprint fit", "TAGS": "Traits", "AGE": "Age", "EXP": "NFL yrs", "VOR": "Value over repl.",
+    "ARCH FIT": "Blueprint fit", "TAGS": "Traits", "AGE": "Age", "EXP": "NFL yrs", "VOR": "Value over repl.",
     "OWNER": "Owner", "WOPR": "WOPR", "WOPR#": "WOPR rank", "DRAFT#": "Draft rank",
     "GAP": "Role vs price", "xPPG±": "Vs role/g",
     "RANK": "Standing", "W": "W", "L": "L", "T": "T", "TEAM": "Team", "MGR": "Manager",
-    "PF": "Pts for", "PA": "Pts against", "STRK": "Streak", "FAAB": "FAAB left",
+    "PF": "Pts for", "PA": "Pts against", "STRK": "Streak",
     "MOV": "Moves", "TRD": "Trades",
-    "WK": "Week", "PTS": "Pts", "OPP PTS": "Opp pts", "RES": "Result",
+    "WK": "Week", "PTS": "Pts", "VS": "Opponent", "OPP PTS": "Opp pts", "RES": "Result",
     "ROLE": "Role", "GIVE ROLE": "Their role", "GET ROLE": "Their role",
     "ODDS±": "Your playoff odds", "THEIR ODDS±": "Their playoff odds", "WATCH": "Watch out",
     "PLAYOFFS": "Make playoffs", "BYE": "First-round bye", "TITLE": "Win it all",
-    "SEED": "Average seed", "OPP": "Opportunity",
+    "SEED": "Average seed", "OPP SCORE": "Opportunity",
     "WHEN": "When", "TYPE": "Type", "MOVE": "Move",
     "MANAGER": "Manager", "YOU GIVE": "You give", "GIVE VAL": "Give value",
     "YOU GET": "You get", "GET VAL": "Get value", "FAIR": "Fairness", "EDGE": "Value gained",
@@ -278,8 +278,8 @@ LABELS = {
     "SHAPE": "Shape", "YOU ±": "Your lineup ±", "THEM ±": "Their lineup ±",
     "MARKET": "Market ratio", "ODDS": "Likelihood", "GIVE LOGO": "", "GET LOGO": "",
     "PWR": "Power rank", "LINEUP": "Lineup pts/g", "BENCH": "Bench pts/g",
-    "xW": "Expected wins", "xW%": "Expected win %", "LUCK W": "Luck (wins)", "SWING": "Week-to-week swing",
-    "MATCHED": "Players scored", "LUCK": "Luck",
+    "xW": "Expected wins", "xW%": "Expected win %", "LUCK W": "Wins vs expected", "SWING": "Week-to-week swing",
+    "MATCHED": "Players scored", "LUCK": "Rank vs roster",
     "PLAYERS": "Your players", "TOT": "Game total", "SPRD": "Spread", "VERDICT": "Verdict",
     "OWN": "Status",
     "GAME": "Opponent", "SNAP%": "Snap %", "CMP": "Cmp", "ATT": "Att", "PASSYD": "Pass yds",
@@ -319,7 +319,10 @@ GLOSS = {
     "FLAG": "\"League-winner 1D/RR\" when a WR clears 12% on enough routes to believe it. "
             "\"Under 50 routes\" means the sample is too small to read the rates at all.",
     "ST": "Out, doubtful, questionable or IR — from the NFL injury report, or from Chris's own list (data/player_status.csv), which wins when the report hasn't caught up.",
+    "PLAY AS": "Where this lineup says to play him — a recommendation, not your "
+               "current lineup. BENCH means sit him.",
     "OPP": "Next opponent (@ = away game).",
+    "VS": "The fantasy team you played that week.",
     "IMP": "Vegas's expected points for his offense next game. Higher = more scoring to go around.",
     "VAL": "FantasyCalc trade value — what the trade market says he's worth.",
     "ADD#": "Rank among the most-added players across Sleeper leagues. Lower = hotter pickup.",
@@ -338,7 +341,9 @@ GLOSS = {
     "DRAFTED BY": "Manager who drafted him.",
     "RD": "Draft round.",
     "VAL±": "Trade value now minus what his draft slot should be worth. Plus = he's beaten his draft cost.",
-    "FIT": "How closely he matches the league-winner blueprint, 0–100.",
+    "ARCH FIT": "How closely he matches the league-winner blueprint, 0–100.",
+    "FIT": "What he would be for you: UPGRADE starts over someone today, DEPTH is a "
+           "bench piece worth holding, STASH is a lottery ticket.",
     "TAGS": "Blueprint traits he hits.",
     "EXP": "Seasons in the NFL.",
     "VOR": "Draft-board value over a replacement-level player.",
@@ -357,7 +362,7 @@ GLOSS = {
              "\"Arms a rival\" means the deal meaningfully helps someone in your own race.",
     "PLAYOFFS": "Share of simulated seasons this team makes the 6-team field.",
     "TITLE": "Share of simulated seasons this team wins it.",
-    "OPP": "Opportunity score: how well he earns the role he has, against others in the "
+    "OPP SCORE": "Opportunity score: how well he earns the role he has, against others in the "
            "same role. 100 is average, 115 is a standard deviation better.",
     "ROLE": "The job he actually has on his own team right now, from his last 3 games — "
             "not where he was drafted. Anything after the dot is something he is doing "
@@ -470,14 +475,14 @@ _WIDTH = {
     "YOU GIVE": 150, "YOU GET": 150, "MANAGER": 140, "TEAM": 150, "DRAFTED BY": 140,
     "MGR": 120, "OWNER": 130, "STAT": 185, "SIGNAL": 115,
     "VERDICT": 115, "OWN": 130, "SRC": 125, "FILLS": 140, "THEY NEED": 140, "POSRANK": 115,
-    "GAME": 105, "MU": 105, "OPP": 105, "SLOT": 72, "POS": 72, "ST": 105, "WHEN": 115,
+    "GAME": 105, "MU": 105, "OPP": 105, "VS": 150, "SLOT": 72, "PLAY AS": 86, "POS": 72, "ST": 105, "WHEN": 115,
     "TYPE": 115, "RES": 80, "STRK": 80, "W": 60, "L": 60, "T": 60, "G": 72, "WK": 68,
 }
 # Text reads from the left; every figure lines up on the right so columns can be compared
 # down the page without the eye hunting for the decimal point.
 _LEFT = {"PLAYER", "NAME", "WHY", "MEANS", "PLAYERS", "TAGS", "YOU GIVE", "YOU GET", "MANAGER",
          "TEAM", "DRAFTED BY", "MGR", "OWNER", "STAT", "NOTE", "MOVE", "SIGNAL", "VERDICT",
-         "OWN", "SRC", "FILLS", "THEY NEED", "GAME", "MU", "OPP", "SLOT", "POS", "ST", "WHEN",
+         "OWN", "SRC", "FILLS", "THEY NEED", "GAME", "MU", "OPP", "VS", "FIT", "SLOT", "PLAY AS", "POS", "ST", "WHEN",
          "TYPE", "RES", "GRADE", "MATCHED", "ROLE", "GIVE ROLE", "GET ROLE"}
 _LOGO_COLS = ("LOGO", "GIVE LOGO", "GET LOGO")
 

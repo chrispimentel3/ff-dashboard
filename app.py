@@ -1506,7 +1506,7 @@ with tab_wire:
                 "good week. Check <b>Team tgt rank</b> and <b>Target share</b> before you spend a claim."
             )
             ui.table(
-                wv,
+                wv.drop(columns=["norm"], errors="ignore"),
                 sequential=["SCORE", "TGT%"], diverging=["TR30"], pos_cols=["POS"],
                 fmt={"PPG": "{:.1f}", "TGT": "{:.1f}", "CAR": "{:.1f}", "TGT%": "{:.1%}",
                      "TM#": "{:.0f}", "VAL": "{:.0f}", "ADD#": "{:.0f}", "TR30": "{:+.0f}",
@@ -1774,8 +1774,8 @@ with tab_arch:
         mine = arch[arch["mine"]].sort_values("arch_fit", ascending=False)
         acols = ["player", "pos", "team", "arch_fit", "tags", "carries_pg", "tgt_share",
                  "tm_rank", "age", "exp_yrs", "why"]
-        ui.table(mine[acols], sequential=["FIT"], pos_cols=["POS"],
-                 fmt={"FIT": "{:.0f}", "CAR": "{:.1f}", "TGT%": "{:.1%}", "AGE": "{:.0f}", "EXP": "{:.0f}"})
+        ui.table(mine[acols], sequential=["ARCH FIT"], pos_cols=["POS"],
+                 fmt={"ARCH FIT": "{:.0f}", "CAR": "{:.1f}", "TGT%": "{:.1%}", "AGE": "{:.0f}", "EXP": "{:.0f}"})
 
         # target board by position
         pos_sel = st.radio("Position", ["QB", "RB", "WR", "TE"], horizontal=True)
@@ -1787,7 +1787,7 @@ with tab_arch:
         st.caption("🟢 available = not on any draft-board roster (verify against live adds). 🟡 mine = already yours.")
         ui.table(pool.head(20)[["status", "player", "team", "arch_fit", "tags",
                                 "half_ppr_pg", "proj_ppg", "tgt_share", "tm_rank", "why"]],
-                 sequential=["FIT"], fmt={"FIT": "{:.0f}", "PPG": "{:.1f}", "PROJ": "{:.1f}", "TGT%": "{:.1%}"},
+                 sequential=["ARCH FIT"], fmt={"ARCH FIT": "{:.0f}", "PPG": "{:.1f}", "PROJ": "{:.1f}", "TGT%": "{:.1%}"},
                  labels={"PROJ": "Proj pts/g"}, help={"PROJ": "Projected fantasy points per game this season."})
 
 with tab_wopr:
