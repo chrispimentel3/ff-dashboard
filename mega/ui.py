@@ -198,6 +198,8 @@ COLS = {
     "faab_left": "FAAB", "faab_spent": "SPENT", "headroom": "ROOM",
     "worst_starter": "WEAKEST", "replacement": "WIRE", "rostered": "HAVE", "starting": "START",
     "ease_rank": "MU#", "pa_pg": "PA/G", "proj_adj": "PROJ*", "proj": "PROJ", "proj_source": "SRC",
+    # §20 Vegas props
+    "vegas": "VEGAS", "vegas_edge": "VEG±", "vegas_parts": "MKTS", "vegas_complete": "FULL",
     "start_sit": "GRADE", "close_call": "NOTE", "lineup": "SLOT", "matchup": "MU",
     # draft value
     "drafted_by": "DRAFTED BY", "round": "RD", "value_delta": "VAL±",
@@ -254,6 +256,7 @@ LABELS = {
     "SEASON": "Season pts", "FAAB": "FAAB left", "SPENT": "FAAB spent", "ROOM": "Headroom",
     "WEAKEST": "Weakest starter", "WIRE": "Wire level", "HAVE": "Rostered", "START": "Starting",
     "MU#": "Matchup rank", "PA/G": "Pts allowed/g", "PROJ*": "Projection", "PROJ": "Raw proj",
+    "VEGAS": "Vegas pts", "VEG±": "Vegas vs proj", "MKTS": "Markets priced", "FULL": "All markets",
     "SRC": "Source", "GRADE": "FP grade", "NOTE": "Close call", "MU": "Opponent",
     "DRAFTED BY": "Drafted by", "RD": "Round", "VAL±": "Value vs slot",
     "FIT": "Blueprint fit", "TAGS": "Traits", "AGE": "Age", "EXP": "NFL yrs", "VOR": "Value over repl.",

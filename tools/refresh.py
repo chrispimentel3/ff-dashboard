@@ -218,6 +218,10 @@ def main(argv=None) -> int:
     ap.add_argument("--no-scores", action="store_true", help="skip the weekly score fetch")
     ap.add_argument("--no-projections", action="store_true",
                     help="skip the ffanalytics (R) projection scrape")
+    ap.add_argument("--no-props", action="store_true",
+                    help="skip the Vegas player-props sweep (spends Odds API credits)")
+    ap.add_argument("--props-force", action="store_true",
+                    help="sweep props even if one was swept recently — costs ~112 credits")
     args = ap.parse_args(argv)
 
     from mega.yahoo import STATE
@@ -291,6 +295,29 @@ def main(argv=None) -> int:
                   f"-{sorted(set(fx['week']))[-1:]}" if len(fx) else "[fixtures] none yet")
         except Exception as e:
             print(f"[fixtures] skipped: {e}")
+
+        # §20 Vegas player props. The free Odds API plan is 500 credits a month and one
+        # sweep of a full slate is 112, so this is deliberately NOT a daily job: `due()`
+        # holds it to roughly weekly and `refresh()` refuses a sweep it cannot finish.
+        # Running it here anyway means the week's props land on whichever daily run first
+        # falls due, rather than needing a second schedule.
+        if not args.no_props:
+            try:
+                import nflreadpy as nflp
+
+                from mega import odds as _odds
+
+                wk = int(nflp.get_current_week())
+                _p, _why = _odds.refresh(args.season, wk, force=args.props_force)
+                print(f"[props] {_why}")
+                if not _p.empty:
+                    from mega.vegas import coverage, publish
+                    publish(args.season, wk)          # derived points -> data/build
+                    cov = coverage(args.season, wk)
+                    print(f"[props] {cov['players']} players priced, "
+                          f"{cov['complete']} with every market posted")
+            except Exception as e:
+                print(f"[props] skipped: {type(e).__name__}: {e}")
 
         # ffanalytics projections + ROS ECR (HANDOFF §3.1 / §6.2). R only runs here, not
         # on Streamlit Cloud, so this build is what the hosted app reads until the next one.

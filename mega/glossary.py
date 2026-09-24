@@ -181,6 +181,46 @@ def cell(role: object, flags=None, tags: dict | None = None, max_flags: int = 2)
     return " · ".join(parts + shown)
 
 
+# ---------------------------------------------------------------- Vegas props (§20)
+VEGAS: dict[str, Term] = {
+    "VEGAS": Term("VEGAS", "Vegas pts",
+                  "What the betting markets say this player is worth this week, converted "
+                  "into our scoring. Sportsbooks post a line for his catches, his yards and "
+                  "his chance of scoring; add those up in half-PPR and you get this number.",
+                  "It is the only projection on the page built by people with money at "
+                  "stake, and it already knows about the injury, the weather and the "
+                  "game plan.",
+                  kind="vegas"),
+    "VEG±": Term("VEG±", "Vegas vs proj",
+                 "The Vegas number minus our own projection. Positive means the market "
+                 "likes him more than our usage model does; negative means the opposite.",
+                 "The two are built from completely different evidence — one from snaps "
+                 "and targets, one from money. When they disagree by a lot, one of them "
+                 "knows something, and that is worth a look before you set the lineup.",
+                 kind="vegas"),
+    "MKTS": Term("MKTS", "Markets priced",
+                 "How many of his scoring categories the sportsbook actually posted a line "
+                 "for. Stars get every market; a backup might only get one.",
+                 "A number built on one market is a thinner read than one built on four.",
+                 kind="vegas"),
+    "FULL": Term("FULL", "All markets",
+                 "True when every scoring category was priced by the book, so the number is "
+                 "entirely the market's. False means we filled a gap — most often the "
+                 "touchdown market — with his own season rate.",
+                 "Trust a FULL row as the market's opinion. Treat the others as mostly the "
+                 "market's, with a patch.",
+                 kind="vegas"),
+}
+
+VEGAS_HEADLINE = (
+    "**Vegas pts** is this week's sportsbook player props scored in half-PPR. One thing "
+    "worth knowing: a posted line is the **middle** outcome, not the average one. Weekly "
+    "receiving yards are lopsided — a receiver priced at 30.5 yards typically gains 24 but "
+    "*averages* 39, because the big games pull the average up and cannot pull it down. So "
+    "these projections sit **above** the lines you would see in a betting app, on purpose."
+)
+
+
 def frame(kind: str = "all") -> pd.DataFrame:
     """The glossary itself, for the panel on screen."""
     rows = []
@@ -197,6 +237,10 @@ def frame(kind: str = "all") -> pd.DataFrame:
                      "why it matters": SPIKE.matters, "group": "How long"})
         rows.append({"tag": "no marker", "code": "sustained", "what it means": SUSTAINED.plain,
                      "why it matters": SUSTAINED.matters, "group": "How long"})
+    if kind in ("all", "vegas"):
+        for t in VEGAS.values():
+            rows.append({"tag": t.label, "code": t.code, "what it means": t.plain,
+                         "why it matters": t.matters, "group": "Vegas"})
     return pd.DataFrame(rows)
 
 

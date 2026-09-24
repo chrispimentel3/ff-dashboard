@@ -139,6 +139,37 @@ draft board as a stand-in for current rosters.
 - **FantasyCalc API** — redraft trade values + 30-day trend
 - **RSS** — ESPN / Rotowire / PFT news
 
+## Vegas projections (§20, needs a free key)
+
+Every starter has sportsbook lines on his catches, his yards and his chance of scoring.
+Scored in half-PPR they become a projection built by people with money at stake, and it
+already contains the injury report, the weather and the game plan. Set `ODDS_API_KEY` in
+`.env` (free tier, no card, from [the-odds-api.com](https://the-odds-api.com)) and the
+column appears in Start/Sit and on a full-slate board under Matchups.
+
+Three corrections happen on the way in, each fitted against 2021-2025 nflverse outcomes by
+`python -m tools.fit_props` rather than assumed:
+
+- **A line is a median, not a mean.** Weekly yardage is lopsided — a receiver priced at
+  30.5 averages 39 — so projections deliberately sit *above* the posted line. Passing
+  yards are the exception and are left alone.
+- **Anytime touchdown is not expected touchdowns.** `6 × P(scores)` ignores two-score
+  games; the Poisson fix overshoots the best scorers by ~12%. The measured multiplier is
+  used instead.
+- **Counts are Poisson.** Receptions and passing touchdowns check out against it at the
+  lines books actually hang, so they are inverted directly and the skew correction is
+  deliberately *not* applied on top.
+
+**Budget.** The free plan is 500 credits a month. The event list is free; props cost
+`markets × regions` per event, so one sweep of a 16-game slate over 7 markets is **112
+credits** — about four sweeps a month. The refresh therefore holds itself to roughly
+weekly, refuses a sweep it cannot finish (half a week would make priced games outrank
+unpriced ones), and never spends the last 40. The $30 tier is 20,000 credits and makes it
+daily: `ODDS_REFRESH_HOURS=24`.
+
+Raw per-book prices stay out of git; the derived points are published to
+`data/build/vegas_<season>_wk<NN>.csv`, which is what the hosted app reads.
+
 ## Automating Tuesdays
 
 - `crontab -e` → `0 9 * * 2 cd /path/to/ff-dashboard && ./.venv/bin/python tuesday.py --email`

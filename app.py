@@ -639,6 +639,13 @@ def _blended_proj(season: int, week: int) -> pd.DataFrame:
     return blended_week(season, week)
 
 
+@st.cache_data(ttl=dt.timedelta(hours=2), show_spinner="Reading the sportsbook…")
+def _vegas(season: int, week: int) -> pd.DataFrame:
+    """§20 — the week's props scored into half-PPR points. Empty when none are on file."""
+    from mega.vegas import week as vweek
+    return vweek(season, week)
+
+
 @st.cache_data(ttl=dt.timedelta(hours=6), show_spinner=False)
 def _dvp(season: int) -> pd.DataFrame:
     from mega.lineup import defense_vs_position
@@ -664,6 +671,11 @@ def _my_roster_projected(season: int, week: int) -> pd.DataFrame:
             r[c] = r[c].where(r[c].notna(), r[f"{c}_n"])
         r = r[[c for c in r.columns if not c.endswith("_n") and c != "norm"]]
     r["proj"] = pd.to_numeric(r["proj"], errors="coerce").fillna(0.0)
+    v = _vegas(season, week)
+    if not v.empty:
+        r = r.merge(v[["gsis_id", "vegas", "vegas_parts", "vegas_complete"]],
+                    on="gsis_id", how="left")
+        r["vegas_edge"] = (pd.to_numeric(r["vegas"], errors="coerce") - r["proj"]).round(1)
     return r
 
 # ---- Roster aggregate ----------------------------------------------------------------
@@ -1038,6 +1050,21 @@ with tab_start:
         lu = None
         st.warning(f"Projections unavailable: {e}")
 
+    _vg = _vegas(int(season), int(next_week))
+    if _vg.empty:
+        from mega import odds as _O
+        st.caption(
+            "Vegas column is off — " + ("no ODDS_API_KEY is set." if not _O.available()
+                                        else f"no props swept for week {next_week} yet.")
+        )
+    else:
+        _full = int(_vg["vegas_complete"].sum())
+        st.caption(
+            f"**Vegas** = this week's sportsbook player props scored in half-PPR: "
+            f"{len(_vg):,} players priced, {_full:,} with every market posted. Lines are read as "
+            "medians and corrected to means, so a projection sits above its own posted line."
+        )
+
     if lu is not None and not lu.empty:
         starters = lu[lu["start"]]
         bench = lu[~lu["start"]]
@@ -1063,18 +1090,23 @@ with tab_start:
 
         slot_order = {"QB": 0, "RB": 1, "WR": 2, "TE": 3, "FLEX": 4}
         cols = [c for c in ["lineup", "player", "pos", "nfl_team", "report_status", "opp", "ease_rank",
-                            "proj", "proj_adj", "proj_source", "tgt_pct", "tm_rank",
-                            "start_sit", "close_call"] if c in lu.columns]
+                            "proj", "proj_adj", "proj_source", "vegas", "vegas_edge",
+                            "tgt_pct", "tm_rank", "start_sit", "close_call"] if c in lu.columns]
 
-        lu_fmt = {"PROJ": "{:.1f}", "PROJ*": "{:.1f}", "TGT%": "{:.1%}"}
+        lu_fmt = {"PROJ": "{:.1f}", "PROJ*": "{:.1f}", "TGT%": "{:.1%}",
+                  "VEGAS": "{:.1f}", "VEG±": "{:+.1f}"}
+        lu_help = {"VEGAS": "Half-PPR points implied by this week's sportsbook player props.",
+                   "VEG±": "Vegas minus our projection. Positive = the market likes him more "
+                           "than the usage model does."}
 
         ui.h("✅ Recommended starters")
         sview = starters.assign(_o=starters["lineup"].map(slot_order)).sort_values("_o")[cols]
-        ui.table(sview, sequential=["PROJ*"], pos_cols=["POS"], fmt=lu_fmt)
+        ui.table(sview, sequential=["PROJ*"], diverging=["VEG±"], pos_cols=["POS"],
+                 fmt=lu_fmt, help=lu_help)
 
         ui.h("🪑 Bench")
         bview = bench.sort_values("proj_adj", ascending=False)[cols]
-        ui.table(bview, pos_cols=["POS"], fmt=lu_fmt)
+        ui.table(bview, diverging=["VEG±"], pos_cols=["POS"], fmt=lu_fmt, help=lu_help)
 
         _est = int((starters["proj_source"] != "FantasyPros").sum())
         if _est:
@@ -1165,6 +1197,55 @@ with tab_match:
         st.caption("Implied team total = Vegas's expected points for that offense. Higher = more scoring to go around.")
         ui.table(mt, sequential=["IMP"], fmt={"TOT": "{:.1f}", "SPRD": "{:+.1f}", "IMP": "{:.1f}"},
                  help={"IMP": "Vegas's expected points for this offense. Higher = more scoring to go around."})
+
+        # ---- §20 every player the book priced this week -----------------------------
+        _vb = _vegas(int(season), int(next_week))
+        if _vb.empty:
+            from mega import odds as _O
+            ui.h(f"Week {next_week} — Vegas player projections")
+            st.info(
+                "No player props on file for this week. " + (
+                    "Set `ODDS_API_KEY` in `.env` (the free plan at the-odds-api.com covers "
+                    "about one sweep of the slate per week) and the daily task will fill this in."
+                    if not _O.available() else
+                    "The next scheduled refresh will sweep them.")
+            )
+        else:
+            ui.h(f"Week {next_week} — Vegas player projections")
+            st.caption(
+                "Half-PPR points implied by the sportsbook's own player props. A posted line is "
+                "the **median** outcome, so it is corrected to a **mean** before scoring — which is "
+                "why a projection sits above the line you would see on the app. "
+                "**MKTS** counts how many markets were actually priced; anything the book did not "
+                "post is filled from the player's own expected-points rate, and **FULL** marks the "
+                "players whose number is entirely the market's."
+            )
+            _vb = _vb.copy()
+            _own = {}
+            try:
+                from mega.yahoo import cached_rosters
+                _r = cached_rosters()
+                _own = dict(zip(_r.get("gsis_id", []), _r.get("team", [])))
+            except Exception:
+                pass
+            from mega.config import MY_TEAM as _MINE   # imported here: the module-level
+            # alias below is defined further down the file, and app.py runs top to bottom
+            _vb["owner"] = _vb["gsis_id"].map(_own).fillna("FA")
+            _c1, _c2 = st.columns([1, 2])
+            _only_mine = _c1.checkbox("My roster only", value=False, key="vegas_mine")
+            _min_mkts = _c2.slider("Minimum markets priced", 1, 5, 1, key="vegas_mkts")
+            _view = _vb[_vb["vegas_parts"] >= _min_mkts]
+            if _only_mine:
+                _view = _view[_view["owner"] == _MINE]
+            _view = _view.sort_values("vegas", ascending=False).head(200)
+            ui.table(
+                _view[["player", "team", "owner", "vegas", "vegas_parts", "vegas_complete"]],
+                sequential=["VEGAS"], fmt={"VEGAS": "{:.1f}"}, logos=False,
+                rename={"team": "TM", "owner": "OWNER"},
+                help={"VEGAS": "Half-PPR points implied by this week's player props.",
+                      "MKTS": "How many prop markets the book actually posted for him.",
+                      "FULL": "True = every scoring market was priced; nothing was filled in."},
+            )
 
         # per-player defense-vs-position matchup
         dvp = _dvp(int(season))
@@ -1899,6 +1980,8 @@ with sec_players:
              "role, so a third receiver is judged against other third receivers."),
             ("How long", "How long it has held",
              "The difference between a pattern and a good afternoon."),
+            ("Vegas", "Vegas — what the betting market says",
+             GL.VEGAS_HEADLINE),
         ):
             ui.h(_title, 5)
             st.caption(_lede)

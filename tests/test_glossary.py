@@ -97,6 +97,25 @@ def test_an_unknown_code_passes_through_rather_than_vanishing():
 
 def test_the_glossary_frame_is_complete_and_grouped():
     f = g.frame()
-    assert set(f["group"]) == {"Role", "Flag", "How long"}
-    assert len(f) == len(g.ROLES) + len(g.FLAGS) + 2
+    assert set(f["group"]) == {"Role", "Flag", "How long", "Vegas"}
+    assert len(f) == len(g.ROLES) + len(g.FLAGS) + len(g.VEGAS) + 2
     assert f["what it means"].str.len().min() > 25
+
+
+def test_every_vegas_column_the_app_shows_has_an_entry():
+    """A column on screen with no glossary row is exactly the fault the glossary tab
+    promises not to have."""
+    from mega import ui
+    shown = {ui.COLS[c] for c in ("vegas", "vegas_edge", "vegas_parts", "vegas_complete")}
+    assert shown <= set(g.VEGAS)
+
+
+def test_the_vegas_kind_filters_on_its_own():
+    f = g.frame("vegas")
+    assert set(f["group"]) == {"Vegas"} and len(f) == len(g.VEGAS)
+
+
+def test_the_vegas_headline_explains_why_projections_beat_the_posted_line():
+    """The one thing a reader will otherwise think is a bug."""
+    h = g.VEGAS_HEADLINE.lower()
+    assert "middle" in h and "above" in h

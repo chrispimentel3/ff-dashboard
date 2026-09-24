@@ -31,3 +31,12 @@ docs/*.pdf
 
 # Manager bias map: personal, hand-filled, and only meaningful on this machine.
 config/managers.json
+
+# Raw sportsbook prop lines, per book, straight from a commercial API. The repo is
+# public and redistributing a paid feed's raw prices is not ours to do — the derived
+# half-PPR projection in data/build/vegas_*.csv is published instead, which is what the
+# hosted app reads anyway.
+data/props_*.csv
+
+# Odds API credit ledger: this account's own usage, of no use to anyone else.
+data/odds_budget.json
