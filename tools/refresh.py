@@ -150,15 +150,31 @@ def changes(saved: dict[str, Path]) -> list[str]:
             return df[~df["player"].str.strip().str.fullmatch(r"\(Empty\)", case=False, na=False)]
 
         def _key(df):
-            """Identity for the diff. Defenses key on their NFL team, not their name:
-            Yahoo writes some as a city ("Green Bay") and some as a nickname ("Packers"),
-            and when that flips between scrapes the same defense reads as one player added
-            and another dropped. Reported as a roster move on 2026-09-23; it never was."""
+            """Identity for the diff.
+
+            Defenses key on their NFL team rather than their name. Yahoo writes some as a
+            city ("Green Bay") and some as a nickname ("Packers"), and when that flips
+            between scrapes the same defense reads as one player added and another
+            dropped — reported as a roster move twice on 2026-09-23, and it never was.
+
+            The catch is that the rows which flip are exactly the rows Yahoo did not fully
+            parse: `pos` and `nfl_team` come back EMPTY on them, and one sits in a bench
+            slot rather than a DEF slot. So the name has to resolve itself. A real player
+            is never called "Denver", which is what makes that safe.
+            """
+            from mega.ask import team_from_name
+
             name = df["player"].astype(str).str.strip()
-            if "pos" in df.columns and "nfl_team" in df.columns:
-                is_def = df["pos"].astype(str).str.upper().isin(("DEF", "DST", "D/ST"))
-                return name.mask(is_def, df["nfl_team"].astype(str).str.upper() + " DEF")
-            return name
+            if "pos" not in df.columns:
+                return name
+            pos = df["pos"].astype(str).str.upper().str.strip()
+            abbr = name.map(team_from_name)
+            is_def = pos.isin(("DEF", "DST", "D/ST")) | ((pos == "") & (abbr != ""))
+            if "nfl_team" in df.columns:
+                nfl = df["nfl_team"].astype(str).str.upper().str.strip()
+                abbr = abbr.where(nfl == "", nfl)
+            # a name that resolves to nothing keeps its own name, so nothing is merged blind
+            return name.mask(is_def & (abbr != ""), abbr + " DEF")
 
         nr, orr = _real(nr), _real(orr)
         now = dict(zip(_key(nr), nr["team"]))

@@ -295,6 +295,23 @@ _ALIASES: list[tuple[str, Field]] = sorted(
 )
 
 
+def team_from_name(text: object) -> str:
+    """"Baltimore" or "Ravens" -> "BAL". Blank when the name is unknown or ambiguous.
+
+    Yahoo names a fantasy defense by city on some rows and by nickname on others, and the
+    roster export leaves `pos` and `nfl_team` empty on the ones it did not fully parse —
+    so the NAME is the only identity those rows carry. Bare "Los Angeles" stays blank on
+    purpose: two teams answer to it.
+    """
+    t = _clean(text)
+    if not t:
+        return ""
+    for name in sorted(_TEAM_WORDS, key=len, reverse=True):
+        if re.fullmatch(re.escape(name), t):
+            return _TEAM_WORDS[name]
+    return ""
+
+
 # ---------------------------------------------------------------- query
 @dataclass
 class Query:
