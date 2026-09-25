@@ -33,6 +33,12 @@ EXPORTS = {
     "_export_trades": "trades.json",
     "_export_wopr": "wopr.json",
     "_export_archetypes": "archetypes.json",
+    "_export_roster": "roster.json",
+    "_export_routes": "routes.json",
+    "_export_axe": "axe.json",
+    "_export_usage": "usage.json",
+    "_export_league": "league.json",
+    "_export_draft": "draft.json",
 }
 
 

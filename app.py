@@ -735,9 +735,12 @@ agg = _build_agg()
 
 # ---- Roster --------------------------------------------------------------------------
 def _tab_over():
+    from mega.roster_web import build as _build_roster
     if agg.empty:
         st.info("No stats yet for this season/week range.")
+        st.session_state["_export_roster"] = _build_roster(None, int(roll))
     else:
+        st.session_state["_export_roster"] = _build_roster(agg, int(roll))
         starters = agg[agg["slot"] != "BN"]
         proj = starters["roll_pg"].sum()
         best = starters.loc[starters["roll_pg"].idxmax()] if not starters.empty else None
@@ -800,10 +803,12 @@ def _tab_over():
 
         # ---- route usage: WR and TE only. Routes are estimated (mega/routes.py), and the
         # estimate is too crude for backs, who are on the field for runs they never route on.
+        from mega.roster_web import build_routes as _build_routes
+        from mega import routes as rz
+        st.session_state["_export_routes"] = _build_routes(
+            None, None, gsis_list, rz.WR_FD_FLAG, rz.MIN_ROUTES)
         _rw = load_routes(int(season))
         if not _rw.empty:
-            from mega import routes as rz
-
             _win = range(max(1, int(week) - int(roll) + 1), int(week) + 1)
             _rt = rz.totals(_rw[_rw["gsis_id"].isin(gsis_list)], weeks=_win)
             if not _rt.empty and _rt["routes"].notna().any():
@@ -855,9 +860,14 @@ def _tab_over():
                     "treat the rates as noise and no flag is given. Backs are left out — the estimate "
                     "can't tell their run snaps from their pass snaps."
                 )
+                st.session_state["_export_routes"] = _build_routes(
+                    _rt, _pool, gsis_list, rz.WR_FD_FLAG, rz.MIN_ROUTES)
 
 # ---- League (live Yahoo API) ---------------------------------------------------------
 def _tab_league():
+    from mega.config import MY_TEAM as _LEAGUE_MINE
+    _standings_export = _standings_src = _xw_export = _xw_week = _rs_export = _tx_export = None
+
     # §18.2 — where this is all heading. Points per week is the working currency; this is
     # the one that decides the season.
     try:
@@ -916,6 +926,7 @@ def _tab_league():
             rename={"team": "TEAM"}, fmt={c: "{:.0f}" for c in ["W", "L", "T"]}, logos=False,
         )
         st.caption("Records and ranks come from the weekly scrape.")
+        _standings_export, _standings_src = _scraped, "scraped Yahoo standings"
 
         _scores = _league_scores()
         if not _scores.empty:
@@ -941,6 +952,7 @@ def _tab_league():
                 "Expected Wins workbook — a logistic on the score gap, scaled to that week's own "
                 "spread — and this implementation reproduces the workbook's 2025 numbers exactly."
             )
+            _xw_export, _xw_week = _xw, int(_scores["week"].max())
 
         ui.h("Power rankings — roster strength")
         ui.lede(
@@ -966,6 +978,7 @@ def _tab_league():
                 fmt={"LINEUP": "{:.1f}", "BENCH": "{:.1f}", "LUCK": "{:+.0f}", "MATCHED": "{:.0f}"},
                 logos=False,
             )
+            _rs_export = _rs
         st.divider()
 
     if not _ya.available():
@@ -1011,11 +1024,13 @@ def _tab_league():
                 fmt={"PF": "{:.1f}", "PA": "{:.1f}", "W": "{:.0f}", "L": "{:.0f}", "T": "{:.0f}"},
                 logos=False,
             )
+            _standings_export, _standings_src = standings, "live Yahoo API"
 
         tx = _ya.transactions_df()
         if not tx.empty:
             ui.h("Recent transactions")
             ui.table(tx.head(40), rename={"team": "TEAM"}, logos=False)
+            _tx_export = tx
 
     # Weekly scores, from whichever source this machine has. These used to sit inside the
     # live-API branch, and the API has been blocked at Yahoo's end all season — so the
@@ -1047,6 +1062,13 @@ def _tab_league():
             caption=("The rest of the league is the grey backdrop. Flat and high beats "
                      "spiky and high — a team that swings wildly loses weeks it should win."))
         ui.note(f"Scores from the {mu_src}.", kind="method")
+
+    from mega.league_web import build as _build_league
+    _mcols_export = [c for c in ["team", "opponent", "points", "opp_points", "proj", "result", "week"]
+                      if c in mu.columns]
+    st.session_state["_export_league"] = _build_league(
+        _LEAGUE_MINE, _o, _standings_export, _standings_src, _xw_export, _xw_week,
+        _rs_export, _tx_export, mu[_mcols_export] if not mu.empty else mu, mu_src)
 
 def _matchup_log() -> tuple[pd.DataFrame, str]:
     """Team-week scores, from the live API if it answers and the weekly scrape if not.
@@ -1153,8 +1175,10 @@ def _tab_start():
 
 # ---- Actual vs expected ------------------------------------------------------------
 def _tab_axe():
+    from mega.axe_web import build as _build_axe
     if ffo.empty:
         st.info("ff_opportunity data unavailable for this season.")
+        st.session_state["_export_axe"] = _build_axe(None, int(week))
     else:
         a = ffo.groupby("gsis_id")["half_ppr_exp"].sum().rename("expected")
         b = sw.groupby("gsis_id")["half_ppr"].sum().rename("actual")
@@ -1162,6 +1186,7 @@ def _tab_axe():
         cmp["player"] = cmp["gsis_id"].map(name_by_id)
         cmp["diff"] = cmp["actual"] - cmp["expected"]
         cmp = cmp.dropna(subset=["player"]).sort_values("diff")
+        st.session_state["_export_axe"] = _build_axe(cmp, int(week))
         _long = cmp.melt(id_vars="player", value_vars=["expected", "actual"],
                          var_name="kind", value_name="pts")
         _long["kind"] = _long["kind"].map({"expected": "Expected", "actual": "Actual"})
@@ -1180,6 +1205,9 @@ def _tab_axe():
 
 # ---- Usage trends ----------------------------------------------------------------
 def _tab_use():
+    from mega.usage_web import build as _build_usage
+    st.session_state["_export_usage"] = _build_usage(sw, snaps, skill, name_by_id, int(season))
+
     metric = st.selectbox("Metric", ["snap share", "target share", "half-PPR points", "targets", "carries"])
     players_sel = st.multiselect("Players", skill["name"].tolist(), default=skill[skill["slot"] != "BN"]["name"].tolist())
     sel_ids = [k for k, v in name_by_id.items() if v in players_sel]
@@ -1774,9 +1802,14 @@ def _tab_trade():
         st.session_state["_export_trades"] = _build_trades(IB["trades"], IB["roster_src"])
 
 def _tab_draft():
+    from mega.draft_web import build as _build_draft
     if IB is None:
         st.warning("League intel unavailable.")
+        st.session_state["_export_draft"] = _build_draft(None, None, set())
     else:
+        from mega.intel import _norm as _dnorm
+        st.session_state["_export_draft"] = _build_draft(
+            IB["draft_delta"], IB["buysell"], {_dnorm(n) for n in skill["name"]})
         dd = IB["draft_delta"]
         mine_only = st.checkbox("My picks only", value=False)
         view = dd[dd["mine"]] if mine_only else dd
@@ -2554,6 +2587,11 @@ if os.environ.get("MEGA_EXPORT_WEB"):
     _tab_trade()
     _tab_wopr()
     _tab_arch()
+    _tab_over()
+    _tab_axe()
+    _tab_use()
+    _tab_league()
+    _tab_draft()
     st.stop()
 else:
     st.navigation([
