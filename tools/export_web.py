@@ -41,6 +41,29 @@ EXPORTS = {
     "_export_draft": "draft.json",
 }
 
+# _export_players is handled separately (see _write_players below): one big JSON with a
+# full detail payload per player runs to several MB (~1,000 players × ~5KB), too large for
+# a single fetch. Split into a small search index plus one file per player, fetched only
+# for whichever player the frontend's dynamic /players/[gsisId] route is asked to render.
+PLAYERS_KEY = "_export_players"
+
+
+def _write_players(payload: dict) -> list[Path]:
+    written = []
+    index_path = OUT_DIR / "players_index.json"
+    index_path.write_text(json.dumps(
+        {"available": payload.get("available", False), "index": payload.get("index", [])},
+        indent=2, default=str))
+    written.append(index_path)
+
+    players_dir = OUT_DIR / "players"
+    players_dir.mkdir(parents=True, exist_ok=True)
+    for gid, detail in payload.get("players", {}).items():
+        path = players_dir / f"{gid}.json"
+        path.write_text(json.dumps(detail, indent=2, default=str))
+        written.append(path)
+    return written
+
 
 def main() -> None:
     # app.py checks this to call every exported tab's function directly instead of going
@@ -65,11 +88,19 @@ def main() -> None:
         path.write_text(json.dumps(payload, indent=2, default=str))
         written.append(path)
 
-    if not written:
-        sys.exit(1)
-
     for path in written:
         print(f"wrote {path.relative_to(ROOT)}")
+
+    if PLAYERS_KEY not in at.session_state:
+        print(f"[export_web] WARNING: {PLAYERS_KEY} not found in session_state — tab may not "
+              f"have run, or the export key was renamed.", file=sys.stderr)
+    else:
+        player_files = _write_players(dict(at.session_state[PLAYERS_KEY]))
+        written.extend(player_files)
+        print(f"wrote data/web/players_index.json + {len(player_files) - 1} data/web/players/<gsis_id>.json files")
+
+    if not written:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

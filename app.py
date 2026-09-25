@@ -2025,26 +2025,33 @@ def _season_table(season: int) -> pd.DataFrame:
 
 
 @st.cache_data(ttl=dt.timedelta(minutes=30), show_spinner=False)
-def _owner_badge(gid: str, pteam: str, own: dict, fa: dict) -> str:
+def _owner_badge(gid: str, pteam: str, own: dict, fa: dict) -> tuple[str, dict]:
     """Who holds him in this league — or nothing at all when there is no league on file.
 
     The player card is the one league-aware thing on a page that otherwise runs entirely
     on league-free modules (lookup, roles, glossary). Keeping that in a single function
     means pointing this at a second league, or at none, touches one place: with no scraped
     rosters the card is simply an NFL player card, not a broken Mega Bowl one.
+
+    Returns (html_for_the_card, structured_info) — the second element is what
+    tools/export_web.py's player-lookup export reads (see `_build_player_export`), so the
+    mega-bowl-web card can render its own ownership badge without needing MY_TEAM itself.
     """
     if not own and not fa:
-        return ""
+        return "", {}
     from mega.config import MY_TEAM
 
     if gid in own:
         team, slot = own[gid]
-        return f"<b>{'Yours' if team == MY_TEAM else team}</b> · {'bench' if slot == 'BN' else slot}"
+        mine = team == MY_TEAM
+        html = f"<b>{'Yours' if mine else team}</b> · {'bench' if slot == 'BN' else slot}"
+        return html, {"kind": "mine" if mine else "other_team", "team": team, "slot": slot}
     if str(fa.get(gid, "")).startswith("W"):
-        return f"<b>On waivers</b> until {str(fa[gid])[1:].strip(' ()')}"   # "W (Sep 19)"
+        until = str(fa[gid])[1:].strip(" ()")   # "W (Sep 19)"
+        return f"<b>On waivers</b> until {until}", {"kind": "waivers", "waiver_until": until}
     if not pteam:
-        return "<b>No NFL team</b>"
-    return "<b>Free agent</b>"
+        return "<b>No NFL team</b>", {"kind": "no_team"}
+    return "<b>Free agent</b>", {"kind": "free_agent"}
 
 
 def _ownership() -> tuple[dict, dict]:
@@ -2113,6 +2120,55 @@ def _tab_gloss():
         "the Waiver Wire, the Trade Finder and his own card is always the same tag."
     )
 
+def _build_player_export(idx: pd.DataFrame, cur: int) -> dict:
+    """Assembles every per-season frame `mega.player_web.build()` needs, once, then hands
+    off to that pure function — this is pure wiring, no business logic lives here."""
+    from mega.player_web import build as _build_players
+
+    if idx.empty:
+        return {"available": False, "index": [], "players": {}}
+
+    seasons = {}
+    cw = player_ids.crosswalk()
+    pfr_ids = ({g: (p if isinstance(p, str) else None) for g, p in zip(cw["gsis_id"], cw["pfr_id"])}
+               if not cw.empty else {})
+    for s in (cur, cur - 1):
+        seasons[s] = {
+            "table": _season_table(s),
+            "w": load_player_stats(s),
+            "ffo": load_ff_opportunity(s),
+            "snaps": load_snaps(s),
+            "sched": load_schedule(s),
+            "routes": load_routes(s),
+            "pfr_ids": pfr_ids,
+        }
+
+    own, fa = _ownership()
+    # Routed through _owner_badge (not `own`/`fa`/MY_TEAM directly) so this stays the only
+    # function on the page that touches the league — see test_nav.py's
+    # test_the_player_page_touches_the_league_in_exactly_one_place.
+    owner_info = {row["gsis_id"]: _owner_badge(row["gsis_id"], row["team"], own, fa)[1]
+                  for _, row in idx.iterrows()}
+    try:
+        role_ctx = _role_ctx(cur)
+    except Exception:
+        role_ctx = None
+    try:
+        dvp = _dvp(cur)
+    except Exception:
+        dvp = pd.DataFrame()
+    try:
+        blended_proj = _blended_proj(cur, int(next_week))
+    except Exception:
+        blended_proj = pd.DataFrame()
+
+    return _build_players(
+        idx, set(gsis_list), owner_info, seasons, load_rosters(cur),
+        role_ctx, dvp, blended_proj, out_for_week(int(next_week)), sched, int(next_week), cur,
+        player_ids.norm,
+    )
+
+
 def _tab_lookup():
     ui.lede(
         "Look up any QB, RB, WR or TE — who has him in Mega Bowl, how he's actually being used, "
@@ -2124,6 +2180,17 @@ def _tab_lookup():
     except Exception as e:
         _idx = pd.DataFrame()
         ui.unavailable("The player index", e)
+
+    # Headless export only (see MEGA_EXPORT_WEB at the bottom of this file): the interactive
+    # UI below only ever computes a card for whatever the search box has selected, which is
+    # nothing in a scripted run, so this instead precomputes every player's card up front.
+    # Gated on the env var so the live app never pays for it — nobody visiting this tab
+    # needs all ~600 players' data, only whichever one they searched for.
+    if os.environ.get("MEGA_EXPORT_WEB"):
+        try:
+            st.session_state["_export_players"] = _build_player_export(_idx, _cur)
+        except Exception as e:
+            st.session_state["_export_players"] = {"available": False, "index": [], "players": {}, "error": str(e)}
 
     if not _idx.empty:
         c_pick, c_season = st.columns([3, 1])
@@ -2146,7 +2213,7 @@ def _tab_lookup():
             # ---- who he is, and whose he is
             own, fa = _ownership()
             n = player_ids.norm(prow["name"])
-            owner = _owner_badge(gid, pteam, own, fa)
+            owner, _ = _owner_badge(gid, pteam, own, fa)
             _out_now = out_for_week(int(next_week)).get(n)
             nfl_status = LK.STATUS_WORDS.get(str(b.get("status") or ""), str(b.get("status") or ""))
             if not inj.empty and "gsis_id" in inj.columns:
@@ -2592,6 +2659,7 @@ if os.environ.get("MEGA_EXPORT_WEB"):
     _tab_use()
     _tab_league()
     _tab_draft()
+    _tab_lookup()
     st.stop()
 else:
     st.navigation([

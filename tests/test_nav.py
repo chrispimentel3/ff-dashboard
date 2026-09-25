@@ -184,10 +184,17 @@ def test_the_player_page_touches_the_league_in_exactly_one_place():
 
 def test_the_ownership_badge_disappears_when_there_is_no_league():
     """With no scraped rosters the card must be a plain NFL player card, not a broken
-    Mega Bowl one — so the very first thing it does is give up."""
+    Mega Bowl one — so the very first thing it does is give up. `_owner_badge` returns
+    (html, structured_info) — the mega-bowl-web export reads the second element — so the
+    no-league case is an empty string paired with an empty dict, not a bare "" ."""
     fn = {n.name: n for n in _tree().body
           if isinstance(n, ast.FunctionDef)}["_owner_badge"]
     first = next(s for s in fn.body if not isinstance(s, ast.Expr))   # skip the docstring
     assert isinstance(first, ast.If), "the no-league case must be handled before anything else"
     assert isinstance(first.body[0], ast.Return)
-    assert first.body[0].value.value == "", "with no league the badge renders nothing"
+    ret = first.body[0].value
+    assert isinstance(ret, ast.Tuple) and len(ret.elts) == 2, "must return (html, info)"
+    assert ret.elts[0].value == "", "with no league the badge renders nothing"
+    assert isinstance(ret.elts[1], ast.Dict) and ret.elts[1].keys == [], (
+        "with no league the structured info is empty too"
+    )
