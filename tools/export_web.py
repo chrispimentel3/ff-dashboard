@@ -118,6 +118,28 @@ def main() -> None:
         written.append(path)
         print(f"wrote {path.relative_to(ROOT)}")
 
+    # Logic (methodology) content is static and Streamlit-free too — see mega/logic.py.
+    from mega import logic_web as _logic_web
+
+    logic_path = OUT_DIR / "logic.json"
+    logic_path.write_text(json.dumps(_logic_web.build(), indent=2, default=str))
+    written.append(logic_path)
+    print(f"wrote {logic_path.relative_to(ROOT)}")
+
+    # Player headshots, name-keyed — see mega/headshots_web.py.
+    from mega import headshots_web as _headshots_web
+
+    try:
+        import nflreadpy as _nfl
+        _season = int(_nfl.get_current_season())
+    except Exception:
+        _season = _data.SEASON_DEFAULT
+    headshots_path = OUT_DIR / "headshots.json"
+    headshots_path.write_text(json.dumps(_headshots_web.build(_data.load_rosters(_season)),
+                                         indent=2, default=str))
+    written.append(headshots_path)
+    print(f"wrote {headshots_path.relative_to(ROOT)}")
+
     if not written:
         sys.exit(1)
 
