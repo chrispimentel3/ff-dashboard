@@ -132,7 +132,7 @@ TOPICS = [
             "Every league has a shape to who actually wins it. Blueprint fit scores each "
             "player 0–100 against the specific profile that's won Mega Bowl, not against a "
             "generic \"good fantasy player\" idea — a fit score is about whether this player "
-            "matches what tends to work *here*."
+            "matches what tends to work here."
         ),
         "detail": (
             "Four different profiles, one per position, thresholds prorated to a per-game "
