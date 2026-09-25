@@ -1106,45 +1106,25 @@ def _tab_start():
         ui.note("No Vegas column this week — " + ("no ODDS_API_KEY is set."
                 if not _O.available() else f"props for week {next_week} have not been swept."))
 
-    if lu is not None and not lu.empty:
-        starters = lu[lu["start"]]
-        bench = lu[~lu["start"]]
-        proj_total = starters["proj_adj"].sum()
-        n_close = int((bench["close_call"] != "").sum())
-        fp_cov = int((starters["proj_source"] == "FantasyPros").sum())
-        _moved = [r for _, r in lu.iterrows()
-                  if str(r.get("lineup", "")) != "BENCH" and str(r.get("slot", "")) == "BN"]
-        _est = int((starters["proj_source"] != "FantasyPros").sum())
-        ui.answer(
-            (f"Your best legal lineup projects {proj_total:.0f} points in week {next_week}."
-             if not _moved else
-             f"Start {', '.join(ui.short_name(r['player']) for r in _moved[:2])} — that is "
-             f"worth {proj_total:.0f} points in week {next_week}, more than your current nine."),
-            (f"{n_close} call{'s' if n_close != 1 else ''} within two points"
-             + (f", and {_est} of {len(starters)} starters run on estimates rather than real "
-                "projections — break those on target share." if _est else "."))
-        )
+    from mega.start_sit import build as _build_start_sit
+    _ts = target_share(int(season), int(week), int(roll))
+    ss = _build_start_sit(lu, _ts, int(next_week))
+    st.session_state["_export_start_sit"] = ss
+
+    if ss["available"]:
+        ui.answer(ss["headline"], ss["subhead"])
+        k = ss["kpis"]
         ui.kpi_row([
-            (f"Wk {next_week} proj total", f"{proj_total:.1f}", "optimal starting 9 (skill)"),
-            ("Close calls", str(n_close), "bench within 2 pts of a starter"),
-            ("FantasyPros-backed", f"{fp_cov}/{len(starters)}", "starters with FP projection"),
+            (f"Wk {next_week} proj total", f"{k['proj_total']:.1f}", "optimal starting 9 (skill)"),
+            ("Close calls", str(k["close_calls"]), "bench within 2 pts of a starter"),
+            ("FantasyPros-backed", f"{k['fp_backed']}/{k['starters_n']}", "starters with FP projection"),
         ])
         st.write("")
 
-        # Opportunity alongside the projection. Below the FantasyPros free-tier cutoff
-        # (top 10 per position) everything is an estimate, and a 1-2 point gap between
-        # two estimates is noise — target share is the steadier tiebreaker.
-        _ts = target_share(int(season), int(week), int(roll))
-        lu = lu.merge(_ts, on="gsis_id", how="left") if "gsis_id" in lu.columns else lu
-        for _c in ("tgt_pct", "tm_rank"):
-            if _c not in lu.columns:
-                lu[_c] = pd.NA
-        starters, bench = lu[lu["start"]], lu[~lu["start"]]
-
-        slot_order = {"QB": 0, "RB": 1, "WR": 2, "TE": 3, "FLEX": 4}
         cols = [c for c in ["lineup", "player", "pos", "nfl_team", "report_status", "opp", "ease_rank",
                             "proj", "proj_adj", "proj_source", "vegas", "vegas_edge",
-                            "tgt_pct", "tm_rank", "start_sit", "close_call"] if c in lu.columns]
+                            "tgt_pct", "tm_rank", "start_sit", "close_call"]
+                if ss["starters"] and c in ss["starters"][0]]
 
         lu_fmt = {"PROJ": "{:.1f}", "PROJ*": "{:.1f}", "TGT%": "{:.1%}",
                   "VEGAS": "{:.1f}", "VEG±": "{:+.1f}"}
@@ -1153,14 +1133,12 @@ def _tab_start():
                            "than the usage model does."}
 
         ui.h("✅ Recommended starters")
-        sview = starters.assign(_o=starters["lineup"].map(slot_order)).sort_values("_o")[cols]
-        ui.table(sview, sequential=["PROJ*"], diverging=["VEG±"], pos_cols=["POS"],
-                 fmt=lu_fmt, help=lu_help, view="startsit_start")
+        ui.table(pd.DataFrame(ss["starters"])[cols], sequential=["PROJ*"], diverging=["VEG±"],
+                 pos_cols=["POS"], fmt=lu_fmt, help=lu_help, view="startsit_start")
 
         ui.h("🪑 Bench")
-        bview = bench.sort_values("proj_adj", ascending=False)[cols]
-        ui.table(bview, diverging=["VEG±"], pos_cols=["POS"], fmt=lu_fmt, help=lu_help,
-                 view="startsit_bench")
+        ui.table(pd.DataFrame(ss["bench"])[cols], diverging=["VEG±"], pos_cols=["POS"],
+                 fmt=lu_fmt, help=lu_help, view="startsit_bench")
 
         with st.expander("Where these projections come from"):
             st.markdown(
@@ -2537,11 +2515,24 @@ def _page_ask() -> None:
     _tabs(("Ask anything", _tab_ask), ("Downloads", _tab_raw))
 
 
-st.navigation([
-    st.Page(_page_week, title="This week", url_path="week", default=True),
-    st.Page(_page_start, title="Who do I start?", url_path="start"),
-    st.Page(_page_upgrade, title="Who should I get?", url_path="upgrade"),
-    st.Page(_page_review, title="How am I doing?", url_path="review"),
-    st.Page(_page_player, title="Look up a player", url_path="player"),
-    st.Page(_page_ask, title="Ask the data", url_path="ask"),
-], position="top").run()
+if os.environ.get("MEGA_EXPORT_WEB"):
+    # Headless data export for mega-bowl-web (tools/export_web.py): call the tab functions
+    # we export directly, bypassing st.navigation entirely. AppTest.switch_page() only
+    # supports file-based pages, and these are function-based (st.Page(_page_start, ...) —
+    # a callable, not a file) — there's no page file to switch to, so this is the only way
+    # to reach _tab_start/_tab_match's session_state exports in a headless run. Every
+    # module-level global they read (season, week, next_week, agg, IB, skill, …) is already
+    # computed above regardless of which page would have been selected.
+    _tab_action()
+    _tab_start()
+    _tab_match()
+    st.stop()
+else:
+    st.navigation([
+        st.Page(_page_week, title="This week", url_path="week", default=True),
+        st.Page(_page_start, title="Who do I start?", url_path="start"),
+        st.Page(_page_upgrade, title="Who should I get?", url_path="upgrade"),
+        st.Page(_page_review, title="How am I doing?", url_path="review"),
+        st.Page(_page_player, title="Look up a player", url_path="player"),
+        st.Page(_page_ask, title="Ask the data", url_path="ask"),
+    ], position="top").run()

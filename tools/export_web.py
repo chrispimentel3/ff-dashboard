@@ -16,6 +16,7 @@ Usage:
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -26,10 +27,14 @@ OUT_DIR = ROOT / "data" / "web"
 
 EXPORTS = {
     "_export_action_board": "action_board.json",
+    "_export_start_sit": "start_sit.json",
 }
 
 
 def main() -> None:
+    # app.py checks this to call every exported tab's function directly instead of going
+    # through st.navigation — see the MEGA_EXPORT_WEB branch at the bottom of app.py.
+    os.environ["MEGA_EXPORT_WEB"] = "1"
     at = AppTest.from_file(str(ROOT / "app.py"), default_timeout=180).run()
 
     if at.exception:
