@@ -264,6 +264,15 @@ def my_gsis_ids(roster_raw: pd.DataFrame) -> tuple[list[str], pd.DataFrame]:
     return [g for g in skill["gsis_id"].dropna().tolist()], dropped
 
 
+def my_norms(roster_raw: pd.DataFrame) -> set[str]:
+    """Normalized names for the same skill-position roster `my_gsis_ids` resolves — the
+    join key mega/history.py's weekly snapshots use (they predate any of them having a
+    gsis_id column consistently, e.g. FantasyCalc trade value)."""
+    mapped, _match = map_roster(roster_raw)
+    skill = mapped[~mapped["pos"].isin(["K", "DEF"]) & ~mapped["slot"].isin(["K", "DEF"])]
+    return set(skill["norm"].dropna())
+
+
 def ownership() -> tuple[dict, dict]:
     """gsis_id -> (fantasy team, slot) from the scraped rosters, and gsis_id -> Yahoo FA
     status. Both go through the id resolver: matching the FA list by name missed players

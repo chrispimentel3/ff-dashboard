@@ -20,7 +20,7 @@ try:
 except Exception:
     pass
 
-from mega import intel
+from mega import data, history, intel
 from mega.digest import build_digest, send_email, write_digest
 
 
@@ -89,6 +89,10 @@ def main(argv=None) -> None:
     md = build_digest(args.season, yahoo_rosters=rosters)
     path = write_digest(md, args.season)
     print(f"digest -> {path}")
+
+    week = data.current_week(args.season, fallback=1)
+    history.snapshot_all(args.season, week)
+    print(f"history snapshot -> week {week}")
 
     if args.email:
         try:

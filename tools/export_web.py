@@ -102,6 +102,22 @@ def main() -> None:
         written.extend(player_files)
         print(f"wrote data/web/players_index.json + {len(player_files) - 1} data/web/players/<gsis_id>.json files")
 
+    # Trend charts (WOPR, archetype fit, trade value) read mega/history.py's weekly
+    # snapshot CSVs directly — plain files, no Streamlit run context needed, so this
+    # runs outside the AppTest harness above rather than through session_state.
+    sys.path.insert(0, str(ROOT))
+    from mega import data as _data
+    from mega import trend_web as _trend_web
+
+    norms = _data.my_norms(_data.my_roster()[0])
+    trends = _trend_web.build(norms)
+    for key, filename in (("wopr", "wopr_trend.json"), ("archetype", "archetype_trend.json"),
+                          ("trade_value", "trade_value_trend.json")):
+        path = OUT_DIR / filename
+        path.write_text(json.dumps(trends[key], indent=2, default=str))
+        written.append(path)
+        print(f"wrote {path.relative_to(ROOT)}")
+
     if not written:
         sys.exit(1)
 
