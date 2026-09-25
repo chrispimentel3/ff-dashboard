@@ -1233,6 +1233,10 @@ def _tab_use():
 def _tab_match():
     if sched.empty:
         st.info("Schedule unavailable.")
+        st.session_state["_export_matchups"] = {
+            "available": False, "next_week": int(next_week), "my_team": "",
+            "team_environment": [], "vegas_players": [], "player_difficulty": [],
+        }
     else:
         teams = sorted({t for t in team_by_id.values() if t})
         wk = sched[sched["week"] == next_week].copy()
@@ -1302,6 +1306,7 @@ def _tab_match():
             )
 
         # per-player defense-vs-position matchup
+        show = pd.DataFrame()
         dvp = _dvp(int(season))
         if not dvp.empty:
             ui.h(f"Week {next_week} — player matchup difficulty (defense vs position)")
@@ -1318,6 +1323,11 @@ def _tab_match():
                                    labels=["🟢 great", "🙂 good", "😐 tough", "🔴 avoid"])
             show = pr[["player", "pos", "matchup", "ease_rank", "pa_pg", "verdict"]].sort_values("ease_rank")
             ui.table(show, pos_cols=["POS"], fmt={"PA/G": "{:.1f}"})
+
+        from mega.matchups import build as _build_matchups
+        from mega.config import MY_TEAM as _MINE_EXPORT
+        st.session_state["_export_matchups"] = _build_matchups(
+            mt, _vb, show, int(next_week), _MINE_EXPORT)
 
 # ---- League intelligence (Mega Bowl) ---------------------------------------------
 @st.cache_data(ttl=dt.timedelta(hours=6), show_spinner="Crunching league intel…")
