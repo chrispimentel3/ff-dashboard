@@ -1141,9 +1141,12 @@ def _tab_match():
             _vb = _vb.copy()
             _own = {}
             try:
-                from mega.yahoo import cached_rosters
-                _r = cached_rosters()
-                _own = dict(zip(_r.get("gsis_id", []), _r.get("team", [])))
+                # cached_rosters() alone carries no gsis_id column at all (it's the raw
+                # Yahoo scrape) — every row silently failed this join and read "FA" even
+                # for players confirmed rostered. data.ownership() is the same resolved
+                # gsis_id -> (team, slot) map the roster-badge code already uses.
+                _own_raw, _ = data.ownership()
+                _own = {g: t for g, (t, _sl) in _own_raw.items()}
             except Exception:
                 pass
             from mega.config import MY_TEAM as _MINE   # imported here: the module-level

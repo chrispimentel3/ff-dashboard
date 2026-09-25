@@ -258,7 +258,12 @@ def resolve(players: pd.DataFrame, name_col: str = "player") -> tuple[pd.DataFra
                 hit, ambiguous = _pick(h, pos, team)
                 method = "" if ambiguous else "fuzzy"
 
-        if not hit.empty:
+        # `hit` can still hold 2+ rows here when path 3/4 found a genuine ambiguity
+        # (`method` left "" on purpose) — using hit.iloc[0] anyway would silently attach
+        # whichever candidate happens to sort first (a real bug: two different real
+        # players named "Lamar Jackson" once put the Ravens QB's props on a Panthers
+        # CB's gsis_id). Only trust `hit` once `method` says the pick was unambiguous.
+        if method and not hit.empty:
             top = hit.iloc[0]
             rec["gsis_id"] = _s(rec.get("gsis_id")) or top.get("gsis_id")
             rec["pfr_id"] = top.get("pfr_id")

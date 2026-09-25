@@ -268,15 +268,45 @@ def refresh(season: int, week: int, markets=MARKETS, force: bool = False,
 
 
 def _attach_ids(df: pd.DataFrame) -> pd.DataFrame:
-    """Book player names -> gsis_id, and the player's own side of the matchup."""
-    from .ids import resolve
-    uniq = df[["player"]].drop_duplicates()
+    """Book player names -> gsis_id, and the player's own side of the matchup.
+
+    A name shared by two real players (there is a Ravens QB and, separately, a Panthers
+    CB both named "Lamar Jackson") is genuinely ambiguous from the name alone — resolve()
+    correctly refuses to guess between them. But every props row already carries the two
+    teams actually playing in that game, and only one of the two same-named real players
+    can belong to either side of it — trying each event team as the candidate's team
+    narrows a same-name tie for free, no separate lookup needed. A player who isn't part
+    of any tie resolves identically either way, so this is never worse than the old
+    name-only lookup, only better for the rare collision."""
+    from .ids import canon_team, crosswalk, resolve
+
+    uniq = df[["player", "home", "away"]].drop_duplicates("player")
+
+    def _resolve_as(team_col: str) -> pd.DataFrame:
+        cand = uniq[["player"]].copy()
+        cand["nfl_team"] = uniq[team_col]
+        res, _ = resolve(cand, name_col="player")
+        return res.set_index("player")
+
     try:
-        res, _ = resolve(uniq, name_col="player")
-        m = dict(zip(res["player"], res["gsis_id"]))
-        t = dict(zip(res["player"], res.get("nfl_team", pd.Series(dtype=str))))
-        # position decides which fitted skew curve a rushing line goes through (§20)
-        pos_map = dict(zip(res["player"], res.get("pos", pd.Series(dtype=str))))
+        # resolve()'s own `nfl_team`/`pos` output echoes back whatever team hint it was
+        # given once a candidate is unambiguous (it trusts the caller's team as
+        # authoritative — right for a roster row, wrong here, since "home"/"away" is
+        # only ever a disambiguating guess, not the player's real team). Only the
+        # gsis_id this settles on is trustworthy; team/pos are looked up fresh from the
+        # crosswalk by that id instead of taken from either resolve() call's output.
+        home_res, away_res = _resolve_as("home"), _resolve_as("away")
+        by_gsis = crosswalk().drop_duplicates("gsis_id").set_index("gsis_id")
+        m, t, pos_map = {}, {}, {}
+        for p in uniq["player"]:
+            hr, ar = home_res.loc[p], away_res.loc[p]
+            best = hr if hr.get("resolved") else ar
+            gid = best.get("gsis_id")
+            m[p] = gid
+            if gid in by_gsis.index:
+                row = by_gsis.loc[gid]
+                t[p] = canon_team(row.get("team"))
+                pos_map[p] = row.get("pos_key")
     except Exception:
         m, t, pos_map = {}, {}, {}
     df = df.copy()

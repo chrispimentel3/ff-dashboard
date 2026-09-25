@@ -145,3 +145,58 @@ def test_a_recent_sweep_of_this_week_is_left_alone(monkeypatch, tmp_path):
     monkeypatch.setattr(O, "props_csv", lambda s, w: f)
     O._save_ledger({"swept": dt.datetime.now(dt.timezone.utc).isoformat()})
     assert O.due(150, 2026, 7) is False
+
+
+# ---------------------------------------------------------------- id attachment
+# Real bug: the Ravens QB "Lamar Jackson" and a Panthers CB of the same name once
+# collided in mega.ids.resolve()'s name lookup, and the CB's gsis_id (sorted first)
+# silently ended up on the QB's real prop lines. Fixed in mega/ids.py's resolve() and
+# here by using the game's own two teams to disambiguate for free.
+_CROSSWALK = pd.DataFrame([
+    {"name": "Lamar Jackson", "gsis_id": "00-0034796", "pfr_id": "JackLa00", "yahoo_id": "31017",
+     "norm": "lamar jackson", "norm_merge": "lamar jackson", "team_key": "BAL", "pos_key": "QB", "team": "BAL"},
+    {"name": "Lamar Jackson", "gsis_id": "00-0036152", "pfr_id": "JackLa01", "yahoo_id": "",
+     "norm": "lamar jackson", "norm_merge": "lamar jackson", "team_key": "CAR", "pos_key": "CB", "team": "CAR"},
+    {"name": "Travis Kelce", "gsis_id": "00-0030506", "pfr_id": "KelcTr00", "yahoo_id": "99999",
+     "norm": "travis kelce", "norm_merge": "travis kelce", "team_key": "KC", "pos_key": "TE", "team": "KC"},
+])
+
+
+def test_attach_ids_uses_the_games_own_teams_to_break_a_name_tie(monkeypatch):
+    from mega import ids
+
+    monkeypatch.setattr(ids, "crosswalk", lambda: _CROSSWALK)
+    monkeypatch.setattr(ids, "overrides", lambda: pd.DataFrame(columns=["yahoo_id", "name", "gsis_id", "note"]))
+    monkeypatch.setattr(ids, "team_defenses", lambda: {})
+
+    props = pd.DataFrame([{
+        "player": "Lamar Jackson", "market": "player_pass_yds", "book": "x", "line": 245.5,
+        "price_over": -110, "price_under": -110, "home": "ATL", "away": "BAL", "event_id": "e1",
+    }])
+    out = O._attach_ids(props)
+    row = out.iloc[0]
+    assert row["gsis_id"] == "00-0034796"   # the real Ravens QB, not the Panthers CB
+    assert row["pos"] == "QB"
+    assert row["team"] == "BAL"
+
+
+def test_attach_ids_does_not_relabel_an_unambiguous_players_own_team(monkeypatch):
+    """Real regression caught while building the fix above: using the game's home/away
+    as a disambiguation hint must not leak into the output team for a player who was
+    never ambiguous in the first place — Travis Kelce's team is KC regardless of which
+    side of this week's matchup (MIA) he's listed as home/away against."""
+    from mega import ids
+
+    monkeypatch.setattr(ids, "crosswalk", lambda: _CROSSWALK)
+    monkeypatch.setattr(ids, "overrides", lambda: pd.DataFrame(columns=["yahoo_id", "name", "gsis_id", "note"]))
+    monkeypatch.setattr(ids, "team_defenses", lambda: {})
+
+    props = pd.DataFrame([{
+        "player": "Travis Kelce", "market": "player_reception_yds", "book": "x", "line": 55.5,
+        "price_over": -110, "price_under": -110, "home": "MIA", "away": "KC", "event_id": "e2",
+    }])
+    out = O._attach_ids(props)
+    row = out.iloc[0]
+    assert row["gsis_id"] == "00-0030506"
+    assert row["team"] == "KC"   # his own team, not "MIA" (this week's opponent)
+    assert row["pos"] == "TE"
