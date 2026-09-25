@@ -181,6 +181,43 @@ TOPICS = [
         ),
     },
     {
+        "key": "matchup_model",
+        "title": "\"Matchup\" on a player's page — what it actually weighs",
+        "headline": (
+            "A defense that \"allows a lot of points\" isn't necessarily bad — it might just "
+            "have faced a run of good offenses. This model asks the harder question: given "
+            "who a defense actually faced, did it allow more or less than expected? That "
+            "answer, blended with the Vegas line for this specific week, is what moves a "
+            "player's number up or down from his normal week."
+        ),
+        "detail": (
+            "Two inputs, combined:\n\n"
+            "- **Opponent-adjusted defense rating.** Points a defense allowed to a position, "
+            "measured against those players' own normal week — not the raw total, which "
+            "rewards a defense that got lucky with who it played. The in-season sample is "
+            "shrunk toward last year's version of the same rating, and how hard depends on "
+            "the position: run defense barely carries over year to year, so RB ratings lean "
+            "on the in-season sample fast; pass defense (and especially wide receiver, where "
+            "an in-season sample is close to pure noise for over a month) leans on last "
+            "year's number much longer.\n"
+            "- **Vegas implied team total**, relative to that team's own average line this "
+            "season — forward-looking, and it prices things (a backup QB, bad weather, an "
+            "injury) a defense rating can't see yet.\n\n"
+            "The two don't just multiply together. A defense that's allowed 30% more than "
+            "expected doesn't actually move a player 30% — most of that 30% was noise, not "
+            "signal — so each input is raised to a fitted exponent (how much of it is real, "
+            "measured against ten years of outcomes) before combining. **Treat anything "
+            "inside about ±3% as within the noise floor** — the fitted model sorts reliably "
+            "at the extremes (a bottom-5 matchup, a big Vegas total) and not reliably in the "
+            "middle.\n\n"
+            "The multiplier is applied to a matchup-*neutral* baseline (this same dashboard's "
+            "usage-based estimate, not a projection that already has the matchup priced in "
+            "elsewhere) to get an expected-points number for the week. A future week with no "
+            "Vegas line posted yet falls back to the defense rating alone, labeled as such, "
+            "rather than guessing at a line."
+        ),
+    },
+    {
         "key": "trade_value",
         "title": "What the \"value\" number in a trade actually is",
         "headline": (

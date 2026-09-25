@@ -1,0 +1,289 @@
+{
+ "_meta": {
+  "seasons": [
+   2016,
+   2025
+  ],
+  "scoring": "half-PPR Mega Bowl",
+  "min_base": {
+   "QB": 12,
+   "RB": 6,
+   "WR": 6,
+   "TE": 4
+  }
+ },
+ "QB": {
+  "k": 12,
+  "rho": 0.85,
+  "b_def": 0.288,
+  "b_impl": 0.374,
+  "b_def_only": 0.435,
+  "se": [
+   0.066,
+   0.064
+  ],
+  "gbar": 17.77,
+  "weekly_sd": 7.3,
+  "n": 3957,
+  "oos": {
+   "Q1": {
+    "pred_pct": -7.7,
+    "actual_pct": -8.8
+   },
+   "Q2": {
+    "pred_pct": -2.6,
+    "actual_pct": 1.1
+   },
+   "Q3": {
+    "pred_pct": 0.5,
+    "actual_pct": -4.1
+   },
+   "Q4": {
+    "pred_pct": 3.5,
+    "actual_pct": 4.0
+   },
+   "Q5": {
+    "pred_pct": 8.4,
+    "actual_pct": 7.9
+   }
+  }
+ },
+ "RB": {
+  "k": 20,
+  "rho": 0.3,
+  "b_def": 0.577,
+  "b_impl": 0.376,
+  "b_def_only": 0.794,
+  "se": [
+   0.118,
+   0.072
+  ],
+  "gbar": 17.05,
+  "weekly_sd": 7.3,
+  "n": 6997,
+  "oos": {
+   "Q1": {
+    "pred_pct": -10.3,
+    "actual_pct": -11.3
+   },
+   "Q2": {
+    "pred_pct": -4.9,
+    "actual_pct": -4.6
+   },
+   "Q3": {
+    "pred_pct": -1.1,
+    "actual_pct": 0.3
+   },
+   "Q4": {
+    "pred_pct": 3.0,
+    "actual_pct": 5.5
+   },
+   "Q5": {
+    "pred_pct": 9.4,
+    "actual_pct": 10.2
+   }
+  }
+ },
+ "WR": {
+  "k": 45,
+  "rho": 0.7,
+  "b_def": 0.365,
+  "b_impl": 0.297,
+  "b_def_only": 0.431,
+  "se": [
+   0.085,
+   0.061
+  ],
+  "gbar": 21.26,
+  "weekly_sd": 6.9,
+  "n": 9758,
+  "oos": {
+   "Q1": {
+    "pred_pct": -8.2,
+    "actual_pct": -6.4
+   },
+   "Q2": {
+    "pred_pct": -3.5,
+    "actual_pct": -3.2
+   },
+   "Q3": {
+    "pred_pct": -1.0,
+    "actual_pct": 6.0
+   },
+   "Q4": {
+    "pred_pct": 1.5,
+    "actual_pct": -0.6
+   },
+   "Q5": {
+    "pred_pct": 5.2,
+    "actual_pct": 4.2
+   }
+  }
+ },
+ "TE": {
+  "k": 6,
+  "rho": 0.3,
+  "b_def": 0.267,
+  "b_impl": 0.455,
+  "b_def_only": 0.334,
+  "se": [
+   0.073,
+   0.098
+  ],
+  "gbar": 8.92,
+  "weekly_sd": 5.5,
+  "n": 5023,
+  "oos": {
+   "Q1": {
+    "pred_pct": -11.7,
+    "actual_pct": -11.3
+   },
+   "Q2": {
+    "pred_pct": -5.7,
+    "actual_pct": 0.7
+   },
+   "Q3": {
+    "pred_pct": -1.8,
+    "actual_pct": 3.3
+   },
+   "Q4": {
+    "pred_pct": 1.8,
+    "actual_pct": -3.8
+   },
+   "Q5": {
+    "pred_pct": 8.0,
+    "actual_pct": 10.9
+   }
+  }
+ },
+ "_prior_def": {
+  "ARI|QB": 1.1238,
+  "ARI|RB": 1.0951,
+  "ARI|TE": 1.2517,
+  "ARI|WR": 0.9282,
+  "ATL|QB": 1.0058,
+  "ATL|RB": 0.9436,
+  "ATL|TE": 0.6377,
+  "ATL|WR": 1.0794,
+  "BAL|QB": 1.016,
+  "BAL|RB": 0.961,
+  "BAL|TE": 0.7212,
+  "BAL|WR": 0.9759,
+  "BUF|QB": 0.9095,
+  "BUF|RB": 1.1123,
+  "BUF|TE": 0.6238,
+  "BUF|WR": 1.0185,
+  "CAR|QB": 0.7735,
+  "CAR|RB": 1.0177,
+  "CAR|TE": 0.9154,
+  "CAR|WR": 0.878,
+  "CHI|QB": 1.2373,
+  "CHI|RB": 0.97,
+  "CHI|TE": 0.987,
+  "CHI|WR": 1.2401,
+  "CIN|QB": 1.1521,
+  "CIN|RB": 1.2593,
+  "CIN|TE": 1.482,
+  "CIN|WR": 0.7887,
+  "CLE|QB": 0.818,
+  "CLE|RB": 0.9201,
+  "CLE|TE": 0.5628,
+  "CLE|WR": 0.9883,
+  "DAL|QB": 1.4322,
+  "DAL|RB": 1.2308,
+  "DAL|TE": 0.8552,
+  "DAL|WR": 1.3462,
+  "DEN|QB": 0.9499,
+  "DEN|RB": 0.9564,
+  "DEN|TE": 0.9673,
+  "DEN|WR": 0.7543,
+  "DET|QB": 1.1115,
+  "DET|RB": 1.0346,
+  "DET|TE": 1.056,
+  "DET|WR": 1.0294,
+  "GB|QB": 0.9244,
+  "GB|RB": 0.993,
+  "GB|TE": 0.9394,
+  "GB|WR": 0.9403,
+  "HOU|QB": 0.7505,
+  "HOU|RB": 0.8908,
+  "HOU|TE": 0.7681,
+  "HOU|WR": 0.8331,
+  "IND|QB": 1.0557,
+  "IND|RB": 0.9595,
+  "IND|TE": 1.1114,
+  "IND|WR": 1.1067,
+  "JAX|QB": 0.9657,
+  "JAX|RB": 0.8729,
+  "JAX|TE": 1.1683,
+  "JAX|WR": 0.9869,
+  "KC|QB": 0.9328,
+  "KC|RB": 0.7008,
+  "KC|TE": 0.899,
+  "KC|WR": 0.8781,
+  "LA|QB": 0.9932,
+  "LA|RB": 0.9047,
+  "LA|TE": 1.0119,
+  "LA|WR": 1.0926,
+  "LAC|QB": 0.8333,
+  "LAC|RB": 0.8725,
+  "LAC|TE": 0.8514,
+  "LAC|WR": 0.8933,
+  "LV|QB": 0.9828,
+  "LV|RB": 0.8991,
+  "LV|TE": 0.9216,
+  "LV|WR": 0.987,
+  "MIA|QB": 1.2241,
+  "MIA|RB": 1.1673,
+  "MIA|TE": 1.0673,
+  "MIA|WR": 1.0313,
+  "MIN|QB": 0.7365,
+  "MIN|RB": 0.8295,
+  "MIN|TE": 0.8222,
+  "MIN|WR": 0.7893,
+  "NE|QB": 1.1149,
+  "NE|RB": 0.9029,
+  "NE|TE": 0.9508,
+  "NE|WR": 1.2606,
+  "NO|QB": 0.8251,
+  "NO|RB": 0.8753,
+  "NO|TE": 0.7858,
+  "NO|WR": 0.9454,
+  "NYG|QB": 1.1493,
+  "NYG|RB": 1.1956,
+  "NYG|TE": 0.8717,
+  "NYG|WR": 0.9155,
+  "NYJ|QB": 1.1035,
+  "NYJ|RB": 1.1571,
+  "NYJ|TE": 1.0262,
+  "NYJ|WR": 1.0179,
+  "PHI|QB": 0.8982,
+  "PHI|RB": 1.0398,
+  "PHI|TE": 0.625,
+  "PHI|WR": 0.7737,
+  "PIT|QB": 1.204,
+  "PIT|RB": 0.7741,
+  "PIT|TE": 1.2294,
+  "PIT|WR": 1.1567,
+  "SEA|QB": 0.9337,
+  "SEA|RB": 0.7194,
+  "SEA|TE": 0.9725,
+  "SEA|WR": 0.8471,
+  "SF|QB": 1.0509,
+  "SF|RB": 1.1761,
+  "SF|TE": 0.9437,
+  "SF|WR": 0.7945,
+  "TB|QB": 1.174,
+  "TB|RB": 0.9466,
+  "TB|TE": 1.2005,
+  "TB|WR": 0.822,
+  "TEN|QB": 1.1003,
+  "TEN|RB": 0.9908,
+  "TEN|TE": 1.016,
+  "TEN|WR": 1.1723,
+  "WAS|QB": 1.2119,
+  "WAS|RB": 1.1022,
+  "WAS|TE": 1.0396,
+  "WAS|WR": 1.0216
+ }
+}

@@ -51,7 +51,13 @@ def _opponents(season: int, week: int) -> pd.DataFrame:
 
 
 def attach_matchup(players: pd.DataFrame, season: int, week: int) -> pd.DataFrame:
-    """Add opponent, ease_rank, mult to a roster frame (needs cols: pos, nfl_team)."""
+    """Add opponent, ease_rank, mult to a roster frame (needs cols: pos, nfl_team).
+
+    `mult` prefers the fitted defense+Vegas model (`mega.matchup_model`) where it
+    has an answer for that team/pos this week, and falls back to the plain
+    points-allowed ratio otherwise (a bye-adjacent edge case, or the fitted model's
+    network fetch failing) — never silently drops to 1.0 when a cruder number is
+    available."""
     dvp = defense_vs_position(season)
     opp = _opponents(season, week)
     df = players.merge(opp, left_on="nfl_team", right_on="team", how="left")
@@ -59,6 +65,21 @@ def attach_matchup(players: pd.DataFrame, season: int, week: int) -> pd.DataFram
         df = df.merge(dvp[["defense", "pos", "ease_rank", "mult"]],
                       left_on=["opp", "pos"], right_on=["defense", "pos"], how="left").drop(columns=["defense"])
     df["mult"] = pd.to_numeric(df.get("mult"), errors="coerce").fillna(1.0)
+
+    try:
+        from .matchup_model import week_matchups
+        fitted = week_matchups(season, week)
+        fitted = fitted[fitted["week"] == week] if not fitted.empty else fitted
+    except Exception:
+        fitted = pd.DataFrame()
+    if not fitted.empty:
+        df = df.merge(
+            fitted[["team", "pos", "mult", "pct", "basis"]].rename(
+                columns={"team": "nfl_team", "mult": "mult_fitted", "pct": "pct_fitted", "basis": "matchup_basis"}),
+            on=["nfl_team", "pos"], how="left",
+        )
+    else:
+        df["mult_fitted"] = pd.NA
     return df
 
 
@@ -70,7 +91,8 @@ def optimize_lineup(roster: pd.DataFrame, season: int, week: int) -> pd.DataFram
     # df.get returns a bare str when the column is absent, and str has no .eq
     is_est = df["proj_source"].eq("nflverse-est") if "proj_source" in df.columns \
         else pd.Series(False, index=df.index)
-    adj_factor = (0.80 + 0.20 * df["mult"]).where(is_est, 1.0)
+    effective_mult = pd.to_numeric(df.get("mult_fitted"), errors="coerce").fillna(df["mult"])
+    adj_factor = (0.80 + 0.20 * effective_mult).where(is_est, 1.0)
     df["proj_adj"] = (pd.to_numeric(df["proj"], errors="coerce") * adj_factor).round(2)
     df = df.sort_values("proj_adj", ascending=False)
 

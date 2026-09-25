@@ -156,6 +156,7 @@ def _role_section(role_ctx: dict | None, gid: str) -> dict | None:
 def _this_week_section(
     pteam: str, ppos: str, sched: pd.DataFrame, next_week: int, dvp: pd.DataFrame,
     out_reason: str | None, blended_proj: pd.DataFrame, gid: str,
+    matchups: pd.DataFrame | None = None,
 ) -> dict | None:
     if not pteam:
         return None
@@ -166,16 +167,37 @@ def _this_week_section(
     is_home = g0["home_team"] == pteam
     opp = g0["away_team"] if is_home else g0["home_team"]
     out = {"bye": False, "opponent": opp, "home": bool(is_home), "ease_rank": None,
-           "out_reason": out_reason, "projection": None, "proj_source": None}
+           "out_reason": out_reason, "projection": None, "proj_source": None,
+           "matchup_mult": None, "matchup_pct": None, "matchup_basis": None,
+           "matchup_def_rank": None, "matchup_def_pct": None, "matchup_vegas_pct": None,
+           "matchup_baseline": None, "expected_pts": None, "delta_pts": None}
     if dvp is not None and not dvp.empty:
         m = dvp[(dvp["defense"] == opp) & (dvp["pos"] == ppos)]
         if not m.empty:
             out["ease_rank"] = int(_clean(m["ease_rank"].iloc[0]))
+    baseline = None
     if not out_reason and blended_proj is not None and not blended_proj.empty and "gsis_id" in blended_proj.columns:
         pr = blended_proj[blended_proj["gsis_id"] == gid]
         if not pr.empty and _clean(pr["proj"].iloc[0]) is not None:
             out["projection"] = round(float(pr["proj"].iloc[0]), 1)
             out["proj_source"] = pr["proj_source"].iloc[0]
+        if not pr.empty and "nfl_est" in pr.columns:
+            baseline = _clean(pr["nfl_est"].iloc[0])
+    if matchups is not None and not matchups.empty:
+        m = matchups[(matchups["team"] == pteam) & (matchups["opp"] == opp) & (matchups["pos"] == ppos)]
+        if not m.empty:
+            r = m.iloc[0]
+            out["matchup_mult"] = _clean(r["mult"])
+            out["matchup_pct"] = _clean(r["pct"])
+            out["matchup_basis"] = r["basis"]
+            out["matchup_def_rank"] = int(_clean(r["def_rank"]))
+            out["matchup_def_pct"] = _clean(r["def_pct"])
+            out["matchup_vegas_pct"] = _clean(r["vegas_pct"])
+            if baseline is not None and not out_reason:
+                mult = float(r["mult"])
+                out["matchup_baseline"] = round(float(baseline), 1)
+                out["expected_pts"] = round(float(baseline) * mult, 1)
+                out["delta_pts"] = round(float(baseline) * (mult - 1), 1)
     return out
 
 
@@ -201,6 +223,7 @@ def build_player(
     out_reason: str | None,
     sched_current: pd.DataFrame,
     next_week: int,
+    matchups: pd.DataFrame | None = None,
 ) -> dict:
     ppos, pteam = idx_row["pos"], idx_row["team"]
     b = LK.bio(gid, rosters_bio)
@@ -251,7 +274,8 @@ def build_player(
             ),
             "role": _role_section(role_ctx, gid) if season == cur else None,
             "this_week": (
-                _this_week_section(pteam, ppos, sched_current, next_week, dvp, out_reason, blended_proj, gid)
+                _this_week_section(pteam, ppos, sched_current, next_week, dvp, out_reason,
+                                    blended_proj, gid, matchups)
                 if season == cur else None
             ),
         }
@@ -274,6 +298,7 @@ def build(
     next_week: int,
     cur: int,
     norm_fn,
+    matchups: pd.DataFrame | None = None,
 ) -> dict:
     """Builds the whole export: the searchable index plus every player's full detail.
 
@@ -295,6 +320,7 @@ def build(
             players[gid] = build_player(
                 gid, row, cur, seasons, rosters_bio, owner_info.get(gid),
                 role_ctx, dvp, blended_proj, out_reason, sched_current, next_week,
+                matchups,
             )
         except Exception as e:  # one bad player shouldn't blank the whole index
             players[gid] = {"gsis_id": gid, "name": row["name"], "pos": row["pos"],

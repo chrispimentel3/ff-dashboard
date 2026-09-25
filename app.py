@@ -460,6 +460,16 @@ def _dvp(season: int) -> pd.DataFrame:
     return defense_vs_position(season)
 
 
+@st.cache_data(ttl=dt.timedelta(hours=6), show_spinner=False)
+def _matchups(season: int, from_week: int) -> pd.DataFrame:
+    """Fitted defense+Vegas matchup multiplier, every remaining game x position —
+    see mega/matchup_model.py. Cached separately from `_dvp` (the old plain ratio,
+    kept for `ease_rank`/pa_pg display) since this one also needs this week's
+    Vegas lines, which change on their own refresh cadence."""
+    from mega.matchup_model import week_matchups
+    return week_matchups(season, from_week)
+
+
 def _my_roster_projected(season: int, week: int) -> pd.DataFrame:
     """My skill roster joined to blended projections (by gsis_id, name fallback)."""
     proj = _blended_proj(season, week)
@@ -1975,11 +1985,15 @@ def _build_player_export(idx: pd.DataFrame, cur: int) -> dict:
         blended_proj = _blended_proj(cur, int(next_week))
     except Exception:
         blended_proj = pd.DataFrame()
+    try:
+        matchups = _matchups(cur, int(next_week))
+    except Exception:
+        matchups = pd.DataFrame()
 
     return _build_players(
         idx, set(gsis_list), owner_info, seasons, load_rosters(cur),
         role_ctx, dvp, blended_proj, out_for_week(int(next_week)), sched, int(next_week), cur,
-        player_ids.norm,
+        player_ids.norm, matchups,
     )
 
 
@@ -2170,6 +2184,18 @@ def _tab_lookup():
                                 pr = pj[pj["gsis_id"] == gid] if "gsis_id" in pj.columns else pd.DataFrame()
                                 if not pr.empty and pd.notna(pr["proj"].iloc[0]):
                                     bits.append(f"projection {float(pr['proj'].iloc[0]):.1f} ({pr['proj_source'].iloc[0]})")
+                            except Exception:
+                                pass
+                        if not _out_now:
+                            try:
+                                mt = _matchups(_cur, int(next_week))
+                                mm = mt[(mt["team"] == pteam) & (mt["opp"] == opp) & (mt["pos"] == ppos)]
+                                if not mm.empty:
+                                    r0 = mm.iloc[0]
+                                    reason = f"defense #{int(r0['def_rank'])} vs {ppos} {r0['def_pct']:+.0f}%"
+                                    if pd.notna(r0["vegas_pct"]):
+                                        reason += f", Vegas {r0['vegas_pct']:+.0f}% vs {pteam}'s norm"
+                                    bits.append(f"matchup {r0['pct']:+.0f}% ({reason})")
                             except Exception:
                                 pass
                         st.markdown(" · ".join(bits))
