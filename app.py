@@ -2233,6 +2233,16 @@ def _tab_raw():
             "- `xFP` uses the nflverse `ff_opportunity` model scored with the half-PPR weights in `SCORING`."
         )
 
+    if os.environ.get("MEGA_EXPORT_WEB"):
+        from mega.downloads_web import build as _build_downloads
+
+        st.session_state["_export_downloads"] = _build_downloads(mapped, MATCH)
+        _web_dir = HERE / "data" / "web"
+        _web_dir.mkdir(parents=True, exist_ok=True)
+        sw.to_csv(_web_dir / "player_stats.csv", index=False)
+        if not ffo.empty:
+            ffo.to_csv(_web_dir / "ff_opportunity.csv", index=False)
+
 
 def _tab_ask():
     from mega import ask as ASK
@@ -2476,6 +2486,7 @@ if os.environ.get("MEGA_EXPORT_WEB"):
     _tab_lookup()
     _tab_gloss()
     _tab_news()
+    _tab_raw()
     st.stop()
 else:
     st.navigation([
