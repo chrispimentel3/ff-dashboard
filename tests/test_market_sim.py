@@ -168,6 +168,34 @@ def test_a_better_team_gets_better_odds():
     assert d["t1"]["d_playoffs"] > 0.05
 
 
+def test_early_season_uncertainty_softens_overconfident_odds():
+    """§18 real-world bug report: playoff odds read as 99%/0% in week 3, which is the
+    simulation trusting a 3-game team_ppw estimate as if it were a known constant. Over
+    many remaining weeks a modest mean edge compounds to near-certainty through score
+    noise alone (CLT) regardless of how shaky that estimate actually is — mean_se is
+    supposed to prevent that by drawing each team's true mean ONCE per simulated season
+    (not per week) around its estimate, widening it when few games back that estimate."""
+    teams = [f"t{i}" for i in range(1, 7)]
+    weeks = list(range(1, 15))          # a long remaining season, where CLT bites hardest
+    sched = [{"week": w, "home": teams[i], "away": teams[-1 - i]}
+             for w in weeks for i in range(3)]
+    # t1 carries a modest, real edge (+16 pts/wk over the field) on both sides of the test.
+    means = {(t, w): 100.0 + (16.0 if t == "t1" else 0.0) for t in teams for w in weeks}
+    base = dict(teams=teams, means=means, schedule=sched,
+               wins={t: 0 for t in teams}, points_for={t: 0.0 for t in teams},
+               sigma=25.0, playoff_teams=3, byes=1)
+
+    certain = sim.simulate(sim.Season(**base, mean_se={}), n=4000)
+    uncertain = sim.simulate(
+        sim.Season(**base, mean_se={t: 25.0 / math.sqrt(3) for t in teams}), n=4000)
+
+    p_certain = certain.set_index("team").loc["t1", "p_playoffs"]
+    p_uncertain = uncertain.set_index("team").loc["t1", "p_playoffs"]
+    assert p_certain > 0.9                       # the old bug: a small edge reads as a lock
+    assert p_uncertain < p_certain                # 3-game uncertainty pulls it back down
+    assert p_uncertain > 0.5                      # a real edge should still show, just softer
+
+
 def test_the_simulation_is_reproducible():
     s = _season()
     a = sim.simulate(s, n=800, seed=7)

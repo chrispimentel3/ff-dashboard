@@ -103,21 +103,37 @@ class Season:
     playoff_teams: int = 6
     byes: int = 0
     approx_weeks: tuple = ()      # weeks with no real fixture on file
+    mean_se: dict = field(default_factory=dict)   # {team: standard error of its own means}
 
 
 def _draws(season: Season, n: int, rng: np.random.Generator) -> dict:
-    """One block of standard normals per team-week, reused across every candidate.
+    """One block of standard normals per team-week, plus one per team for its mean shock
+    (see `simulate`), reused across every candidate.
 
     This is the common-random-numbers trick: the SAME shocks are applied to the baseline
     and to each alternative, so what differs between them is the roster, not the dice.
     """
     weeks = sorted({g["week"] for g in season.schedule})
-    return {(t, w): rng.standard_normal(n) for t in season.teams for w in weeks}
+    draws = {(t, w): rng.standard_normal(n) for t in season.teams for w in weeks}
+    draws.update({(t, "mu"): rng.standard_normal(n) for t in season.teams})
+    return draws
 
 
 def simulate(season: Season, n: int = N_SIMS, seed: int = SEED,
              draws: dict | None = None) -> pd.DataFrame:
-    """Play the rest of the season `n` times. Returns per-team playoff, bye and title odds."""
+    """Play the rest of the season `n` times. Returns per-team playoff, bye and title odds.
+
+    `team_ppw` (season.means) is itself an estimate — an average over however many games a
+    team has actually played — not a known constant, and treating it as one is what made
+    early-season odds read as overconfident (a team 3-0 on three good games looked like a
+    99% playoff lock, because the only randomness simulated was week-to-week score noise,
+    which averages out over a long remaining season regardless of how shaky the 3-game
+    estimate underneath it was). `mean_se` (§ from_league) is the standard error of that
+    estimate — large with few games played, shrinking as more come in — and gets drawn
+    ONCE per simulated season, not once per week: a team's true talent is either better or
+    worse than its early-season average, consistently, not independently redrawn every
+    Sunday. That single draw then rides along under every week's own score noise.
+    """
     if not season.teams or not season.schedule:
         return pd.DataFrame(columns=["team", "p_playoffs", "p_bye", "p_title"])
     rng = np.random.default_rng(seed)
@@ -125,13 +141,14 @@ def simulate(season: Season, n: int = N_SIMS, seed: int = SEED,
 
     wins = {t: np.full(n, float(season.wins.get(t, 0))) for t in season.teams}
     pf = {t: np.full(n, float(season.points_for.get(t, 0.0))) for t in season.teams}
+    mean_shock = {t: season.mean_se.get(t, 0.0) * draws[(t, "mu")][:n] for t in season.teams}
 
     for g in season.schedule:
         h, a, w = g["home"], g["away"], g["week"]
         if h not in wins or a not in wins:
             continue
-        hs = season.means.get((h, w), 0.0) + season.sigma * draws[(h, w)][:n]
-        as_ = season.means.get((a, w), 0.0) + season.sigma * draws[(a, w)][:n]
+        hs = season.means.get((h, w), 0.0) + mean_shock[h] + season.sigma * draws[(h, w)][:n]
+        as_ = season.means.get((a, w), 0.0) + mean_shock[a] + season.sigma * draws[(a, w)][:n]
         pf[h] += hs
         pf[a] += as_
         wins[h] += (hs > as_).astype(float)
@@ -234,16 +251,24 @@ def from_league(scores: pd.DataFrame, standings: pd.DataFrame, team_ppw: dict,
     schedule is most of a fantasy season, so a real fixture beats an invented one every
     time; weeks with no fixture on file fall back to a round robin and `approx_weeks`
     records exactly which, so the caption can say so rather than imply more than is known.
+
+    `team_ppw` is a mean over each team's own games played so far — its standard error is
+    `sigma / sqrt(games)`, textbook standard-error-of-the-mean, using this league's own
+    pooled week-to-week spread rather than a 3-game team-level variance that would itself
+    be too noisy to trust. A team with no games on file gets the full `sigma` (the widest
+    this ever gets) rather than a divide-by-zero.
     """
     if standings is None or standings.empty:
         return Season(teams=[], means={}, schedule=[])
     teams = [str(t) for t in standings["team"]]
     wins = {str(r["team"]): float(r.get("wins") or 0) for _, r in standings.iterrows()}
-    pf = {}
+    pf, games_played, sigma = {}, {}, weekly_sigma(scores)
     if scores is not None and not scores.empty:
         pf = scores.groupby("team")["points"].sum().to_dict()
+        games_played = scores.groupby("team")["points"].count().to_dict()
     weeks = [int(w) for w in weeks_left]
     means = {(t, w): float(team_ppw.get(t, 0.0)) for t in teams for w in weeks}
+    mean_se = {t: sigma / math.sqrt(max(games_played.get(t, 0), 1)) for t in teams}
 
     known = set(teams)
     sched, real_weeks = [], set()
@@ -260,8 +285,8 @@ def from_league(scores: pd.DataFrame, standings: pd.DataFrame, team_ppw: dict,
     sched += _round_robin(teams, missing)
     return Season(teams=teams, means=means, schedule=sched, wins=wins,
                   points_for={str(k): float(v) for k, v in pf.items()},
-                  sigma=weekly_sigma(scores), playoff_teams=playoff_teams, byes=byes,
-                  approx_weeks=tuple(missing))
+                  sigma=sigma, playoff_teams=playoff_teams, byes=byes,
+                  approx_weeks=tuple(missing), mean_se=mean_se)
 
 
 def _round_robin(teams: list, weeks: list) -> list:

@@ -153,6 +153,34 @@ TOPICS = [
         ),
     },
     {
+        "key": "playoff_odds",
+        "title": "Why playoff odds move so much early in the season",
+        "headline": (
+            "A team's projected points per week is itself a guess, especially a few weeks "
+            "in — and the simulation now says so explicitly, instead of quietly treating "
+            "an early-season average as gospel and simulating 6,000 seasons as if it were."
+        ),
+        "detail": (
+            "Every remaining game is simulated by drawing a score around each team's "
+            "projected points per week, with this league's own week-to-week spread. Early "
+            "on, that was the *only* randomness in the model — the points-per-week estimate "
+            "itself was treated as a known constant. Over a dozen-plus remaining weeks, even "
+            "a modest, noisy edge from three games compounds into near-certainty through "
+            "sheer repetition (the law of large numbers doesn't care that the underlying "
+            "estimate was shaky) — which is exactly how a 3-0 start turned into a 99% "
+            "playoff lock in week 3.\n\n"
+            "The fix: a team's points-per-week estimate now carries its own uncertainty — "
+            "textbook standard-error-of-the-mean, `this league's weekly spread ÷ √(games "
+            "played)` — so it's wide with three games on file and narrows every week as more "
+            "come in. Each simulated season draws that team's *true* level ONCE (not "
+            "re-rolled every week — a team is consistently better or worse than its "
+            "early-season average, not randomly different each Sunday), and every week's "
+            "score is then drawn around that. The net effect: early-season odds spread out "
+            "and pull back from the extremes, and tighten toward what the record actually "
+            "shows as the season goes on and each team's true level becomes clearer."
+        ),
+    },
+    {
         "key": "trade_value",
         "title": "What the \"value\" number in a trade actually is",
         "headline": (
