@@ -1408,68 +1408,47 @@ except Exception as e:  # network / dependency issue — keep the core dashboard
 
 # ---- Action board --------------------------------------------------------------------
 def _tab_action():
-    if IB:
-        _w = IB.get("waivers")
-        _tr = IB.get("trades")
-        _nw = 0 if _w is None or _w.empty else len(_worth_claiming(_w))
-        _nt = 0 if _tr is None or _tr.empty else len(_tr)
-        _bits = []
-        if _nw:
-            _bits.append(f"{_nw} free agent{'' if _nw == 1 else 's'} would start for you")
-        if _nt:
-            _bits.append(f"{_nt} trade{'' if _nt == 1 else 's'} clear the fairness filter")
-        _said = " and ".join(_bits)
-        ui.answer(
-            f"{_said[0].upper()}{_said[1:]}." if _said else
-            "Nothing on the wire or the trade board beats what you already have.",
-            "Everything below is ranked by what it adds to your starting nine, not by name.",
-        )
+    from mega.action_board import build as _build_action_board
 
-    if not BASIS["current"]:
+    ab = _build_action_board(agg, IB, BASIS, int(season))
+    # Read back by tools/export_web.py via AppTest's session_state — the export runs this
+    # same tab function under default widget values rather than re-deriving season/week/roll
+    # defaults by hand, so the web snapshot can never drift from what the live app computes.
+    st.session_state["_export_action_board"] = {
+        **ab,
+        "season": int(season),
+        "week": int(week),
+        "next_week": int(next_week),
+    }
+
+    if ab["headline"]:
+        ui.answer(ab["headline"], ab["subhead"])
+
+    if ab["basis"]:
+        b = ab["basis"]
         st.info(
-            f"**Form numbers below are {BASIS['season']}, not {int(season)}.**  "
-            f"{int(season)} has {BASIS['weeks']} week(s) played and the rolling window needs 3 — "
-            f"a {BASIS['weeks']}-week sample would read as a trend. This switches over on its own at week 3."
+            f"**Form numbers below are {b['prior_season']}, not {b['season']}.**  "
+            f"{b['season']} has {b['weeks']} week(s) played and the rolling window needs 3 — "
+            f"a {b['weeks']}-week sample would read as a trend. This switches over on its own at week 3."
         )
 
-    mine = agg.copy() if not agg.empty else pd.DataFrame()
-    if not mine.empty and "xfp_diff" in mine.columns:
-        mine["per_g"] = mine["xfp_diff"] / mine["games"].clip(lower=1)
+    acols = ["player", "pos", "slot", "half_ppr_pg", "per_g", "tgt_pct", "tm_rank", "why"]
+    afmt = {"PPG": "{:.1f}", "xFP±/G": "{:+.1f}", "TGT%": "{:.1%}"}
 
-        def _why_sell(r):
-            bits = [f"scoring {r['per_g']:+.1f}/g more than his opportunity"]
-            if pd.notna(r.get("tgt_pct")) and r["tgt_pct"] < 0.20:
-                bits.append(f"only {r['tgt_pct']:.0%} of targets")
-            if pd.notna(r.get("tm_rank")) and r["tm_rank"] >= 3:
-                bits.append(f"#{int(r['tm_rank'])} option on his own offense")
-            return "; ".join(bits)
-
-        def _why_buy(r):
-            bits = [f"scoring {abs(r['per_g']):.1f}/g less than his opportunity"]
-            if pd.notna(r.get("tgt_pct")) and r["tgt_pct"] >= 0.20:
-                bits.append(f"{r['tgt_pct']:.0%} target share")
-            if pd.notna(r.get("tm_rank")) and r["tm_rank"] <= 2:
-                bits.append(f"his team's #{int(r['tm_rank'])} option")
-            return "; ".join(bits)
-
-        acols = ["player", "pos", "slot", "half_ppr_pg", "per_g", "tgt_pct", "tm_rank", "why"]
-        afmt = {"PPG": "{:.1f}", "xFP±/G": "{:+.1f}", "TGT%": "{:.1%}"}
-
-        sell = mine[mine["per_g"] >= 2.0].sort_values("per_g", ascending=False).head(5)
+    if ab["xfp_available"]:
+        sell = pd.DataFrame(ab["shop"])
         ui.h("Shop these — points are ahead of the work")
         if sell.empty:
             st.caption("Nobody on your roster is meaningfully outscoring his opportunity right now.")
         else:
-            sell = sell.assign(why=sell.apply(_why_sell, axis=1))
             ui.table(sell[acols], diverging=["xFP±/G"], pos_cols=["POS"], fmt=afmt)
             st.caption("Their value to a leaguemate is at its peak. Sell the name, not the role.")
 
-        buy = mine[mine["per_g"] <= -1.5].sort_values("per_g").head(5)
+        buy = pd.DataFrame(ab["hold"])
         ui.h("Hold these — the work is there, the points aren't yet")
         if buy.empty:
             st.caption("Nobody is notably underperforming his opportunity.")
         else:
-            buy = buy.assign(why=buy.apply(_why_buy, axis=1))
             ui.table(buy[acols], diverging=["xFP±/G"], pos_cols=["POS"], fmt=afmt)
             st.caption("Don't sell into a cold streak — the usage says the points are coming.")
     else:
@@ -1477,38 +1456,34 @@ def _tab_action():
 
     if IB is not None:
         wv = IB["waivers"]
+        waivers = pd.DataFrame(ab["waivers"])
         if not wv.empty and "bid" in wv.columns:
             ui.h("Best waiver claims")
-            worth = wv[wv["bid"] >= 1]
-            if worth.empty:
+            if waivers.empty:
                 st.caption(
                     "Nothing on the wire improves your starting lineup this week, so there's "
                     "nothing worth bidding on. Your budget keeps."
                 )
             else:
-                ui.table(worth.head(5)[["player", "pos", "gain", "bid", "max_bid", "drop", "why"]],
+                ui.table(waivers[["player", "pos", "gain", "bid", "max_bid", "drop", "why"]],
                          sequential=["GAIN"], pos_cols=["POS"],
                          fmt={"GAIN": "{:+.2f}", "BID": "${:.0f}", "MAX": "${:.0f}"})
         elif not wv.empty:
             ui.h("Best waiver claims")
-            ui.table(wv.head(5)[["player", "pos", "pg_recent", "tgt_pct", "tm_rank", "add_score", "why"]],
+            ui.table(waivers[["player", "pos", "pg_recent", "tgt_pct", "tm_rank", "add_score", "why"]],
                      sequential=["SCORE"], pos_cols=["POS"],
                      fmt={"PPG": "{:.1f}", "TGT%": "{:.1%}", "TM#": "{:.0f}", "SCORE": "{:.2f}"})
 
-        tr = IB["trades"]
-        if not tr.empty:
+        trades = pd.DataFrame(ab["trades"])
+        if not IB["trades"].empty:
             ui.h("Best trades to offer")
-            tr5 = tr.head(5).copy()
-            tr5["give"] = tr5["give"] + " (" + tr5["give_pos"] + ")"
-            tr5["get"] = tr5["get"] + " (" + tr5["get_pos"] + ")"
-            tr5["addresses"] = tr5["addresses"].str.replace(r"^my (\S+) need$", r"\1", regex=True)
             ui.table(
-                tr5[["partner", "give", "give_val", "get", "get_val", "addresses", "fairness"]],
+                trades[["partner", "give", "give_val", "get", "get_val", "addresses", "fairness"]],
                 sequential=["FAIR"],
                 fmt={"GIVE VAL": "{:.0f}", "GET VAL": "{:.0f}", "FAIR": "{:.2f}"},
             )
             st.caption(f"Full list, grouped by manager, under **Get better → Trade finder**. "
-                       f"Rosters: {IB['roster_src']}.")
+                       f"Rosters: {ab['roster_src']}.")
     else:
         ui.unavailable("League intel", _intel_err)
 
