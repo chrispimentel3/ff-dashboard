@@ -39,6 +39,8 @@ EXPORTS = {
     "_export_usage": "usage.json",
     "_export_league": "league.json",
     "_export_draft": "draft.json",
+    "_export_glossary": "glossary.json",
+    "_export_news": "news.json",
 }
 
 # _export_players is handled separately (see _write_players below): one big JSON with a

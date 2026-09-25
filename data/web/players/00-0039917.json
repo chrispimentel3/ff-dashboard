@@ -15,14 +15,152 @@
     "headshot_url": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/mip4kogkqxwkkya6mvmh"
   },
   "ownership": {
-    "kind": "free_agent",
+    "kind": "waivers",
     "team": null,
     "slot": null,
-    "waiver_until": null
+    "waiver_until": "Sep 30"
   },
   "nfl_status": "Active",
   "out_reason": null,
   "seasons": {
+    "2026": {
+      "games": 1,
+      "pts_pg": 15.040000000000001,
+      "xfp_pg": 9.5912,
+      "vs_exp_pg": 5.4488,
+      "usage_label": "Pass att/g",
+      "usage_value": 25.0,
+      "usage_fmt": "25.0",
+      "ranks": {
+        "pts_pg": null,
+        "xfp_pg": null,
+        "att_pg": null
+      },
+      "card": [
+        {
+          "stat": "Pts/game",
+          "value_fmt": "15.0",
+          "pos_rank": "\u2014",
+          "means": "Half-PPR fantasy points per game."
+        },
+        {
+          "stat": "Expected pts/g",
+          "value_fmt": "9.6",
+          "pos_rank": "\u2014",
+          "means": "What his volume should score."
+        },
+        {
+          "stat": "Pass att/g",
+          "value_fmt": "25.0",
+          "pos_rank": "\u2014",
+          "means": "Dropback volume."
+        },
+        {
+          "stat": "Completion %",
+          "value_fmt": "72.0%",
+          "pos_rank": "\u2014",
+          "means": ""
+        },
+        {
+          "stat": "CPOE",
+          "value_fmt": "+8.8",
+          "pos_rank": "\u2014",
+          "means": "Completion % over expected, given throw difficulty. Plus is accurate."
+        },
+        {
+          "stat": "Yds/att",
+          "value_fmt": "10.2",
+          "pos_rank": "\u2014",
+          "means": ""
+        },
+        {
+          "stat": "EPA/dropback",
+          "value_fmt": "+0.38",
+          "pos_rank": "\u2014",
+          "means": "Points added per dropback, sacks included. Above +0.10 is good."
+        },
+        {
+          "stat": "Carries/g",
+          "value_fmt": "2.0",
+          "pos_rank": "\u2014",
+          "means": "Rushing volume \u2014 the fantasy QB cheat code."
+        },
+        {
+          "stat": "Rush yds",
+          "value_fmt": "-2",
+          "pos_rank": "\u2014",
+          "means": ""
+        },
+        {
+          "stat": "INT",
+          "value_fmt": "1",
+          "pos_rank": "\u2014",
+          "means": ""
+        }
+      ],
+      "game_log": [
+        {
+          "week": 3,
+          "game": "@ GB",
+          "snap_pct": 1.0,
+          "completions": 18,
+          "attempts": 25,
+          "passing_yards": 256,
+          "passing_tds": 1,
+          "passing_interceptions": 1,
+          "sacks_suffered": 0,
+          "carries": 2,
+          "rushing_yards": -2,
+          "rushing_tds": 0,
+          "half_ppr": 15.040000000000001,
+          "xfp": 9.5912,
+          "vs_exp": 5.4488
+        }
+      ],
+      "role": {
+        "headline": "Starting QB",
+        "from_usage": false,
+        "games": 1,
+        "rows": [
+          {
+            "metric": "carry share",
+            "him": 0.09686829136087753,
+            "role_avg": 0.14615829000577701,
+            "vs_role": 66.27628946469527,
+            "nfl_avg": 0.13231794383626844,
+            "vs_nfl": 73.20873386662004,
+            "fmt": "{:.1%}"
+          },
+          {
+            "metric": "snap %",
+            "him": 0.9776066716674756,
+            "role_avg": 0.9511078998073218,
+            "vs_role": 102.78609523330866,
+            "nfl_avg": 0.8476781425140112,
+            "vs_nfl": 115.32757807911945,
+            "fmt": "{:.1%}"
+          },
+          {
+            "metric": "xFP share",
+            "him": 0.13976525658698027,
+            "role_avg": 0.23874454226302996,
+            "vs_role": 58.54175985015729,
+            "nfl_avg": 0.20962577382163874,
+            "vs_nfl": 66.67369858150188,
+            "fmt": "{:.1%}"
+          }
+        ]
+      },
+      "this_week": {
+        "bye": false,
+        "opponent": "GB",
+        "home": false,
+        "ease_rank": 17,
+        "out_reason": null,
+        "projection": 12.7,
+        "proj_source": "ffanalytics"
+      }
+    },
     "2025": {
       "games": 9,
       "pts_pg": 13.697777777777778,

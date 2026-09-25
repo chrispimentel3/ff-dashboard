@@ -1988,6 +1988,8 @@ def _tab_digest():
 
 def _tab_news():
     from mega.sources import news_for_players, news_items
+    from mega.news_web import build as _build_news
+    st.session_state["_export_news"] = _build_news(list(skill["name"]))
 
     scope = st.radio("Scope", ["My roster", "Watchlist + roster", "All NFL"], horizontal=True)
     watch = [w.strip() for w in st.text_input("Watchlist (comma-separated)", "").split(",") if w.strip()]
@@ -2085,6 +2087,9 @@ from mega.status import note_for, out_for_week
 
 
 def _tab_gloss():
+    from mega.glossary_web import build as _build_glossary
+    st.session_state["_export_glossary"] = _build_glossary()
+
     ui.lede(
         "Every tag the dashboard puts next to a player, in plain English. "
         "If a label anywhere needs this page to make sense, that is a fault in the "
@@ -2660,6 +2665,8 @@ if os.environ.get("MEGA_EXPORT_WEB"):
     _tab_league()
     _tab_draft()
     _tab_lookup()
+    _tab_gloss()
+    _tab_news()
     st.stop()
 else:
     st.navigation([
