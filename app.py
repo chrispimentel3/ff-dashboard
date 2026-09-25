@@ -1631,41 +1631,7 @@ def _tab_trade():
             ui.table(tt[["partner"] + tcols], sequential=["FAIR"], diverging=["EDGE"], fmt=tfmt)
 
         ui.note(f"Rosters: {IB['roster_src']}.", kind="method")
-        st.session_state["_export_trades"] = _build_trades(IB["trades"], IB["roster_src"])
-
-def _tab_draft():
-    from mega.draft_web import build as _build_draft
-    if IB is None:
-        st.warning("League intel unavailable.")
-        st.session_state["_export_draft"] = _build_draft(None, None, set())
-    else:
-        from mega.intel import _norm as _dnorm
-        st.session_state["_export_draft"] = _build_draft(
-            IB["draft_delta"], IB["buysell"], {_dnorm(n) for n in skill["name"]})
-        dd = IB["draft_delta"]
-        mine_only = st.checkbox("My picks only", value=False)
-        view = dd[dd["mine"]] if mine_only else dd
-        view = view[view["value"] > 0]
-        dcols = ["player", "pos", "drafted_by", "round", "value", "value_delta"]
-        dfmt = {"VAL": "{:.0f}", "VAL±": "{:+.0f}", "RD": "{:.0f}"}
-        c1, c2 = st.columns(2)
-        c1.markdown("**▲ Risers vs draft slot**")
-        ui.table(view.head(15)[dcols], diverging=["VAL±"], pos_cols=["POS"], fmt=dfmt,
-                 legend=False, container=c1)
-        c2.markdown("**▼ Fallers vs draft slot**")
-        ui.table(view.sort_values("value_delta").head(15)[dcols], diverging=["VAL±"], pos_cols=["POS"],
-                 fmt=dfmt, container=c2)
-        st.markdown("**Your regression watch** — actual vs expected half-PPR")
-        from mega.intel import _norm as _mnorm
-        bs = IB["buysell"]
-        my_norm = {_mnorm(n) for n in skill["name"]}
-        mine_bs = bs[bs["norm"].isin(my_norm)].sort_values("diff_pg")[
-            ["player", "pos", "gms", "actual", "expected", "diff_pg", "signal"]] if not bs.empty else pd.DataFrame()
-        if mine_bs.empty:
-            st.caption("Not enough games yet to compare.")
-        else:
-            ui.table(mine_bs, diverging=["xFP±/G"], pos_cols=["POS"],
-                     fmt={"ACT": "{:.1f}", "xFP": "{:.1f}", "xFP±/G": "{:+.1f}"})
+        st.session_state["_export_trades"] = _build_trades(IB["trades"], IB["roster_src"], int(season))
 
 def _tab_arch():
     st.caption(
@@ -2476,8 +2442,7 @@ def _page_upgrade() -> None:
 
 def _page_review() -> None:
     _tabs(("My roster", _tab_over), ("Points vs opportunity", _tab_axe),
-          ("Usage trends", _tab_use), ("The league", _tab_league),
-          ("Draft value", _tab_draft))
+          ("Usage trends", _tab_use), ("The league", _tab_league))
 
 
 def _page_player() -> None:
@@ -2508,7 +2473,6 @@ if os.environ.get("MEGA_EXPORT_WEB"):
     _tab_axe()
     _tab_use()
     _tab_league()
-    _tab_draft()
     _tab_lookup()
     _tab_gloss()
     _tab_news()

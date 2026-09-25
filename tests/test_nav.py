@@ -44,7 +44,7 @@ def test_there_are_six_pages_and_exactly_one_opens_first():
 
 # Names that describe where the data came from or what the code is called, rather than what
 # the reader wants. Every one of these was a tab label before the rebuild.
-FEATURE_NAMES = ("wopr", "archetype", "raw data", "waiver", "standings", "draft value",
+FEATURE_NAMES = ("wopr", "archetype", "raw data", "waiver", "standings",
                  "glossary", "news", "trade finder", "start/sit", "matchups", "digest")
 
 # Six links have to sit in one row of the top bar. Nothing else stops a title growing until

@@ -38,7 +38,6 @@ EXPORTS = {
     "_export_axe": "axe.json",
     "_export_usage": "usage.json",
     "_export_league": "league.json",
-    "_export_draft": "draft.json",
     "_export_glossary": "glossary.json",
     "_export_news": "news.json",
     "_export_downloads": "downloads.json",
@@ -139,6 +138,18 @@ def main() -> None:
                                          indent=2, default=str))
     written.append(headshots_path)
     print(f"wrote {headshots_path.relative_to(ROOT)}")
+
+    # Weekly rankings — league-wide, position-ranked by projection. Streamlit-free (same
+    # tier as logic/headshots/trend); see mega/rankings_web.py.
+    from mega import rankings_web as _rankings_web
+
+    _next_week = min(_data.current_week(_season, 1), 18)
+    _gsis_list, _ = _data.my_gsis_ids(_data.my_roster()[0])
+    rankings_path = OUT_DIR / "rankings.json"
+    rankings_path.write_text(json.dumps(
+        _rankings_web.build(_season, _next_week, set(_gsis_list)), indent=2, default=str))
+    written.append(rankings_path)
+    print(f"wrote {rankings_path.relative_to(ROOT)}")
 
     if not written:
         sys.exit(1)
