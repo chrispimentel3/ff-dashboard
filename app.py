@@ -1476,8 +1476,10 @@ def _tab_action():
         ui.unavailable("League intel", _intel_err)
 
 def _tab_wire():
+    from mega.waivers import build as _build_waivers
     if IB is None:
         ui.unavailable("League intel", _intel_err)
+        st.session_state["_export_waivers"] = _build_waivers(None, None, None)
     else:
         wv = IB["waivers"].copy()
         need_aware = "bid" in wv.columns
@@ -1548,6 +1550,7 @@ def _tab_wire():
                     rf"has actually spent never appears on it. The real market runs dearer than "
                     rf"the \${_m['median']:.0f} median suggests."
                 )
+            st.session_state["_export_waivers"] = _build_waivers(wv, _r, _m)
         else:
             top3 = wv.head(3)
             ui.kpi_row([
@@ -1568,6 +1571,7 @@ def _tab_wire():
                      "SCORE": "{:.2f}"},
                 view="waivers_blind",
             )
+            st.session_state["_export_waivers"] = _build_waivers(wv, None, None)
 
 from mega.config import MY_TEAM as MY_TEAM_LABEL   # noqa: E402  (the trade tab reads it)
 
@@ -1647,10 +1651,13 @@ def _trade_search(season: int, pid: str, mine: bool, flags: tuple, shapes: tuple
 
 
 def _tab_trade():
+    from mega.trades import build as _build_trades
     if IB is None:
         st.warning("League intel unavailable.")
+        st.session_state["_export_trades"] = _build_trades(None, None)
     elif IB["trades"].empty:
         st.info("No trade ideas cleared the fairness filter this run.")
+        st.session_state["_export_trades"] = _build_trades(None, IB["roster_src"])
     else:
         ui.h("Trade around one player")
         ui.lede(
@@ -1764,6 +1771,7 @@ def _tab_trade():
             ui.table(tt[["partner"] + tcols], sequential=["FAIR"], diverging=["EDGE"], fmt=tfmt)
 
         ui.note(f"Rosters: {IB['roster_src']}.", kind="method")
+        st.session_state["_export_trades"] = _build_trades(IB["trades"], IB["roster_src"])
 
 def _tab_draft():
     if IB is None:
@@ -1806,13 +1814,16 @@ def _tab_arch():
             "- **WR** — **sticky first-down producer** (blueprint: FD/route 12%+; here FD-rate + FD/g proxy) in the **breakout window (exp yrs 3–6)**, avoid age **32+** (except Evans/Adams).\n"
             "- **TE** — **alpha on a WR-thin, high-scoring offense**: no team WR inside top-60 ADP, **20+ team ppg**, big target share (except prime Kelce)."
         )
+    from mega.archetypes_web import build as _build_arch
     try:
         arch = _archetypes(int(season))
     except Exception as e:
         arch = pd.DataFrame()
         ui.unavailable("Blueprint scores", e)
 
-    if not arch.empty:
+    if arch.empty:
+        st.session_state["_export_archetypes"] = _build_arch(None, set(), set())
+    else:
         from mega.intel import _norm as _an
         my_norms = {_an(n) for n in skill["name"]}
         arch = arch.assign(mine=arch["norm"].isin(my_norms))
@@ -1837,6 +1848,7 @@ def _tab_arch():
                                 "half_ppr_pg", "proj_ppg", "tgt_share", "tm_rank", "why"]],
                  sequential=["ARCH FIT"], fmt={"ARCH FIT": "{:.0f}", "PPG": "{:.1f}", "PROJ": "{:.1f}", "TGT%": "{:.1%}"},
                  labels={"PROJ": "Proj pts/g"}, help={"PROJ": "Projected fantasy points per game this season."})
+        st.session_state["_export_archetypes"] = _build_arch(arch, my_norms, rostered)
 
 def _tab_wopr():
     st.caption(
@@ -1845,11 +1857,13 @@ def _tab_wopr():
         "with this one on a 3-game prior; **xPPG±** flags points running ahead of / behind the "
         "underlying role."
     )
+    from mega.wopr_web import build as _build_wopr
     try:
         W = _wopr(int(season))
     except Exception as e:
         W = None
         ui.unavailable("Receiving opportunity", e)
+    st.session_state["_export_wopr"] = _build_wopr(W, int(season))
 
     if W and not W["df"].empty:
         from mega.wopr import SCHEMA
@@ -2536,6 +2550,10 @@ if os.environ.get("MEGA_EXPORT_WEB"):
     _tab_action()
     _tab_start()
     _tab_match()
+    _tab_wire()
+    _tab_trade()
+    _tab_wopr()
+    _tab_arch()
     st.stop()
 else:
     st.navigation([

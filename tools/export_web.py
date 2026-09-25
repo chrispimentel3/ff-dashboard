@@ -29,6 +29,10 @@ EXPORTS = {
     "_export_action_board": "action_board.json",
     "_export_start_sit": "start_sit.json",
     "_export_matchups": "matchups.json",
+    "_export_waivers": "waivers.json",
+    "_export_trades": "trades.json",
+    "_export_wopr": "wopr.json",
+    "_export_archetypes": "archetypes.json",
 }
 
 
