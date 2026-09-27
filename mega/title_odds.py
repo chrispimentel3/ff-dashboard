@@ -68,6 +68,8 @@ class Model:
     n: int = N_SEASONS
     _tw: dict = field(default_factory=dict)       # team-week totals for trade variants
     _tw_base: dict = field(default_factory=dict)  # ... and for the rosters as they stand
+    _z0: dict = field(default_factory=dict)       # each player's season-long draw: one array
+                                                  # per player (~4 MB), read every week
 
     # ------------------------------------------------------------ dice
     def _dice(self, key: str) -> tuple[np.ndarray, np.ndarray]:
@@ -89,7 +91,9 @@ class Model:
         sd_week = max((p90 - p10) / 2.563, 1e-6)
         f = math.sqrt(max(0.2, 1.0 - (sd_proj / sd_week) ** 2))
         z, u = self._dice(f"{pid}|{w}")
-        z0, _ = self._dice(f"{pid}|season")
+        z0 = self._z0.get(pid)
+        if z0 is None:
+            z0 = self._z0[pid] = self._dice(f"{pid}|season")[0]
         lo, hi = (med - p10) / 1.2816 * f, (p90 - med) / 1.2816 * f
         pts = med + np.where(z < 0, lo * z, hi * z) + sd_proj * z0
         return np.maximum(pts, -2.0), u < pa

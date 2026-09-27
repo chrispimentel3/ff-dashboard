@@ -41,6 +41,7 @@ allocator never handed back:
 4. **The title-odds model regenerates dice from the seed** instead of storing them (same
    key, same roll — results are identical), keeps team-week totals in float32, and keeps
    the current rosters' totals apart from trade variants, which are capped at 400.
+   Each player's one season-long draw is still cached (~4 MB) since every week reads it.
    Cost: ~21 MB instead of ~125 MB. `TITLE_ODDS_LIVE` is now **on** by default
    (`TITLE_ODDS_LIVE=0` falls back to the team-level playoff odds).
 5. **Linux only:** after each request the service runs `gc.collect()` and
