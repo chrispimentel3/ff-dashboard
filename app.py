@@ -1210,11 +1210,22 @@ def _intel_bundle(season: int):
         draft=draft,
         waivers=_waiver_board(season, ros, rostered),
         trades=_i.trade_finder(season, yahoo_rosters=ros),
+        theses=_trade_theses(season, ros),
         draft_delta=_i.draft_value_delta(season),
         buysell=_i.buy_low_sell_high(season),
         basis=_i.season_basis(season),
         roster_src=roster_src,
     )
+
+
+def _trade_theses(season: int, ros) -> dict:
+    """HANDOFF v1.3 Pass 4 — engine-built offers ranked by title odds (mega/trade_theses.py).
+    One computation shared by the Trades tab, the Action board and the web export."""
+    from mega import trade_theses as _tt
+    try:
+        return _tt.run(season, current_week(season, 1), yahoo_rosters=ros)
+    except Exception as e:
+        return {"available": False, "cards": [], "meta": {"error": f"{type(e).__name__}: {e}"}}
 
 
 def _waiver_board(season: int, ros, rostered: set) -> pd.DataFrame:
@@ -1318,7 +1329,7 @@ def _tab_action():
                      fmt={"PPG": "{:.1f}", "TGT%": "{:.1%}", "TM#": "{:.0f}", "SCORE": "{:.2f}"})
 
         trades = pd.DataFrame(ab["trades"])
-        if not IB["trades"].empty:
+        if not trades.empty:
             ui.h("Best trades to offer")
             ui.table(
                 trades[["partner", "give", "give_val", "get", "get_val", "addresses", "fairness"]],
@@ -1507,7 +1518,7 @@ def _tab_trade():
     if IB is None:
         st.warning("League intel unavailable.")
         st.session_state["_export_trades"] = _build_trades(None, None)
-    elif IB["trades"].empty:
+    elif IB["trades"].empty and not (IB.get("theses") or {}).get("available"):
         st.info("No trade ideas cleared the fairness filter this run.")
         st.session_state["_export_trades"] = _build_trades(None, IB["roster_src"])
     else:
@@ -1594,36 +1605,36 @@ def _tab_trade():
                     st.caption(_ppg_note(_trade_engine(int(season))[1]))
             st.divider()
 
-        ui.h("Offers the league is set up for")
+        ui.h("Offers that raise your title odds")
         ui.lede(
-            "Built from <b>your league's actual rosters</b> — who has a surplus where you're "
-            "thin, and what they're short of in return. This is the part a generic ranking site "
-            "can't do for you."
+            "Every 1-for-1 and 2-for-1 the engine can build, ranked by what it does to "
+            "<b>your chance of winning the title</b> — only offers that raise it beyond the "
+            "simulation's own noise are shown. Each one says why, what would prove it wrong, "
+            "and what it does to <b>them</b>."
         )
-        tt = IB["trades"].copy()
-        # Position folded into the name — two "POS" columns would collide on rename.
-        tt["give"] = tt["give"] + " (" + tt["give_pos"] + ")"
-        tt["get"] = tt["get"] + " (" + tt["get_pos"] + ")"
-        tt["addresses"] = tt["addresses"].str.replace(r"^my (\S+) need$", r"\1", regex=True)
-        tfmt = {"GIVE VAL": "{:.0f}", "GET VAL": "{:.0f}", "FAIR": "{:.2f}", "EDGE": "{:+.0f}"}
-        tcols = ["give", "give_val", "get", "get_val", "addresses", "fairness", "edge"]
-
-        by_mgr = st.toggle("Group by manager", value=True)
-        if by_mgr:
-            for partner, grp in tt.groupby("partner", sort=False):
-                need = grp["they_need"].iloc[0] if "they_need" in grp.columns else "—"
-                ui.h(f"{partner}")
-                st.caption(
-                    f"Thin at **{need}** — lead with that when you pitch it."
-                    if need and need != "—"
-                    else "No clear positional hole — pitch this one on value, not need."
-                )
-                ui.table(grp[tcols], sequential=["FAIR"], diverging=["EDGE"], fmt=tfmt)
+        _th = IB.get("theses") or {}
+        _cards = _th.get("cards") or []
+        if not _cards:
+            ui.note("No offer the league would plausibly take raises your title odds right now.")
         else:
-            ui.table(tt[["partner"] + tcols], sequential=["FAIR"], diverging=["EDGE"], fmt=tfmt)
-
-        ui.note(f"Rosters: {IB['roster_src']}.", kind="method")
-        st.session_state["_export_trades"] = _build_trades(IB["trades"], IB["roster_src"], int(season))
+            _rows = pd.DataFrame([{
+                "partner": c["partner"],
+                "give": " + ".join(f"{g['name']} ({g['pos']})" for g in c["give"]),
+                "get": " + ".join(f"{g['name']} ({g['pos']})" for g in c["get"]),
+                "thesis": " · ".join(c["tags"]), "d_title_us": 100 * c["us"]["d_title"],
+                "d_ros_us": c["us"]["d_ros"], "d_title_them": 100 * c["them"]["d_title"],
+                "p_accept": c["p_accept"], "flag": c["flag"], "why": c["thesis"], "kill": c["kill"],
+            } for c in _cards])
+            ui.table(_rows, sequential=["D_TITLE_US"],
+                     labels={"D_TITLE_US": "Title odds", "D_ROS_US": "ROS pts/wk",
+                             "D_TITLE_THEM": "Their title odds", "P_ACCEPT": "P(accept)",
+                             "KILL": "Wrong if"},
+                     fmt={"D_TITLE_US": "{:+.1f}pp", "D_ROS_US": "{:+.2f}", "D_TITLE_THEM": "{:+.1f}pp",
+                          "P_ACCEPT": "{:.0%}"})
+        ui.note(f"Rosters: {IB['roster_src']}. {_th.get('meta', {}).get('evaluated', 0)} offers built, "
+                f"{_th.get('meta', {}).get('simulated', 0)} simulated.", kind="method")
+        st.session_state["_export_trades"] = _build_trades(IB["trades"], IB["roster_src"], int(season),
+                                                           theses=_th)
 
 def _tab_arch():
     st.caption(

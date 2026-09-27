@@ -73,6 +73,8 @@ def main() -> None:
     os.environ["MEGA_EXPORT_WEB"] = "1"
     # HANDOFF v1.3: rebuild our rest-of-season projection first — the trade and waiver
     # engines inside the app run read data/proj_ros_<season>.json.
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
     try:
         import nflreadpy as _nfl0
         from mega import data as _d0

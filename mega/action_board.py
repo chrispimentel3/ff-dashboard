@@ -78,12 +78,16 @@ def headline(IB: dict | None) -> tuple[str, str]:
     w = IB.get("waivers")
     tr = IB.get("trades")
     nw = 0 if w is None or w.empty else len(worth_claiming(w))
-    nt = 0 if tr is None or tr.empty else len(tr)
+    th = IB.get("theses") or {}
+    if th.get("available"):
+        nt, trade_bit = len(th.get("cards") or []), "raise{} your title odds"
+    else:
+        nt, trade_bit = (0 if tr is None or tr.empty else len(tr)), "clear{} the fairness filter"
     bits = []
     if nw:
         bits.append(f"{nw} free agent{'' if nw == 1 else 's'} would start for you")
     if nt:
-        bits.append(f"{nt} trade{'' if nt == 1 else 's'} clear the fairness filter")
+        bits.append(f"{nt} trade{'' if nt == 1 else 's'} " + trade_bit.format("s" if nt == 1 else ""))
     said = " and ".join(bits)
     main = (f"{said[0].upper()}{said[1:]}." if said else
             "Nothing on the wire or the trade board beats what you already have.")
@@ -134,7 +138,20 @@ def build(agg: pd.DataFrame, IB: dict | None, BASIS: dict, season: int) -> dict:
             payload["waivers"] = _records(worth.head(5).reindex(columns=cols))
 
         tr = IB.get("trades")
-        if tr is not None and not tr.empty:
+        cards = (IB.get("theses") or {}).get("cards") or []
+        if cards:
+            # HANDOFF v1.3: the same engine-built, title-odds-ranked offers as the Trades tab
+            payload["trades"] = [{
+                "partner": c["partner"],
+                "give": " + ".join(f"{g['name']} ({g['pos']})" for g in c["give"]),
+                "give_val": round(sum(g["ros_pg"] for g in c["give"]), 1),
+                "get": " + ".join(f"{g['name']} ({g['pos']})" for g in c["get"]),
+                "get_val": round(sum(g["ros_pg"] for g in c["get"]), 1),
+                "addresses": c["tags"][0].replace("_", " ").lower(),
+                "fairness": c["fairness"],
+                "d_title": c["us"]["d_title"], "thesis": c["thesis"],
+            } for c in cards[:5]]
+        elif tr is not None and not tr.empty:
             tr5 = tr.head(5).copy()
             tr5["give"] = tr5["give"] + " (" + tr5["give_pos"] + ")"
             tr5["get"] = tr5["get"] + " (" + tr5["get_pos"] + ")"

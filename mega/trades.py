@@ -70,8 +70,18 @@ def _impact(engine, their_team: str, give_name: str, get_name: str) -> dict | No
     }
 
 
-def build(trades: pd.DataFrame | None, roster_src: str | None, season: int | None = None) -> dict:
-    """`trades` is IB["trades"] (raw — give_pos/get_pos not yet folded into give/get)."""
+def build(trades: pd.DataFrame | None, roster_src: str | None, season: int | None = None,
+          theses: dict | None = None) -> dict:
+    """`trades` is IB["trades"] (raw — give_pos/get_pos not yet folded into give/get).
+
+    HANDOFF v1.3 Pass 4: when `theses` (mega/trade_theses.py) is available it IS the
+    export — engine-built offers ranked by title odds, each with its thesis, kill condition
+    and both teams' numbers. The FantasyCalc-fairness list below is the fallback only;
+    `groups` stays in the payload (empty) so an older page build can't break on it."""
+    if theses and theses.get("available"):
+        return {"available": True, "version": 3, "cards": theses.get("cards") or [],
+                "meta": theses.get("meta") or {}, "groups": [], "roster_src": roster_src,
+                "impact_available": True}
     if trades is None or trades.empty:
         return {"available": False, "groups": [], "roster_src": roster_src}
 

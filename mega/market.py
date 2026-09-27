@@ -34,16 +34,16 @@ MIN_GAMES_FOR_BOX = 2        # §6.2: box rank needs at least two games to mean 
 # §17 (J) — seeds from the draft scouting notes, by MANAGER name. They only take effect
 # once config/managers.json maps a manager to a Yahoo team; without that mapping every
 # team is priced neutrally, which is the honest default. Guessing who is who would skew
-# every trade flag in a way nobody could see.
+# every trade flag in a way nobody could see. (Roman, Steve, Fletch and Mike were in the
+# notes but are not in this league — dropped 2026-09-26.)
 SEEDS = {
     "jamie": {"RB": 1.15},
     "colin": {"WR": 1.15, "RB": 0.90},
-    "roman": {"TE": 1.15},
-    "steve": {"QB": 1.10},
-    "fletch": {"QB": 1.10},
-    "mike": {"TE": 0.85},
 }
 MANAGERS_JSON = ROOT / "config" / "managers.json"
+# HANDOFF v1.3: the same seeds keyed by TEAM name, which is how Chris asked for them to be
+# held. Read in preference to the manager-name route above.
+TEAM_BIAS_JSON = ROOT / "config" / "manager_bias.json"
 BIAS_CLAMP = (0.80, 1.25)
 REACH_SCALE = 40.0           # §17: rounds of draft reach that move a multiplier
 FAAB_SCALE = 0.25
@@ -126,6 +126,13 @@ def load_managers() -> dict:
 
 def seed_bias(managers: dict | None = None) -> dict[str, dict]:
     """team name -> {pos: multiplier}, from the draft scouting seeds."""
+    if managers is None and TEAM_BIAS_JSON.is_file():
+        try:
+            raw = json.loads(TEAM_BIAS_JSON.read_text())
+            return {str(t): {str(p): float(m) for p, m in v.items()}
+                    for t, v in raw.items() if not str(t).startswith("_") and isinstance(v, dict)}
+        except Exception:
+            pass
     managers = managers if managers is not None else load_managers()
     out = {}
     for manager, team in (managers or {}).items():

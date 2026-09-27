@@ -194,6 +194,23 @@ class Model:
                       "noise": abs(float(dt_.mean())) < NOISE_Z * se_t or float(dt_.mean()) == 0.0}
         return out
 
+    def delta_vs(self, rosters_base: dict, rosters_after: dict, teams: tuple) -> dict:
+        """Like `delta`, but against an alternative baseline (a free waiver swap already
+        made) instead of the rosters as they stand — paired on the same dice either way."""
+        a = self.run({**self.rosters, **rosters_base})
+        b = self.run({**self.rosters, **rosters_after})
+        out = {}
+        for t in teams:
+            i = a["teams"].index(t)
+            dt_ = b["title"][i].astype(float) - a["title"][i].astype(float)
+            dp = b["made"][i].astype(float) - a["made"][i].astype(float)
+            se_t = float(dt_.std(ddof=1) / math.sqrt(self.n))
+            out[t] = {"d_title": float(dt_.mean()), "se_title": se_t,
+                      "d_playoffs": float(dp.mean()), "se_playoffs": float(dp.std(ddof=1) / math.sqrt(self.n)),
+                      "p_title": float(b["title"][i].mean()), "p_playoffs": float(b["made"][i].mean()),
+                      "noise": abs(float(dt_.mean())) < NOISE_Z * se_t or float(dt_.mean()) == 0.0}
+        return out
+
     def _base(self):
         if not hasattr(self, "_base_run"):
             self._base_run = self.run(self.rosters)
