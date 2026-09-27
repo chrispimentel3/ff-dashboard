@@ -42,6 +42,7 @@ KDEF_MEAN = 15.0          # (J) a half-PPR kicker + defense per week; same for e
 KDEF_SD = 7.0             #     so it sets game-to-game noise and never a trade's delta
 DEFAULT_Q = (0.35, 0.90, 1.75)   # (J) p10/p50/p90 multipliers for a player the projection lacks
 NOISE_Z = 2.0             # |Δ| under 2 SE is noise
+TW_CACHE_MAX = 1500       # team-week score arrays kept before the cache is flushed
 POSTURE = ((0.70, "protect"), (0.35, "balanced"), (0.0, "swing"))   # handoff §5, on P(playoffs)
 
 
@@ -72,7 +73,8 @@ class Model:
         hit = self._draw.get(key)
         if hit is None:
             r = _rng(key)
-            hit = (r.standard_normal(self.n), r.random(self.n))
+            # float32: the live API holds these for hours on a 512MB host
+            hit = (r.standard_normal(self.n, dtype=np.float32), r.random(self.n, dtype=np.float32))
             self._draw[key] = hit
         return hit
 
@@ -113,6 +115,9 @@ class Model:
                 total += np.where(on, x, 0.0)
         z, _ = self._dice(f"{team}|kdef|{w}")
         total += KDEF_MEAN + KDEF_SD * z
+        if len(self._tw) > TW_CACHE_MAX:
+            self._tw.clear()            # every new roster adds 15 weeks of arrays; a live
+                                        # service would otherwise grow without bound
         self._tw[key] = total
         return total
 

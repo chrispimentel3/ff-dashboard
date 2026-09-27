@@ -154,6 +154,50 @@ def _trade_odds(season: int, next_week: int, rows: list[tuple]) -> dict:
     return out
 
 
+LIVE_SEASONS = 3000        # half the offline 6,000: a live request has to answer in seconds
+# Off unless TITLE_ODDS_LIVE=1. Measured 2026-09-27: the player-level model adds ~80MB to a
+# ~480MB process, which would put Render's 512MB free instance over its limit and take the
+# Ask endpoint down with it. With it off, the search keeps the team-level playoff odds.
+TITLE_ODDS_LIVE = os.environ.get("TITLE_ODDS_LIVE", "") == "1"
+
+
+def _title_model(season: int, next_week: int):
+    """HANDOFF v1.3 title-odds model (mega/title_odds.py), cached like the engine."""
+    def build():
+        from mega import title_odds as T
+        from mega.yahoo import cached_rosters
+        return T.build(season, next_week, cached_rosters(), n=LIVE_SEASONS)
+    return _cached(f"title_model:{season}:{next_week}", ENGINE_TTL, build)
+
+
+def _title_odds_rows(season: int, next_week: int, eng, my_id, results: list) -> dict:
+    """index -> both teams' change in playoff AND title odds for each offer, from player-
+    level draws on common random numbers — the same model the offer cards use, so the
+    search and the cards can't disagree."""
+    from mega import trade_engine as te
+    tm = _title_model(season, next_week)
+    if tm is None:
+        return {}
+    ctx = eng.ctx
+    my_name = ctx.teams[my_id]["name"]
+    out = {}
+    for i, r in enumerate(results):
+        core = te.evaluate_core(ctx, my_id, r["partner"]["id"], r["giveIds"], r["getIds"])
+        partner = r["partner"]["name"]
+        ir = lambda team, tid: [p for p in tm.rosters.get(team, []) if p not in ctx.teams[tid]["roster"]]
+        d = tm.delta({my_name: list(core["_after"]["me"].ids) + ir(my_name, my_id),
+                      partner: list(core["_after"]["them"].ids) + ir(partner, r["partner"]["id"])},
+                     (my_name, partner))
+        us, them = d.get(my_name, {}), d.get(partner, {})
+        out[i] = {"d_playoffs": us.get("d_playoffs"), "their_d_playoffs": them.get("d_playoffs"),
+                  "d_title": us.get("d_title"), "their_d_title": them.get("d_title"),
+                  "title_noise": bool(us.get("noise", True)),
+                  "their_tag": SIM.partner_tag(them.get("p_playoffs", 0.0)),
+                  "arms_rival": SIM.arms_rival(us.get("d_playoffs", 0.0), them.get("d_playoffs", 0.0),
+                                               us.get("p_playoffs", 0.0), them.get("p_playoffs", 0.0))}
+    return out
+
+
 class AskRequest(BaseModel):
     text: str = PydField(min_length=1, max_length=300)
     seasons: list[int] = PydField(default_factory=list)
@@ -233,11 +277,18 @@ def trade_search(req: TradeSearchRequest):
         rank = {"LIKELY": 0, "NEEDS_PITCH": 1, "EXPLOIT": 2, "LONGSHOT": 3}
         results = sorted(results, key=lambda r: (rank.get(r["flag"], 9), -r["dMe"]))
 
-    keyrows = [(i, r["partner"]["name"], r["dMe"], r["dThem"]) for i, r in enumerate(results[:SIM_TOP])]
-    try:
-        odds = _trade_odds(season, next_week, keyrows)
-    except Exception:
-        odds = {}
+    odds = {}
+    if TITLE_ODDS_LIVE:
+        try:
+            odds = _title_odds_rows(season, next_week, eng, me, results[:SIM_TOP])
+        except Exception:
+            odds = {}
+    if not odds:
+        keyrows = [(i, r["partner"]["name"], r["dMe"], r["dThem"]) for i, r in enumerate(results[:SIM_TOP])]
+        try:
+            odds = _trade_odds(season, next_week, keyrows)
+        except Exception:
+            odds = {}
 
     rows = []
     for i, r in enumerate(results):
@@ -253,6 +304,9 @@ def trade_search(req: TradeSearchRequest):
             "flag": r["flag"],
             "odds": o.get("d_playoffs"),
             "their_odds": o.get("their_d_playoffs"),
+            "title": o.get("d_title"),
+            "their_title": o.get("their_d_title"),
+            "title_noise": o.get("title_noise"),
             "watch": "arms a rival" if o.get("arms_rival") else (o.get("their_tag") or None),
             "i_would_start": [s["name"] for s in r["me"]["startersIn"]],
             "i_would_bench": [s["name"] for s in r["me"]["startersOut"]],
