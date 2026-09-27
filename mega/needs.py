@@ -225,10 +225,15 @@ def board(season: int, week: int, yahoo_rosters: pd.DataFrame | None = None,
         df["lane"] = df["lane"].fillna("")
         df["why"] = [lane_why(r) if r["lane"] else r["why"] for _, r in df.iterrows()]
         df["_lane"] = df["lane"].map(LANE_ORDER).fillna(len(LANE_ORDER))
+        # D1: rank by the change in title odds where the simulation can see one; a Δ inside
+        # its own noise band ranks as zero and pts/wk (or the signal score) breaks the tie.
+        dt = df["d_title"] if "d_title" in df.columns else pd.Series(0.0, index=df.index)
+        nz = df["title_noise"] if "title_noise" in df.columns else pd.Series(True, index=df.index)
+        df["_title"] = [0.0 if (n is None or n is True or pd.isna(d)) else float(d) for d, n in zip(dt, nz)]
         df["_key"] = [(r["signal_score"] if r["lane"] == "early_signal" else r["fit_pts"]) or 0.0
                       for _, r in df.iterrows()]
-        df = df.sort_values(["_lane", "_key", "add_score"], ascending=[True, False, False])
-        df = df.drop(columns=["_lane", "_key"]).head(top).reset_index(drop=True)
+        df = df.sort_values(["_lane", "_title", "_key", "add_score"], ascending=[True, False, False, False])
+        df = df.drop(columns=["_lane", "_key", "_title"]).head(top).reset_index(drop=True)
     else:
         df = df.sort_values(["gain", "add_score"], ascending=[False, False]).head(top).reset_index(drop=True)
     df.attrs["roster_notes"] = v13.get("notes") or []

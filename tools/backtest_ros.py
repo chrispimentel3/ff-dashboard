@@ -190,7 +190,7 @@ def calibration(ev: pd.DataFrame, d: Data, blend_w: dict) -> tuple[dict, dict]:
         x = g[["gsis_id", "pos", "pts_pg", "ecr_pts", "band"]].merge(fut, on="gsis_id")
         wv = x.apply(lambda r: blend_w[r["pos"]][r["band"]], axis=1)
         x["pred"] = wv * x["pts_pg"] + (1 - wv) * x["ecr_pts"]
-        x["season"] = s
+        x["season"], x["w0"] = s, w
         rows.append(x)
     wk = pd.concat(rows, ignore_index=True)
     wk = wk[wk["pred"] > 1]
@@ -203,6 +203,16 @@ def calibration(ev: pd.DataFrame, d: Data, blend_w: dict) -> tuple[dict, dict]:
                    for t, g in gp.groupby("tier")} for pos, gp in x.groupby("pos")}
         q["_tier_edges"] = edges
         return q
+
+    # Season-long projection error, net of the noise in the target itself: a player's ROS
+    # pts/g is a mean of only a handful of games, so part of |pred − actual| is that
+    # sampling noise, not the projection. title_odds draws this once per player-season.
+    per = wk.groupby(["season", "w0", "gsis_id"]).agg(pos=("pos", "first"), pred=("pred", "first"),
+                                                act=("pts", "mean"), var=("pts", "var"), n=("pts", "size"))
+    per = per[per["n"] >= MIN_ROS_GAMES]
+    err_sd = {pos: round(float(math.sqrt(max(0.0, ((g["pred"] - g["act"]) ** 2).mean() - (g["var"] / g["n"]).mean()))), 3)
+              for pos, g in per.groupby("pos")}
+    edges["_proj_err_sd"] = err_sd
 
     train = fit(wk[wk["season"] <= 2023])
     test = wk[wk["season"] >= 2024].copy()
@@ -331,6 +341,7 @@ def main(argv=None) -> None:
     weights, cv = fit_blend(ev)
     dis = disagreement(ev)
     quant, coverage = calibration(ev, d, weights)
+    err_sd = quant["_tier_edges"].pop("_proj_err_sd", {})
     sched = schedule_test(d)
     es = early_signal(d)
 
@@ -362,7 +373,7 @@ def main(argv=None) -> None:
         "fitted": dt.date.today().isoformat(),
         "params": {k: (None if (isinstance(v, float) and math.isinf(v)) else v) for k, v in params.items()},
         "blend_w": weights,
-        "quantiles": quant, "coverage_2024_25": coverage,
+        "quantiles": quant, "coverage_2024_25": coverage, "proj_err_sd": err_sd,
         "disagreement_allowed": allowed,
         "schedule_lens": {pos: v["passes"] for pos, v in sched.items()},
         "schedule_test": sched,

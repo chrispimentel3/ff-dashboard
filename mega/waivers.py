@@ -17,7 +17,8 @@ from mega.ui import short_name
 LANE_COLS = ["player", "pos", "nfl_team", "ppg", "lane", "fit_pts", "start", "cover", "insure",
              "next3", "mechanism", "handcuff", "insures", "drop", "drop_cost", "drop_insure",
              "drop_flip", "signal", "p_expand", "gain_if_expands", "signal_score", "pct_ros",
-             "market_on", "flip", "bid", "max_bid", "role", "why"]
+             "market_on", "flip", "bid", "max_bid", "role", "why", "d_title", "se_title",
+             "title_noise"]
 CHIP_COLS = ["player", "pos", "nfl_team", "flip", "flip_buyers"]
 LANES = ("bid_now", "early_signal", "stash")
 

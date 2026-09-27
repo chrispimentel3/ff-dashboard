@@ -302,7 +302,8 @@ def build(season: int, now: int, write: bool = True) -> dict:
                 pa = 1.0 - cg.miss_hazard(r.pos, ages.get(r.gsis_id), w - now)
             base = float(r.ros_pg) * ratio.get((team, w), 1.0) ** fw.GAMMA
             wk[w] = {"median": round(base * q[1], 2), "p10": round(base * q[0], 2), "p90": round(base * q[2], 2),
-                     "p_active": round(pa, 3), "expected": round(base * pa, 2)}
+                     "p_active": round(pa, 3), "expected": round(base * pa, 2),
+                     "mean_if_active": round(base, 2)}
         drivers, driver, gap = [], None, None
         if pd.notna(r.pts_pg):
             drivers.append(f"usage: {r.xfp_proj:.1f} expected pts/g from his share of {team}'s volume")
@@ -338,6 +339,7 @@ def build(season: int, now: int, write: bool = True) -> dict:
            "players": players}
     if write:
         (ROOT / "data" / f"proj_ros_{season}.json").write_text(json.dumps(out, separators=(",", ":")))
+        cached.cache_clear()
     return out
 
 

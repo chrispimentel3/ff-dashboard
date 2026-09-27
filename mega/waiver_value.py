@@ -350,7 +350,8 @@ def build_board(league: dict, cfg: dict, my_id, now: int, avail: dict, byes: dic
         p["bye"] = byes.get(canon_team(p.get("nfl") or ""))
         a = avail.get(pid)
         if a:
-            p["weekly"] = {w: 0.0 for w in wset if w < a["back"]}
+            # on top of the projection's own weekly values, never instead of them
+            p["weekly"] = {**(p.get("weekly") or {}), **{w: 0.0 for w in wset if w < a["back"]}}
         ph = lg_h["players"][pid]
         if pid in mine:
             ph["bye"], ph["weekly"] = None, None
@@ -587,6 +588,32 @@ def run(season: int, now: int, yahoo_rosters: pd.DataFrame | None = None) -> dic
 
     rows = assess(b, lg["freeAgents"], cuffs, fc_by_name, roles, flat, baselines, pct_ros,
                   budget_left, now)
+
+    # HANDOFF v1.3 §5 / D1: rank by the change in title odds. Only lane players are
+    # simulated — the rest have no fit, so there is nothing to price.
+    meta_title = {}
+    try:
+        from . import title_odds as T
+        tm = T.build(season, now, yahoo_rosters, league=lg)
+        if tm is not None and not rows.empty:
+            my_name = next(t["name"] for t in lg["teams"] if t["id"] == my_id)
+            base = tm.odds()[my_name]
+            meta_title = {"p_playoffs": base["p_playoffs"], "p_title": base["p_title"],
+                          "posture": T.posture(base["p_playoffs"]), "seasons": tm.n}
+            mine = list(tm.rosters[my_name])
+            d_title, se_title, noise = [], [], []
+            for r in rows.itertuples():
+                if r.lane not in ("bid_now", "early_signal", "stash"):
+                    d_title.append(None), se_title.append(None), noise.append(None)
+                    continue
+                drop = next((pid for pid in mine if b.ctx.players.get(pid, {}).get("name") == r.drop), None)
+                after = [p for p in mine if p != drop] + [r.pid]
+                dd = tm.delta({my_name: after}, (my_name,))[my_name]
+                d_title.append(round(dd["d_title"], 4)), se_title.append(round(dd["se_title"], 4))
+                noise.append(bool(dd["noise"]))
+            rows["d_title"], rows["se_title"], rows["title_noise"] = d_title, se_title, noise
+    except Exception as e:
+        meta_title = {"error": f"{type(e).__name__}: {e}"}
     return {"rows": rows, "notes": roster_notes(b, avail),
             "meta": {"weeks": [w for w, _ in b.weeks], "tau_bid": TAU_BID, "fit_min": FIT_MIN,
-                     "budget_left": budget_left}}
+                     "budget_left": budget_left, "title": meta_title}}

@@ -98,9 +98,27 @@ def build_league(season: int, yahoo_rosters: pd.DataFrame | None = None) -> dict
     except Exception:
         perceived_by_gsis = {}
 
+    # HANDOFF v1.3 Pass 3: the value input is our blended rest-of-season projection
+    # (mega/proj_ros.py — ours and FantasyPros ECR in the proportion the 2021–25 backtest
+    # earned). `ppg` is per game played; `weekly` is each remaining week's EXPECTED points
+    # (0 on a bye, discounted by the chance he plays), which the horizon engines read. This
+    # week keeps the Vegas props number (§5: "keep this week's props as the week-current
+    # value"). FantasyPros ROS / nflverse remain the fallback for anyone it doesn't cover.
+    from . import proj_ros
+    proj = (proj_ros.cached(season) or {}).get("players") or {}
+    proj_week = int(((proj_ros.cached(season) or {}).get("meta") or {}).get("week") or 0)
+    vegas_now = {}
+    try:
+        vp = DATA / "build" / f"vegas_{season}_wk{proj_week:02d}.csv"
+        if proj_week and vp.is_file():
+            v = pd.read_csv(vp)
+            vegas_now = dict(zip(v["gsis_id"], pd.to_numeric(v["vegas"], errors="coerce")))
+    except Exception:
+        vegas_now = {}
+
     players: dict[str, dict] = {}
     unpriced: list[str] = []
-    sources = {"fantasypros_ros": 0, "nflverse": 0, "none": 0}
+    sources = {"proj_ros": 0, "fantasypros_ros": 0, "nflverse": 0, "none": 0}
 
     def add(row) -> str | None:
         pos = _s(row.get("pos")).upper()
@@ -110,7 +128,17 @@ def build_league(season: int, yahoo_rosters: pd.DataFrame | None = None) -> dict
         if pid in players:
             return pid
         gid, nrm = row.get("gsis_id"), row.get("norm")
-        ppg, src = fp_by_gsis.get(gid), "fantasypros_ros"
+        weekly = None
+        pr = proj.get(gid) if isinstance(gid, str) else None
+        if pr and pos in ("QB", "RB", "WR", "TE"):
+            ppg, src = pr["ros_pg"], "proj_ros"
+            weekly = {int(w): float(v["expected"]) for w, v in (pr.get("weeks") or {}).items()}
+            vn = vegas_now.get(gid)
+            wk_now = (pr.get("weeks") or {}).get(str(proj_week)) or {}
+            if vn is not None and pd.notna(vn) and proj_week and not wk_now.get("bye"):
+                weekly[proj_week] = round(float(vn) * float(wk_now.get("p_active", 1.0)), 2)
+        else:
+            ppg, src = fp_by_gsis.get(gid), "fantasypros_ros"
         if ppg is None or pd.isna(ppg):
             ppg = fp_by_norm.get(nrm)
         if ppg is None or pd.isna(ppg):
@@ -133,6 +161,8 @@ def build_league(season: int, yahoo_rosters: pd.DataFrame | None = None) -> dict
             "ecr": None if ecr is None or pd.isna(ecr) else int(ecr),
             "ppg_src": src,
         }
+        if weekly:
+            players[pid]["weekly"] = weekly
         return pid
 
     teams, seat_of = [], {}
