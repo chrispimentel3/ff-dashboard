@@ -43,6 +43,11 @@ def worth_claiming(wv: pd.DataFrame) -> pd.DataFrame:
     """
     if wv is None or wv.empty:
         return wv
+    # HANDOFF v1.3: the "Bid now" lane — lineup gain over the next three weeks above
+    # waiver_value.TAU_BID — is the claim worth making. Stash and early-signal players are
+    # real, but they are not what "would change your lineup" means.
+    if "lane" in wv.columns:
+        return wv[wv["lane"] == "bid_now"]
     if "bid" in wv.columns:
         return wv[wv["bid"] >= 1]
     return wv[pd.to_numeric(wv.get("gain"), errors="coerce").fillna(0) > 0]
@@ -121,7 +126,7 @@ def build(agg: pd.DataFrame, IB: dict | None, BASIS: dict, season: int) -> dict:
         wv = IB.get("waivers")
         if wv is not None and not wv.empty:
             if "bid" in wv.columns:
-                worth = wv[wv["bid"] >= 1]
+                worth = worth_claiming(wv)
                 cols = ["player", "pos", "gain", "bid", "max_bid", "drop", "why"]
             else:
                 worth = wv

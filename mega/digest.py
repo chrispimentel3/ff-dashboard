@@ -59,7 +59,24 @@ def build_digest(season: int, my_players: list[str] | None = None,
     L.append(f"_{SCORING_NAME} · team **{MY_TEAM}** · form data: {intel.form_season(season)} season · rosters: {src}_\n")
 
     L.append("## 🔎 Waiver targets")
-    if "gain" in wb.columns:
+    if "lane" in wb.columns:
+        # HANDOFF v1.3 lanes: nobody is listed without a reason tied to this roster.
+        for lane, title, empty in (
+            ("bid_now", "**Bid now** — improves your lineup over the next three weeks.",
+             "Nothing on the wire improves your lineup over the next three weeks. Hold your budget."),
+            ("early_signal", "**Early signal** — usage rising before the points have.", None),
+            ("stash", "**Stash** — insurance, bye cover or a small season-long upgrade.", None),
+        ):
+            sub = wb[wb["lane"] == lane]
+            if sub.empty and empty is None:
+                continue
+            L.append(title + "\n")
+            L.append(f"_{empty}_\n" if sub.empty else
+                     _tbl(sub, ["player", "pos", "fit_pts", "bid", "drop", "why"], 8))
+        for note in wb.attrs.get("roster_notes") or []:
+            L.append(f"- {note}")
+        L.append(_faab_line())
+    elif "gain" in wb.columns:
         # Split on the bid, not the label: a player the model won't spend a dollar on does
         # not belong under a heading that says he is worth money.
         fits = wb[wb["bid"] >= 1]

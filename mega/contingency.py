@@ -22,8 +22,15 @@ Every constant marked (J) is a judgment default. §19.4 says when each gets fitt
 """
 from __future__ import annotations
 
+import functools
+import json
+import math
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
+
+HAZARD_FILE = Path(__file__).resolve().parents[1] / "config" / "injury_hazard.json"
 
 # §15.1 (J): weekly chance a healthy player picks up an injury, and how long it keeps him
 # out. P_ss = p * L is the steady-state chance he is unavailable in any given future week.
@@ -55,6 +62,50 @@ def p_out(pos: str, weeks_ahead: int) -> float:
     if weeks_ahead <= 0:
         return 0.0
     return steady_state(pos) * min(1.0, weeks_ahead / WEEKS_MISSED)
+
+
+@functools.lru_cache(maxsize=1)
+def _fitted_hazard() -> dict:
+    try:
+        return json.loads(HAZARD_FILE.read_text())
+    except Exception:
+        return {}
+
+
+def _age_band(age: float | None, bands: list[str]) -> str:
+    """Bands are fitted as "u25", "25-28", "29+" (tools/fit_injury_hazard.py)."""
+    if age is None or not math.isfinite(age):
+        return "25-28" if "25-28" in bands else (bands[0] if bands else "")
+    return "u25" if age < 25 else "25-28" if age < 29 else "29+"
+
+
+def miss_hazard(pos: str, age: float | None, weeks_ahead: int) -> float:
+    """HANDOFF v1.3 §3.1 `h` — the chance a starter misses a game `weeks_ahead` from now.
+
+    Fitted from 2021–2025 snap counts by position and age band (config/injury_hazard.json,
+    tools/fit_injury_hazard.py): of starters who played this week, how many took no snap
+    k weeks later while their team played. Falls back to the §15.1 judgment ramp (p_out)
+    if the fit is missing, so a fresh checkout still runs.
+    """
+    if weeks_ahead <= 0:
+        return 0.0
+    fit = _fitted_hazard()
+    by_pos = (fit.get("hazard") or {}).get(str(pos).upper())
+    if not by_pos:
+        return p_out(pos, weeks_ahead)
+    curve = by_pos.get(_age_band(age, fit.get("age_bands") or [])) or next(iter(by_pos.values()))
+    k = min(int(weeks_ahead), len(curve))
+    v = curve[k - 1]
+    return float(v) if v is not None else p_out(pos, weeks_ahead)
+
+
+def inherit_fraction(pos: str) -> float:
+    """Share of a missing starter's expected points his next man up picks up, fitted from
+    2021–2025 (config/injury_hazard.json "inherit"): RB ~0.37, TE ~0.17, WR ~0.05 — a WR1's
+    targets spread across the room rather than passing to one receiver. Falls back to the
+    §15.2 committee haircut if the fit is missing."""
+    v = ((_fitted_hazard().get("inherit") or {}).get(str(pos).upper()) or {}).get("inherit")
+    return float(v) if v is not None else CUFF_HAIRCUT
 
 
 def availability(status: object, pos: str, week: int, now: int,
@@ -94,6 +145,11 @@ def next_man_up(pw: pd.DataFrame, roles_tab: pd.DataFrame, window: int = 3) -> p
     for (team, pos), grp in d[d["pos"].isin(("RB", "WR", "TE", "QB"))].groupby(["team", "pos"]):
         lead_roles = {"RB": "LEAD", "WR": "WR1", "TE": "TE1-REC", "QB": "STARTER"}
         starters = grp[grp["role"] == lead_roles.get(pos)]
+        if starters.empty:
+            # A committee still has a first man: McCaffrey sharing carries with Kaelon Black
+            # is not "no starter", and the back behind him still inherits the work when he
+            # sits. Fall back to the most-used player at the position.
+            starters = grp[grp["snaps"].notna()]
         if starters.empty:
             continue
         starter = starters.sort_values("snaps", ascending=False).iloc[0]

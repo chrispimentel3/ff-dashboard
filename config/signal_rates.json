@@ -1,0 +1,172 @@
+{
+ "_doc": "P(role reaches the next rung within 3 weeks | usage flag at week w), walk-forward 2021-2025 weeks 3-14, with the no-flag base rate per position. Fitted by tools/fit_signal_rates.py; read by mega/waiver_value.py.",
+ "fitted": "2026-09-26",
+ "seasons": [
+  2021,
+  2022,
+  2023,
+  2024,
+  2025
+ ],
+ "weeks": [
+  3,
+  14
+ ],
+ "ahead": 3,
+ "base": {
+  "QB": {
+   "rate": 0.0287,
+   "n": 1987
+  },
+  "RB": {
+   "rate": 0.103,
+   "n": 4553
+  },
+  "TE": {
+   "rate": 0.0781,
+   "n": 4930
+  },
+  "WR": {
+   "rate": 0.15,
+   "n": 9619
+  }
+ },
+ "flags": {
+  "AIR": {
+   "WR": {
+    "spike": {
+     "rate": 0.5818,
+     "n": 55
+    },
+    "sustained": {
+     "rate": 0.4402,
+     "n": 418
+    }
+   }
+  },
+  "GL": {
+   "QB": {
+    "spike": {
+     "rate": 0.0135,
+     "n": 74
+    },
+    "sustained": {
+     "rate": 0.0323,
+     "n": 31
+    }
+   },
+   "RB": {
+    "spike": {
+     "rate": 0.3092,
+     "n": 249
+    },
+    "sustained": {
+     "rate": 0.2595,
+     "n": 316
+    }
+   }
+  },
+  "LEAD": {
+   "RB": {
+    "spike": {
+     "rate": 0.2143,
+     "n": 14
+    },
+    "sustained": {
+     "rate": 0.75,
+     "n": 12
+    }
+   }
+  },
+  "ROLE+": {
+   "QB": {
+    "window": {
+     "rate": 0.0091,
+     "n": 219
+    }
+   },
+   "RB": {
+    "window": {
+     "rate": 0.256,
+     "n": 1254
+    }
+   },
+   "TE": {
+    "window": {
+     "rate": 0.2522,
+     "n": 464
+    }
+   },
+   "WR": {
+    "window": {
+     "rate": 0.5575,
+     "n": 174
+    }
+   }
+  },
+  "SNAP": {
+   "RB": {
+    "spike": {
+     "rate": 0.3889,
+     "n": 18
+    },
+    "sustained": {
+     "rate": 0.36,
+     "n": 200
+    }
+   },
+   "TE": {
+    "spike": {
+     "rate": 1.0,
+     "n": 1
+    },
+    "sustained": {
+     "rate": 0.807,
+     "n": 57
+    }
+   },
+   "WR": {
+    "spike": {
+     "rate": 0.0,
+     "n": 1
+    },
+    "sustained": {
+     "rate": 0.4715,
+     "n": 333
+    }
+   }
+  },
+  "TGT": {
+   "RB": {
+    "spike": {
+     "rate": 0.234,
+     "n": 47
+    },
+    "sustained": {
+     "rate": 0.3312,
+     "n": 314
+    }
+   },
+   "TE": {
+    "spike": {
+     "rate": 0.0,
+     "n": 1
+    },
+    "sustained": {
+     "rate": 0.4595,
+     "n": 37
+    }
+   },
+   "WR": {
+    "spike": {
+     "rate": 0.5455,
+     "n": 22
+    },
+    "sustained": {
+     "rate": 0.5024,
+     "n": 205
+    }
+   }
+  }
+ }
+}

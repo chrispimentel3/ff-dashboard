@@ -55,8 +55,13 @@ def build_league(season: int, yahoo_rosters: pd.DataFrame | None = None) -> dict
     ros = current_rosters(yahoo_rosters)
     if ros.empty:
         return {"teams": [], "players": {}, "freeAgents": [], "report": {"error": "no rosters"}}
+    # IR players hold no roster spot, so the engine never sees them in `roster`. They are
+    # still priced and listed per team under `ir`: mega/waiver_value.py puts them back on
+    # the roster at their expected return week (HANDOFF v1.3 §3.2). The engine ignores it.
+    ir_rows = pd.DataFrame()
     if "slot" in ros.columns:
-        ros = ros[ros["slot"].astype(str).str.upper() != "IR"]
+        on_ir = ros["slot"].astype(str).str.upper() == "IR"
+        ir_rows, ros = ros[on_ir], ros[~on_ir]
 
     # Points per game is forward-looking: a trade is decided on what a player will score
     # from here, not what he already banked. FantasyPros' rest-of-season number is the best
@@ -136,7 +141,9 @@ def build_league(season: int, yahoo_rosters: pd.DataFrame | None = None) -> dict
         seat = pd.to_numeric(g["seat"], errors="coerce").dropna()
         tid = int(seat.iloc[0]) if not seat.empty else len(teams) + 100
         seat_of[str(team)] = tid
-        teams.append({"id": tid, "name": str(team), "roster": roster})
+        ir = ir_rows[ir_rows["team"] == team] if not ir_rows.empty else ir_rows
+        ir_ids = [pid for pid in (add(r) for _, r in ir.iterrows()) if pid]
+        teams.append({"id": tid, "name": str(team), "roster": roster, "ir": ir_ids})
 
     free_agents: list[str] = []
     fa_path = DATA / "yahoo_free_agents.csv"
@@ -146,7 +153,7 @@ def build_league(season: int, yahoo_rosters: pd.DataFrame | None = None) -> dict
         fa, _ = resolve(pd.read_csv(fa_path, dtype=str).fillna(""), name_col="player")
         for _, r in fa.iterrows():
             pid = add(r)
-            if pid and pid not in {p for t in teams for p in t["roster"]}:
+            if pid and pid not in {p for t in teams for p in t["roster"] + t["ir"]}:
                 free_agents.append(pid)
 
     return {

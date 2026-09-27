@@ -202,6 +202,9 @@ COLS = {
     "gain": "GAIN", "fit": "FIT", "bid": "BID", "max_bid": "MAX", "drop": "CUT",
     "upside": "UPSIDE", "starts": "STARTS", "vacated": "VAC", "season_pts": "SEASON",
     "faab_left": "FAAB", "faab_spent": "SPENT", "headroom": "ROOM",
+    # HANDOFF v1.3 waiver lanes (mega/waiver_value.py) — all pts/wk across the season
+    "fit_pts": "FIT/WK", "next3": "NEXT 3", "start": "START/WK", "cover": "COVER/WK",
+    "insure": "INSURE/WK", "p_expand": "P(UP)", "gain_if_expands": "IF UP", "pct_ros": "OWN%",
     "worst_starter": "WEAKEST", "replacement": "WIRE", "rostered": "HAVE", "starting": "START",
     "ease_rank": "MU#", "pa_pg": "PA/G", "proj_adj": "PROJ*", "proj": "PROJ", "proj_source": "SRC",
     # §20 Vegas props

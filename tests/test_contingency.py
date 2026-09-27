@@ -108,6 +108,34 @@ def test_only_one_backup_per_starter_gets_the_option():
     assert out["cuff_of"].iloc[0] == "S"
 
 
+def test_a_committee_still_has_a_next_man_up():
+    """McCaffrey and Kaelon Black splitting carries is not "no starter": the most-used
+    back is the one whose job the other inherits."""
+    pw = pd.DataFrame([{"gsis_id": g, "week": 1, "offense_snaps": s, "carries": c}
+                       for g, s, c in (("S", 36, 10), ("B", 28, 14), ("C", 8, 4))])
+    tab = pd.DataFrame([{"gsis_id": g, "team": "SF", "pos": "RB", "role": r}
+                        for g, r in (("S", "COMMITTEE"), ("B", "COMMITTEE"), ("C", "BACKUP"))])
+    out = cg.next_man_up(pw, tab)
+    assert list(out["gsis_id"]) == ["B"] and out["cuff_of"].iloc[0] == "S"
+
+
+# ---------------------------------------------------------------- v1.3 fitted INSURE inputs
+def test_fitted_hazard_rises_with_the_horizon_and_falls_back_without_a_fit(monkeypatch):
+    if not cg._fitted_hazard():
+        pytest.skip("config/injury_hazard.json not fitted")
+    assert 0 < cg.miss_hazard("RB", 26, 1) < cg.miss_hazard("RB", 26, 8) < 0.5
+    assert cg.miss_hazard("RB", 26, 0) == 0.0
+    monkeypatch.setattr(cg, "_fitted_hazard", lambda: {})
+    assert cg.miss_hazard("RB", 26, 3) == pytest.approx(cg.p_out("RB", 3))
+
+
+def test_a_wr1s_targets_spread_while_a_lead_backs_carries_mostly_pass_down():
+    if not cg._fitted_hazard():
+        pytest.skip("config/injury_hazard.json not fitted")
+    assert cg.inherit_fraction("RB") > cg.inherit_fraction("WR")
+    assert 0 <= cg.inherit_fraction("WR") < 0.2
+
+
 # ---------------------------------------------------------------- §16
 def test_replacement_is_the_mean_of_the_top_three():
     """One lucky free agent must not set the bar for a whole position."""

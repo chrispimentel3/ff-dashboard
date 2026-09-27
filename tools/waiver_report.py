@@ -21,6 +21,7 @@ import sys
 
 COLS = ["player", "pos", "role", "role_flags", "gain", "bid", "max_bid", "drop"]
 SPEC_COLS = ["player", "pos", "role", "role_flags", "ppg", "upside"]
+LANE_COLS = ["player", "pos", "role", "role_flags", "fit_pts", "bid", "drop", "why"]
 
 
 def main(season: int = 2026) -> int:
@@ -45,18 +46,34 @@ def main(season: int = 2026) -> int:
         print("NO BOARD — the valuation engine could not build. Report this and carry on.")
         return 1
 
-    worth = board[board["bid"] >= 1]
-    print("WORTH BIDDING ON")
-    if worth.empty:
-        print("  nothing — no free agent improves the starting lineup. Hold the budget.")
+    if "lane" in board.columns:
+        # HANDOFF v1.3 lanes (mega/waiver_value.py): fit to this roster, season-long
+        for lane, title, empty in (
+            ("bid_now", "BID NOW (improves the lineup over the next 3 weeks)",
+             "nothing — no free agent improves the lineup over the next 3 weeks. Hold the budget."),
+            ("early_signal", "EARLY SIGNAL (usage rising before the points)", "none"),
+            ("stash", "STASH (insurance, bye cover or a small season-long upgrade)", "none"),
+        ):
+            sub = board[board["lane"] == lane]
+            print(title)
+            print(sub[LANE_COLS].to_string(index=False) if not sub.empty else f"  {empty}")
+            print()
+        for note in board.attrs.get("roster_notes") or []:
+            print(f"NOTE  {note}")
+        print()
     else:
-        print(worth[COLS].to_string(index=False))
-    print()
-    print("SPECULATIVE (a dollar at most)")
-    spec = board[board["bid"] < 1]
-    print(spec[[c for c in SPEC_COLS if c in spec.columns]].head(6).to_string(index=False)
-          if not spec.empty else "  none")
-    print()
+        worth = board[board["bid"] >= 1]
+        print("WORTH BIDDING ON")
+        if worth.empty:
+            print("  nothing — no free agent improves the starting lineup. Hold the budget.")
+        else:
+            print(worth[COLS].to_string(index=False))
+        print()
+        print("SPECULATIVE (a dollar at most)")
+        spec = board[board["bid"] < 1]
+        print(spec[[c for c in SPEC_COLS if c in spec.columns]].head(6).to_string(index=False)
+              if not spec.empty else "  none")
+        print()
     from mega.glossary import FLAGS
 
     print("WHAT THE TAGS MEAN")

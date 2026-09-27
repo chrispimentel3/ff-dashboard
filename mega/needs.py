@@ -207,8 +207,55 @@ def board(season: int, week: int, yahoo_rosters: pd.DataFrame | None = None,
     # reorders the players who actually improve the lineup — `gain` is a measurement and a
     # flag is an opinion, so the measurement sorts first.
     df["add_score"] = df["add_score"] + df["role_score"].fillna(0.0)
-    return (df.sort_values(["gain", "add_score"], ascending=[False, False])
-              .head(top).reset_index(drop=True))
+
+    # HANDOFF v1.3 Pass 1 — the season-long, mechanism-split value (mega/waiver_value.py)
+    # decides the lanes, the drop and the bid. Trend and industry adds no longer rank
+    # anyone: a player with no fit to this roster sits in no lane however hot he is.
+    try:
+        from . import waiver_value as wval
+        v13 = wval.run(season, week, yahoo_rosters)
+    except Exception as e:
+        v13 = {"rows": pd.DataFrame(), "notes": [], "meta": {"error": f"{type(e).__name__}: {e}"}}
+    rows13 = v13["rows"]
+    if not rows13.empty:
+        df = df.drop(columns=["drop", "bid", "max_bid"]).merge(
+            rows13.drop(columns=["pid", "pos", "nfl_team", "ppg", "gain", "role"]).rename(
+                columns={"fit": "fit_pts", "behind": "insures"}),
+            on="player", how="left")
+        df["lane"] = df["lane"].fillna("")
+        df["why"] = [lane_why(r) if r["lane"] else r["why"] for _, r in df.iterrows()]
+        df["_lane"] = df["lane"].map(LANE_ORDER).fillna(len(LANE_ORDER))
+        df["_key"] = [(r["signal_score"] if r["lane"] == "early_signal" else r["fit_pts"]) or 0.0
+                      for _, r in df.iterrows()]
+        df = df.sort_values(["_lane", "_key", "add_score"], ascending=[True, False, False])
+        df = df.drop(columns=["_lane", "_key"]).head(top).reset_index(drop=True)
+    else:
+        df = df.sort_values(["gain", "add_score"], ascending=[False, False]).head(top).reset_index(drop=True)
+    df.attrs["roster_notes"] = v13.get("notes") or []
+    df.attrs["v13"] = v13.get("meta") or {}
+    return df
+
+
+# trade_chip (FLIP only, no fit) rides after the lanes so the top-N cut can't drop it
+LANE_ORDER = {"bid_now": 0, "early_signal": 1, "stash": 2, "trade_chip": 3}
+
+
+def lane_why(r) -> str:
+    """One line saying which mechanism makes him worth a spot, in points per week."""
+    lane, mech = r.get("lane"), r.get("mechanism")
+    if lane == "bid_now":
+        return (f"+{r['next3']:.1f} pts/wk over the next 3 weeks"
+                + (" — covers a bye or injury" if mech == "COVER" else " — starts for you"))
+    if lane == "early_signal":
+        from .glossary import flag_label
+        return (f"{flag_label(r['signal'], None)}: {r['p_expand']:.0%} chance his role grows within "
+                f"3 weeks, worth +{r['gain_if_expands']:.1f} pts/wk if it does")
+    if mech == "INSURE":
+        return (f"insurance on {r['insures']}: +{r['insure']:.2f} pts/wk in expectation"
+                + (" (your own starter)" if r.get("handcuff") else ""))
+    if mech == "COVER":
+        return f"bye and injury cover: +{r['cover']:.2f} pts/wk across the season"
+    return f"+{r['start']:.2f} pts/wk upgrade across the season"
 
 
 def _role_text(rc: dict) -> str:

@@ -924,18 +924,10 @@ def _matchup_log() -> tuple[pd.DataFrame, str]:
 
 
 def _worth_claiming(wv: pd.DataFrame) -> pd.DataFrame:
-    """Free agents who would actually change your lineup.
-
-    One definition, because two surfaces had their own and contradicted each other on the
-    same week: the action board counted any positive gain and said "6 free agents would
-    start for you", while the waiver page counted a bid of a dollar or more and said "0
-    would change your lineup". A gain too small to be worth a dollar is not a claim.
-    """
-    if wv is None or wv.empty:
-        return wv
-    if "bid" in wv.columns:
-        return wv[wv["bid"] >= 1]
-    return wv[pd.to_numeric(wv.get("gain"), errors="coerce").fillna(0) > 0]
+    """Free agents who would actually change your lineup — mega.action_board's definition,
+    the one every surface shares (this used to be a second copy, and copies drift)."""
+    from mega.action_board import worth_claiming
+    return worth_claiming(wv)
 
 
 # ---- Start / Sit -------------------------------------------------------------------
@@ -1345,65 +1337,62 @@ def _tab_wire():
         st.session_state["_export_waivers"] = _build_waivers(None, None, None)
     else:
         wv = IB["waivers"].copy()
-        need_aware = "bid" in wv.columns
+        need_aware = "lane" in wv.columns
 
         if need_aware:
             from mega import faab as _fb
 
             _r, _m = _fb.rivals(), _fb.market_summary()
             worth = _worth_claiming(wv)
-            spec = wv[~wv.index.isin(worth.index)]
             _top = worth.iloc[0] if len(worth) else None
+            _n_other = int(wv["lane"].isin(["early_signal", "stash"]).sum())
             ui.answer(
                 (f"Put ${int(_top['bid'])} on {ui.short_name(_top['player'])} — "
-                 f"he adds {float(_top['gain']):.1f} points a game to your starting nine."
+                 f"he adds {float(_top['next3']):.1f} points a week over the next three."
                  if _top is not None else
-                 "Nothing on the wire would start for you. Hold the budget."),
-                (f"{len(worth)} free agent{'' if len(worth) == 1 else 's'} would change your "
-                 f"lineup" + (f"; the league has been settling claims around "
-                              f"${_m['median']:.0f}." if _m.get("claims") else ".")),
+                 "Nothing on the wire improves your lineup over the next three weeks. Hold the budget."),
+                f"{len(worth)} to bid on now, {_n_other} worth a stash or a watch.",
             )
             ui.kpi_row([
                 ("Your FAAB", f"${_r['mine']}" if _r.get("known") else "—",
                  f"of ${_fb.BUDGET} · {_r['richer']} of {_r['teams'] - 1} teams hold more"
                  if _r.get("known") else "balances not cached"),
-                ("Worth bidding on", str(len(worth)),
-                 "free agents who'd change your lineup" if len(worth) != 1
-                 else "free agent who'd change your lineup"),
-                ("League has paid", f"${_m['median']:.0f}" if _m.get("claims") else "—",
-                 f"median of {_m['claims']} settled claims" if _m.get("claims") else "no claims yet"),
+                ("Bid now", str(len(worth)), "improve your lineup in the next 3 weeks"),
+                ("League has spent", f"${_m['league_spend']:.0f}" if _m.get("league_spend") else "—",
+                 "total FAAB, including claims the feed misses"),
             ])
             st.write("")
             ui.lede(
-                "Free agents priced against <b>your actual lineup</b>. A player is worth what he adds "
-                "to an optimal starting eleven once you account for who he displaces and who you'd cut "
-                "for him — so a third tight end is worth nothing here however good he is, because the "
-                "flex is RB/WR and he can never start."
+                "Every free agent is valued against <b>your roster for the rest of the season</b> — "
+                "byes, injuries and IR returns included — and split by why he helps: he "
+                "<b>starts</b>, he <b>covers</b> a bye or injury, or he <b>insures</b> a starter "
+                "who might miss time. A player with none of the three sits in no lane, however "
+                "many managers are adding him."
             )
-            ui.h("Worth bidding on")
+            _lane_cols = ["player", "pos", "nfl_team", "fit_pts", "next3", "start", "cover",
+                          "insure", "bid", "drop", "why"]
+            _fmt = {"FIT/WK": "{:+.2f}", "NEXT 3": "{:+.2f}", "START/WK": "{:+.2f}",
+                    "COVER/WK": "{:+.2f}", "INSURE/WK": "{:+.2f}", "BID": "${:.0f}"}
+            ui.h("Bid now")
             if worth.empty:
                 st.info(
-                    "Nothing available improves your starting lineup this week. That is a real "
-                    "answer, not a missing one — hold the budget for a week when it isn't true."
+                    "Nothing available improves your lineup over the next three weeks. That is a "
+                    "real answer, not a missing one — hold the budget for a week when it isn't true."
                 )
             else:
-                ui.table(
-                    worth[["player", "pos", "nfl_team", "ppg", "gain", "bid", "max_bid", "drop", "why"]],
-                    sequential=["GAIN", "BID"], pos_cols=["POS"],
-                    fmt={"PPG": "{:.1f}", "GAIN": "{:+.2f}", "BID": "${:.0f}", "MAX": "${:.0f}"},
-                )
-
-            ui.h("Speculative")
-            ui.lede(
-                "These add nothing to your lineup today, so they're ranked by who is trending instead. "
-                "A dollar at most, and only for a bench spot you don't mind wasting."
-            )
-            ui.table(
-                spec[["player", "pos", "nfl_team", "ppg", "add_score", "upside", "why"]].head(15),
-                sequential=["SCORE"], pos_cols=["POS"],
-                fmt={"PPG": "{:.1f}", "SCORE": "{:.2f}"},
-                labels={"WHY": "Why not now"},
-            )
+                ui.table(worth[_lane_cols], sequential=["FIT/WK", "BID"], pos_cols=["POS"], fmt=_fmt)
+            for _lane, _title in (("early_signal", "Early signal"), ("stash", "Stash")):
+                _sub = wv[wv["lane"] == _lane]
+                if not _sub.empty:
+                    ui.h(_title)
+                    ui.table(_sub[_lane_cols], sequential=["FIT/WK"], pos_cols=["POS"], fmt=_fmt)
+            _chips = wv[wv["lane"] == "trade_chip"]
+            _notes = list(wv.attrs.get("roster_notes") or [])
+            if not _chips.empty:
+                _notes.append("Trade chips (no fit here, but 2+ teams would start them): "
+                              + ", ".join(_chips["player"]) + ".")
+            if _notes:
+                ui.note(" ".join(_notes))
             if _m.get("unlisted_spend"):
                 # Escaped dollars: Streamlit reads $...$ in markdown as LaTeX and swallows
                 # both the signs and everything between them.
