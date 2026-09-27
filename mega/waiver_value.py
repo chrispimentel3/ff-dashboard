@@ -505,8 +505,13 @@ def roster_notes(b: Board, avail: dict) -> list[str]:
         why = {"IR": "on injured reserve", "Out": "ruled out"}.get(a.get("status"), "on your IR slot")
         notes.append(f"{names(pid)} is {why}; expected back week {back}.")
     for d in b.path(b.roster)["drops"]:
-        notes.append(f"{names(d['drop'])} is your cheapest drop once {names(d['returning'])} is back "
-                     f"(week {d['week']}), so he is the default cut for any add from then on.")
+        if d["drop"] == d["returning"]:
+            pos = b.ctx.players[d["drop"]]["pos"]
+            notes.append(f"When {names(d['returning'])} is back (week {d['week']}) he projects as your "
+                         f"weakest {pos} — on these numbers he, not a healthy player, is the one to cut.")
+        else:
+            notes.append(f"{names(d['drop'])} is your cheapest drop once {names(d['returning'])} is back "
+                         f"(week {d['week']}), so he is the default cut for any add from then on.")
     return notes
 
 

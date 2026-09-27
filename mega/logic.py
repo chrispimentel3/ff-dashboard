@@ -13,15 +13,83 @@ directly when a rule (or a constant it quotes) changes; nothing else derives fro
 """
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
+_PARAMS = Path(__file__).resolve().parents[1] / "config" / "proj_ros_params.json"
+
+
+def _params() -> dict:
+    """The fitted backtest results — quoted, never retyped, so this page can't drift."""
+    try:
+        return json.loads(_PARAMS.read_text())
+    except Exception:
+        return {}
+
+
+def _proj_headline() -> str:
+    return (
+        "Books only price one week ahead, so the rest of the season is our own projection: "
+        "each player's share of his team's expected points, times what that offense is "
+        "expected to produce, plus a heavily discounted efficiency term. It is blended with "
+        "FantasyPros consensus in exactly the proportion a five-season backtest earned — "
+        "and where it didn't earn the right to disagree, the page says \"consensus view\"."
+    )
+
+
+def _proj_detail() -> str:
+    p = _params()
+    if not p:
+        return "The backtest hasn't been run on this checkout (tools/backtest_ros.py)."
+    m = {r["pos"]: r for r in p.get("metrics", [])}
+    w = p.get("blend_w", {})
+    lens = [pos for pos, on in (p.get("schedule_lens") or {}).items() if on]
+    allowed = [f"{pos} {d}" for pos, ds in (p.get("disagreement_allowed") or {}).items() for d, ok in ds.items() if ok]
+    prm = p.get("params", {})
+    rows = "\n".join(
+        f"  - **{pos}:** ours {m[pos]['mae_ours']:.2f}, consensus {m[pos]['mae_ecr']:.2f}, "
+        f"blend {m[pos]['mae_blend_cv']:.2f} pts/g off on average; blend weight on ours "
+        f"{w.get(pos, {}).get('3-6', 0):.0%} → {w.get(pos, {}).get('11-14', 0):.0%} through the season"
+        for pos in ("QB", "RB", "WR", "TE") if pos in m)
+    wins = [pos for pos in ("QB", "RB", "WR", "TE") if pos in m and m[pos]["mae_blend_cv"] < m[pos]["mae_ecr"]]
+    ours_wins = [pos for pos in ("QB", "RB", "WR", "TE") if pos in m and m[pos]["mae_ours"] < m[pos]["mae_ecr"]]
+    verdict = (("Alone, ours trails consensus everywhere; " if not ours_wins else
+                f"Alone, ours beats consensus at {', '.join(ours_wins)}; ")
+               + ("blended, it beats consensus at every position" if len(wins) == len(m) else
+                  f"blended, it beats consensus at {', '.join(wins) or 'no position'}")
+               + ", scored on seasons it wasn't fitted on:\n")
+    return (
+        "- **The model.** A player's share of his team's expected half-PPR points (receiving, "
+        f"rushing and passing, each separately), weighted toward recent games (half-life {prm.get('h')} games) "
+        f"and shrunk {prm.get('k_s')} games toward last season; the team's volume likewise, "
+        f"shrunk {prm.get('k_t')} games; plus scoring above or below expectation, discounted by "
+        f"n/(n + {prm.get('k_eff')}) — usage is trusted, touchdown luck mostly isn't.\n"
+        "- **The backtest** (2021–25, weeks 3–14, only data available that week, against "
+        "the FantasyPros rest-of-season ranking scraped before kickoff). " + verdict + rows + "\n"
+        "- **Disagreement tags.** When ours and consensus are 8+ ranks apart, how often "
+        "were we closer? Only driver types above 55% get a \"we're higher/lower\" tag — "
+        + (", ".join(allowed) if allowed else "none cleared the bar, so every player reads \"consensus view\"")
+        + ".\n"
+        "- **Schedule.** A read of the remaining schedule predicted what it actually did "
+        + (f"only for {', '.join(lens)}" if lens else "at no position")
+        + " — so the playoff-schedule trade tag exists only there.\n"
+        "- **Ranges.** Each week carries a 10th–90th percentile from how single weeks "
+        "actually scatter around a projection; out of sample they caught "
+        + ", ".join(f"{pos} {v:.0%}" for pos, v in (p.get("coverage_2024_25") or {}).items())
+        + " of 2024–25 weeks (target ~80%)."
+    )
+
+
 TOPICS = [
     {
         "key": "vegas",
-        "title": "Why Vegas lines, not a homemade projection",
+        "title": "Why Vegas lines for this week",
         "headline": (
             "A sportsbook's line already has the injury report, the weather and the game "
             "plan priced in — money is on the line, so it gets built by people with better "
-            "information than a spreadsheet has. We take that price and re-score it to "
-            "half-PPR instead of guessing at our own."
+            "information than a spreadsheet has. For THIS week we take that price and re-score "
+            "it to half-PPR instead of guessing at our own. (Books only price one week ahead; "
+            "the rest of the season is our own projection — see the topic below.)"
         ),
         "detail": (
             "Every starter has sportsbook lines on his catches, his yards and his chance of "
@@ -260,16 +328,114 @@ TOPICS = [
             "- **The source.** FantasyCalc's live redraft value API, queried with "
             "`isDynasty=false, numQbs=1, numTeams=12, ppr=0.5` — this league's exact "
             "settings, not a generic default.\n"
-            "- **Trades page** asks *is this specific deal fair, for these two teams, right "
-            "now?* Both sides of a proposed trade get summed on this same value scale, and "
-            "the fairness percentage is the smaller side over the larger — 95%+ is close to "
-            "even. \"Addresses\" names the position the trade actually fixes for you, read "
-            "off the other manager's own roster.\n\n"
-            "**What it doesn't do yet:** neither view checks what a trade does to your "
-            "actual starting lineup — whether the player you'd receive would even crack "
-            "your starters, or fill a bye-week gap, versus just adding bench depth. That's "
-            "a heavier per-trade computation (it existed as \"trade around one player\" "
-            "search in the original dashboard) and isn't wired up here yet."
+            "- **On the Trades page it is the PRICE, not the value.** It answers *would the "
+            "other manager take this?* — an offer where they get back less than 80% of what "
+            "they give on this scale isn't built at all, and the ratio feeds the acceptance "
+            "odds on every card.\n"
+            "- **The value is what the deal does to your title odds.** Every offer is "
+            "valued by rebuilding both rosters, re-optimising both lineups on our "
+            "rest-of-season projection, and playing the season out 6,000 times — see *How "
+            "trade offers are built* below. FantasyCalc never ranks an offer; it only decides "
+            "whether one is realistic enough to consider."
+        ),
+    },
+    {
+        "key": "projection",
+        "title": "Our rest-of-season projection, and when we trust it over consensus",
+        "headline": _proj_headline(),
+        "detail": _proj_detail(),
+    },
+    {
+        "key": "waiver_mechanisms",
+        "title": "Why a free agent is worth a roster spot: start, cover, insure",
+        "headline": (
+            "A pickup is valued against YOUR roster for the rest of the season, and the value "
+            "is split by the reason it exists: he starts, he covers a bye or an injury, or he "
+            "insures a starter who might go down. A player with none of the three sits in no "
+            "lane, however many other managers are adding him."
+        ),
+        "detail": (
+            "- **The horizon.** Every week from now to the final (week 17), playoff weeks "
+            "counted 1.5×, with each player's bye, this week's injury report and IR return "
+            "dates modelled. An IR player comes back on his expected week and forces your "
+            "cheapest cut — that's where \"Stroud is your cheapest drop once Daniels is back\" "
+            "comes from.\n"
+            "- **START** is the gain if everyone on your roster were healthy and never on bye. "
+            "**COVER** is what absences add or take away — a hole he fills, or one that "
+            "dropping your cut would open. START + COVER is exactly the engine's gain for the "
+            "move, bad weeks included.\n"
+            "- **INSURE** is shown beside it, never inside it: the chance the starter ahead of "
+            "him misses a given week (fitted from 2021–25 snap counts by position and age — "
+            "about 4% next week, ~15% eight weeks out) × what the job is worth to you. Only "
+            "the share a backup actually inherits counts: fitted at ~37% of a lead back's "
+            "expected points, ~17% for a tight end and ~5% for a receiver, whose targets "
+            "spread across the room.\n"
+            "- **Lanes.** *Bid now* adds 1+ pts/wk over the next three weeks. *Early signal* "
+            "has rising usage before the points: ranked by the fitted chance his role reaches "
+            "the next rung within 3 weeks (flagged low-owned players did so 2.5–3× the base "
+            "rate in 2021–25) times what that's worth to you. *Stash* is everything else with "
+            "real fit. Industry adds only set the price of a bid, never the rank.\n"
+            "- **FLIP** (resale value when 2+ teams would start him) never ranks anyone — a "
+            "player with only that is listed as a trade chip."
+        ),
+    },
+    {
+        "key": "title_odds",
+        "title": "Title odds, not points per week",
+        "headline": (
+            "A point in week 4 for a team already cruising is worth less than one in week 16 "
+            "for a team on the bubble. So every move is also priced in the only number that "
+            "matters in December: your chance of winning it all, from 6,000 simulated seasons."
+        ),
+        "detail": (
+            "- **Player by player.** Each starter draws his own score every week from his "
+            "fitted distribution (median, 10th and 90th percentile from the projection "
+            "backtest); if he doesn't play, his backup does. Each player also carries one "
+            "season-long projection error, so a whole roster can be over- or under-rated.\n"
+            "- **The real bracket.** Your remaining fixtures (where scraped), wins then points "
+            "for, then Mega Bowl's 6-team bracket — seeds 1 and 2 on bye in week 15, the top "
+            "seed meets the lowest left in week 16, final in week 17.\n"
+            "- **Same dice for every version.** Draws are tied to the player, so a trade "
+            "carries his dice to his new team. A trade that changes nothing moves the odds by "
+            "exactly zero, and a small real edge isn't lost in resampling noise. A change "
+            "inside two standard errors is shown as noise.\n"
+            "- **Posture.** Over 70% playoff odds: *protect* the floor. 35–70%: *balanced*. "
+            "Under 35%: *swing* — variance is your friend when you're behind, and the "
+            "simulation rewards it without being told to."
+        ),
+    },
+    {
+        "key": "trade_theses",
+        "title": "How trade offers are built",
+        "headline": (
+            "The engine builds every 1-for-1 and 2-for-1 around your roster, keeps the ones "
+            "the other manager could plausibly accept, and shows only those that raise your "
+            "title odds. Each carries a reason, the number behind it, and a kill condition — "
+            "the thing that would prove it wrong."
+        ),
+        "detail": (
+            "- **Built, not scraped.** Both rosters are rebuilt, forced to legal size and "
+            "re-optimised for every candidate (about 3,000 a week). A 2-for-1 opens a spot "
+            "the engine fills with the best free agent — which you could add anyway, so the "
+            "deal is credited only net of that pickup.\n"
+            "- **Realistic first.** An offer where they'd get back under 80% of what they give "
+            "on FantasyCalc isn't considered, whatever it does for you.\n"
+            "- **Ranked by title odds.** The best 25 by rest-of-season points are simulated "
+            "for both teams; one that doesn't raise yours beyond the noise is hidden, unless "
+            "it's a consolidation (two for one, down this week, up for the season).\n"
+            "- **Thesis tags.** *Sell high* (scoring 4+ pts/g over what his usage earns and "
+            "consensus still believes), *Buy low* (the reverse, with usage ranking him above "
+            "consensus), *Trajectory* (share rising fastest at his position), *Role expiry* "
+            "(his share is borrowed from a teammate due back), *Contingency* (next up behind a "
+            "fragile starter), *Playoff schedule* (tight ends only — the one position where a "
+            "schedule read predicted anything in the backtest), *Portfolio* (spreads your "
+            "byes or cuts your exposure to one offense), *Consolidation*, and *Lineup* when "
+            "the reason is simply that he starts for you.\n"
+            "- **Will they take it?** A logistic on what it does to THEIR title odds, "
+            "FantasyCalc fairness, whether our player starts for them, their positional bias "
+            "(Undisputed pays up for backs; Crabcakes and Football for receivers, not backs), "
+            "and how much they need a move (25–50% playoff odds is the sweet spot). The "
+            "weights are labelled estimates until the league has five trades to fit them on."
         ),
     },
     {

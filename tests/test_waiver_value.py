@@ -154,6 +154,14 @@ def test_an_ir_return_cuts_the_useless_backup_not_the_handcuff():
     assert any("q2 is your cheapest drop once q9 is back (week 5)" in n for n in notes)
 
 
+def test_a_returning_player_who_projects_worst_is_named_as_the_cut_plainly():
+    b = board(ir=[_p("q9", "QB", "WAS", 3)], avail={"q9": {"status": "Out", "back": 5}},
+              mine_extra=[_p("q2", "QB", "HOU", 14)], roster_size=9)
+    notes = wv.roster_notes(b, {"q9": {"status": "Out", "back": 5}})
+    assert any("When q9 is back (week 5) he projects as your weakest QB" in n for n in notes)
+    assert not any("q9 is your cheapest drop once q9" in n for n in notes)
+
+
 def test_before_the_return_the_ir_player_is_worth_nothing_and_after_it_everything():
     b = board(ir=[_p("q9", "QB", "WAS", 22)], avail={"q9": {"status": "Out", "back": 6}},
               mine_extra=[_p("q2", "QB", "HOU", 14)], roster_size=9)
