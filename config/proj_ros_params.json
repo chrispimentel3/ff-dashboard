@@ -1,0 +1,218 @@
+{
+ "_doc": "Fitted by tools/backtest_ros.py (walk-forward 2021-2025, weeks 3-14, vs FantasyPros ROS ECR). Read by mega/proj_ros.py. See docs/backtest_v13.md.",
+ "fitted": "2026-09-27",
+ "params": {
+  "h": 6,
+  "k_s": 2.0,
+  "k_t": 8,
+  "k_eff": 16
+ },
+ "blend_w": {
+  "QB": {
+   "11-14": 0.2,
+   "3-6": 0.3,
+   "7-10": 0.3
+  },
+  "RB": {
+   "11-14": 0.5,
+   "3-6": 0.4,
+   "7-10": 0.4
+  },
+  "TE": {
+   "11-14": 0.55,
+   "3-6": 0.15,
+   "7-10": 0.35
+  },
+  "WR": {
+   "11-14": 0.55,
+   "3-6": 0.35,
+   "7-10": 0.35
+  }
+ },
+ "quantiles": {
+  "QB": {
+   "high": [
+    0.461,
+    0.904,
+    1.422
+   ],
+   "low": [
+    0.388,
+    0.954,
+    1.578
+   ],
+   "mid": [
+    0.425,
+    0.952,
+    1.521
+   ]
+  },
+  "RB": {
+   "high": [
+    0.333,
+    0.871,
+    1.646
+   ],
+   "low": [
+    0.107,
+    0.697,
+    2.142
+   ],
+   "mid": [
+    0.223,
+    0.84,
+    1.917
+   ]
+  },
+  "TE": {
+   "high": [
+    0.293,
+    0.874,
+    2.034
+   ],
+   "low": [
+    0.184,
+    0.899,
+    2.295
+   ],
+   "mid": [
+    0.201,
+    0.885,
+    2.019
+   ]
+  },
+  "WR": {
+   "high": [
+    0.288,
+    0.853,
+    1.73
+   ],
+   "low": [
+    0.156,
+    0.809,
+    1.922
+   ],
+   "mid": [
+    0.25,
+    0.844,
+    1.834
+   ]
+  },
+  "_tier_edges": {
+   "QB": [
+    16.76,
+    19.07
+   ],
+   "RB": [
+    8.7,
+    12.3
+   ],
+   "TE": [
+    6.32,
+    8.06
+   ],
+   "WR": [
+    9.54,
+    11.82
+   ]
+  }
+ },
+ "coverage_2024_25": {
+  "QB": 0.743,
+  "RB": 0.801,
+  "TE": 0.807,
+  "WR": 0.787
+ },
+ "disagreement_allowed": {
+  "QB": {
+   "usage": false,
+   "efficiency": false
+  },
+  "RB": {
+   "usage": false,
+   "efficiency": false
+  },
+  "WR": {
+   "usage": false,
+   "efficiency": false
+  },
+  "TE": {
+   "usage": false,
+   "efficiency": false
+  }
+ },
+ "schedule_lens": {
+  "QB": false,
+  "RB": false,
+  "WR": false,
+  "TE": true
+ },
+ "schedule_test": {
+  "QB": {
+   "spearman": -0.036,
+   "n_team_seasons": 160,
+   "t": -0.46,
+   "passes": false
+  },
+  "RB": {
+   "spearman": 0.113,
+   "n_team_seasons": 160,
+   "t": 1.43,
+   "passes": false
+  },
+  "WR": {
+   "spearman": 0.076,
+   "n_team_seasons": 160,
+   "t": 0.95,
+   "passes": false
+  },
+  "TE": {
+   "spearman": 0.164,
+   "n_team_seasons": 160,
+   "t": 2.1,
+   "passes": true
+  }
+ },
+ "metrics": [
+  {
+   "pos": "QB",
+   "n": 1621,
+   "mae_ours": 3.5384,
+   "mae_ecr": 3.3606,
+   "mae_blend_cv": 3.3498,
+   "rho_ours": 0.4495,
+   "rho_ecr": 0.551,
+   "rho_blend_cv": 0.5347
+  },
+  {
+   "pos": "RB",
+   "n": 3296,
+   "mae_ours": 3.097,
+   "mae_ecr": 3.0199,
+   "mae_blend_cv": 2.9541,
+   "rho_ours": 0.6387,
+   "rho_ecr": 0.6862,
+   "rho_blend_cv": 0.6801
+  },
+  {
+   "pos": "WR",
+   "n": 3313,
+   "mae_ours": 2.7608,
+   "mae_ecr": 2.6961,
+   "mae_blend_cv": 2.6445,
+   "rho_ours": 0.5605,
+   "rho_ecr": 0.5901,
+   "rho_blend_cv": 0.5982
+  },
+  {
+   "pos": "TE",
+   "n": 1656,
+   "mae_ours": 2.249,
+   "mae_ecr": 2.1611,
+   "mae_blend_cv": 2.1413,
+   "rho_ours": 0.5229,
+   "rho_ecr": 0.5479,
+   "rho_blend_cv": 0.5542
+  }
+ ]
+}

@@ -157,6 +157,30 @@ def fit_inherit(seasons) -> dict:
     return out
 
 
+def fit_status(seasons) -> dict:
+    """P(takes an offensive snap | final injury-report status that week), 2021–2025.
+
+    Replaces the judgment table in mega/contingency.py (AVAIL_NOW: Q .85, D .25, O 0)
+    wherever the fitted file is present (handoff §4.1 P_active)."""
+    import nflreadpy as nfl
+    inj = nfl.load_injuries(seasons=list(seasons)).to_pandas()
+    inj = inj[(inj["game_type"] == "REG") & inj["position"].isin(POS) & inj["report_status"].notna()]
+    sc = nfl.load_snap_counts(seasons=list(seasons)).to_pandas()
+    sc = sc[(sc["game_type"] == "REG") & (sc["offense_snaps"] > 0)]
+    ids = nfl.load_players().to_pandas()[["gsis_id", "pfr_id"]].dropna().drop_duplicates("gsis_id")
+    inj = inj.merge(ids, on="gsis_id", how="inner")
+    played = set(zip(sc["pfr_player_id"], sc["season"], sc["week"]))
+    inj["played"] = [(p, s, w) in played for p, s, w in zip(inj["pfr_id"], inj["season"], inj["week"])]
+    # Only players who played the week before: a backup listed Questionable wasn't going
+    # to take a snap healthy either, and counting him drags the rate down for everyone.
+    inj["was_active"] = [(p, s, w - 1) in played for p, s, w in zip(inj["pfr_id"], inj["season"], inj["week"])]
+    inj = inj[inj["was_active"]]
+    out = {}
+    for st, g in inj.groupby("report_status"):
+        out[str(st)] = {"p_active": round(float(g["played"].mean()), 4), "n": int(len(g))}
+    return out
+
+
 def main(argv=None) -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--seasons", nargs="+", type=int, default=DEFAULT_SEASONS)
@@ -174,6 +198,8 @@ def main(argv=None) -> None:
                         "man up gains, net of the same measure in weeks the starter played "
                         "(regression-to-the-mean control). See fit_inherit().",
         "inherit": fit_inherit(a.seasons),
+        "_doc_status": "P(takes an offensive snap | final injury-report status). See fit_status().",
+        "status": fit_status(a.seasons),
     }
     OUT.write_text(json.dumps(out, indent=1))
     for pos in POS:
@@ -181,6 +207,7 @@ def main(argv=None) -> None:
             h = out["hazard"][pos][b]
             print(f"{pos:3s} {b:6s} n={out['n_at_k1'][pos][b]:>5}  k1={h[0]:.3f}  k3={h[2]:.3f}  k8={h[7]:.3f}")
     print("inherit:", out["inherit"])
+    print("status:", out["status"])
     print("wrote", OUT)
 
 

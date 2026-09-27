@@ -1,6 +1,6 @@
 {
  "_doc": "P(miss week w+k | took >= 50% of offensive snaps in week w), k = 1..14, by position and age band (age on Sep 1). A miss is any game his team played without him taking an offensive snap. Fitted by tools/fit_injury_hazard.py; read by mega/contingency.py.",
- "fitted": "2026-09-26",
+ "fitted": "2026-09-27",
  "seasons": [
   2021,
   2022,
@@ -263,6 +263,25 @@
    "raw": 0.2552,
    "control": 0.0854,
    "n": 110
+  }
+ },
+ "_doc_status": "P(takes an offensive snap | final injury-report status). See fit_status().",
+ "status": {
+  "Doubtful": {
+   "p_active": 0.0072,
+   "n": 139
+  },
+  "Note": {
+   "p_active": 1.0,
+   "n": 2
+  },
+  "Out": {
+   "p_active": 0.0014,
+   "n": 706
+  },
+  "Questionable": {
+   "p_active": 0.6926,
+   "n": 1210
   }
  }
 }

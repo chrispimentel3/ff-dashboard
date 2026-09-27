@@ -71,6 +71,17 @@ def main() -> None:
     # app.py checks this to call every exported tab's function directly instead of going
     # through st.navigation — see the MEGA_EXPORT_WEB branch at the bottom of app.py.
     os.environ["MEGA_EXPORT_WEB"] = "1"
+    # HANDOFF v1.3: rebuild our rest-of-season projection first — the trade and waiver
+    # engines inside the app run read data/proj_ros_<season>.json.
+    try:
+        import nflreadpy as _nfl0
+        from mega import data as _d0
+        from mega import proj_ros as _pr
+        _s0 = int(_nfl0.get_current_season())
+        _pr.build(_s0, min(_d0.current_week(_s0, 1), 17))
+        print(f"wrote data/proj_ros_{_s0}.json")
+    except Exception as e:
+        print(f"[export_web] projection build failed, engines use the last file: {e}", file=sys.stderr)
     at = AppTest.from_file(str(ROOT / "app.py"), default_timeout=180).run()
 
     if at.exception:
