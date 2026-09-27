@@ -12,6 +12,8 @@ Run locally:  .venv/bin/uvicorn service.main:app --reload --port 8008
 """
 from __future__ import annotations
 
+import ctypes
+import gc
 import os
 import time
 
@@ -28,6 +30,10 @@ from mega.config import MY_TEAM
 
 try:
     import nflreadpy as nfl
+    # nflreadpy keeps every table it loads in memory for a day by default. On a 512MB host
+    # that is the wrong place for it: disk costs nothing here, and a re-read is milliseconds.
+    from nflreadpy import config as _nfl_cfg
+    _nfl_cfg.update_config(cache_mode="filesystem")
 except ImportError:  # pragma: no cover
     nfl = None
 
@@ -40,6 +46,26 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+
+# Give freed memory back to the OS after each request. glibc keeps what a request freed
+# (the league build and the Ask loaders each spike 100MB+ and drop it) and Render counts it
+# against the 512MB limit as if still in use. Linux-only; a no-op anywhere else. Pairs with
+# MALLOC_ARENA_MAX=2 and ARROW_DEFAULT_MEMORY_POOL=system in render.yaml, which route
+# pyarrow's buffers through the same malloc so this reaches them too.
+try:
+    _malloc_trim = ctypes.CDLL("libc.so.6").malloc_trim
+except (OSError, AttributeError):
+    _malloc_trim = None
+
+
+@app.middleware("http")
+async def _release_memory(request, call_next):
+    response = await call_next(request)
+    if _malloc_trim is not None and request.url.path != "/health":
+        gc.collect()
+        _malloc_trim(0)
+    return response
+
 
 PW_TTL = 6 * 3600       # matches app.py's CACHE_TTL for the player-week index
 ROSTER_TTL = 30 * 60    # matches app.py's ownership/roster cache TTL
@@ -64,7 +90,17 @@ def _current_season() -> int:
         return data.SEASON_DEFAULT
 
 
+PW_KEEP = 4             # player-week tables held at once: this season plus a few past ones
+
+
 def _player_week(season: int) -> pd.DataFrame:
+    held = [k for k in _cache if k.startswith("pw:")]
+    if f"pw:{season}" not in held and len(held) >= PW_KEEP:
+        # drop the oldest-fetched past season; the current one is asked about most
+        cur = f"pw:{_current_season()}"
+        old = sorted((k for k in held if k != cur), key=lambda k: _cache[k][0])
+        if old:
+            _cache.pop(old[0], None)
     return _cached(f"pw:{season}", PW_TTL, lambda: data.ask_player_week(season))
 
 
@@ -88,13 +124,22 @@ SEASON_MODEL_TTL = 6 * 3600  # matches app.py's _season_model cache TTL
 SIM_TOP = 12              # matches app.py's SIM_TOP — only the best candidates get simulated
 
 
+def _league(season: int) -> dict:
+    """The priced league both the engine and the title-odds model are built from — built
+    once, since building it is the heaviest step a trade search takes."""
+    def build():
+        from mega.trade_league import build_league
+        from mega.yahoo import cached_rosters
+        return build_league(season, cached_rosters())
+    return _cached(f"league:{season}", ENGINE_TTL, build)
+
+
 def _trade_engine(season: int):
     def build():
         from mega.trade_engine import create_engine
-        from mega.trade_league import build_league, engine_config
-        from mega.yahoo import cached_rosters
+        from mega.trade_league import engine_config
 
-        league = build_league(season, cached_rosters())
+        league = _league(season)
         if not league["teams"]:
             return None, league["report"]
         return create_engine(league, engine_config()), league["report"]
@@ -155,25 +200,26 @@ def _trade_odds(season: int, next_week: int, rows: list[tuple]) -> dict:
 
 
 LIVE_SEASONS = 3000        # half the offline 6,000: a live request has to answer in seconds
-# Off unless TITLE_ODDS_LIVE=1. Measured 2026-09-27: the player-level model adds ~80MB to a
-# ~480MB process, which would put Render's 512MB free instance over its limit and take the
-# Ask endpoint down with it. With it off, the search keeps the team-level playoff odds.
-TITLE_ODDS_LIVE = os.environ.get("TITLE_ODDS_LIVE", "") == "1"
+# On unless TITLE_ODDS_LIVE=0, which falls back to the team-level playoff odds. It was off
+# at first because the model cost ~125MB (it stored its dice); it now regenerates them from
+# the seed and costs ~10MB. Measured totals are in docs/service_memory.md.
+TITLE_ODDS_LIVE = os.environ.get("TITLE_ODDS_LIVE", "1") != "0"
 
 
 def _title_model(season: int, next_week: int):
     """HANDOFF v1.3 title-odds model (mega/title_odds.py), cached like the engine."""
     def build():
         from mega import title_odds as T
-        from mega.yahoo import cached_rosters
-        return T.build(season, next_week, cached_rosters(), n=LIVE_SEASONS)
+        return T.build(season, next_week, league=_league(season), n=LIVE_SEASONS)
     return _cached(f"title_model:{season}:{next_week}", ENGINE_TTL, build)
 
 
-def _title_odds_rows(season: int, next_week: int, eng, my_id, results: list) -> dict:
+def _title_odds_rows(season: int, next_week: int, eng, my_id, results: list,
+                     swap_ids: list | None = None) -> dict:
     """index -> both teams' change in playoff AND title odds for each offer, from player-
     level draws on common random numbers — the same model the offer cards use, so the
-    search and the cards can't disagree."""
+    search and the cards can't disagree. A netted 2-for-1 is measured against the free-
+    swap roster (`swap_ids`), as the cards measure it."""
     from mega import trade_engine as te
     tm = _title_model(season, next_week)
     if tm is None:
@@ -185,9 +231,12 @@ def _title_odds_rows(season: int, next_week: int, eng, my_id, results: list) -> 
         core = te.evaluate_core(ctx, my_id, r["partner"]["id"], r["giveIds"], r["getIds"])
         partner = r["partner"]["name"]
         ir = lambda team, tid: [p for p in tm.rosters.get(team, []) if p not in ctx.teams[tid]["roster"]]
-        d = tm.delta({my_name: list(core["_after"]["me"].ids) + ir(my_name, my_id),
-                      partner: list(core["_after"]["them"].ids) + ir(partner, r["partner"]["id"])},
-                     (my_name, partner))
+        after = {my_name: list(core["_after"]["me"].ids) + ir(my_name, my_id),
+                 partner: list(core["_after"]["them"].ids) + ir(partner, r["partner"]["id"])}
+        if r.get("netted") and swap_ids:
+            d = tm.delta_vs({my_name: list(swap_ids) + ir(my_name, my_id)}, after, (my_name, partner))
+        else:
+            d = tm.delta(after, (my_name, partner))
         us, them = d.get(my_name, {}), d.get(partner, {})
         out[i] = {"d_playoffs": us.get("d_playoffs"), "their_d_playoffs": them.get("d_playoffs"),
                   "d_title": us.get("d_title"), "their_d_title": them.get("d_title"),
@@ -272,15 +321,17 @@ def trade_search(req: TradeSearchRequest):
     except (ValueError, KeyError) as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    results = out["results"]
+    results, swap_ids = TL.net_free_swap(eng, me, out["results"])
     if req.order == "accept":
         rank = {"LIKELY": 0, "NEEDS_PITCH": 1, "EXPLOIT": 2, "LONGSHOT": 3}
         results = sorted(results, key=lambda r: (rank.get(r["flag"], 9), -r["dMe"]))
+    else:
+        results = sorted(results, key=lambda r: -r["dMe"])
 
     odds = {}
     if TITLE_ODDS_LIVE:
         try:
-            odds = _title_odds_rows(season, next_week, eng, me, results[:SIM_TOP])
+            odds = _title_odds_rows(season, next_week, eng, me, results[:SIM_TOP], swap_ids)
         except Exception:
             odds = {}
     if not odds:
@@ -302,6 +353,8 @@ def trade_search(req: TradeSearchRequest):
             "d_them": round(r["dThem"], 2),
             "mkt_ratio": round(r["market"]["ratio"], 2),
             "flag": r["flag"],
+            "fa_add": r.get("fa_add") or [],
+            "netted": bool(r.get("netted")),
             "odds": o.get("d_playoffs"),
             "their_odds": o.get("their_d_playoffs"),
             "title": o.get("d_title"),

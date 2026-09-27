@@ -206,8 +206,18 @@ def search(text: str, limit: int = 8, numeric_only: bool = True,
     return keep[:limit]
 
 
-def load(table: str, season: int) -> pd.DataFrame:
-    """Fetch one catalogued table, using the loader and variant the schema recorded."""
+def needed(table: str, col: str) -> list[str]:
+    """The columns `mega.ask.run_table` touches for a question about `col`: the stat plus
+    the table's keys. Lets a heavy table be read a few columns wide instead of whole."""
+    rec = schema().get(table, {})
+    keys = [rec.get(k) for k in ("player_key", "team_key", "name_key", "week_key")]
+    return [c for c in dict.fromkeys([col, *keys, pos_key(table), "season", "season_type"]) if c]
+
+
+def load(table: str, season: int, columns: list[str] | None = None) -> pd.DataFrame:
+    """Fetch one catalogued table, using the loader and variant the schema recorded.
+    `columns`, when given, may be all the caller gets back (play-by-play is read only
+    that wide; the other tables are small enough to load whole and trim)."""
     import inspect
 
     import nflreadpy as nfl
@@ -217,7 +227,7 @@ def load(table: str, season: int) -> pd.DataFrame:
         raise KeyError(f"unknown table {table!r}")
     if table == "pbp":                              # goes through the disk-cached path
         from . import pbp as _pbp
-        return _pbp.load(season).to_pandas()
+        return _pbp.load(season, columns).to_pandas()
     fn = getattr(nfl, rec["loader"])
     kw = {}
     if "seasons" in inspect.signature(fn).parameters:
@@ -225,6 +235,8 @@ def load(table: str, season: int) -> pd.DataFrame:
     if rec.get("variant"):
         kw["stat_type"] = rec["variant"]
     df = fn(**kw)
+    if columns and hasattr(df, "select"):
+        df = df.select([c for c in columns if c in df.columns])
     return df.to_pandas() if hasattr(df, "to_pandas") else df
 
 

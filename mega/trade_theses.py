@@ -543,6 +543,6 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
                  "p_playoffs": mine.get("p_playoffs"), "p_title": mine.get("p_title"),
                  "posture": T.posture(mine.get("p_playoffs", 0.0)) if mine else None,
                  "seasons": tm.n if tm else 0, "priors": pri.get("status", "estimated"),
-                 "league_trades": tx, "refit_at": 5,
+                 "league_trades": tx,
                  "bias_teams": sorted(bias_by_name)},
     }

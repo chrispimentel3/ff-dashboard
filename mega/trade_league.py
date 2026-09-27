@@ -216,6 +216,35 @@ def find_from_my_player(engine, my_id: int, give_ids: list[str], **opts) -> dict
             "evaluated": out["evaluated"], "padded": out["padded"], "matched": out["matched"]}
 
 
+def net_free_swap(engine, my_id: int, results: list, min_delta_me: float = 0.01) -> tuple[list, list]:
+    """Re-state 2-for-1s against the best add/drop available WITHOUT trading — the same
+    netting the offer cards do (mega/trade_theses.py, handoff §6.5).
+
+    A 2-for-1 opens a roster spot the engine fills with the best free agent, and credits
+    the trade with him. That pickup was always available, so the trade only earns what it
+    adds beyond it. Rows with nothing left afterwards are dropped. Returns the rows and
+    the free-swap roster they are now measured against."""
+    from . import trade_engine as te
+    from .trade_theses import free_swap
+
+    ctx = engine.ctx
+    swap_ids, swap_val = free_swap(ctx, ctx.base[my_id].ids)
+    swap = None
+    out = []
+    for r in results:
+        core = te.evaluate_core(ctx, my_id, r["partner"]["id"], r["giveIds"], r["getIds"])
+        a_me = core["_after"]["me"]
+        if r["shape"] == "2-for-1" and a_me.added:
+            d = a_me.value - swap_val
+            if d < min_delta_me:
+                continue
+            swap = swap or te.settle(list(swap_ids), ctx, set())
+            r = {**r, "dMe": d, "me": te._side(ctx, swap, a_me), "netted": True,
+                 "fa_add": [ctx.players[i]["name"] for i in a_me.added]}
+        out.append(r)
+    return out, list(swap_ids)
+
+
 def find_for_their_player(engine, my_id: int, target_id: str, top_n: int = 50,
                           include_flags: tuple[str, ...] = ("LIKELY", "EXPLOIT", "NEEDS_PITCH"),
                           min_delta_me: float = 0.01, shapes: tuple[str, ...] = ("1-for-1", "2-for-1")) -> dict:

@@ -1,5 +1,5 @@
 {
-  "_doc": "HANDOFF v1.3 §6.3 counterparty model: P(accept) = sigmoid(a0 + a*dTitle_them + b*(fc_fairness - 1) + c*need_fit_them + d*bias_mgr + e*urgency_them). ESTIMATED priors, not fitted: this league had 1 trade on record when they were set (2026-09-26), and a refit needs >= 5 (mega/trade_theses.py counts them and says which it is using). a0 is an intercept added to the handoff formula so a neutral offer reads as more likely declined than accepted.",
+  "_doc": "HANDOFF v1.3 §6.3 counterparty model: P(accept) = sigmoid(a0 + a*dTitle_them + b*(fc_fairness - 1) + c*need_fit_them + d*bias_mgr + e*urgency_them). ESTIMATED priors, set by judgment and never fitted: Yahoo exposes only completed trades, not declined offers, so there is no data to fit an acceptance model on (decided with Chris 2026-09-27; cards label the odds 'est.'). a0 is an intercept added to the handoff formula so a neutral offer reads as more likely declined than accepted.",
   "status": "estimated",
   "a0": -0.75,
   "a": 20.0,

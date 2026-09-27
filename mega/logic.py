@@ -435,7 +435,9 @@ TOPICS = [
             "FantasyCalc fairness, whether our player starts for them, their positional bias "
             "(Undisputed pays up for backs; Crabcakes and Football for receivers, not backs), "
             "and how much they need a move (25–50% playoff odds is the sweet spot). The "
-            "weights are labelled estimates until the league has five trades to fit them on."
+            "weights are set by judgment, not fitted, and every card says \"est.\": Yahoo "
+            "shows only the trades that went through, never the offers turned down, and a "
+            "model of what gets accepted can't be fitted without the refusals."
         ),
     },
     {

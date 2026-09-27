@@ -30,6 +30,10 @@ import numpy as np
 import pandas as pd
 
 DEFAULT_SEASONS = [2021, 2022, 2023, 2024, 2025]
+# A QB's next man up only counts when he took snaps the week before, which backup QBs
+# rarely do — five seasons gave 25 cases. Ten give 48 (2012–2025: 61, fraction .65 vs .67,
+# so the older years agree). The other positions have 100+ cases on the default window.
+QB_INHERIT_SEASONS = list(range(2016, 2026))
 POS = ("QB", "RB", "WR", "TE")
 START_PCT = 0.50             # "starter": at least half the team's offensive snaps that week
 MAX_AHEAD = 14               # a waiver horizon never runs longer than this
@@ -184,6 +188,7 @@ def fit_status(seasons) -> dict:
 def main(argv=None) -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--seasons", nargs="+", type=int, default=DEFAULT_SEASONS)
+    ap.add_argument("--qb-inherit-seasons", nargs="+", type=int, default=QB_INHERIT_SEASONS)
     a = ap.parse_args(argv)
     sc, games = load(a.seasons)
     out = fit(sc, games)
@@ -197,7 +202,8 @@ def main(argv=None) -> None:
         "_doc_inherit": "Fraction of a missing starter's expected points per game his next "
                         "man up gains, net of the same measure in weeks the starter played "
                         "(regression-to-the-mean control). See fit_inherit().",
-        "inherit": fit_inherit(a.seasons),
+        "inherit": {**fit_inherit(a.seasons),
+                    "QB": {**fit_inherit(a.qb_inherit_seasons)["QB"], "seasons": a.qb_inherit_seasons}},
         "_doc_status": "P(takes an offensive snap | final injury-report status). See fit_status().",
         "status": fit_status(a.seasons),
     }

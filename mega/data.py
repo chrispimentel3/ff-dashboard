@@ -289,17 +289,55 @@ def ownership() -> tuple[dict, dict]:
     return own, fa
 
 
-def ask_player_week(season: int) -> pd.DataFrame:
-    """The curated player-week index `mega.ask` queries against."""
+ASK_HISTORY = DATA / "ask_history"
+
+
+def ask_pw_stamp() -> str:
+    """A fingerprint of the code that builds the Ask player-week table. A finished season's
+    table is pre-built (tools/build_ask_history.py) and only trusted while this matches —
+    change any of these functions and the files are ignored until rebuilt, never served stale."""
+    import hashlib
+    import inspect
+
+    from mega import ask as ASK, redzone as rzn, routes as rz
+
+    fns = (ASK.player_week, rz.weekly, rz.team_dropbacks, rzn.weekly,
+           load_player_stats, load_snaps, load_ff_opportunity, score_actual, score_expected)
+    return hashlib.sha1("".join(inspect.getsource(f) for f in fns).encode()).hexdigest()[:12]
+
+
+def _ask_history(season: int) -> pd.DataFrame | None:
+    import json
+
+    try:
+        man = json.loads((ASK_HISTORY / "manifest.json").read_text())
+        f = ASK_HISTORY / f"player_week_{int(season)}.parquet"
+        if man.get("stamp") == ask_pw_stamp() and int(season) in man.get("seasons", []) and f.is_file():
+            return pd.read_parquet(f)
+    except Exception:
+        pass
+    return None
+
+
+def ask_player_week(season: int, prebuilt: bool = True) -> pd.DataFrame:
+    """The curated player-week index `mega.ask` queries against.
+
+    A finished season comes from data/ask_history/ (0.3 MB) rather than being rebuilt from
+    nflverse: the rebuild reads a season of play-by-play and left the 512 MB Render service
+    ~300 MB heavier per past season asked about."""
     from mega import ask as ASK
 
+    if prebuilt:
+        hit = _ask_history(season)
+        if hit is not None:
+            return hit
     return ASK.player_week(load_player_stats(season), load_snaps(season),
                            load_ff_opportunity(season), load_routes(season),
                            player_ids.crosswalk(), load_redzone(season))
 
 
-def nflverse_table(table: str, season: int) -> pd.DataFrame:
+def nflverse_table(table: str, season: int, columns: list[str] | None = None) -> pd.DataFrame:
     """Any catalogued nflverse table, for questions outside the curated metrics."""
     from . import catalog
 
-    return catalog.load(table, season)
+    return catalog.load(table, season, columns)

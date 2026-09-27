@@ -187,9 +187,9 @@ def _ask_pw(season: int) -> pd.DataFrame:
 
 
 @st.cache_data(ttl=CACHE_TTL, show_spinner="Fetching that nflverse table…")
-def _nflverse_table(table: str, season: int) -> pd.DataFrame:
+def _nflverse_table(table: str, season: int, columns: list[str] | None = None) -> pd.DataFrame:
     """Any catalogued nflverse table, for questions outside the curated metrics."""
-    return data.nflverse_table(table, season)
+    return data.nflverse_table(table, season, columns)
 @st.cache_data(ttl=dt.timedelta(hours=6), show_spinner="Simulating the rest of the season…")
 def _season_model(season: int):
     """§18 — this league's remaining season, ready to simulate."""

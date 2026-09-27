@@ -10,4 +10,9 @@ services:
         value: 3.12.6
       - key: ALLOWED_ORIGINS
         value: "*"
+      # memory on the 512MB instance — see docs/service_memory.md
+      - key: MALLOC_ARENA_MAX
+        value: "2"
+      - key: ARROW_DEFAULT_MEMORY_POOL
+        value: system
     healthCheckPath: /health

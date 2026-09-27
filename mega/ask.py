@@ -1014,7 +1014,9 @@ def answer(pw: pd.DataFrame, text: str, weeks_available: tuple[int, ...] = (),
         pos_map = (dict(zip(pw["gsis_id"], pw["pos"]))
                    if pw is not None and not pw.empty and "pos" in pw.columns else {})
         try:
-            return run_table(loader(q.source, season), use_q or q, xwalk=xwalk, mine=mine,
+            from . import catalog
+            frame = loader(q.source, season, columns=catalog.needed(q.source, q.field.col))
+            return run_table(frame, use_q or q, xwalk=xwalk, mine=mine,
                              rostered=rostered, pos_map=pos_map, with_id=want_id)
         except Exception as e:
             return pd.DataFrame(), [f"Could not load `{q.source}` for {season}: "

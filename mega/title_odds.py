@@ -42,7 +42,8 @@ KDEF_MEAN = 15.0          # (J) a half-PPR kicker + defense per week; same for e
 KDEF_SD = 7.0             #     so it sets game-to-game noise and never a trade's delta
 DEFAULT_Q = (0.35, 0.90, 1.75)   # (J) p10/p50/p90 multipliers for a player the projection lacks
 NOISE_Z = 2.0             # |Δ| under 2 SE is noise
-TW_CACHE_MAX = 1500       # team-week score arrays kept before the cache is flushed
+TW_CACHE_MAX = 400        # trade-variant team-week arrays kept before they are flushed
+                          # (the current rosters' own are kept for the life of the model)
 POSTURE = ((0.70, "protect"), (0.35, "balanced"), (0.0, "swing"))   # handoff §5, on P(playoffs)
 
 
@@ -65,18 +66,16 @@ class Model:
     proj_sd: dict                  # pos -> sd of the season-long projection error
     rosters: dict                  # team -> [pids]
     n: int = N_SEASONS
-    _draw: dict = field(default_factory=dict)
-    _tw: dict = field(default_factory=dict)
+    _tw: dict = field(default_factory=dict)       # team-week totals for trade variants
+    _tw_base: dict = field(default_factory=dict)  # ... and for the rosters as they stand
 
     # ------------------------------------------------------------ dice
     def _dice(self, key: str) -> tuple[np.ndarray, np.ndarray]:
-        hit = self._draw.get(key)
-        if hit is None:
-            r = _rng(key)
-            # float32: the live API holds these for hours on a 512MB host
-            hit = (r.standard_normal(self.n, dtype=np.float32), r.random(self.n, dtype=np.float32))
-            self._draw[key] = hit
-        return hit
+        """Regenerated on every call, never stored: the seed is a function of the key, so
+        the same key always rolls the same dice. Storing them cost ~55 MB on the live API
+        (2,300 keys × 3,000 seasons) to save microseconds."""
+        r = _rng(key)
+        return r.standard_normal(self.n, dtype=np.float32), r.random(self.n, dtype=np.float32)
 
     def _player(self, pid: str, w: int) -> tuple[np.ndarray, np.ndarray]:
         """(points if he plays, whether he plays) for every simulated season."""
@@ -98,13 +97,15 @@ class Model:
     # ------------------------------------------------------------ one team-week
     def team_week(self, team: str, ids, w: int) -> np.ndarray:
         key = (team, frozenset(ids), w)
-        hit = self._tw.get(key)
+        is_base = key[1] == frozenset(self.rosters.get(team, ()))
+        store = self._tw_base if is_base else self._tw
+        hit = store.get(key)
         if hit is not None:
             return hit
         lu = te.lineup(list(ids), self.ctx, w)
         flex_ok = set(self.ctx.cfg["flexEligible"])
         bench = [e for e in lu.bench]
-        total = np.zeros(self.n)
+        total = np.zeros(self.n, np.float32)
         for pid, pos, _pts, slot in lu.starters:
             x, on = self._player(pid, w)
             bk = next((e[0] for e in bench if e[1] == pos or (slot == "FLEX" and e[1] in flex_ok)), None)
@@ -115,10 +116,10 @@ class Model:
                 total += np.where(on, x, 0.0)
         z, _ = self._dice(f"{team}|kdef|{w}")
         total += KDEF_MEAN + KDEF_SD * z
-        if len(self._tw) > TW_CACHE_MAX:
+        if not is_base and len(self._tw) > TW_CACHE_MAX:
             self._tw.clear()            # every new roster adds 15 weeks of arrays; a live
                                         # service would otherwise grow without bound
-        self._tw[key] = total
+        store[key] = total
         return total
 
     # ------------------------------------------------------------ a season
