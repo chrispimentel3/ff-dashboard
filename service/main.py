@@ -15,7 +15,9 @@ from __future__ import annotations
 import ctypes
 import gc
 import os
+import threading
 import time
+from collections import defaultdict
 
 import pandas as pd
 from fastapi import FastAPI, HTTPException
@@ -71,16 +73,23 @@ PW_TTL = 6 * 3600       # matches app.py's CACHE_TTL for the player-week index
 ROSTER_TTL = 30 * 60    # matches app.py's ownership/roster cache TTL
 
 _cache: dict[str, tuple[float, object]] = {}
+_locks: defaultdict[str, threading.Lock] = defaultdict(threading.Lock)
 
 
 def _cached(key: str, ttl: int, build):
-    now = time.time()
+    """Per-key locked: the warm-up thread and a request (or two requests) asking for the
+    same thing wait for one build instead of each running it — on a 512MB host a second
+    copy of the league build is what tips it over."""
     hit = _cache.get(key)
-    if hit is not None and now - hit[0] < ttl:
+    if hit is not None and time.time() - hit[0] < ttl:
         return hit[1]
-    val = build()
-    _cache[key] = (now, val)
-    return val
+    with _locks[key]:
+        hit = _cache.get(key)
+        if hit is not None and time.time() - hit[0] < ttl:
+            return hit[1]
+        val = build()
+        _cache[key] = (time.time(), val)
+        return val
 
 
 def _current_season() -> int:
@@ -291,7 +300,22 @@ def trade_pool():
     if pool.empty:
         return []
     ir = _on_ir(season)
+    _warm(season)
     return [{**r, "ir": r["pid"] in ir} for r in pool.to_dict(orient="records")]
+
+
+def _warm(season: int) -> None:
+    """The page fetches the pool on load, seconds before anyone picks a player — build the
+    engine and the title-odds model then, in the background, so the first search after a
+    quiet spell doesn't pay for them (it took 20-30s on Render's CPU)."""
+    def go():
+        try:
+            _trade_engine(season)
+            if TITLE_ODDS_LIVE:
+                _title_model(season, data.current_week(season, 1))
+        except Exception:
+            pass
+    threading.Thread(target=go, daemon=True).start()
 
 
 def _on_ir(season: int) -> set:
