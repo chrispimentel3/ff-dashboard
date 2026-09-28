@@ -207,7 +207,14 @@ class Model:
     def delta_vs(self, rosters_base: dict, rosters_after: dict, teams: tuple) -> dict:
         """Like `delta`, but against an alternative baseline (a free waiver swap already
         made) instead of the rosters as they stand — paired on the same dice either way."""
-        a = self.run({**self.rosters, **rosters_base})
+        # every netted offer in one search shares the same free-swap baseline: run it once
+        key = frozenset((t, frozenset(ids)) for t, ids in rosters_base.items())
+        runs = self.__dict__.setdefault("_base_runs", {})
+        a = runs.get(key)
+        if a is None:
+            if len(runs) > 8:
+                runs.clear()
+            a = runs[key] = self.run({**self.rosters, **rosters_base})
         b = self.run({**self.rosters, **rosters_after})
         out = {}
         for t in teams:
