@@ -290,7 +290,16 @@ def trade_pool():
     pool = _trade_pool(season)
     if pool.empty:
         return []
-    return pool.to_dict(orient="records")
+    ir = _on_ir(season)
+    return [{**r, "ir": r["pid"] in ir} for r in pool.to_dict(orient="records")]
+
+
+def _on_ir(season: int) -> set:
+    """Players in an IR slot. They're priced and listed, but the engine trades only the
+    active roster (HANDOFF v1.3 put IR players on `team["ir"]`, returned by the waiver
+    model at their return week), so a search on one has nothing to run."""
+    league = _league(season)
+    return {p for t in league.get("teams", []) for p in t.get("ir") or []}
 
 
 @app.post("/trade-search")
@@ -307,6 +316,10 @@ def trade_search(req: TradeSearchRequest):
     me = rep.get("my_team_id")
     if me is None:
         raise HTTPException(status_code=503, detail="Could not resolve your team's roster.")
+
+    if req.pid in _on_ir(season):
+        raise HTTPException(status_code=400, detail="He's on IR, and trades for players on IR "
+                            "aren't modeled yet — the engine only trades active rosters.")
 
     shapes = ("1-for-1", "2-for-1") if req.two_player else ("1-for-1",)
     flags = tuple(f.upper().replace(" ", "_") for f in req.flags) or ("LIKELY", "EXPLOIT", "NEEDS_PITCH")
