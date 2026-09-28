@@ -271,7 +271,7 @@ class TradeSearchRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"ok": True}
+    return {"ok": True, "commit": os.environ.get("RENDER_GIT_COMMIT", "")[:7], "warm": _WARM}
 
 
 @app.get("/meta")
@@ -309,13 +309,21 @@ def _warm(season: int) -> None:
     engine and the title-odds model then, in the background, so the first search after a
     quiet spell doesn't pay for them (it took 20-30s on Render's CPU)."""
     def go():
+        t = time.perf_counter()
         try:
             _trade_engine(season)
+            _WARM["engine_s"] = round(time.perf_counter() - t, 1)
             if TITLE_ODDS_LIVE:
                 _title_model(season, data.current_week(season, 1))
-        except Exception:
-            pass
-    threading.Thread(target=go, daemon=True).start()
+            _WARM["total_s"] = round(time.perf_counter() - t, 1)
+        except Exception as e:
+            _WARM["error"] = f"{type(e).__name__}: {e}"[:200]
+    if not _WARM:
+        _WARM["started"] = time.strftime("%H:%M:%S")
+        threading.Thread(target=go, daemon=True).start()
+
+
+_WARM: dict = {}   # what the first warm-up took, reported by /health
 
 
 def _on_ir(season: int) -> set:
@@ -332,9 +340,19 @@ def trade_search(req: TradeSearchRequest):
     as an endpoint so the statically-generated mega-bowl-web Trades page can offer it too
     (see mega/trades.py's docstring for why this couldn't just be precomputed: the question
     space is one pick out of the whole league, not a fixed list)."""
+    clock, t0 = {}, time.perf_counter()
+
+    def lap(name):     # seconds per step, returned as `timings` — Render's CPU is ~10x slower
+        nonlocal t0    # than a laptop, so where a slow search spends its time is measured there
+        now = time.perf_counter()
+        clock[name] = round(now - t0, 2)
+        t0 = now
+
     season = _current_season()
     next_week = data.current_week(season, 1)
+    lap("week")
     eng, rep = _trade_engine(season)
+    lap("engine")
     if eng is None:
         raise HTTPException(status_code=503, detail="League rosters unavailable this run.")
     me = rep.get("my_team_id")
@@ -357,8 +375,10 @@ def trade_search(req: TradeSearchRequest):
                                            shapes=shapes, top_n=40)
     except (ValueError, KeyError) as e:
         raise HTTPException(status_code=400, detail=str(e))
+    lap("search")
 
     results, swap_ids = TL.net_free_swap(eng, me, out["results"])
+    lap("net_free_swap")
     if req.order == "accept":
         rank = {"LIKELY": 0, "NEEDS_PITCH": 1, "EXPLOIT": 2, "LONGSHOT": 3}
         results = sorted(results, key=lambda r: (rank.get(r["flag"], 9), -r["dMe"]))
@@ -377,6 +397,7 @@ def trade_search(req: TradeSearchRequest):
             odds = _trade_odds(season, next_week, keyrows)
         except Exception:
             odds = {}
+    lap("odds")
 
     rows = []
     for i, r in enumerate(results):
@@ -408,6 +429,7 @@ def trade_search(req: TradeSearchRequest):
         "evaluated": out["evaluated"], "padded": out["padded"], "matched": out["matched"],
         "sim_available": bool(odds),
         "rows": rows,
+        "timings": clock,
     }
 
 
