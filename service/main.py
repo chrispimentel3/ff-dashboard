@@ -318,12 +318,18 @@ def _warm(season: int) -> None:
             _WARM["total_s"] = round(time.perf_counter() - t, 1)
         except Exception as e:
             _WARM["error"] = f"{type(e).__name__}: {e}"[:200]
-    if not _WARM:
+        finally:
+            _WARMING.release()
+    # every pool load re-warms (the caches expire after 30 min; a fresh one returns at
+    # once), but never two warm-ups at a time
+    if _WARMING.acquire(blocking=False):
+        _WARM.clear()
         _WARM["started"] = time.strftime("%H:%M:%S")
         threading.Thread(target=go, daemon=True).start()
 
 
-_WARM: dict = {}   # what the first warm-up took, reported by /health
+_WARM: dict = {}   # what the latest warm-up took, reported by /health
+_WARMING = threading.Lock()
 
 
 def _on_ir(season: int) -> set:
