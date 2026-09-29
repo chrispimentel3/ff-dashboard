@@ -22,5 +22,152 @@
   },
   "nfl_status": "Active",
   "out_reason": null,
-  "seasons": {}
+  "seasons": {
+    "2026": {
+      "games": 1,
+      "pts_pg": 0.0,
+      "xfp_pg": null,
+      "vs_exp_pg": null,
+      "usage_label": "Carry share",
+      "usage_value": 0.0,
+      "usage_fmt": "0%",
+      "ranks": {
+        "pts_pg": null,
+        "xfp_pg": null,
+        "rush_share": null
+      },
+      "card": [
+        {
+          "stat": "Pts/game",
+          "value_fmt": "0.0",
+          "pos_rank": "\u2014",
+          "means": "Half-PPR fantasy points per game."
+        },
+        {
+          "stat": "Expected pts/g",
+          "value_fmt": "\u2014",
+          "pos_rank": "\u2014",
+          "means": "What his touches should score."
+        },
+        {
+          "stat": "Snap share",
+          "value_fmt": "29%",
+          "pos_rank": "\u2014",
+          "means": "Share of his offense's plays he was on the field for."
+        },
+        {
+          "stat": "Carry share",
+          "value_fmt": "0%",
+          "pos_rank": "\u2014",
+          "means": "His share of his team's carries."
+        },
+        {
+          "stat": "Carries/g",
+          "value_fmt": "0.0",
+          "pos_rank": "\u2014",
+          "means": ""
+        },
+        {
+          "stat": "Yds/carry",
+          "value_fmt": "\u2014",
+          "pos_rank": "\u2014",
+          "means": ""
+        },
+        {
+          "stat": "Rush EPA/carry",
+          "value_fmt": "\u2014",
+          "pos_rank": "\u2014",
+          "means": "Points added per carry. Above 0 is rare for backs."
+        },
+        {
+          "stat": "Target share",
+          "value_fmt": "0.0%",
+          "pos_rank": "\u2014",
+          "means": "Receiving role \u2014 worth more than carries in half-PPR."
+        },
+        {
+          "stat": "Targets/g",
+          "value_fmt": "0.0",
+          "pos_rank": "\u2014",
+          "means": ""
+        },
+        {
+          "stat": "Rush TD",
+          "value_fmt": "0",
+          "pos_rank": "\u2014",
+          "means": ""
+        }
+      ],
+      "game_log": [
+        {
+          "week": 3,
+          "game": "@ TB",
+          "snap_pct": 0.17,
+          "carries": 0,
+          "rushing_yards": 0,
+          "rushing_tds": 0,
+          "targets": 0,
+          "tgt_pct": 0.0,
+          "receptions": 0,
+          "receiving_yards": 0,
+          "receiving_tds": 0,
+          "half_ppr": 0.0,
+          "xfp": null,
+          "vs_exp": null
+        }
+      ],
+      "role": {
+        "headline": "Backup RB",
+        "from_usage": true,
+        "games": 1,
+        "rows": [
+          {
+            "metric": "target share",
+            "him": 0.017849518641453305,
+            "role_avg": 0.02528681807539218,
+            "vs_role": 70.58823529411765,
+            "nfl_avg": 0.062037699832975426,
+            "vs_nfl": 28.77205101012723,
+            "fmt": "{:.1%}"
+          },
+          {
+            "metric": "carry share",
+            "him": 0.0710757432771359,
+            "role_avg": 0.11194429566148902,
+            "vs_role": 63.4920634920635,
+            "nfl_avg": 0.29308920704845814,
+            "vs_nfl": 24.250549514566234,
+            "fmt": "{:.1%}"
+          },
+          {
+            "metric": "snap %",
+            "him": 0.1776352727728308,
+            "role_avg": 0.18564329099944782,
+            "vs_role": 95.68634116347312,
+            "nfl_avg": 0.36253110156073287,
+            "vs_nfl": 48.99862991288005,
+            "fmt": "{:.1%}"
+          }
+        ]
+      },
+      "this_week": {
+        "bye": false,
+        "opponent": "MIA",
+        "home": true,
+        "ease_rank": 3,
+        "out_reason": null,
+        "projection": 3.3,
+        "proj_source": "nflverse-est",
+        "matchup_mult": 1.083,
+        "matchup_pct": 8.3,
+        "matchup_basis": "defense+vegas",
+        "matchup_def_rank": 3,
+        "matchup_def_pct": 8.7,
+        "matchup_vegas_pct": 3.2,
+        "matchup_baseline": 3.3,
+        "expected_pts": 3.6,
+        "delta_pts": 0.3
+      }
+    }
+  }
 }

@@ -23,6 +23,195 @@
   "nfl_status": "Active",
   "out_reason": null,
   "seasons": {
+    "2026": {
+      "games": 1,
+      "pts_pg": 0.0,
+      "xfp_pg": null,
+      "vs_exp_pg": null,
+      "usage_label": "Target share",
+      "usage_value": 0.0,
+      "usage_fmt": "0.0%",
+      "ranks": {
+        "pts_pg": null,
+        "xfp_pg": null,
+        "tgt_share": null
+      },
+      "card": [
+        {
+          "stat": "Pts/game",
+          "value_fmt": "0.0",
+          "pos_rank": "\u2014",
+          "means": "Half-PPR fantasy points per game."
+        },
+        {
+          "stat": "Expected pts/g",
+          "value_fmt": "\u2014",
+          "pos_rank": "\u2014",
+          "means": "What his targets should score."
+        },
+        {
+          "stat": "Snap share",
+          "value_fmt": "3%",
+          "pos_rank": "\u2014",
+          "means": "Share of his offense's plays he was on the field for."
+        },
+        {
+          "stat": "Routes/game (est.)",
+          "value_fmt": "1.4",
+          "pos_rank": "\u2014",
+          "means": "Pass routes run per game. Estimated from snap share \u00d7 team dropbacks \u2014 nflverse has no charted route count. Under ~25 is a part-time role."
+        },
+        {
+          "stat": "Targets/game",
+          "value_fmt": "0.0",
+          "pos_rank": "\u2014",
+          "means": "Raw target volume \u2014 the input everything else starts from."
+        },
+        {
+          "stat": "Target share",
+          "value_fmt": "0.0%",
+          "pos_rank": "\u2014",
+          "means": "25%+ is a No. 1 receiver's role."
+        },
+        {
+          "stat": "Targets per route (est.)",
+          "value_fmt": "0.0%",
+          "pos_rank": "\u2014",
+          "means": "How often he's thrown to when he's actually in a route. Around 20%+ is a featured receiver. This is what separates a real role from empty snaps."
+        },
+        {
+          "stat": "1st downs per route (est.)",
+          "value_fmt": "0.0%",
+          "pos_rank": "\u2014",
+          "means": "The single best read on a receiver. 12%+ is the league-winner line for a WR. Tight ends read lower \u2014 the route estimate counts their blocking snaps, so judge a TE against TEs."
+        },
+        {
+          "stat": "Air-yards share",
+          "value_fmt": "0.0%",
+          "pos_rank": "\u2014",
+          "means": "Share of the team's downfield targets."
+        },
+        {
+          "stat": "WOPR",
+          "value_fmt": "0.00",
+          "pos_rank": "\u2014",
+          "means": "1.5 \u00d7 target share + 0.7 \u00d7 air-yards share. About 0.5+ is a starter's role."
+        },
+        {
+          "stat": "aDOT",
+          "value_fmt": "\u2014",
+          "pos_rank": "\u2014",
+          "means": "Average depth of target, in yards."
+        },
+        {
+          "stat": "Catch rate",
+          "value_fmt": "\u2014",
+          "pos_rank": "\u2014",
+          "means": ""
+        },
+        {
+          "stat": "YAC/rec",
+          "value_fmt": "\u2014",
+          "pos_rank": "\u2014",
+          "means": "Yards after catch per reception."
+        },
+        {
+          "stat": "EPA/target",
+          "value_fmt": "\u2014",
+          "pos_rank": "\u2014",
+          "means": "Points added per target."
+        }
+      ],
+      "game_log": [
+        {
+          "week": 3,
+          "game": "vs MIN",
+          "snap_pct": 0.03,
+          "routes": 1.0,
+          "targets": 0,
+          "tgt_pct": 0.0,
+          "receptions": 0,
+          "receiving_first_downs": 0,
+          "receiving_yards": 0,
+          "receiving_tds": 0,
+          "receiving_air_yards": 0,
+          "receiving_yards_after_catch": 0,
+          "half_ppr": 0.0,
+          "xfp": null,
+          "vs_exp": null
+        }
+      ],
+      "role": {
+        "headline": "Backup TE",
+        "from_usage": false,
+        "games": 1,
+        "rows": [
+          {
+            "metric": "target share",
+            "him": 0.037367363485740476,
+            "role_avg": 0.05916499218575575,
+            "vs_role": 63.1578947368421,
+            "nfl_avg": 0.09522495169748826,
+            "vs_nfl": 39.24114721995297,
+            "fmt": "{:.1%}"
+          },
+          {
+            "metric": "air-yards share",
+            "him": 0.022768837262841832,
+            "role_avg": 0.04071068102596119,
+            "vs_role": 55.928411633109626,
+            "nfl_avg": 0.06493758175740055,
+            "vs_nfl": 35.06265038926708,
+            "fmt": "{:.1%}"
+          },
+          {
+            "metric": "TPRR (est.)",
+            "him": 0.13412736789113258,
+            "role_avg": 0.13597832556803022,
+            "vs_role": 98.63878477017164,
+            "nfl_avg": 0.1587137287375358,
+            "vs_nfl": 84.5089892084499,
+            "fmt": "{:.3f}"
+          },
+          {
+            "metric": "1D/RR (est.)",
+            "him": 0.049714606201016476,
+            "role_avg": 0.05028632417232816,
+            "vs_role": 98.86307464162137,
+            "nfl_avg": 0.05842505376715086,
+            "vs_nfl": 85.0912459561453,
+            "fmt": "{:.3f}"
+          },
+          {
+            "metric": "snap %",
+            "him": 0.18653779141174387,
+            "role_avg": 0.367722918201916,
+            "vs_role": 50.72781221357443,
+            "nfl_avg": 0.5052473763118441,
+            "vs_nfl": 36.92009105983179,
+            "fmt": "{:.1%}"
+          }
+        ]
+      },
+      "this_week": {
+        "bye": false,
+        "opponent": "GB",
+        "home": true,
+        "ease_rank": 20,
+        "out_reason": null,
+        "projection": 0.0,
+        "proj_source": "nflverse-est",
+        "matchup_mult": 0.908,
+        "matchup_pct": -9.2,
+        "matchup_basis": "defense+vegas",
+        "matchup_def_rank": 14,
+        "matchup_def_pct": -0.1,
+        "matchup_vegas_pct": -9.2,
+        "matchup_baseline": 0.0,
+        "expected_pts": 0.0,
+        "delta_pts": -0.0
+      }
+    },
     "2025": {
       "games": 2,
       "pts_pg": 0.0,
