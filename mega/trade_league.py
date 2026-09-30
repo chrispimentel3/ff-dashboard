@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from .config import DATA, FLEX_ELIGIBLE, LINEUP, MY_TEAM
+from .config import DATA, FLEX_ELIGIBLE, IR_SLOTS, LINEUP, MY_TEAM
 
 ROSTER_SIZE = 15          # 9 starters (incl. K/DEF) + 6 bench, once IR is excluded
 
@@ -43,6 +43,7 @@ def engine_config() -> dict:
         "flexCount": LINEUP.get("W/R", 1),
         "flexEligible": sorted(FLEX_ELIGIBLE),
         "rosterSize": ROSTER_SIZE,
+        "irSlots": IR_SLOTS,
     }
 
 
@@ -128,11 +129,16 @@ def build_league(season: int, yahoo_rosters: pd.DataFrame | None = None) -> dict
         if pid in players:
             return pid
         gid, nrm = row.get("gsis_id"), row.get("norm")
-        weekly = None
+        weekly, avail = None, None
         pr = proj.get(gid) if isinstance(gid, str) else None
         if pr and pos in ("QB", "RB", "WR", "TE"):
             ppg, src = pr["ros_pg"], "proj_ros"
             weekly = {int(w): float(v["expected"]) for w, v in (pr.get("weeks") or {}).items()}
+            # share of his remaining (non-bye) games he's projected to play — what an
+            # injured-reserve player is worth relative to a healthy one (trade_engine.ir_value)
+            left = [v for w, v in (pr.get("weeks") or {}).items()
+                    if int(w) >= proj_week and not v.get("bye")]
+            avail = (sum(float(v.get("p_active", 1.0)) for v in left) / len(left)) if left else None
             vn = vegas_now.get(gid)
             wk_now = (pr.get("weeks") or {}).get(str(proj_week)) or {}
             if vn is not None and pd.notna(vn) and proj_week and not wk_now.get("bye"):
@@ -163,6 +169,8 @@ def build_league(season: int, yahoo_rosters: pd.DataFrame | None = None) -> dict
         }
         if weekly:
             players[pid]["weekly"] = weekly
+        if weekly is not None and avail is not None:
+            players[pid]["avail"] = round(avail, 3)
         return pid
 
     teams, seat_of = [], {}
@@ -229,13 +237,19 @@ def net_free_swap(engine, my_id: int, results: list, min_delta_me: float = 0.01)
 
     ctx = engine.ctx
     swap_ids, swap_val = free_swap(ctx, ctx.base[my_id].ids)
+    swap_val_ir = None
     swap = None
     out = []
     for r in results:
         core = te.evaluate_core(ctx, my_id, r["partner"]["id"], r["giveIds"], r["getIds"])
         a_me = core["_after"]["me"]
         if r["shape"] == "2-for-1" and a_me.added:
-            d = a_me.value - swap_val
+            ref = swap_val
+            if "_after_ir" in core:          # an IR trade is valued counting IR players
+                if swap_val_ir is None:
+                    swap_val_ir = te.ir_value(list(swap_ids), ctx.ir.get(my_id, []), ctx)
+                ref = swap_val_ir
+            d = a_me.value - ref
             if d < min_delta_me:
                 continue
             swap = swap or te.settle(list(swap_ids), ctx, set())
@@ -255,7 +269,8 @@ def find_for_their_player(engine, my_id: int, target_id: str, top_n: int = 50,
     Same valuation, same flags, roughly ninety evaluations rather than three thousand.
     """
     ctx = engine.ctx
-    owner = next((t for t in ctx.teams.values() if target_id in t["roster"]), None)
+    owner = next((t for t in ctx.teams.values()
+                  if target_id in t["roster"] or target_id in ctx.ir.get(t["id"], [])), None)
     if owner is None or owner["id"] == my_id:
         return {"results": [], "table": pd.DataFrame(), "evaluated": 0, "padded": 0, "matched": 0}
     mine = [i for i in ctx.teams[my_id]["roster"] if ctx.players[i]["pos"] in ctx.valued_pos]

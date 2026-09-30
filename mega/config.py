@@ -51,6 +51,7 @@ SCORING = dict(
 
 # Starting lineup: 1 QB, 2 RB, 2 WR, 1 TE, 1 W/R (flex), 1 K, 1 DEF.
 LINEUP = {"QB": 1, "RB": 2, "WR": 2, "TE": 1, "W/R": 1, "K": 1, "DEF": 1}
+IR_SLOTS = 1   # Yahoo league settings, "Roster Positions: ... BN x6, IR" (read 2026-09-30)
 # The flex is W/R: RB or WR only. A TE can't start there in Mega Bowl (Chris, 2026-09-18) —
 # this used to include TE, which let Start/Sit put a second tight end in an illegal slot.
 FLEX_ELIGIBLE = {"RB", "WR"}

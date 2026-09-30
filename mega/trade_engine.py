@@ -27,6 +27,9 @@ DEFAULTS: dict[str, Any] = {
     "flexCount": 1,
     "flexEligible": ["RB", "WR", "TE"],
     "rosterSize": 15,
+    # Injured-reserve slots per team. A player in one doesn't count toward rosterSize; one
+    # received with the team's slots already full has to sit on the bench and take a spot.
+    "irSlots": 1,
     "depthWeights": {"QB": [0.10], "RB": [0.15, 0.05], "WR": [0.15, 0.05], "TE": [0.10]},
     "horizon": None,
     "themTolerance": 1.0,
@@ -105,6 +108,9 @@ class Ctx:
     fa_candidates: list
     base: dict = field(default_factory=dict)
     memo: dict = field(default_factory=dict)
+    ir: dict = field(default_factory=dict)        # team id -> players in its IR slot(s)
+    ir_owner: dict = field(default_factory=dict)  # IR player -> team id
+    base_ir: dict = field(default_factory=dict)   # team id -> value counting its IR players
 
 
 @dataclass
@@ -187,15 +193,16 @@ class Settled:
     value: float
 
 
-def settle(ids, ctx: Ctx, keep: set) -> Settled:
+def settle(ids, ctx: Ctx, keep: set, size: int | None = None) -> Settled:
     """Force a roster to legal size. Over: drop whoever costs the least (ties -> lowest ppg).
     Under: add the free agent who adds the most (ties -> highest ppg). `keep` and K/DEF are
-    never dropped."""
+    never dropped. `size` overrides rosterSize (an injured player on the bench holds a spot)."""
     cfg, players = ctx.cfg, ctx.players
+    limit = cfg["rosterSize"] if size is None else size
     cur = list(ids)
     dropped, added = [], []
 
-    while len(cur) > cfg["rosterSize"]:
+    while len(cur) > limit:
         best, best_val, best_ppg = None, -math.inf, math.inf
         for pid in cur:
             if pid in keep or players[pid]["pos"] not in ctx.valued_pos:
@@ -209,7 +216,7 @@ def settle(ids, ctx: Ctx, keep: set) -> Settled:
         cur = [x for x in cur if x != best]
         dropped.append(best)
 
-    while len(cur) < cfg["rosterSize"]:
+    while len(cur) < limit:
         have = set(cur)
         best, best_val, best_ppg = None, -math.inf, -math.inf
         for pid in ctx.fa_candidates:
@@ -273,7 +280,51 @@ def build_context(league: dict, config: dict | None = None) -> Ctx:
     ctx = Ctx(cfg, players, teams, valued_pos, pos_order, fa, weeks, repl, fa_candidates)
     for t in teams.values():
         ctx.base[t["id"]] = settle(t["roster"], ctx, set())
+        ctx.ir[t["id"]] = [p for p in (t.get("ir") or []) if p in players]
+        for p in ctx.ir[t["id"]]:
+            ctx.ir_owner[p] = t["id"]
     return ctx
+
+
+# ------------------------------------------------------------------ injured reserve
+def ir_value(active_ids, ir_ids, ctx: Ctx) -> float:
+    """Team value counting injured-reserve players for the part of the season they're
+    expected back.
+
+    Each IR player adds `avail` x (the roster's value once he's back, after the cut his
+    return forces - its value without him). `avail` is the share of his remaining games
+    he's projected to play (trade_league: the mean P(plays) over his non-bye weeks, 0
+    while he's out). An IR player who'd be the cut on return adds nothing. Per-game value
+    is the engine's scale, so this is only meant for the per-game engine, not a horizon."""
+    base = team_value(active_ids, ctx)
+    v = base
+    for p in ir_ids:
+        f = float(ctx.players[p].get("avail") or 0.0)
+        if f <= 0:
+            continue
+        back = settle(list(active_ids) + [p], ctx, set()).value
+        v += f * max(0.0, back - base)
+    return v
+
+
+def _base_ir(ctx: Ctx, team_id) -> float:
+    hit = ctx.base_ir.get(team_id)
+    if hit is None:
+        hit = ctx.base_ir[team_id] = ir_value(ctx.base[team_id].ids, ctx.ir.get(team_id, []), ctx)
+    return hit
+
+
+def _after_ir(ctx: Ctx, team_id, out_ids, in_ids) -> tuple[Settled, list]:
+    """One side of a trade that moves an IR player: (settled active roster valued with its
+    IR players, the IR list after). Injured players beyond the team's IR slots sit on the
+    bench, so the active roster is settled that many spots short."""
+    out_set = set(out_ids)
+    ir = [p for p in ctx.ir.get(team_id, []) if p not in out_set] + [p for p in in_ids if p in ctx.ir_owner]
+    active_in = [p for p in in_ids if p not in ctx.ir_owner]
+    over = max(0, len(ir) - int(ctx.cfg.get("irSlots", 0)))
+    active = [p for p in ctx.teams[team_id]["roster"] if p not in out_set] + active_in
+    s = settle(active, ctx, set(active_in), size=ctx.cfg["rosterSize"] - over)
+    return Settled(s.ids, s.dropped, s.added, ir_value(s.ids, ir, ctx)), ir
 
 
 def _info(ctx: Ctx, pid: str) -> dict:
@@ -297,12 +348,20 @@ def evaluate_core(ctx: Ctx, my_id, their_id, give_ids, get_ids) -> dict:
     me, them = ctx.teams[my_id], ctx.teams[their_id]
     give_set, get_set = set(give_ids), set(get_ids)
 
-    a_me = settle([i for i in me["roster"] if i not in give_set] + list(get_ids), ctx, get_set)
-    a_them = settle([i for i in them["roster"] if i not in get_set] + list(give_ids), ctx, give_set)
-    b_me, b_them = ctx.base[my_id], ctx.base[their_id]
-
-    d_me = a_me.value - b_me.value
-    d_them = a_them.value - b_them.value
+    moves_ir = bool(ctx.ir_owner) and bool((give_set | get_set) & ctx.ir_owner.keys())
+    if moves_ir:
+        # Both sides valued with their IR players counted, before and after — only for a
+        # trade that moves one, so every other trade keeps the v1 numbers exactly.
+        a_me, ir_me = _after_ir(ctx, my_id, give_ids, get_ids)
+        a_them, ir_them = _after_ir(ctx, their_id, get_ids, give_ids)
+        d_me = a_me.value - _base_ir(ctx, my_id)
+        d_them = a_them.value - _base_ir(ctx, their_id)
+    else:
+        a_me = settle([i for i in me["roster"] if i not in give_set] + list(get_ids), ctx, get_set)
+        a_them = settle([i for i in them["roster"] if i not in get_set] + list(give_ids), ctx, give_set)
+        b_me, b_them = ctx.base[my_id], ctx.base[their_id]
+        d_me = a_me.value - b_me.value
+        d_them = a_them.value - b_them.value
 
     # §17 — the market test is the one THEY apply. Their positional bias scales both
     # sides, so a manager who overrates running backs both pays more for one and wants
@@ -329,7 +388,8 @@ def evaluate_core(ctx: Ctx, my_id, their_id, give_ids, get_ids) -> dict:
             "flag": flag_for(lineup_ok, market_ok),
             "market": {"mvYouGive": mv_give, "mvYouGet": mv_get, "ratio": ratio,
                        "neutralRatio": neutral, "biased": bool(bias)},
-            "_after": {"me": a_me, "them": a_them}}
+            "_after": {"me": a_me, "them": a_them},
+            **({"_after_ir": {"me": ir_me, "them": ir_them}} if moves_ir else {})}
 
 
 def _snapshot(ctx: Ctx, ids) -> dict:
@@ -354,12 +414,17 @@ def with_detail(ctx: Ctx, my_id, core: dict) -> dict:
     """Core result plus both sides' before/after. Never mutates `core` — the search caches
     and reuses these, and a popped key would break the second read."""
     after = core.get("_after")
-    r = {k: v for k, v in core.items() if k != "_after"}
+    r = {k: v for k, v in core.items() if k not in ("_after", "_after_ir")}
     r["give"] = [_info(ctx, i) for i in core["giveIds"]]
     r["get"] = [_info(ctx, i) for i in core["getIds"]]
     if after:
-        r["me"] = _side(ctx, ctx.base[my_id], after["me"])
-        r["them"] = _side(ctx, ctx.base[core["partner"]["id"]], after["them"])
+        their_id = core["partner"]["id"]
+        b_me, b_them = ctx.base[my_id], ctx.base[their_id]
+        if "_after_ir" in core:          # before-values on the same IR-counting scale as after
+            b_me = Settled(b_me.ids, b_me.dropped, b_me.added, _base_ir(ctx, my_id))
+            b_them = Settled(b_them.ids, b_them.dropped, b_them.added, _base_ir(ctx, their_id))
+        r["me"] = _side(ctx, b_me, after["me"])
+        r["them"] = _side(ctx, b_them, after["them"])
     return r
 
 
@@ -374,7 +439,7 @@ def find_trades(ctx: Ctx, my_id, give_ids, opts: dict | None = None) -> dict:
     def tradeable(pid):
         return players[pid]["pos"] in ctx.valued_pos
     for pid in give_ids:
-        if pid not in me["roster"]:
+        if pid not in me["roster"] and pid not in ctx.ir.get(my_id, []):
             raise ValueError(f"{pid} is not on team {my_id}")
         if not tradeable(pid):
             raise ValueError(f"{pid} ({players[pid]['pos']}) is not tradeable")

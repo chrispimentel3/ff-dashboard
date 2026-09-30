@@ -240,8 +240,10 @@ def _title_odds_rows(season: int, next_week: int, eng, my_id, results: list,
         core = te.evaluate_core(ctx, my_id, r["partner"]["id"], r["giveIds"], r["getIds"])
         partner = r["partner"]["name"]
         ir = lambda team, tid: [p for p in tm.rosters.get(team, []) if p not in ctx.teams[tid]["roster"]]
-        after = {my_name: list(core["_after"]["me"].ids) + ir(my_name, my_id),
-                 partner: list(core["_after"]["them"].ids) + ir(partner, r["partner"]["id"])}
+        moved = core.get("_after_ir")    # a trade moving an IR player carries both IR lists after it
+        after = {my_name: list(core["_after"]["me"].ids) + (moved["me"] if moved else ir(my_name, my_id)),
+                 partner: list(core["_after"]["them"].ids)
+                 + (moved["them"] if moved else ir(partner, r["partner"]["id"]))}
         if r.get("netted") and swap_ids:
             d = tm.delta_vs({my_name: list(swap_ids) + ir(my_name, my_id)}, after, (my_name, partner))
         else:
@@ -333,9 +335,9 @@ _WARMING = threading.Lock()
 
 
 def _on_ir(season: int) -> set:
-    """Players in an IR slot. They're priced and listed, but the engine trades only the
-    active roster (HANDOFF v1.3 put IR players on `team["ir"]`, returned by the waiver
-    model at their return week), so a search on one has nothing to run."""
+    """Players in an IR slot — flagged in the pool so the page can say so. They trade
+    like anyone else, valued for the share of the season they're projected to play
+    (mega/trade_engine.py ir_value)."""
     league = _league(season)
     return {p for t in league.get("teams", []) for p in t.get("ir") or []}
 
@@ -364,10 +366,6 @@ def trade_search(req: TradeSearchRequest):
     me = rep.get("my_team_id")
     if me is None:
         raise HTTPException(status_code=503, detail="Could not resolve your team's roster.")
-
-    if req.pid in _on_ir(season):
-        raise HTTPException(status_code=400, detail="He's on IR, and trades for players on IR "
-                            "aren't modeled yet — the engine only trades active rosters.")
 
     shapes = ("1-for-1", "2-for-1") if req.two_player else ("1-for-1",)
     flags = tuple(f.upper().replace(" ", "_") for f in req.flags) or ("LIKELY", "EXPLOIT", "NEEDS_PITCH")
@@ -405,6 +403,9 @@ def trade_search(req: TradeSearchRequest):
             odds = {}
     lap("odds")
 
+    ctx = eng.ctx
+    ir_of = lambda ids: [{"name": ctx.players[p]["name"], "avail": ctx.players[p].get("avail")}
+                         for p in ids if p in ctx.ir_owner]
     rows = []
     for i, r in enumerate(results):
         o = odds.get(i, {})
@@ -418,6 +419,9 @@ def trade_search(req: TradeSearchRequest):
             "mkt_ratio": round(r["market"]["ratio"], 2),
             "flag": r["flag"],
             "fa_add": r.get("fa_add") or [],
+            # players in this offer who are on injured reserve, with the share of the
+            # remaining games each is projected to play (how they're valued)
+            "on_ir": ir_of(r["giveIds"] + r["getIds"]),
             "netted": bool(r.get("netted")),
             "odds": o.get("d_playoffs"),
             "their_odds": o.get("their_d_playoffs"),

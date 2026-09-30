@@ -336,7 +336,11 @@ TOPICS = [
             "valued by rebuilding both rosters, re-optimising both lineups on our "
             "rest-of-season projection, and playing the season out 6,000 times — see *How "
             "trade offers are built* below. FantasyCalc never ranks an offer; it only decides "
-            "whether one is realistic enough to consider."
+            "whether one is realistic enough to consider.\n"
+            "- **Players on IR trade too.** One is counted for the share of the remaining games "
+            "he's projected to play, times what he adds once he's back — after whoever has to "
+            "be cut to make room. The league has one IR slot per team, so a team whose slot is "
+            "already full carries him on the bench, a roster spot short, until he returns."
         ),
     },
     {
