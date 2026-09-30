@@ -389,13 +389,15 @@ def trade_search(req: TradeSearchRequest):
     else:
         results = sorted(results, key=lambda r: -r["dMe"])
 
-    odds = {}
+    odds, model, odds_error = {}, None, None
     if TITLE_ODDS_LIVE:
         try:
             odds = _title_odds_rows(season, next_week, eng, me, results[:SIM_TOP], swap_ids)
-        except Exception:
-            odds = {}
+            model = "player" if odds else None
+        except Exception as e:
+            odds, odds_error = {}, f"{type(e).__name__}: {e}"[:300]
     if not odds:
+        model = "team" if results[:SIM_TOP] else None
         keyrows = [(i, r["partner"]["name"], r["dMe"], r["dThem"]) for i, r in enumerate(results[:SIM_TOP])]
         try:
             odds = _trade_odds(season, next_week, keyrows)
@@ -440,6 +442,10 @@ def trade_search(req: TradeSearchRequest):
         "sim_available": bool(odds),
         "rows": rows,
         "timings": clock,
+        # which odds model priced the rows: "player" (title_odds, the offer cards' model)
+        # or "team" (the older team-level fallback, used only if the first one fails)
+        "odds_model": model,
+        **({"odds_error": odds_error} if odds_error else {}),
     }
 
 
