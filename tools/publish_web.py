@@ -3,7 +3,8 @@
 mega-bowl-web reads the JSON in data/web/ from this repo (refreshed hourly), so the site
 only moves when these files do: new game scores and standings, the matchup week turning
 over after Monday night, waiver results. tools/export_web.py builds them; this wraps it
-for the scheduled refresh tasks with the checks a human would do by eye.
+for the scheduled refresh tasks with the checks a human would do by eye, and first takes
+the week's trend snapshot (data/history/) if it hasn't been taken yet.
 
     PYTHONPATH=. .venv/bin/python tools/publish_web.py
 
@@ -25,11 +26,28 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 # what the export writes and the site (or the Streamlit app) reads, beyond data/web/
-EXTRA = ["data/build/", "data/yahoo_fixtures.csv"]
+EXTRA = ["data/build/", "data/yahoo_fixtures.csv", "data/history/"]
 
 
 def main() -> int:
     from mega import data
+
+    # Weekly trend snapshots first, so the export's trend charts include this week. Only a
+    # week not yet captured is taken (mega.history.snapshot_new) — safe to run every day.
+    season0 = data.SEASON_DEFAULT
+    try:
+        import nflreadpy as nfl
+        season0 = int(nfl.get_current_season())
+    except Exception:
+        pass
+    try:
+        from mega import history
+        wk = data.current_week(season0, 0)
+        if wk:
+            took = history.snapshot_new(season0, wk)
+            print(f"[web] trend snapshot week {wk}: " + (", ".join(took) if took else "already taken"))
+    except Exception as e:
+        print(f"[web] trend snapshot skipped: {type(e).__name__}: {e}")
 
     run = subprocess.run([sys.executable, str(ROOT / "tools" / "export_web.py")], cwd=ROOT,
                          capture_output=True, text=True)
@@ -39,12 +57,7 @@ def main() -> int:
         print(f"[web] FAILED: export_web.py exited {run.returncode}\n{tail}")
         return 4
 
-    season = data.SEASON_DEFAULT
-    try:
-        import nflreadpy as nfl
-        season = int(nfl.get_current_season())
-    except Exception:
-        pass
+    season = season0
     problems = []
     if f"wrote data/proj_ros_{season}.json" not in out:
         problems.append(f"the projection (data/proj_ros_{season}.json) was not rebuilt")
