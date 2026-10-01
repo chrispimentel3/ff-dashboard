@@ -185,6 +185,19 @@ def main() -> None:
     except Exception as e:
         print(f"[export_web] schedule outlook failed: {type(e).__name__}: {e}", file=sys.stderr)
 
+    # Past seasons (final standings, rosters, champions, records) — pulled one year at a time
+    # by tools/pull_history.py, exported from whatever is on disk; see mega/history_web.py.
+    try:
+        from mega import history_web as _history_web
+        from mega import yahoo_history as _yh
+        history_path = OUT_DIR / "history.json"
+        history_path.write_text(json.dumps(
+            _history_web.build(sorted(_yh.SEASON_LEAGUE_IDS)), separators=(",", ":"), default=str))
+        written.append(history_path)
+        print(f"wrote {history_path.relative_to(ROOT)}")
+    except Exception as e:
+        print(f"[export_web] history failed: {type(e).__name__}: {e}", file=sys.stderr)
+
     # The weekly digest — the week just played and the one coming, in sentences. Built
     # from the league files and the league.json written above; see mega/digest_web.py.
     try:
