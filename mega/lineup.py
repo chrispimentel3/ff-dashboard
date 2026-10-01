@@ -74,8 +74,9 @@ def attach_matchup(players: pd.DataFrame, season: int, week: int) -> pd.DataFram
         fitted = pd.DataFrame()
     if not fitted.empty:
         df = df.merge(
-            fitted[["team", "pos", "mult", "pct", "basis"]].rename(
-                columns={"team": "nfl_team", "mult": "mult_fitted", "pct": "pct_fitted", "basis": "matchup_basis"}),
+            fitted[["team", "pos", "mult", "pct", "basis", "def_rank", "vegas_pct"]].rename(
+                columns={"team": "nfl_team", "mult": "mult_fitted", "pct": "pct_fitted", "basis": "matchup_basis",
+                         "def_rank": "matchup_def_rank", "vegas_pct": "matchup_vegas_pct"}),
             on=["nfl_team", "pos"], how="left",
         )
     else:

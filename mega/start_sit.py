@@ -19,6 +19,9 @@ COLS = [
     "lineup", "player", "pos", "nfl_team", "report_status", "opp", "ease_rank",
     "proj", "proj_adj", "proj_source", "vegas", "vegas_edge",
     "tgt_pct", "tm_rank", "start_sit", "close_call",
+    # the matchup verdict the player cards show: the fitted model's % on a normal week,
+    # what that's worth in points, and its two parts (defense rank, Vegas team line)
+    "matchup_pct", "matchup_pts", "matchup_def_rank", "matchup_vegas_pct", "matchup_basis",
 ]
 SLOT_ORDER = {"QB": 0, "RB": 1, "WR": 2, "TE": 3, "FLEX": 4}
 
@@ -43,6 +46,15 @@ def build(lu: pd.DataFrame | None, ts: pd.DataFrame, next_week: int) -> dict:
     for c in ("tgt_pct", "tm_rank"):
         if c not in lu.columns:
             lu[c] = None
+
+    if "pct_fitted" in lu.columns:
+        lu["matchup_pct"] = pd.to_numeric(lu["pct_fitted"], errors="coerce").round(1)
+        mult = pd.to_numeric(lu.get("mult_fitted"), errors="coerce")
+        # on the same baseline as the player card (nflverse's estimate of a normal week),
+        # so one player reads the same number on both pages
+        base = pd.to_numeric(lu["nfl_est"], errors="coerce") if "nfl_est" in lu.columns else pd.Series(float("nan"), index=lu.index)
+        base = base.fillna(pd.to_numeric(lu["proj"], errors="coerce"))
+        lu["matchup_pts"] = (base * (mult - 1)).round(1)
 
     starters = lu[lu["start"]]
     bench = lu[~lu["start"]]

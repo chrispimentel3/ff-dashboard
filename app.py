@@ -473,19 +473,19 @@ def _matchups(season: int, from_week: int) -> pd.DataFrame:
 def _my_roster_projected(season: int, week: int) -> pd.DataFrame:
     """My skill roster joined to blended projections (by gsis_id, name fallback)."""
     proj = _blended_proj(season, week)
-    for c in ("proj", "proj_source", "ecr", "start_sit", "norm"):
+    for c in ("proj", "proj_source", "ecr", "start_sit", "norm", "nfl_est"):
         if c not in proj.columns:
             proj[c] = pd.NA
     r = skill.rename(columns={"name": "player"})[["player", "slot", "pos", "nfl_team", "gsis_id"]].copy()
-    pj = proj[["gsis_id", "proj", "proj_source", "ecr", "start_sit"]].dropna(subset=["gsis_id"])
+    pj = proj[["gsis_id", "proj", "proj_source", "ecr", "start_sit", "nfl_est"]].dropna(subset=["gsis_id"])
     r = r.merge(pj, on="gsis_id", how="left")
     miss = r["proj"].isna()
     if miss.any():  # fallback join on normalized name
         from mega.intel import _norm
         r["_n"] = r["player"].map(_norm)
-        pn = proj.dropna(subset=["proj"]).drop_duplicates("norm")[["norm", "proj", "proj_source", "ecr", "start_sit"]]
+        pn = proj.dropna(subset=["proj"]).drop_duplicates("norm")[["norm", "proj", "proj_source", "ecr", "start_sit", "nfl_est"]]
         r = r.merge(pn, left_on="_n", right_on="norm", how="left", suffixes=("", "_n"))
-        for c in ["proj", "proj_source", "ecr", "start_sit"]:
+        for c in ["proj", "proj_source", "ecr", "start_sit", "nfl_est"]:
             r[c] = r[c].where(r[c].notna(), r[f"{c}_n"])
         r = r[[c for c in r.columns if not c.endswith("_n") and c != "norm"]]
     r["proj"] = pd.to_numeric(r["proj"], errors="coerce").fillna(0.0)
