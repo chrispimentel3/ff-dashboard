@@ -58,6 +58,11 @@ def _write_players(payload: dict) -> list[Path]:
         indent=2, default=str))
     written.append(index_path)
 
+    if payload.get("stats"):
+        stats_path = OUT_DIR / "stats_table.json"
+        stats_path.write_text(json.dumps(payload["stats"], separators=(",", ":"), default=str))
+        written.append(stats_path)
+
     players_dir = OUT_DIR / "players"
     players_dir.mkdir(parents=True, exist_ok=True)
     for gid, detail in payload.get("players", {}).items():

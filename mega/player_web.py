@@ -326,8 +326,12 @@ def build(
             players[gid] = {"gsis_id": gid, "name": row["name"], "pos": row["pos"],
                             "team": row["team"] or None, "error": str(e), "seasons": {}}
 
+    from . import stats_web
+
     return {
         "available": True,
         "index": build_index(idx, gsis_list),
         "players": players,
+        # the chart builder's league-wide table, off the same season tables as the cards
+        "stats": stats_web.build(seasons, {g: _ownership_info(o) for g, o in owner_info.items()}),
     }

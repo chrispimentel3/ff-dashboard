@@ -185,6 +185,11 @@ def season_table(w: pd.DataFrame, ffo: pd.DataFrame | None, snaps: pd.DataFrame 
     t["pass_epa_db"] = t.get("passing_epa", 0) / drop.replace(0, np.nan)
     t["cpoe"] = t["_cpoe_w"] / att.replace(0, np.nan) if "_cpoe_w" in t.columns else np.nan
     t["att_pg"] = att / g
+    t["pass_ypg"] = t.get("passing_yards", 0) / g
+    t["rec_pg"] = rec / g
+    t["rec_ypg"] = t.get("receiving_yards", 0) / g
+    t["rush_ypg"] = t.get("rushing_yards", 0) / g
+    t["yprr"] = t.get("receiving_yards", 0) / t["routes"].replace(0, np.nan)
     return t
 
 
@@ -193,12 +198,15 @@ CARD = {
     "QB": [("pts_pg", "Pts/game", "{:.1f}", "Half-PPR fantasy points per game."),
            ("xfp_pg", "Expected pts/g", "{:.1f}", "What his volume should score."),
            ("att_pg", "Pass att/g", "{:.1f}", "Dropback volume."),
+           ("pass_ypg", "Pass yds/g", "{:.0f}", ""),
+           ("passing_tds", "Pass TD", "{:.0f}", ""),
            ("cmp_pct", "Completion %", "{:.1%}", ""),
            ("cpoe", "CPOE", "{:+.1f}", "Completion % over expected, given throw difficulty. Plus is accurate."),
            ("ypa", "Yds/att", "{:.1f}", ""),
            ("pass_epa_db", "EPA/dropback", "{:+.2f}", "Points added per dropback, sacks included. Above +0.10 is good."),
            ("car_pg", "Carries/g", "{:.1f}", "Rushing volume — the fantasy QB cheat code."),
            ("rushing_yards", "Rush yds", "{:.0f}", ""),
+           ("rushing_tds", "Rush TD", "{:.0f}", ""),
            ("passing_interceptions", "INT", "{:.0f}", "")],
     "RB": [("pts_pg", "Pts/game", "{:.1f}", "Half-PPR fantasy points per game."),
            ("xfp_pg", "Expected pts/g", "{:.1f}", "What his touches should score."),
@@ -209,6 +217,8 @@ CARD = {
            ("rush_epa_car", "Rush EPA/carry", "{:+.2f}", "Points added per carry. Above 0 is rare for backs."),
            ("tgt_share", "Target share", "{:.1%}", "Receiving role — worth more than carries in half-PPR."),
            ("tgt_pg", "Targets/g", "{:.1f}", ""),
+           ("rec_pg", "Receptions/g", "{:.1f}", "Catches are half a point each — a pass-catching back's floor."),
+           ("rec_ypg", "Rec yds/g", "{:.1f}", ""),
            ("rushing_tds", "Rush TD", "{:.0f}", "")],
     "WR": [("pts_pg", "Pts/game", "{:.1f}", "Half-PPR fantasy points per game."),
            ("xfp_pg", "Expected pts/g", "{:.1f}", "What his targets should score."),
@@ -229,6 +239,10 @@ CARD = {
            ("adot", "aDOT", "{:.1f}", "Average depth of target, in yards."),
            ("catch_rate", "Catch rate", "{:.0%}", ""),
            ("yac_pr", "YAC/rec", "{:.1f}", "Yards after catch per reception."),
+           ("yprr", "Yds per route (est.)", "{:.2f}",
+            "Receiving yards per route run. About 2.0+ is a WR1's efficiency; on the same route estimate."),
+           ("rec_ypg", "Rec yds/g", "{:.1f}", ""),
+           ("receiving_tds", "Rec TD", "{:.0f}", ""),
            ("rec_epa_tgt", "EPA/target", "{:+.2f}", "Points added per target.")],
 }
 CARD["TE"] = CARD["WR"]
@@ -249,7 +263,7 @@ def ranks(table: pd.DataFrame, gsis_id: str, pos: str) -> dict[str, str]:
         if col not in pool.columns or gsis_id not in set(pool["gsis_id"]):
             continue
         v = pd.to_numeric(pool[col], errors="coerce")
-        if col in ("tprr", "fd_rr") and ranked is not None:
+        if col in ("tprr", "fd_rr", "yprr") and ranked is not None:
             v = v.where(ranked.fillna(False))
         if v.notna().sum() < 3:
             continue
