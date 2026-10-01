@@ -185,6 +185,23 @@ def main() -> None:
     except Exception as e:
         print(f"[export_web] digest failed: {type(e).__name__}: {e}", file=sys.stderr)
 
+    # Starters, NFL teams and projections for the site's live scoreboard, which scores
+    # the week from ESPN box scores as it's played — see mega/live_web.py.
+    try:
+        from mega import live_web as _live_web
+        from mega.config import MY_TEAM as _MY_TEAM
+        from mega.yahoo import cached_fixtures as _cfx, cached_rosters as _cros
+
+        _rk = json.loads(rankings_path.read_text()).get("rows") or []
+        setup = _live_web.build(_season, _next_week, _cros(), _cfx(), _rk,
+                                _data.load_rosters(_season), _MY_TEAM)
+        live_path = OUT_DIR / "live_setup.json"
+        live_path.write_text(json.dumps(setup, indent=2, default=str))
+        written.append(live_path)
+        print(f"wrote {live_path.relative_to(ROOT)}")
+    except Exception as e:
+        print(f"[export_web] live setup failed: {type(e).__name__}: {e}", file=sys.stderr)
+
     if not written:
         sys.exit(1)
 
