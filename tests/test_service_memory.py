@@ -83,3 +83,35 @@ def test_the_live_search_nets_a_two_for_one_like_the_cards_do():
     else:
         assert two["netted"] and two["fa_add"] == ["fa_wr"]
         assert two["dMe"] == pytest.approx(raw_two - fa_alone, abs=1e-9)
+
+
+def test_offers_come_back_first_and_the_odds_call_reuses_the_search(monkeypatch):
+    """The page asks for the offers without odds (a few seconds on Render), shows them,
+    then asks again with odds — which must not run the search a second time."""
+    from service import main as M
+
+    ctx = SimpleNamespace(players={"a": {"name": "A"}, "b": {"name": "B"}}, ir_owner={})
+    eng = SimpleNamespace(ctx=ctx)
+    row = {"partner": {"id": 2, "name": "Them"}, "shape": "1-for-1", "give": [{"name": "A"}],
+           "get": [{"name": "B"}], "giveIds": ["a"], "getIds": ["b"], "dMe": 1.0, "dThem": 0.5,
+           "market": {"ratio": 1.0}, "flag": "LIKELY",
+           "me": {"startersIn": [], "startersOut": []}, "them": {"startersIn": [], "startersOut": []}}
+    searched = []
+
+    def fake_search(eng, me, req, flags, shapes, lap):
+        searched.append(req.pid)
+        return {"results": [row], "evaluated": 1, "padded": 0, "matched": 1}, [row], None
+
+    monkeypatch.setattr(M, "_current_season", lambda: 2026)
+    monkeypatch.setattr(M.data, "current_week", lambda s, d: 4)
+    monkeypatch.setattr(M, "_trade_engine", lambda s: (eng, {"my_team_id": 1}))
+    monkeypatch.setattr(M, "_search", fake_search)
+    monkeypatch.setattr(M, "TITLE_ODDS_LIVE", True)
+    monkeypatch.setattr(M, "_title_odds_rows", lambda *a, **k: {0: {"d_playoffs": 0.04, "d_title": 0.01}})
+    monkeypatch.setattr(M, "_searches", M.OrderedDict())
+
+    first = M.trade_search(M.TradeSearchRequest(pid="a", mine=True, odds=False))
+    assert first["odds_pending"] and first["rows"][0]["odds"] is None and first["odds_model"] is None
+    full = M.trade_search(M.TradeSearchRequest(pid="a", mine=True, odds=True))
+    assert not full["odds_pending"] and full["rows"][0]["odds"] == 0.04
+    assert searched == ["a"] and "search_cached" in full["timings"]

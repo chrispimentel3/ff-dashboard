@@ -17,7 +17,7 @@ import gc
 import os
 import threading
 import time
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 
 import pandas as pd
 from fastapi import FastAPI, HTTPException
@@ -269,6 +269,9 @@ class TradeSearchRequest(BaseModel):
     flags: list[str] = PydField(default_factory=lambda: ["LIKELY", "EXPLOIT", "NEEDS_PITCH"])
     two_player: bool = True
     order: str = "accept"  # "accept" (most likely accepted) | "gain" (best for me)
+    # False returns the offers without playoff/title odds — the page asks for those first
+    # (a few seconds) and then again with True, which reuses the search and adds the odds
+    odds: bool = True
 
 
 @app.get("/health")
@@ -342,6 +345,32 @@ def _on_ir(season: int) -> set:
     return {p for t in league.get("teams", []) for p in t.get("ir") or []}
 
 
+_searches: "OrderedDict[tuple, tuple]" = OrderedDict()   # the latest few searches, so the
+SEARCH_KEEP = 8                                         # odds call doesn't search again
+_SEARCH_LOCK = threading.Lock()
+
+
+def _search(eng, me, req, flags, shapes, lap):
+    try:
+        if req.mine:
+            out = TL.find_from_my_player(eng, me, [req.pid], includeFlags=list(flags),
+                                         shapes=list(shapes), topN=40)
+        else:
+            out = TL.find_for_their_player(eng, me, req.pid, include_flags=flags,
+                                           shapes=shapes, top_n=40)
+    except (ValueError, KeyError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    lap("search")
+    results, swap_ids = TL.net_free_swap(eng, me, out["results"])
+    lap("net_free_swap")
+    if req.order == "accept":
+        rank = {"LIKELY": 0, "NEEDS_PITCH": 1, "EXPLOIT": 2, "LONGSHOT": 3}
+        results = sorted(results, key=lambda r: (rank.get(r["flag"], 9), -r["dMe"]))
+    else:
+        results = sorted(results, key=lambda r: -r["dMe"])
+    return out, results, swap_ids
+
+
 @app.post("/trade-search")
 def trade_search(req: TradeSearchRequest):
     """"Trade around one player" — the live search app.py's own Trades tab runs, wrapped
@@ -369,34 +398,29 @@ def trade_search(req: TradeSearchRequest):
 
     shapes = ("1-for-1", "2-for-1") if req.two_player else ("1-for-1",)
     flags = tuple(f.upper().replace(" ", "_") for f in req.flags) or ("LIKELY", "EXPLOIT", "NEEDS_PITCH")
-
-    try:
-        if req.mine:
-            out = TL.find_from_my_player(eng, me, [req.pid], includeFlags=list(flags),
-                                         shapes=list(shapes), topN=40)
-        else:
-            out = TL.find_for_their_player(eng, me, req.pid, include_flags=flags,
-                                           shapes=shapes, top_n=40)
-    except (ValueError, KeyError) as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    lap("search")
-
-    results, swap_ids = TL.net_free_swap(eng, me, out["results"])
-    lap("net_free_swap")
-    if req.order == "accept":
-        rank = {"LIKELY": 0, "NEEDS_PITCH": 1, "EXPLOIT": 2, "LONGSHOT": 3}
-        results = sorted(results, key=lambda r: (rank.get(r["flag"], 9), -r["dMe"]))
+    key = (id(eng), req.pid, req.mine, flags, shapes, req.order)
+    with _SEARCH_LOCK:
+        hit = _searches.get(key)
+        if hit is not None:
+            _searches.move_to_end(key)
+    if hit is not None:
+        out, results, swap_ids = hit
+        lap("search_cached")
     else:
-        results = sorted(results, key=lambda r: -r["dMe"])
+        out, results, swap_ids = _search(eng, me, req, flags, shapes, lap)
+        with _SEARCH_LOCK:
+            _searches[key] = (out, results, swap_ids)
+            while len(_searches) > SEARCH_KEEP:
+                _searches.popitem(last=False)
 
     odds, model, odds_error = {}, None, None
-    if TITLE_ODDS_LIVE:
+    if req.odds and TITLE_ODDS_LIVE:
         try:
             odds = _title_odds_rows(season, next_week, eng, me, results[:SIM_TOP], swap_ids)
             model = "player" if odds else None
         except Exception as e:
             odds, odds_error = {}, f"{type(e).__name__}: {e}"[:300]
-    if not odds:
+    if req.odds and not odds:
         model = "team" if results[:SIM_TOP] else None
         keyrows = [(i, r["partner"]["name"], r["dMe"], r["dThem"]) for i, r in enumerate(results[:SIM_TOP])]
         try:
@@ -440,6 +464,7 @@ def trade_search(req: TradeSearchRequest):
     return {
         "evaluated": out["evaluated"], "padded": out["padded"], "matched": out["matched"],
         "sim_available": bool(odds),
+        "odds_pending": not req.odds,
         "rows": rows,
         "timings": clock,
         # which odds model priced the rows: "player" (title_odds, the offer cards' model)
