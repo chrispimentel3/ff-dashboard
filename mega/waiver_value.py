@@ -281,6 +281,14 @@ def evaluate(b: Board, pid: str, insure_mine: dict, cuffs: dict) -> dict:
     # Against the roster as it stands, not R − d*: if the man we'd cut would himself fill
     # the hole when the starter sits, the add is only worth the difference.
     ins = insure(b, pid, c, Rp, R) if c else 0.0
+    handcuff = bool(c and (c.starter in R or c.starter in {p for p, _ in b.ir}))
+    if b.ctx.players[pid]["pos"] == "QB" and not handcuff:
+        # (J) A quarterback is one slot and a roster already holds two or three. Insurance on
+        # a starter we don't own is a lottery ticket on another team's injury, not cover for
+        # ours — bye and injury cover for our own QBs is COVER and is already counted. Case
+        # Keenum, behind Caleb Williams, was a $7 "insurance" bid for a manager with Young
+        # and Daniels. A QB handcuff to OUR quarterback still counts.
+        ins = 0.0
     lost = insure_mine.get(d, 0.0) if d else 0.0
     drop_lineup = (base - b.value([x for x in R if x != d])) if d else 0.0
     return {
@@ -288,7 +296,7 @@ def evaluate(b: Board, pid: str, insure_mine: dict, cuffs: dict) -> dict:
         "next3": b.average(gain_w, first), "insure": ins, "insure_lost": lost,
         "fit": b.average(start_w) + b.average(cover_w) + ins - lost,
         "drop_id": d, "drop_cost": drop_lineup + lost,
-        "handcuff": bool(c and (c.starter in R or c.starter in {p for p, _ in b.ir})),
+        "handcuff": handcuff,
         "_start_w": start_w, "_cover_w": cover_w,
     }
 

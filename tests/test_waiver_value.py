@@ -224,3 +224,23 @@ def test_a_the_extra_quarterbacks_have_no_fit_on_the_live_week3_roster():
         if qb in r.index:
             assert r.loc[qb, "fit"] <= wv.FIT_MIN, qb
             assert r.loc[qb, "lane"] in ("", "trade_chip"), qb
+
+
+def test_a_backup_qb_behind_someone_elses_starter_has_no_insure():
+    """Keenum behind Caleb Williams was a $7 'insurance' bid for a manager holding two QBs.
+    The starter isn't ours, so there is nothing to insure."""
+    b = board(extra_fa=[_p("fa_qb", "QB", "CHI", 15)])
+    cuffs = wv.make_cuffs(b, {"fa_qb": {"cuff_of": "bq", "clear_two": True, "pos": "QB"}},
+                          xfp_pg={"bq": 20.0}, vol_ratio={}, avail={}, ages={})
+    # make the starter someone on another team that the engine knows
+    b.ctx.players["bq"]["pos"] = "QB"
+    ev = wv.evaluate(b, "fa_qb", {}, cuffs)
+    assert ev["insure"] == 0.0 and ev["handcuff"] is False
+
+
+def test_a_backup_qb_behind_our_own_qb_still_gets_insure():
+    b = board(extra_fa=[_p("fa_qb", "QB", "KC", 15)])
+    cuffs = wv.make_cuffs(b, {"fa_qb": {"cuff_of": "q1", "clear_two": True, "pos": "QB"}},
+                          xfp_pg={"q1": 20.0}, vol_ratio={}, avail={}, ages={})
+    ev = wv.evaluate(b, "fa_qb", {}, cuffs)
+    assert ev["handcuff"] is True and ev["insure"] > 0
