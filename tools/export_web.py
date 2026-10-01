@@ -164,6 +164,27 @@ def main() -> None:
     written.append(rankings_path)
     print(f"wrote {rankings_path.relative_to(ROOT)}")
 
+    # The weekly digest — the week just played and the one coming, in sentences. Built
+    # from the league files and the league.json written above; see mega/digest_web.py.
+    try:
+        from mega import digest_web as _digest_web
+        from mega.config import MY_TEAM as _MY_TEAM
+        from mega.yahoo import cached_fixtures as _cfx, cached_scores as _csc
+
+        _league = json.loads((OUT_DIR / "league.json").read_text())
+        _through = int((_league.get("power_xwins") or {}).get("through_week") or 0)
+        if _digest_web.snapshot_odds(_season, _through, _league.get("playoff_odds") or []):
+            print(f"wrote {_digest_web.ODDS_CSV.relative_to(ROOT)} (week {_through} odds)")
+        _ab = json.loads((OUT_DIR / "action_board.json").read_text())
+        digest = _digest_web.build(_season, _MY_TEAM, _csc(), _cfx(), _league, _ab,
+                                   _digest_web.odds_history(_season))
+        digest_path = OUT_DIR / "digest.json"
+        digest_path.write_text(json.dumps(digest, indent=2, default=str))
+        written.append(digest_path)
+        print(f"wrote {digest_path.relative_to(ROOT)}")
+    except Exception as e:
+        print(f"[export_web] digest failed: {type(e).__name__}: {e}", file=sys.stderr)
+
     if not written:
         sys.exit(1)
 
