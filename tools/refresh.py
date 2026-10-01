@@ -109,7 +109,7 @@ def warnings_() -> list[str]:
             blank = sorted(set(r.loc[r["seat"].str.strip() == "", "team"]))
             for team in blank:
                 out.append(f"unknown seat for team {team!r} — a manager renamed their team. "
-                           "mega/config.py TEAM_BY_SEAT needs updating; confirm the seat from "
+                           "mega/config.py TEAM_BY_SEAT and FORMER_NAMES need updating; confirm the seat from "
                            "whose draft picks are on that roster, not from the name.")
     return out
 

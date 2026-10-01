@@ -152,11 +152,11 @@ def current_rosters(yahoo_rosters: pd.DataFrame | None = None) -> pd.DataFrame:
 
         r, rep = resolve(yahoo_rosters.copy(), name_col="player")
         if "team" in r.columns:
-            from .config import SEAT_BY_TEAM
+            from .teams import seat_for
             # Fill blanks, not just a missing column: the scrape stamps seats with the name
             # map as it stood at pull time, so a renamed team stays seatless until re-pulled.
             seat = pd.to_numeric(r["seat"], errors="coerce") if "seat" in r.columns else pd.Series(float("nan"), index=r.index)
-            r["seat"] = seat.fillna(r["team"].map(SEAT_BY_TEAM))
+            r["seat"] = seat.fillna(r["team"].map(seat_for))
         r.attrs["match"] = rep
         return r
     return rosters_from_draft()

@@ -214,6 +214,10 @@ def test_a_the_extra_quarterbacks_have_no_fit_on_the_live_week3_roster():
     ros = cached_rosters()
     if ros.empty:
         pytest.skip("no cached Yahoo rosters")
+    mine = set(ros.loc[ros["team"] == "TaylorMade", "player"])
+    if not {"Bryce Young", "C.J. Stroud", "Jayden Daniels"} <= mine:
+        # pinned to the week-3 three-QB roster; with two QBs a third has real bye-week fit
+        pytest.skip("TaylorMade no longer carries the week-3 three quarterbacks")
     out = wv.run(2026, 3, ros)
     r = out["rows"].set_index("player")
     for qb in ("Daniel Jones", "Jacoby Brissett", "Kirk Cousins", "Deshaun Watson"):

@@ -29,7 +29,8 @@ import re
 
 import pandas as pd
 
-from .config import DATA, N_TEAMS, SEAT_BY_TEAM
+from . import teams
+from .config import DATA, N_TEAMS
 
 BUDGET = 100           # season FAAB allowance, per team
 # Chris confirmed the league accepts $0 claims (2026-09-23), so an uncontested add costs
@@ -62,7 +63,7 @@ def parse_budgets(page_text: str) -> pd.DataFrame:
         team = m.group("team").strip()
         if team and team not in rows:
             rows[team] = dict(
-                team=team, seat=SEAT_BY_TEAM.get(team),
+                team=team, seat=teams.seat_for(team),
                 rank=int(m.group("rank")), faab_left=int(m.group("faab")),
             )
     if not rows:

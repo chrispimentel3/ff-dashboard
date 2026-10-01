@@ -27,7 +27,8 @@ from pathlib import Path
 import pandas as pd
 from lxml import html as lx
 
-from .config import DATA, LEAGUE_ID, N_TEAMS, SEAT_BY_TEAM, TEAM_BY_SEAT
+from . import teams
+from .config import DATA, LEAGUE_ID, N_TEAMS, TEAM_BY_SEAT
 
 STATE = DATA / "yahoo_state.json"
 MANUAL = DATA / "manual"
@@ -219,21 +220,18 @@ def parse_standings(page_text: str) -> pd.DataFrame:
         dict(
             rank=int(d["rank"]), team=team, manager=d["manager"].strip(),
             wins=int(d["w"]), losses=int(d["l"]), ties=int(d["t"]),
-            seat=_seat_for(team),
+            seat=_seat_for(team, d["manager"]),
         )
         for team, d in seen.items()
     ]
+    for r in rows:      # the roster pages scraped next carry only the name
+        teams.learn(r["team"], r["seat"])
     return pd.DataFrame(rows).sort_values("rank").reset_index(drop=True)
 
 
-def _seat_for(team_name: str) -> int | None:
-    """Draft seat for a team, tolerating in-season renames."""
-    if team_name in SEAT_BY_TEAM:
-        return SEAT_BY_TEAM[team_name]
-    import difflib
-
-    hit = difflib.get_close_matches(team_name, list(SEAT_BY_TEAM), n=1, cutoff=0.6)
-    return SEAT_BY_TEAM[hit[0]] if hit else None
+def _seat_for(team_name: str, manager: str | None = None) -> int | None:
+    """Draft seat for a team, tolerating in-season renames (mega/teams.py)."""
+    return teams.seat_for(team_name, manager)
 
 
 def parse_transactions(html_text: str) -> pd.DataFrame:
@@ -386,7 +384,10 @@ def fixtures(weeks: list[int], session: "LeagueSession | None" = None) -> pd.Dat
 def cached_fixtures() -> pd.DataFrame:
     if not FIXTURES_CSV.is_file():
         return pd.DataFrame(columns=["week", "home", "away"])
-    return pd.read_csv(FIXTURES_CSV).astype({"week": int})
+    df = pd.read_csv(FIXTURES_CSV).astype({"week": int})
+    for c in ("home", "away"):        # older weeks carry the names teams had then
+        df[c] = teams.canonical(df[c])
+    return df
 
 
 def refresh_fixtures(through_week: int = 17, session: "LeagueSession | None" = None) -> pd.DataFrame:
@@ -433,6 +434,8 @@ def cached_scores() -> pd.DataFrame:
     if not SCORES_CSV.is_file():
         return pd.DataFrame(columns=["team", "week", "points", "opponent", "opp_points"])
     df = pd.read_csv(SCORES_CSV)
+    for c in ("team", "opponent"):    # older weeks carry the names teams had then
+        df[c] = teams.canonical(df[c])
     return df.astype({"week": int, "points": float})
 
 

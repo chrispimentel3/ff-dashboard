@@ -24,8 +24,8 @@ TEAM_BY_SEAT = {
     3: "Undisputed",
     4: "Heartbreak Drake",
     5: "L'Omar",
-    6: "Barkley’s Balls Deep",
-    7: "A Place in the Hampton",
+    6: "Allen Moore connection",   # was "Barkley’s Balls Deep" (Andrew), renamed 2026-10-01
+    7: "Saquon Enjoyer",           # was "A Place in the Hampton" (Alex), renamed 2026-10-01
     8: "TaylorMade",
     9: "Revenge of the Smith",
     10: "Don R.I.C.O",
@@ -33,6 +33,20 @@ TEAM_BY_SEAT = {
     12: "Crabcakes and Football",
 }
 SEAT_BY_TEAM = {v: k for k, v in TEAM_BY_SEAT.items()}
+# Earlier names, which older files (scores, fixtures, snapshots) still carry. Matched by
+# manager and roster overlap, never by what the new name suggests — see mega/teams.py.
+FORMER_NAMES = {
+    "TyRick Hill": 2,
+    "Barkley’s Balls Deep": 6,
+    "Barkley's Balls Deep": 6,
+    "A Place in the Hampton": 7,
+}
+# Manager names as the standings page shows them. Teams get renamed; managers haven't,
+# so this is what pins a renamed team to its seat (mega/teams.py).
+MANAGER_BY_SEAT = {
+    1: "J", 2: "Ricardo", 3: "Jamie", 4: "Yasser", 5: "justin", 6: "Andrew",
+    7: "Alex", 8: "Christopher", 9: "julian", 10: "xavier", 11: "Evan", 12: "Colin",
+}
 
 # Names as they appear in the draft-board HTML (some were renamed since draft day).
 DRAFT_BOARD_NAME_BY_SEAT = {
