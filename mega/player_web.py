@@ -170,7 +170,8 @@ def _this_week_section(
            "out_reason": out_reason, "projection": None, "proj_source": None,
            "matchup_mult": None, "matchup_pct": None, "matchup_basis": None,
            "matchup_def_rank": None, "matchup_def_pct": None, "matchup_vegas_pct": None,
-           "matchup_baseline": None, "expected_pts": None, "delta_pts": None}
+           "matchup_baseline": None, "expected_pts": None, "delta_pts": None,
+           "matchup_score": None, "matchup_rank": None, "matchup_n": None}
     if dvp is not None and not dvp.empty:
         m = dvp[(dvp["defense"] == opp) & (dvp["pos"] == ppos)]
         if not m.empty:
@@ -184,9 +185,13 @@ def _this_week_section(
         if not pr.empty and "nfl_est" in pr.columns:
             baseline = _clean(pr["nfl_est"].iloc[0])
     if matchups is not None and not matchups.empty:
-        m = matchups[(matchups["team"] == pteam) & (matchups["opp"] == opp) & (matchups["pos"] == ppos)]
+        # this week only: the frame runs to the end of the season, and a division
+        # rematch later on has the same team, opponent and position
+        wkm = matchups[matchups["week"] == next_week] if "week" in matchups.columns else matchups
+        m = wkm[(wkm["team"] == pteam) & (wkm["opp"] == opp) & (wkm["pos"] == ppos)]
         if not m.empty:
             r = m.iloc[0]
+            out.update(_matchup_score(wkm[wkm["pos"] == ppos]["pct"], r["pct"]))
             out["matchup_mult"] = _clean(r["mult"])
             out["matchup_pct"] = _clean(r["pct"])
             out["matchup_basis"] = r["basis"]
@@ -199,6 +204,20 @@ def _this_week_section(
                 out["expected_pts"] = round(float(baseline) * mult, 1)
                 out["delta_pts"] = round(float(baseline) * (mult - 1), 1)
     return out
+
+
+def _matchup_score(week_pcts: pd.Series, pct) -> dict:
+    """1-10 for the card: where this matchup ranks among the week's matchups at his
+    position (about 32), 10 the best. A rank, not a size — the impact in points sits
+    next to it, and inside ±3% the model can't tell matchups apart (the card says so)."""
+    v = pd.to_numeric(week_pcts, errors="coerce").dropna()
+    pct = _clean(pct)
+    if pct is None or len(v) < 2:
+        return {}
+    rank = int((v > pct).sum()) + 1          # 1 = best matchup of the week
+    n = len(v)
+    return {"matchup_rank": rank, "matchup_n": n,
+            "matchup_score": round(1 + 9 * (n - rank) / (n - 1), 1)}
 
 
 def _game_log_rows(w, gid, ffo, snaps, sched, pfr_id, routes, ppos) -> list[dict]:
