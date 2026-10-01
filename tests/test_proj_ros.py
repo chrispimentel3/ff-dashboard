@@ -73,3 +73,48 @@ def test_the_fitted_file_carries_the_ship_rules():
         assert all(0 <= v <= 1 for v in cfg["blend_w"][pos].values())
         assert set(cfg["disagreement_allowed"][pos]) == {"usage", "efficiency"}
         assert pos in cfg["schedule_lens"]
+
+
+def _qb(p_active, bye=None):
+    wk = {}
+    for w, pa in p_active.items():
+        wk[w] = ({"median": 0.0, "p10": 0.0, "p90": 0.0, "p_active": 0.0, "expected": 0.0, "bye": True}
+                 if w == bye else
+                 {"median": 18.0, "p10": 9.0, "p90": 28.0, "p_active": pa, "expected": round(20 * pa, 2),
+                  "mean_if_active": 20.0})
+    return {"pos": "QB", "weeks": wk, "drivers": []}
+
+
+def test_a_backup_quarterback_plays_only_when_the_starter_does_not():
+    # the starter is 90% to play, so his backup is on the field ~10% of weeks — not 100%
+    players = {"starter": _qb({4: 0.9, 5: 0.9, 6: 0.9}), "backup": _qb({4: 1.0, 5: 1.0, 6: 1.0})}
+    cuffs = pd.DataFrame([{"gsis_id": "backup", "cuff_of": "starter", "pos": "QB", "team": "CHI", "share": 1.0}])
+    P._backup_qbs(players, cuffs)
+    b = players["backup"]
+    assert b["backup_of"] == "starter"
+    assert b["weeks"][4]["p_active"] == pytest.approx(0.1)
+    assert b["weeks"][4]["expected"] == pytest.approx(2.0)
+    assert b["weeks"][4]["mean_if_active"] == 20.0          # per game played is untouched
+    assert b["start_p"] == pytest.approx(0.1)
+    assert "starter" in players and "backup_of" not in players["starter"]
+
+
+def test_a_backup_starts_every_week_the_starter_is_out_and_skips_the_bye():
+    players = {"s": _qb({4: 0.0, 5: 0.0, 6: 0.9}, bye=5), "b": _qb({4: 1.0, 5: 1.0, 6: 1.0}, bye=5)}
+    cuffs = pd.DataFrame([{"gsis_id": "b", "cuff_of": "s", "pos": "QB", "team": "CHI", "share": 1.0}])
+    P._backup_qbs(players, cuffs)
+    assert players["b"]["weeks"][4]["expected"] == pytest.approx(20.0)
+    assert players["b"]["weeks"][5].get("bye") and players["b"]["weeks"][5]["expected"] == 0.0
+    assert players["b"]["start_p"] == pytest.approx((1.0 + 0.1) / 2)
+
+
+def test_backup_rule_leaves_non_quarterbacks_and_chained_cuffs_alone():
+    rb = {"pos": "RB", "weeks": {4: {"p_active": 1.0, "expected": 10.0, "mean_if_active": 10.0}}, "drivers": []}
+    players = {"a": rb, "b": _qb({4: 1.0}), "c": _qb({4: 1.0})}
+    cuffs = pd.DataFrame([
+        {"gsis_id": "a", "cuff_of": "b", "pos": "RB", "team": "X", "share": 1.0},
+        {"gsis_id": "b", "cuff_of": "c", "pos": "QB", "team": "X", "share": 1.0},
+    ])
+    P._backup_qbs(players, cuffs)
+    assert rb["weeks"][4]["expected"] == 10.0 and "backup_of" not in rb
+    assert players["b"]["backup_of"] == "c"

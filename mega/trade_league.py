@@ -133,6 +133,10 @@ def build_league(season: int, yahoo_rosters: pd.DataFrame | None = None) -> dict
         pr = proj.get(gid) if isinstance(gid, str) else None
         if pr and pos in ("QB", "RB", "WR", "TE"):
             ppg, src = pr["ros_pg"], "proj_ros"
+            if pr.get("backup_of"):
+                # a backup QB is on the field only when the starter isn't: his number per
+                # game PLAYED is not what a roster spot on him earns (proj_ros._backup_qbs)
+                ppg = ppg * float(pr.get("start_p") or 0.0)
             weekly = {int(w): float(v["expected"]) for w, v in (pr.get("weeks") or {}).items()}
             # share of his remaining (non-bye) games he's projected to play — what an
             # injured-reserve player is worth relative to a healthy one (trade_engine.ir_value)

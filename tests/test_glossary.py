@@ -97,8 +97,8 @@ def test_an_unknown_code_passes_through_rather_than_vanishing():
 
 def test_the_glossary_frame_is_complete_and_grouped():
     f = g.frame()
-    assert set(f["group"]) == {"Role", "Flag", "How long", "Vegas"}
-    assert len(f) == len(g.ROLES) + len(g.FLAGS) + len(g.VEGAS) + 2
+    assert set(f["group"]) == {"Role", "Flag", "How long", "Vegas", "Matchup"}
+    assert len(f) == len(g.ROLES) + len(g.FLAGS) + len(g.VEGAS) + len(g.MATCHUP) + 2
     assert f["what it means"].str.len().min() > 25
 
 

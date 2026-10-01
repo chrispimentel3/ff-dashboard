@@ -168,6 +168,38 @@
           "why it matters": "Trust a FULL row as the market's opinion. Treat the others as mostly the market's, with a patch."
         }
       ]
+    },
+    {
+      "key": "Matchup",
+      "title": "Matchup \u2014 the tags on the lineup, waiver and trade pages",
+      "lede": "Short tags instead of sentences. Each appears only when it says something; hover one for the full sentence.",
+      "rows": [
+        {
+          "tag": "Great / Good / Neutral / Tough / Very tough matchup",
+          "what it means": "How much this week's game helps or hurts him against a normal week for him: the opposing defense and the betting line, combined. Neutral means within 3%, which the model can't reliably tell apart from a normal week. The points beside it (+1.3 pts) are what that percentage is worth to him.",
+          "why it matters": "It moves a close start/sit call, it doesn't make one. A great matchup for a bad player is still a bad play."
+        },
+        {
+          "tag": "Easy D / Tough D",
+          "what it means": "The defense he faces ranks in the easiest eight or the toughest eight against his position, out of 32.",
+          "why it matters": "Shown only when the defense is the reason, not for an average one."
+        },
+        {
+          "tag": "Vegas: team +5%",
+          "what it means": "The betting line (spread and total) has his team scoring 5% more than usual this week. Negative means less.",
+          "why it matters": "A team expected to score a lot gives every player on it more to work with. Shown only when the move is 2% or more."
+        },
+        {
+          "tag": "Props 19.3 \u25b2 / \u25bc",
+          "what it means": "The sportsbook player-prop projection for him this week, with an arrow when it is at least half a point above (\u25b2) or below (\u25bc) ours.",
+          "why it matters": "Built from different evidence than ours \u2014 when they disagree, one of them knows something."
+        },
+        {
+          "tag": "Next 4: Good",
+          "what it means": "The same matchup verdict, averaged over his next four games instead of this week. A bye isn't counted as a game.",
+          "why it matters": "Waiver and trade decisions are about the rest of the season, so the schedule matters more there than it does for one start/sit call."
+        }
+      ]
     }
   ]
 }

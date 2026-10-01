@@ -18,6 +18,9 @@ GROUPS = [
     ("How long", "How long it has held",
      "The difference between a pattern and a good afternoon."),
     ("Vegas", "Vegas — what the betting market says", GL.VEGAS_HEADLINE),
+    ("Matchup", "Matchup — the tags on the lineup, waiver and trade pages",
+     "Short tags instead of sentences. Each appears only when it says something; hover one "
+     "for the full sentence."),
 ]
 
 

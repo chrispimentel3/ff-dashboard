@@ -212,6 +212,41 @@ VEGAS: dict[str, Term] = {
                  kind="vegas"),
 }
 
+# ---------------------------------------------------------------- matchup tags
+MATCHUP: dict[str, Term] = {
+    "VERDICT": Term("VERDICT", "Great / Good / Neutral / Tough / Very tough matchup",
+                    "How much this week's game helps or hurts him against a normal week for him: "
+                    "the opposing defense and the betting line, combined. Neutral means within "
+                    "3%, which the model can't reliably tell apart from a normal week. The "
+                    "points beside it (+1.3 pts) are what that percentage is worth to him.",
+                    "It moves a close start/sit call, it doesn't make one. A great matchup for "
+                    "a bad player is still a bad play.",
+                    kind="matchup"),
+    "EASY-D": Term("EASY-D", "Easy D / Tough D",
+                   "The defense he faces ranks in the easiest eight or the toughest eight "
+                   "against his position, out of 32.",
+                   "Shown only when the defense is the reason, not for an average one.",
+                   kind="matchup"),
+    "VEGAS-TEAM": Term("VEGAS-TEAM", "Vegas: team +5%",
+                       "The betting line (spread and total) has his team scoring 5% more than "
+                       "usual this week. Negative means less.",
+                       "A team expected to score a lot gives every player on it more to work "
+                       "with. Shown only when the move is 2% or more.",
+                       kind="matchup"),
+    "PROPS": Term("PROPS", "Props 19.3 ▲ / ▼",
+                  "The sportsbook player-prop projection for him this week, with an arrow when "
+                  "it is at least half a point above (▲) or below (▼) ours.",
+                  "Built from different evidence than ours — when they disagree, one of them "
+                  "knows something.",
+                  kind="matchup"),
+    "NEXT4": Term("NEXT4", "Next 4: Good",
+                  "The same matchup verdict, averaged over his next four games instead of "
+                  "this week. A bye isn't counted as a game.",
+                  "Waiver and trade decisions are about the rest of the season, so the "
+                  "schedule matters more there than it does for one start/sit call.",
+                  kind="matchup"),
+}
+
 VEGAS_HEADLINE = (
     "**Vegas pts** is this week's sportsbook player props scored in half-PPR. One thing "
     "worth knowing: a posted line is the **middle** outcome, not the average one. Weekly "
@@ -241,6 +276,10 @@ def frame(kind: str = "all") -> pd.DataFrame:
         for t in VEGAS.values():
             rows.append({"tag": t.label, "code": t.code, "what it means": t.plain,
                          "why it matters": t.matters, "group": "Vegas"})
+    if kind in ("all", "matchup"):
+        for t in MATCHUP.values():
+            rows.append({"tag": t.label, "code": t.code, "what it means": t.plain,
+                         "why it matters": t.matters, "group": "Matchup"})
     return pd.DataFrame(rows)
 
 

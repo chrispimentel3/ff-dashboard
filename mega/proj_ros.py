@@ -40,6 +40,11 @@ PRIOR_MIN_GAMES = 4           # a previous season shorter than this is not a pri
 
 DEFAULT_PARAMS = {"h": 3.0, "k_s": 2.0, "k_t": 4.0, "k_eff": 32.0}
 
+# (J) Mid-week, before the final report is out: a player who sat out practice is probably
+# not playing. Used only for the week about to be played, and only when the report itself
+# has no status yet — a published status (cg.status_p_active) always wins.
+DNP_P_ACTIVE = 0.35
+
 
 # ======================================================================== inputs
 @functools.lru_cache(maxsize=8)
@@ -231,6 +236,41 @@ def _current_teams(season: int) -> dict:
         return {}
 
 
+def _backup_qbs(players: dict, cuffs: pd.DataFrame) -> None:
+    """A backup quarterback plays only when the starter doesn't.
+
+    Shares are measured over the games a player appeared in, so a backup who relieved an
+    injured starter once reads as 100% of his team's passing — and the starter keeps his
+    own ~90%, so the team's one quarterback slot was being counted twice. Case Keenum, one
+    relief game behind Caleb Williams, came out as the league's #2 quarterback and a $21
+    bid. His chance of playing in a week is the starter's chance of not:
+
+        P(plays, w) = P(active, w) × (1 − P(starter active, w))
+
+    His per-game number stays "if he plays" (`ros_pg`); `p_active`, `expected` and the
+    `start_p` summary carry the share of weeks he is expected to be the one under center.
+    """
+    if cuffs is None or cuffs.empty:
+        return
+    qb = cuffs[cuffs["pos"] == "QB"]
+    starters = set(qb["cuff_of"])
+    for r in qb.itertuples():
+        me, st = players.get(r.gsis_id), players.get(r.cuff_of)
+        if not me or not st or r.gsis_id in starters or me["pos"] != "QB" or st["pos"] != "QB":
+            continue
+        ps = []
+        for w, v in me["weeks"].items():
+            if v.get("bye"):
+                continue
+            p_start = float(v["p_active"]) * (1.0 - float((st["weeks"].get(w) or {}).get("p_active", 1.0)))
+            v["p_active"] = round(p_start, 3)
+            v["expected"] = round(float(v["mean_if_active"]) * p_start, 2)
+            ps.append(p_start)
+        me["backup_of"] = r.cuff_of
+        me["start_p"] = round(sum(ps) / len(ps), 3) if ps else 0.0
+        me["drivers"] = [f"backup: plays only when the starter doesn't — about {me['start_p']:.0%} of the weeks left"] + me["drivers"]
+
+
 def build(season: int, now: int, write: bool = True) -> dict:
     """The live projection: data/proj_ros_<season>.json.
 
@@ -275,6 +315,9 @@ def build(season: int, now: int, write: bool = True) -> dict:
     if inj is not None and not inj.empty:
         cw = inj[pd.to_numeric(inj["week"], errors="coerce") == int(now)]
         status_now = dict(zip(cw["gsis_id"], cw["report_status"].fillna("")))
+        practice_now = dict(zip(cw["gsis_id"], cw["practice_status"].fillna("")))
+    else:
+        practice_now = {}
     kick = pd.Timestamp(f"{season}-09-01")
     ages = {g: (kick - d).days / 365.25 for g, d in _birthdays().items() if pd.notna(d)}
     quant = cfg.get("quantiles") or {}
@@ -297,7 +340,12 @@ def build(season: int, now: int, write: bool = True) -> dict:
             if a and w < a["back"]:
                 pa = 0.0
             elif w == now:
-                pa = cg.status_p_active(status_now.get(r.gsis_id, "")) if status_now.get(r.gsis_id) else 1.0
+                if status_now.get(r.gsis_id):
+                    pa = cg.status_p_active(status_now[r.gsis_id])
+                elif "did not participate" in str(practice_now.get(r.gsis_id, "")).lower():
+                    pa = DNP_P_ACTIVE
+                else:
+                    pa = 1.0
             else:
                 pa = 1.0 - cg.miss_hazard(r.pos, ages.get(r.gsis_id), w - now)
             base = float(r.ros_pg) * ratio.get((team, w), 1.0) ** fw.GAMMA
@@ -333,6 +381,7 @@ def build(season: int, now: int, write: bool = True) -> dict:
                 **{f"vol_{c}": round(float(getattr(r, f"vol_{c}")), 2) for c in COMPONENTS}},
             "drivers": drivers, "weeks": wk,
         }
+    _backup_qbs(players, S.handcuffs(season))
     out = {"meta": {"season": season, "week": now, "band": b, "params": cfg.get("params"),
                     "fitted": cfg.get("fitted"), "players": len(players),
                     "ecr_scrape": str(ecr["scrape_date"].max()) if "scrape_date" in ecr else None},

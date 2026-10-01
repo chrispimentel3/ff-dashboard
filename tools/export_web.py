@@ -169,6 +169,22 @@ def main() -> None:
     written.append(rankings_path)
     print(f"wrote {rankings_path.relative_to(ROOT)}")
 
+    # Next-four-games matchup outlook per team x position, for the waiver and trade pages
+    # (rest-of-season question, not this week's start/sit) — see mega/schedule_web.py.
+    try:
+        from mega import schedule_web as _schedule_web
+        from mega.lookup import player_index as _player_index
+        _pidx = _player_index(
+            {_season: _data.load_player_stats(_season), _season - 1: _data.load_player_stats(_season - 1)},
+            _data.load_rosters(_season))
+        schedule_path = OUT_DIR / "schedule.json"
+        schedule_path.write_text(json.dumps(
+            _schedule_web.build(_season, _next_week, _pidx), separators=(",", ":"), default=str))
+        written.append(schedule_path)
+        print(f"wrote {schedule_path.relative_to(ROOT)}")
+    except Exception as e:
+        print(f"[export_web] schedule outlook failed: {type(e).__name__}: {e}", file=sys.stderr)
+
     # The weekly digest — the week just played and the one coming, in sentences. Built
     # from the league files and the league.json written above; see mega/digest_web.py.
     try:
