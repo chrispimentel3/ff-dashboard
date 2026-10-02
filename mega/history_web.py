@@ -22,12 +22,18 @@ from .config import FORMER_NAMES, MY_TEAM, SEAT_BY_TEAM, TEAM_BY_SEAT
 SEASONS_DIR = Path(__file__).resolve().parents[1] / "data" / "history" / "seasons"
 
 
+def _norm(name: str) -> str:
+    """Spacing, case and apostrophe style only — "Bills Mafia" and "BillsMafia" are one team,
+    "Steve" and "Steven" are not."""
+    return "".join(ch for ch in (name or "").replace("’", "'").casefold() if not ch.isspace())
+
+
 def _seat(team: str) -> int | None:
-    """Draft seat for a team name, exact matches only (curly and straight apostrophes alike)."""
-    flat = (team or "").replace("’", "'")
+    """Draft seat for a team name, exact up to spacing, case and apostrophe style."""
+    flat = _norm(team)
     for known in (SEAT_BY_TEAM, FORMER_NAMES):
         for name, seat in known.items():
-            if name.replace("’", "'") == flat:
+            if _norm(name) == flat:
                 return seat
     return None
 

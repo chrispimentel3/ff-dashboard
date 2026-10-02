@@ -26,6 +26,27 @@ from mega.yahoo import AuthExpired, LeagueSession  # noqa: E402
 
 OUT = ROOT / "data" / "history" / "seasons"
 DELAY = 8.0     # seconds between page loads; the module's own 4s is what got us blocked
+RETRIES = 3     # for a dropped connection only; "Request denied" and an expired session never retry
+RETRY_WAIT = 30.0
+
+
+def _patient(fn):
+    """Retry a page load that failed on OUR network (timeout, network changed), waiting between
+    tries. A rate-limit or auth error is not a network error and passes straight through."""
+    import time
+
+    def wrapped(*a, **k):
+        for attempt in range(1, RETRIES + 1):
+            try:
+                return fn(*a, **k)
+            except (yh.RateLimited, AuthExpired):
+                raise
+            except Exception as e:
+                if "net::ERR_" not in str(e) or attempt == RETRIES:
+                    raise
+                print(f"[history] network hiccup ({str(e).splitlines()[0][-60:]}); retry {attempt}/{RETRIES - 1} in {RETRY_WAIT:.0f}s")
+                time.sleep(RETRY_WAIT)
+    return wrapped
 
 
 def path(year: int) -> Path:
@@ -56,6 +77,7 @@ def main(argv: list[str]) -> int:
         return 7
 
     yh.REQUEST_DELAY = DELAY
+    yh.roster, yh.standings = _patient(yh.roster), _patient(yh.standings)
     print(f"[history] pulling {year} (league {yh.SEASON_LEAGUE_IDS[year]}), {DELAY:.0f}s between pages")
     try:
         with LeagueSession() as s:

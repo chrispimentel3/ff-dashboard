@@ -61,3 +61,8 @@ def test_all_time_merges_known_names_by_seat_and_never_fuzzy_matches(tmp_path, m
 def test_apostrophes_match_whichever_way_yahoo_spelled_them():
     assert H._seat("Barkley's Balls Deep") == H._seat("Barkley’s Balls Deep") == 6
     assert H._seat("Nobody") is None
+
+
+def test_spacing_and_case_variants_are_one_team_but_near_names_are_not():
+    assert H._seat("Bills Mafia") == H._seat("BillsMafia") == 11
+    assert H._seat("steven's sus team") is None
