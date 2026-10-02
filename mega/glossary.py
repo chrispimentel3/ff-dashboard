@@ -225,7 +225,8 @@ MATCHUP: dict[str, Term] = {
     "EASY-D": Term("EASY-D", "Easy D / Tough D",
                    "The defense he faces ranks in the easiest eight or the toughest eight "
                    "against his position, out of 32.",
-                   "Shown only when the defense is the reason, not for an average one.",
+                   "Shown only when the defense is the reason, not for an average one. On a phone, tap any "
+                   "tag to read its explanation.",
                    kind="matchup"),
     "VEGAS-TEAM": Term("VEGAS-TEAM", "Vegas: team +5%",
                        "The betting line (spread and total) has his team scoring 5% more than "
@@ -241,7 +242,8 @@ MATCHUP: dict[str, Term] = {
                   kind="matchup"),
     "NEXT4": Term("NEXT4", "Next 4: Good",
                   "The same matchup verdict, averaged over his next four games instead of "
-                  "this week. A bye isn't counted as a game.",
+                  "this week. A bye isn't counted as a game. An average of four games is steadier than "
+                  "one, so it is judged on a tighter band: Neutral is within about 1.5%.",
                   "Waiver and trade decisions are about the rest of the season, so the "
                   "schedule matters more there than it does for one start/sit call.",
                   kind="matchup"),

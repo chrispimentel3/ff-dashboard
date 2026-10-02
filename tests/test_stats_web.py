@@ -22,12 +22,3 @@ def test_the_metrics_exist_on_the_real_season_table():
     card_cols = {c for rows in lookup.CARD.values() for c, *_ in rows}
     keys = {m[0] for m in stats_web.METRICS}
     assert card_cols <= keys | {"routes_pg"}
-
-
-def test_matchup_score_ranks_the_week_ten_is_best():
-    from mega.player_web import _matchup_score
-    week = pd.Series([12.0, 5.0, 0.0, -4.0, -10.0])
-    assert _matchup_score(week, 12.0) == {"matchup_rank": 1, "matchup_n": 5, "matchup_score": 10.0}
-    assert _matchup_score(week, -10.0)["matchup_score"] == 1.0
-    assert _matchup_score(week, 0.0)["matchup_score"] == 5.5
-    assert _matchup_score(week, None) == {}

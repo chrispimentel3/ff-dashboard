@@ -45,3 +45,12 @@ def test_series_exports_everyone_with_position_and_mine_flag(tmp_path):
     assert out["info"]["A"] == {"pos": "WR", "mine": True} and out["info"]["Z"]["mine"] is False
     assert len(out["rows"]) == 3
     assert out["movers"]["up"][0]["player"] == "A"
+
+
+def test_movers_can_be_limited_to_players_who_matter():
+    df = _df([(3, "a", "A", "WR", 1000), (4, "a", "A", "WR", 2000),
+              (3, "z", "Z", "WR", 1000), (4, "z", "Z", "WR", 5000)])
+    assert [r["player"] for r in T.movers(df, "value", set(), only={"a"})["up"]] == ["A"]
+    assert [r["player"] for r in T.movers(df, "value", set(), only=None)["up"]] == ["Z", "A"]
+    # but your own players are always eligible
+    assert [r["player"] for r in T.movers(df, "value", {"z"}, only={"a"})["up"]] == ["Z", "A"]
