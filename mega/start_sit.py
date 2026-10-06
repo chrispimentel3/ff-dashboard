@@ -23,7 +23,7 @@ COLS = [
     # what that's worth in points, and its two parts (defense rank, Vegas team line)
     "matchup_pct", "matchup_pts", "matchup_def_rank", "matchup_vegas_pct", "matchup_basis",
 ]
-SLOT_ORDER = {"QB": 0, "RB": 1, "WR": 2, "TE": 3, "FLEX": 4}
+SLOT_ORDER = {"QB": 0, "RB": 1, "WR": 2, "TE": 3, "FLEX": 4, "K": 5, "DEF": 6}
 
 
 def _records(df: pd.DataFrame | None) -> list[dict]:
@@ -95,3 +95,20 @@ def build(lu: pd.DataFrame | None, ts: pd.DataFrame, next_week: int) -> dict:
         "bench": _records(bview),
         "next_week": next_week,
     }
+
+
+def add_kdef(payload: dict, rows: list[dict]) -> dict:
+    """Fold my kicker and defense (mega/kdef.py lineup_rows) into a built payload: the
+    starter of each joins the lineup and the projected total, any second one the bench."""
+    if not payload.get("available") or not rows:
+        return payload
+    out = dict(payload)
+    old = float((out.get("kpis") or {}).get("proj_total") or 0.0)
+    starts = [{k: v for k, v in r.items() if k != "start"} for r in rows if r["start"]]
+    out["starters"] = list(out["starters"]) + starts
+    out["bench"] = list(out["bench"]) + [{k: v for k, v in r.items() if k != "start"} for r in rows if not r["start"]]
+    new = round(old + sum(float(r["proj_adj"]) for r in starts), 1)
+    out["kpis"] = {**out["kpis"], "proj_total": new, "starters_n": len(out["starters"])}
+    # ponytail: the headline's number is swapped in place; build() owns its wording
+    out["headline"] = out["headline"].replace(f"{old:.0f} points", f"{new:.0f} points", 1)
+    return out

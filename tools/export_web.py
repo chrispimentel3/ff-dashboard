@@ -164,8 +164,43 @@ def main() -> None:
     _next_week = min(_data.current_week(_season, 1), 18)
     _gsis_list, _ = _data.my_gsis_ids(_data.my_roster()[0])
     rankings_path = OUT_DIR / "rankings.json"
-    rankings_path.write_text(json.dumps(
-        _rankings_web.build(_season, _next_week, set(_gsis_list)), indent=2, default=str))
+    _rankings = _rankings_web.build(_season, _next_week, set(_gsis_list))
+
+    # Kickers and defenses (mega/kdef.py): ranked alongside everyone else, folded into my
+    # start/sit, streamed on the waivers page, and added to the stats table. Outside the
+    # Streamlit run like the rest of this tier; a failure here leaves those files as built.
+    try:
+        from mega import faab as _fb
+        from mega import kdef as _kdef
+        from mega import start_sit as _start_sit
+        from mega import stats_web as _stats_web
+        from mega.config import MY_TEAM as _MY_TEAM
+        from mega.yahoo import cached_rosters as _cros0
+
+        _kros = _kdef.rostered(_cros0())
+        _rankings["rows"] = list(_rankings.get("rows") or []) + _kdef.ranking_rows(_season, _next_week, _kros, _MY_TEAM)
+        _ss_path = OUT_DIR / "start_sit.json"
+        _ss_path.write_text(json.dumps(_start_sit.add_kdef(
+            json.loads(_ss_path.read_text()), _kdef.lineup_rows(_season, _next_week, _kros, _MY_TEAM)),
+            indent=2, default=str))
+        _bud = _fb.cached_budgets()
+        _left = dict(zip(_bud["team"], _bud["faab_left"])) if not _bud.empty else {}
+        _wv_path = OUT_DIR / "waivers.json"
+        _wv = json.loads(_wv_path.read_text())
+        _wv["streamers"] = _kdef.streamers(_season, _next_week, _kros, _MY_TEAM, _left,
+                                           int(_left.get(_MY_TEAM, _fb.BUDGET)))
+        _wv_path.write_text(json.dumps(_wv, indent=2, default=str))
+        _st_path = OUT_DIR / "stats_table.json"
+        if _st_path.is_file():
+            _st_rows = [r for s_ in (_season, _season - 1) for r in _kdef.season_rows(s_, _kros, _MY_TEAM)]
+            _st_path.write_text(json.dumps(_stats_web.add_kdef(json.loads(_st_path.read_text()), _st_rows,
+                                                               _kdef.SEASON_METRICS),
+                                           separators=(",", ":"), default=str))
+        print("wrote K/DEF into rankings, start_sit, waivers and stats_table")
+    except Exception as e:
+        print(f"[export_web] K/DEF failed: {type(e).__name__}: {e}", file=sys.stderr)
+
+    rankings_path.write_text(json.dumps(_rankings, indent=2, default=str))
     written.append(rankings_path)
     print(f"wrote {rankings_path.relative_to(ROOT)}")
 

@@ -22,7 +22,7 @@ from . import teams
 from .config import DATA
 
 BENCH = {"BN", "IR", "IR+", "NA"}
-# no K or DEF projections exist anywhere in the pipeline; a league-average week stands in
+# league-average weeks, only for a K or DEF the rankings rows (mega/kdef.py) don't project
 K_PROJ, DEF_PROJ = 8.0, 7.0
 # nflverse -> ESPN team abbreviations, where they differ
 ESPN_ABBR = {"WAS": "WSH", "LA": "LAR"}
@@ -62,8 +62,11 @@ def build(season: int, week: int, rosters: pd.DataFrame, fixtures: pd.DataFrame,
     r = rosters.copy()
     r["team"] = teams.canonical(r["team"])
 
-    proj, nfl_team = {}, {}
+    proj, nfl_team, def_proj = {}, {}, {}
     for row in rankings_rows or []:
+        if row.get("pos") == "DEF":
+            def_proj[ESPN_ABBR.get(row["team"], row["team"])] = row.get("proj")
+            continue
         k = key(row["player"])
         proj.setdefault(k, row.get("proj"))
         if row.get("team"):
@@ -87,8 +90,10 @@ def build(season: int, week: int, rosters: pd.DataFrame, fixtures: pd.DataFrame,
                 continue
             if slot == "DEF":
                 abbr = nick.get(key(name)) or (p.get("nfl_team") if isinstance(p.get("nfl_team"), str) else None)
+                dp = def_proj.get(abbr)
                 starters.append({"slot": slot, "player": name, "key": f"DEF:{abbr}" if abbr else None,
-                                 "nfl_team": abbr, "proj": DEF_PROJ, "proj_avg": True})
+                                 "nfl_team": abbr, "proj": float(dp) if dp is not None else DEF_PROJ,
+                                 **({} if dp is not None else {"proj_avg": True})})
                 continue
             k = key(name)
             roster_tm = p.get("nfl_team") if isinstance(p.get("nfl_team"), str) else None
@@ -96,7 +101,7 @@ def build(season: int, week: int, rosters: pd.DataFrame, fixtures: pd.DataFrame,
             pr = proj.get(k)
             row = {"slot": slot, "player": name, "key": k, "nfl_team": tm,
                    "proj": float(pr) if pr is not None else (K_PROJ if slot == "K" else 0.0)}
-            if slot == "K" or pr is None:
+            if pr is None:
                 row["proj_avg"] = slot == "K"
             starters.append(row)
         out_teams[str(team)] = starters

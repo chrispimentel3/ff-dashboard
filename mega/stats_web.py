@@ -17,17 +17,18 @@ import math
 import pandas as pd
 
 ALL = ("QB", "RB", "WR", "TE")
+EVERY = ALL + ("K", "DEF")
 REC = ("RB", "WR", "TE")
 WRTE = ("WR", "TE")
 
 # (column, label, kind, positions, what it means) — kind is "pct" (0.25 -> 25%), "num",
 # "int" or "signed"
 METRICS = [
-    ("pts_pg", "Fantasy pts/game", "num", ALL, "Half-PPR points per game."),
+    ("pts_pg", "Fantasy pts/game", "num", EVERY, "Half-PPR points per game (Yahoo default scoring for K and DEF)."),
     ("xfp_pg", "Expected pts/game", "num", ALL, "What his volume should score (nflverse expected points)."),
     ("vs_exp_pg", "Pts over expected/game", "signed", ALL, "Scoring above (+) or below (−) his opportunity."),
-    ("pts", "Fantasy pts (total)", "num", ALL, ""),
-    ("games", "Games", "int", ALL, ""),
+    ("pts", "Fantasy pts (total)", "num", EVERY, ""),
+    ("games", "Games", "int", EVERY, ""),
     ("snap_pct", "Snap share", "pct", ALL, "Share of his offense's plays he was on the field for."),
     ("routes_pg", "Routes/game (est.)", "num", WRTE, "Snap share × team dropbacks — nflverse has no charted routes."),
     ("routes", "Routes (total, est.)", "int", WRTE, ""),
@@ -105,3 +106,19 @@ def build(seasons: dict[int, dict], owners: dict[str, dict]) -> dict:
         "columns": ID_COLS + cols,
         "rows": rows,
     }
+
+
+def add_kdef(payload: dict, rows: list[dict], metrics: list[tuple]) -> dict:
+    """Append kickers and defenses (mega/kdef.py season_rows / SEASON_METRICS) to a built
+    table: their extra metrics become columns, and every other row gets None there."""
+    if not rows:
+        return payload
+    extra = [m for m in metrics if m[0] not in payload["columns"]]
+    cols = list(payload["columns"]) + [m[0] for m in extra]
+    pad = [None] * len(extra)
+    body = [list(r) + pad for r in payload["rows"]]
+    body += [[r.get(c) if c in ID_COLS else _num(r.get(c)) for c in cols] for r in rows]
+    return {**payload, "available": True, "columns": cols, "rows": body,
+            "metrics": list(payload["metrics"]) + [{"key": k, "label": label, "kind": kind,
+                                                    "positions": list(pos), "means": means}
+                                                   for k, label, kind, pos, means in extra]}

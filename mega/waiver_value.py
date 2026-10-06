@@ -522,6 +522,20 @@ RIVAL_MIN = COVER_ONLY_START   # (J) pts/wk net a rival must gain to bother bidd
                                # settled claims drew 2-5 bidders, not the 6-9 a 0.02 floor implies
 
 
+def bid_vs_rivals(top: int, who: str, n: int, fit: float, max_bid: int) -> tuple[int, str]:
+    """(bid, why) once the likeliest top rival bid is known — shared with the K/DEF
+    streamers (mega/kdef.py) so every claim on the board follows one rule."""
+    if top <= 0:
+        return (1 if fit > 0.05 else 0,
+                "no other team gains enough from him to bid" if n == 0 else
+                f"{n} other team{'s' if n > 1 else ''} would add him, none likely to pay")
+    if top + 1 <= max_bid:
+        return top + 1, f"beats {who}'s likely ${top} ({n} team{'s' if n > 1 else ''} interested)"
+    if top <= max_bid:
+        return int(max_bid), f"matches {who}'s likely ${top}; a tie goes to the worse record"
+    return 0, f"likely outbid: {who} ~${top}, over your ${max_bid} ceiling"
+
+
 def rival_bids(b: Board, rows: pd.DataFrame, faab_left: dict, now: int) -> pd.DataFrame:
     """Price each claim against the other eleven rosters (handoff §5.4: beat the likeliest
     top bid by a dollar, or walk away).
@@ -580,19 +594,7 @@ def rival_bids(b: Board, rows: pd.DataFrame, faab_left: dict, now: int) -> pd.Da
             bid = fb.suggest(g, int(faab_left.get(t["name"], 0)), now)["bid"]
             if bid > top:
                 top, who = bid, t["name"]
-        if top <= 0:
-            bid = 1 if r.fit > 0.05 else 0
-            note = ("no other team gains enough from him to bid" if n == 0 else
-                    f"{n} other team{'s' if n > 1 else ''} would add him, none likely to pay")
-        elif top + 1 <= r.max_bid:
-            bid = top + 1
-            note = f"beats {who}'s likely ${top} ({n} team{'s' if n > 1 else ''} interested)"
-        elif top <= r.max_bid:
-            bid = int(r.max_bid)
-            note = f"matches {who}'s likely ${top}; a tie goes to the worse record"
-        else:
-            bid = 0
-            note = f"likely outbid: {who} ~${top}, over your ${r.max_bid} ceiling"
+        bid, note = bid_vs_rivals(top, who, n, r.fit, r.max_bid)
         for k, v in (("bid", bid), ("rival_top", top), ("rival_team", who), ("rivals_n", n), ("bid_note", note)):
             cols[k].append(v)
     return rows.assign(**cols)
