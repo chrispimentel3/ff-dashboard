@@ -590,11 +590,12 @@ def run(season: int, now: int, yahoo_rosters: pd.DataFrame | None = None) -> dic
 
     avail = availability(S.injuries(season), _rosters_weekly(season), now)
     from .ids import norm
-    from .status import out_for_season
-    gone = out_for_season()           # data/player_status.csv: not playing again this season
+    from .status import back_weeks
+    held = back_weeks(now)           # data/player_status.csv: Chris's word on who is out
     for pid, p in lg["players"].items():
-        if norm(p["name"]) in gone:
-            avail[pid] = {"status": "Out", "back": LAST_WEEK + 1}
+        b = held.get(norm(p["name"]))
+        if b and b > (avail.get(pid) or {}).get("back", 0):
+            avail[pid] = {"status": "Out", "back": b}
     sched = S.schedules(season)
     b = build_board(lg, cfg, my_id, now, avail, bye_weeks(sched))
 

@@ -52,6 +52,20 @@ def out_for_season() -> dict[str, str]:
     return {r.norm: _label(r) for r in o.itertuples()}
 
 
+SEASON_BACK = 18     # "back" week for someone out for the season: one past the final
+
+
+def back_weeks(now: int) -> dict[str, int]:
+    """norm -> the first NFL week he plays again, for everyone still ruled out of `now`
+    or later. A blank through_week is the rest of the season. A row that has run its
+    course (through_week before `now`) says nothing."""
+    o = overrides()
+    o = o[o["status"] == "OUT"]
+    back = {r.norm: SEASON_BACK if pd.isna(r.through_week) else int(r.through_week) + 1
+            for r in o.itertuples()}
+    return {n: b for n, b in back.items() if b > int(now)}
+
+
 def _label(r) -> str:
     return "OUT (season)" if pd.isna(r.through_week) else f"OUT (thru wk {int(r.through_week)})"
 

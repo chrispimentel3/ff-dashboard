@@ -264,3 +264,13 @@ def test_lane_why_season_out():
     from mega.needs import lane_why
     r = {"lane": "stash", "mechanism": "START", "start": 0.5, "out_status": "Out", "out_back": 18.0}
     assert lane_why(r).startswith("out for the season — ")
+
+
+def test_status_rows_say_when_each_player_is_back(tmp_path, monkeypatch):
+    from mega import status
+    f = tmp_path / "s.csv"
+    f.write_text("player,status,through_week,note\n"
+                 "Kyler Murray,OUT,2,old\nTyler Out,OUT,8,new\nSeason Guy,OUT,,gone\nQ Guy,QUESTIONABLE,9,x\n")
+    monkeypatch.setattr(status, "STATUS_CSV", f)
+    got = status.back_weeks(5)
+    assert got == {status.norm("Tyler Out"): 9, status.norm("Season Guy"): status.SEASON_BACK}   # Murray's row has run out
