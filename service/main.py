@@ -379,7 +379,7 @@ def _search(eng, me, req, flags, shapes, lap):
         results = sorted(results, key=lambda r: (rank.get(r["flag"], 9), -r["dMe"]))
     else:
         results = sorted(results, key=lambda r: -r["dMe"])
-    return out, results, swap_ids
+    return out, TL.collapse_variants(eng.ctx, results), swap_ids
 
 
 def _package(season, next_week, eng, me, req, out, results, swap_ids, clock, lap, extra=None):
@@ -427,6 +427,8 @@ def _package(season, next_week, eng, me, req, out, results, swap_ids, clock, lap
             "their_title": o.get("their_d_title"),
             "title_noise": o.get("title_noise"),
             "watch": "arms a rival" if o.get("arms_rival") else (o.get("their_tag") or None),
+            "variants": r.get("variants") or [],
+            "n_variants": r.get("n_variants") or 0,
             "i_would_start": [s["name"] for s in r["me"]["startersIn"]],
             "i_would_bench": [s["name"] for s in r["me"]["startersOut"]],
             "they_would_start": [s["name"] for s in r["them"]["startersIn"]],
@@ -533,6 +535,7 @@ def trade_team(req: TradeTeamRequest):
             results = sorted(results, key=lambda r: (rank.get(r["flag"], 9), -r["dMe"]))
         else:
             results = sorted(results, key=lambda r: -r["dMe"])
+        results = TL.collapse_variants(eng.ctx, results)
         # keep only what can be shown: the best TEAM_SHOW overall and per shape (the page's
         # filter), so a cached search stays small however many offers it found
         counts = {}

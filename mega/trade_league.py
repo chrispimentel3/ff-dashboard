@@ -325,6 +325,33 @@ def find_with_team(engine, my_id: int, partner_id: int, top_n: int = 40,
             "matched": len(results)}
 
 
+VARIANTS_SHOWN = 6     # similar offers listed under each one; the rest are only counted
+
+
+def collapse_variants(ctx, results: list) -> list:
+    """One offer per headline: offers of the same shape whose most valuable player on each side
+    is the same are the same pitch with a different throw-in (Kelce + Daniels or Kelce +
+    Boston for McBride). The first of them, in the order given, stands for the group and
+    carries the rest as `variants` (up to VARIANTS_SHOWN, with `n_variants` counting all), so
+    nothing is hidden, only folded."""
+    from . import trade_engine as te
+    mv = lambda i: te.market_value(ctx.players[i], ctx.cfg)
+    seen: dict = {}
+    kept = []
+    for r in results:
+        k = (r["shape"], max(r["giveIds"], key=mv), max(r["getIds"], key=mv))
+        rep = seen.get(k)
+        if rep is None:
+            rep = seen[k] = {**r, "variants": [], "n_variants": 0}
+            kept.append(rep)
+            continue
+        rep["n_variants"] += 1
+        if len(rep["variants"]) < VARIANTS_SHOWN:
+            rep["variants"].append({"give": [p["name"] for p in r["give"]], "get": [p["name"] for p in r["get"]],
+                                    "d_me": round(r["dMe"], 2), "d_them": round(r["dThem"], 2), "flag": r["flag"]})
+    return kept
+
+
 NEED_GAP = 1.0        # pts/wk below the league's average starters at a position to call it a need
 
 

@@ -224,3 +224,19 @@ def test_lineup_detail_can_wait_until_the_list_is_cut(eng):
     for k, r in b.items():
         assert r["dMe"] == pytest.approx(a[k]["dMe"]) and "me" in r and "them" in r and "give" in r
         assert r["me"]["valueAfter"] == pytest.approx(a[k]["me"]["valueAfter"])
+
+
+def test_near_duplicate_offers_fold_into_one_headline(eng):
+    from mega import trade_league as TL
+    rs = TL.find_with_team(eng, 1, 2, top_n=10**6, include_flags=tuple(ALL_FLAGS), size=3)["results"]
+    rows, _ = TL.net_free_swap(eng, 1, rs)
+    rows, _ = TL.drop_padding(rows, eng.ctx.cfg["padTolerance"])
+    out = TL.collapse_variants(eng.ctx, rows)
+    mv = lambda i: __import__("mega.trade_engine", fromlist=["x"]).market_value(eng.ctx.players[i], eng.ctx.cfg)
+    keys = [(r["shape"], max(r["giveIds"], key=mv), max(r["getIds"], key=mv)) for r in out]
+    assert len(keys) == len(set(keys)) and len(out) < len(rows)           # one per headline
+    assert sum(1 + r["n_variants"] for r in out) == len(rows)             # nothing lost, only folded
+    assert all(len(r["variants"]) == min(r["n_variants"], TL.VARIANTS_SHOWN) for r in out)
+    firsts = {k: i for i, k in reversed(list(enumerate(
+        (r["shape"], max(r["giveIds"], key=mv), max(r["getIds"], key=mv)) for r in rows)))}
+    assert [firsts[k] for k in keys] == sorted(firsts[k] for k in keys)   # order of first appearance kept
