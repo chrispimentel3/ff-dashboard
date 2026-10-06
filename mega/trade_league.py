@@ -228,6 +228,61 @@ def find_from_my_player(engine, my_id: int, give_ids: list[str], **opts) -> dict
             "evaluated": out["evaluated"], "padded": out["padded"], "matched": out["matched"]}
 
 
+def drop_padding(results: list, pad: float) -> tuple[list, int]:
+    """A pair is padding when either of its players alone, for the same return, already does
+    as well for both sides. The engine checks that only against the player it searched from,
+    and a 2-for-1 restated by net_free_swap changes its numbers — so a search that merges many
+    starting points, or nets, runs this over the whole list."""
+    singles = {(r["giveIds"][0], frozenset(r["getIds"])): r for r in results if len(r["giveIds"]) == 1}
+    kept = [r for r in results if not (len(r["giveIds"]) == 2 and any(
+        (s := singles.get((g, frozenset(r["getIds"])))) and s["dMe"] >= r["dMe"] - pad
+        and s["dThem"] >= r["dThem"] - pad for g in r["giveIds"]))]
+    return kept, len(results) - len(kept)
+
+
+def find_with_team(engine, my_id: int, partner_id: int, top_n: int = 40,
+                   include_flags: tuple[str, ...] = ("LIKELY", "EXPLOIT", "NEEDS_PITCH"),
+                   shapes: tuple[str, ...] = ("1-for-1", "2-for-1")) -> dict:
+    """Every offer to one named team: the engine's own search, once per player of mine with
+    `partners` pinned, merged (a pair found from either of its players is one offer) and ranked
+    like the single-player search."""
+    ctx = engine.ctx
+    empty = {"results": [], "evaluated": 0, "padded": 0, "matched": 0}
+    if partner_id == my_id or partner_id not in ctx.teams:
+        return empty
+    mine = [i for i in [*ctx.teams[my_id]["roster"], *ctx.ir.get(my_id, [])]
+            if ctx.players[i]["pos"] in ctx.valued_pos]
+    opts = {"partners": [partner_id], "shapes": list(shapes), "includeFlags": list(include_flags),
+            "topN": 10**6}
+    seen, evaluated, padded = {}, 0, 0
+    for pid in mine:
+        out = engine.find_trades(my_id, [pid], opts)
+        evaluated += out["evaluated"]
+        padded += out["padded"]
+        for r in out["results"]:
+            seen.setdefault((frozenset(r["giveIds"]), frozenset(r["getIds"])), r)
+    kept, n = drop_padding(list(seen.values()), ctx.cfg["padTolerance"])
+    padded += n
+    order = {"LIKELY": 0, "EXPLOIT": 1, "NEEDS_PITCH": 2, "LONGSHOT": 3}
+    results = sorted(kept, key=lambda r: (-r["dMe"], order.get(r["flag"], 9)))
+    return {"results": results[:top_n], "evaluated": evaluated, "padded": padded,
+            "matched": len(results)}
+
+
+def targets_of(results: list) -> list[dict]:
+    """Their players, best change to my lineup first. Run on offers already restated by
+    net_free_swap — before that, any trade that opens a roster spot is credited with the free
+    agent who fills it, and every player it touches looks equally good."""
+    targets: dict = {}
+    for r in results:
+        for p in r["get"]:
+            t = targets.setdefault(p["id"], {"name": p["name"], "pos": p.get("pos"),
+                                             "best_d_me": r["dMe"], "offers": 0})
+            t["best_d_me"] = max(t["best_d_me"], r["dMe"])
+            t["offers"] += 1
+    return sorted(targets.values(), key=lambda t: -t["best_d_me"])
+
+
 def net_free_swap(engine, my_id: int, results: list, min_delta_me: float = 0.01) -> tuple[list, list]:
     """Re-state 2-for-1s against the best add/drop available WITHOUT trading — the same
     netting the offer cards do (mega/trade_theses.py, handoff §6.5).

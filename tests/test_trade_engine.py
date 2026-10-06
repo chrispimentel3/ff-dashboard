@@ -149,3 +149,25 @@ def test_bad_input_rejected(eng):
         eng.find_trades(1, ["m_k"])
     with pytest.raises(ValueError, match="missing"):
         create_engine({"teams": [{"id": 1, "roster": ["ghost"]}], "players": {}})
+
+
+def test_a_team_search_is_every_offer_to_that_team_once(eng):
+    from mega import trade_league as TL
+    out = TL.find_with_team(eng, 1, 3, top_n=10**6, include_flags=tuple(ALL_FLAGS))
+    rs = out["results"]
+    assert rs and all(r["partner"]["id"] == 3 for r in rs)
+    keys = [(frozenset(r["giveIds"]), frozenset(r["getIds"])) for r in rs]
+    assert len(keys) == len(set(keys))                                  # a pair found from either side is one offer
+    assert [r["dMe"] for r in rs] == sorted((r["dMe"] for r in rs), reverse=True)
+    assert (frozenset(["m_wr2"]), frozenset(["b_wr3"])) in keys          # the plain 1-for-1
+    assert (frozenset(["m_rb3", "m_wr2"]), frozenset(["b_wr2"])) in keys  # a sweetener found from m_rb3 or m_wr2
+    pad = eng.ctx.cfg["padTolerance"]                                    # no pair is a single offer plus a sweetener nobody needs
+    one = {(r["giveIds"][0], frozenset(r["getIds"])): r for r in rs if len(r["giveIds"]) == 1}
+    for r in rs:
+        for g in r["giveIds"] if len(r["giveIds"]) == 2 else []:
+            s = one.get((g, frozenset(r["getIds"])))
+            assert not (s and s["dMe"] >= r["dMe"] - pad and s["dThem"] >= r["dThem"] - pad)
+    t = TL.targets_of(rs)
+    assert [x["best_d_me"] for x in t] == sorted((x["best_d_me"] for x in t), reverse=True)
+    assert {x["name"] for x in t} <= {p["name"] for p in LEAGUE["players"].values()}
+    assert TL.find_with_team(eng, 1, 1)["results"] == []                # not a trade with yourself

@@ -274,6 +274,14 @@ class TradeSearchRequest(BaseModel):
     odds: bool = True
 
 
+class TradeTeamRequest(BaseModel):
+    team: str
+    flags: list[str] = PydField(default_factory=lambda: ["LIKELY", "EXPLOIT", "NEEDS_PITCH"])
+    two_player: bool = True
+    order: str = "accept"
+    odds: bool = True
+
+
 @app.get("/health")
 def health():
     return {"ok": True, "commit": os.environ.get("RENDER_GIT_COMMIT", "")[:7], "warm": _WARM}
@@ -348,6 +356,7 @@ def _on_ir(season: int) -> set:
 _searches: "OrderedDict[tuple, tuple]" = OrderedDict()   # the latest few searches, so the
 SEARCH_KEEP = 8                                         # odds call doesn't search again
 _SEARCH_LOCK = threading.Lock()
+TEAM_SHOW = 60              # offers shown for a team search; its targets are ranked over all of them
 
 
 def _search(eng, me, req, flags, shapes, lap):
@@ -362,6 +371,7 @@ def _search(eng, me, req, flags, shapes, lap):
         raise HTTPException(status_code=400, detail=str(e))
     lap("search")
     results, swap_ids = TL.net_free_swap(eng, me, out["results"])
+    results, _ = TL.drop_padding(results, eng.ctx.cfg["padTolerance"])
     lap("net_free_swap")
     if req.order == "accept":
         rank = {"LIKELY": 0, "NEEDS_PITCH": 1, "EXPLOIT": 2, "LONGSHOT": 3}
@@ -371,48 +381,9 @@ def _search(eng, me, req, flags, shapes, lap):
     return out, results, swap_ids
 
 
-@app.post("/trade-search")
-def trade_search(req: TradeSearchRequest):
-    """"Trade around one player" — the live search app.py's own Trades tab runs, wrapped
-    as an endpoint so the statically-generated mega-bowl-web Trades page can offer it too
-    (see mega/trades.py's docstring for why this couldn't just be precomputed: the question
-    space is one pick out of the whole league, not a fixed list)."""
-    clock, t0 = {}, time.perf_counter()
-
-    def lap(name):     # seconds per step, returned as `timings` — Render's CPU is ~10x slower
-        nonlocal t0    # than a laptop, so where a slow search spends its time is measured there
-        now = time.perf_counter()
-        clock[name] = round(now - t0, 2)
-        t0 = now
-
-    season = _current_season()
-    next_week = data.current_week(season, 1)
-    lap("week")
-    eng, rep = _trade_engine(season)
-    lap("engine")
-    if eng is None:
-        raise HTTPException(status_code=503, detail="League rosters unavailable this run.")
-    me = rep.get("my_team_id")
-    if me is None:
-        raise HTTPException(status_code=503, detail="Could not resolve your team's roster.")
-
-    shapes = ("1-for-1", "2-for-1") if req.two_player else ("1-for-1",)
-    flags = tuple(f.upper().replace(" ", "_") for f in req.flags) or ("LIKELY", "EXPLOIT", "NEEDS_PITCH")
-    key = (id(eng), req.pid, req.mine, flags, shapes, req.order)
-    with _SEARCH_LOCK:
-        hit = _searches.get(key)
-        if hit is not None:
-            _searches.move_to_end(key)
-    if hit is not None:
-        out, results, swap_ids = hit
-        lap("search_cached")
-    else:
-        out, results, swap_ids = _search(eng, me, req, flags, shapes, lap)
-        with _SEARCH_LOCK:
-            _searches[key] = (out, results, swap_ids)
-            while len(_searches) > SEARCH_KEEP:
-                _searches.popitem(last=False)
-
+def _package(season, next_week, eng, me, req, out, results, swap_ids, clock, lap, extra=None):
+    """Price the best offers in odds and shape every offer for the page — shared by the
+    one-player search and the one-team search."""
     odds, model, odds_error = {}, None, None
     if req.odds and TITLE_ODDS_LIVE:
         try:
@@ -471,7 +442,108 @@ def trade_search(req: TradeSearchRequest):
         # or "team" (the older team-level fallback, used only if the first one fails)
         "odds_model": model,
         **({"odds_error": odds_error} if odds_error else {}),
+        **(extra or {}),
     }
+
+
+@app.post("/trade-search")
+def trade_search(req: TradeSearchRequest):
+    """"Trade around one player" — the live search app.py's own Trades tab runs, wrapped
+    as an endpoint so the statically-generated mega-bowl-web Trades page can offer it too
+    (see mega/trades.py's docstring for why this couldn't just be precomputed: the question
+    space is one pick out of the whole league, not a fixed list)."""
+    clock, t0 = {}, time.perf_counter()
+
+    def lap(name):     # seconds per step, returned as `timings` — Render's CPU is ~10x slower
+        nonlocal t0    # than a laptop, so where a slow search spends its time is measured there
+        now = time.perf_counter()
+        clock[name] = round(now - t0, 2)
+        t0 = now
+
+    season = _current_season()
+    next_week = data.current_week(season, 1)
+    lap("week")
+    eng, rep = _trade_engine(season)
+    lap("engine")
+    if eng is None:
+        raise HTTPException(status_code=503, detail="League rosters unavailable this run.")
+    me = rep.get("my_team_id")
+    if me is None:
+        raise HTTPException(status_code=503, detail="Could not resolve your team's roster.")
+
+    shapes = ("1-for-1", "2-for-1") if req.two_player else ("1-for-1",)
+    flags = tuple(f.upper().replace(" ", "_") for f in req.flags) or ("LIKELY", "EXPLOIT", "NEEDS_PITCH")
+    key = (id(eng), req.pid, req.mine, flags, shapes, req.order)
+    with _SEARCH_LOCK:
+        hit = _searches.get(key)
+        if hit is not None:
+            _searches.move_to_end(key)
+    if hit is not None:
+        out, results, swap_ids = hit
+        lap("search_cached")
+    else:
+        out, results, swap_ids = _search(eng, me, req, flags, shapes, lap)
+        with _SEARCH_LOCK:
+            _searches[key] = (out, results, swap_ids)
+            while len(_searches) > SEARCH_KEEP:
+                _searches.popitem(last=False)
+
+    return _package(season, next_week, eng, me, req, out, results, swap_ids, clock, lap)
+
+
+@app.post("/trade-team")
+def trade_team(req: TradeTeamRequest):
+    """"Trade with one team" — every offer to the team the page picked, plus their players
+    ranked by what they'd add to my lineup (`targets`)."""
+    clock, t0 = {}, time.perf_counter()
+
+    def lap(name):
+        nonlocal t0
+        now = time.perf_counter()
+        clock[name] = round(now - t0, 2)
+        t0 = now
+
+    season = _current_season()
+    next_week = data.current_week(season, 1)
+    eng, rep = _trade_engine(season)
+    lap("engine")
+    if eng is None:
+        raise HTTPException(status_code=503, detail="League rosters unavailable this run.")
+    me = rep.get("my_team_id")
+    if me is None:
+        raise HTTPException(status_code=503, detail="Could not resolve your team's roster.")
+    partner = next((t for t in eng.ctx.teams.values() if t["name"] == req.team and t["id"] != me), None)
+    if partner is None:
+        raise HTTPException(status_code=400, detail=f"No team called {req.team!r} to trade with.")
+
+    shapes = ("1-for-1", "2-for-1") if req.two_player else ("1-for-1",)
+    flags = tuple(f.upper().replace(" ", "_") for f in req.flags) or ("LIKELY", "EXPLOIT", "NEEDS_PITCH")
+    key = (id(eng), "team", partner["id"], flags, shapes, req.order)
+    with _SEARCH_LOCK:
+        hit = _searches.get(key)
+        if hit is not None:
+            _searches.move_to_end(key)
+    if hit is not None:
+        out, results, swap_ids = hit
+    else:
+        out = TL.find_with_team(eng, me, partner["id"], top_n=10**6, include_flags=flags, shapes=shapes)
+        results, swap_ids = TL.net_free_swap(eng, me, out["results"])
+        results, _ = TL.drop_padding(results, eng.ctx.cfg["padTolerance"])
+        out = {**out, "targets": TL.targets_of(results)}
+        if req.order == "accept":
+            rank = {"LIKELY": 0, "NEEDS_PITCH": 1, "EXPLOIT": 2, "LONGSHOT": 3}
+            results = sorted(results, key=lambda r: (rank.get(r["flag"], 9), -r["dMe"]))
+        else:
+            results = sorted(results, key=lambda r: -r["dMe"])
+        results = results[:TEAM_SHOW]
+        with _SEARCH_LOCK:
+            _searches[key] = (out, results, swap_ids)
+            while len(_searches) > SEARCH_KEEP:
+                _searches.popitem(last=False)
+    lap("search")
+    return _package(season, next_week, eng, me, req, out, results, swap_ids, clock, lap,
+                    extra={"team": partner["name"],
+                           "targets": [{**t, "best_d_me": round(t["best_d_me"], 2)} for t in out["targets"][:12]]})
 
 
 @app.post("/ask")
