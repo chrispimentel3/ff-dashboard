@@ -138,13 +138,20 @@ def availability(status: object, pos: str, week: int, now: int,
 
 
 # ---------------------------------------------------------------- §15.2 handcuffs
-def next_man_up(pw: pd.DataFrame, roles_tab: pd.DataFrame, window: int = 3) -> pd.DataFrame:
+def next_man_up(pw: pd.DataFrame, roles_tab: pd.DataFrame, window: int = 3,
+                out_weeks: dict | None = None) -> pd.DataFrame:
     """Per team, the backup who would inherit each lead back's work.
 
     Highest snap share among the backs who are not the lead — the spec's tiebreak of depth
     chart `pos_rank` applies only when snaps cannot separate them. Only ONE player per
     starter gets contingent value: spreading it across a room double counts a job that can
     only be done by one man at a time.
+
+    The starter is picked on snaps per game he was AVAILABLE for — the team's games less
+    the weeks he was ruled out (`out_weeks`: gsis_id -> weeks Out/Doubtful/IR). On season
+    totals a starter back from injury lost his job to the man who filled in: Daniels missed
+    weeks 3-4 and Mariota's 111 snaps beat his 109, so the projection had Daniels playing
+    only when Mariota got hurt.
     """
     cols = ["gsis_id", "team", "pos", "role"]
     if roles_tab is None or roles_tab.empty or pw is None or pw.empty:
@@ -152,6 +159,12 @@ def next_man_up(pw: pd.DataFrame, roles_tab: pd.DataFrame, window: int = 3) -> p
     snaps = (pw.sort_values("week").groupby("gsis_id")
              .agg(snaps=("offense_snaps", "sum"), carries=("carries", "sum")))
     d = roles_tab[cols].merge(snaps, on="gsis_id", how="left")
+    tw = pw if "team" in pw.columns else pw.merge(roles_tab[["gsis_id", "team"]], on="gsis_id", how="inner")
+    team_weeks = tw.groupby("team")["week"].apply(lambda s: set(int(w) for w in s.dropna())).to_dict()
+    out_weeks = out_weeks or {}
+    d["per_game"] = [s / max(1, len(team_weeks.get(t, ())) - len(team_weeks.get(t, set()) & set(out_weeks.get(g, ()))))
+                     if pd.notna(s) else float("nan")
+                     for g, t, s in zip(d["gsis_id"], d["team"], d["snaps"])]
 
     out = []
     for (team, pos), grp in d[d["pos"].isin(("RB", "WR", "TE", "QB"))].groupby(["team", "pos"]):
@@ -164,7 +177,7 @@ def next_man_up(pw: pd.DataFrame, roles_tab: pd.DataFrame, window: int = 3) -> p
             starters = grp[grp["snaps"].notna()]
         if starters.empty:
             continue
-        starter = starters.sort_values("snaps", ascending=False).iloc[0]
+        starter = starters.sort_values("per_game", ascending=False).iloc[0]
         rest = grp[grp["gsis_id"] != starter["gsis_id"]].sort_values(
             "snaps", ascending=False, na_position="last")
         if rest.empty:

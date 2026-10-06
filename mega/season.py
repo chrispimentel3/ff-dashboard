@@ -148,7 +148,28 @@ def handcuffs(season: int) -> pd.DataFrame:
     tab = rc.get("table")
     if tab is None or tab.empty:
         return pd.DataFrame()
-    return cg.next_man_up(player_week(season), tab)
+    return cg.next_man_up(player_week(season), tab, out_weeks=out_weeks(season))
+
+
+def out_weeks(season: int) -> dict:
+    """gsis_id -> the weeks he was ruled out: Out or Doubtful on the injury report, or on
+    reserve (weekly roster status RES)."""
+    out: dict = {}
+    inj = injuries(season)
+    if inj is not None and not inj.empty:
+        o = inj[inj["report_status"].isin(["Out", "Doubtful"])]
+        for g, w in zip(o["gsis_id"], pd.to_numeric(o["week"], errors="coerce")):
+            if isinstance(g, str) and pd.notna(w):
+                out.setdefault(g, set()).add(int(w))
+    try:
+        import nflreadpy as nfl
+        rw = nfl.load_rosters_weekly(seasons=[season]).to_pandas()
+        for g, w in zip(rw.loc[rw["status"] == "RES", "gsis_id"], rw.loc[rw["status"] == "RES", "week"]):
+            if isinstance(g, str):
+                out.setdefault(g, set()).add(int(w))
+    except Exception:
+        pass
+    return out
 
 
 def cuff_lookup(season: int) -> dict[str, dict]:

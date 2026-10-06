@@ -88,6 +88,21 @@ def optimize_lineup(roster: pd.DataFrame, season: int, week: int) -> pd.DataFram
     """roster needs: player, pos, nfl_team, proj, proj_source (+ optional ecr/start_sit).
     Returns the roster with matchup-adjusted proj, lineup slot assignment, and flags."""
     df = attach_matchup(roster.copy(), season, week)
+    # Nobody ruled out of this week starts: Out or Doubtful on the NFL report, or on IR not
+    # yet due back (waiver_value.availability, the rule the waiver and trade pages use).
+    # A status the caller already set (data/player_status.csv) is kept.
+    if "gsis_id" in df.columns:
+        try:
+            from . import season as S
+            from .waiver_value import _rosters_weekly, availability
+            av = availability(S.injuries(season), _rosters_weekly(season), week)
+            hit = df["gsis_id"].map(lambda g: (av.get(g) or {}).get("status")
+                                    if (av.get(g) or {}).get("back", 0) > week else None)
+            prior = df["report_status"] if "report_status" in df.columns else pd.Series(None, index=df.index, dtype=object)
+            df["report_status"] = prior.where(prior.notna(), hit)
+            df.loc[hit.notna(), "proj"] = 0.0
+        except Exception:
+            pass
     # FantasyPros already prices the matchup; only nudge the nflverse estimates.
     # df.get returns a bare str when the column is absent, and str has no .eq
     is_est = df["proj_source"].eq("nflverse-est") if "proj_source" in df.columns \

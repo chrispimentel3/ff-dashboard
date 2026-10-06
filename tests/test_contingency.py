@@ -155,3 +155,15 @@ def test_a_refilling_position_has_a_rising_replacement_level():
     rising = cg.replacement_curve(8.0, supply=3.0, delta=2.0, week=10, now=4)
     assert flat == pytest.approx(8.0)
     assert rising == pytest.approx(8.0 + 3.0 * 2.0 * 6 / 12)
+
+
+def test_a_starter_back_from_injury_keeps_his_job():
+    """Daniels missed weeks 3-4 and Mariota's season snaps (111) passed his (109): on totals
+    the fill-in became the starter and Daniels his backup. Per game available, it's Daniels."""
+    rows = [("D", 1, 70), ("D", 2, 39), ("M", 2, 32), ("M", 3, 69), ("M", 4, 10), ("K", 4, 54)]
+    pw = pd.DataFrame([{"gsis_id": g, "team": "WAS", "week": w, "offense_snaps": s, "carries": 1}
+                       for g, w, s in rows])
+    tab = pd.DataFrame([{"gsis_id": g, "team": "WAS", "pos": "QB", "role": "QB-BACKUP"} for g in "DMK"])
+    assert cg.next_man_up(pw, tab)["cuff_of"].iloc[0] == "M"                    # season totals
+    out = cg.next_man_up(pw, tab, out_weeks={"D": {3, 4}})
+    assert out["cuff_of"].iloc[0] == "D" and out["gsis_id"].iloc[0] == "M"
