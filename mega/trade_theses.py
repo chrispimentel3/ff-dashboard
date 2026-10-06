@@ -35,7 +35,7 @@ from . import trade_engine as te
 ROOT = Path(__file__).resolve().parents[1]
 PRIORS = ROOT / "config" / "acceptance_priors.json"
 
-TOP_SIM = 25                  # handoff §5: ΔTitle only for the top 25 by ΔROS
+TOP_SIM = 25                  # handoff §5: ΔTitle only for the top 25 (by expected ΔROS since 2026-10-06)
 SHAPES = ["1-for-1", "2-for-1"]
 SELL_HIGH_GAP = 4.0           # pts − xFP per game (existing site threshold)
 SELL_HIGH_MIN_PTS = 8.0
@@ -371,8 +371,33 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
         t = sum(float(fc_by_name.get(ctx.players[i]["name"], 0) or 0) for i in r["getIds"])
         return g / t if t > 0 else 0.0
 
+    tm = T.build(season, now, yahoo_rosters, league=lg)
+    base = tm.odds() if tm is not None else {}
+    pri = load_priors()
+
+    def counterparty(c, d_title_them: float) -> dict:
+        """§6.3 — the chance they say yes, and the inputs it was read from."""
+        partner = name_of[c["partner"]["id"]]
+        give_val = sum(float(fc_by_name.get(n, 0) or 0) for n in _names(ctx, c["giveIds"]))
+        get_val = sum(float(fc_by_name.get(n, 0) or 0) for n in _names(ctx, c["getIds"]))
+        fair = give_val / get_val if get_val > 0 else 1.0
+        need_fit = 1.0 if any(s["id"] in c["giveIds"] for s in c["them"]["startersIn"]) else 0.0
+        pb = bias_by_name.get(partner) or {}
+        fair_x = min(fair, tl.MAX_OVERPAY)   # past 1.5x an overpay stops buying more yes (the search caps it too)
+        bias = (np.mean([pb.get(ctx.players[i]["pos"], 1.0) for i in c["giveIds"]])
+                - np.mean([pb.get(ctx.players[i]["pos"], 1.0) for i in c["getIds"]]))
+        p_now = (base.get(partner) or {}).get("p_playoffs", 0.0)
+        urg = urgency(p_now)
+        return {"pa": p_accept(pri, d_title_them, fair_x, need_fit, float(bias), urg, float(c["dThem"])),
+                "fair": fair, "urg": urg, "p_now": p_now}
+
+    # Chosen by EXPECTED gain — the chance they say yes times what it does for us — so the
+    # page offers deals a manager would take, not the 2-for-1s that wreck his lineup (picked
+    # with Chris 2026-10-06). Before the title sim there is no title term; once a candidate
+    # is simulated the card re-reads its odds with it.
+    exp_pre = lambda r: counterparty(r, 0.0)["pa"] * r["dMe"]
     cands = sorted((r for r in cands if r["flag"] != "LONGSHOT" and fc_fair(r) >= FAIR_MIN),
-                   key=lambda r: -r["dMe"])
+                   key=lambda r: -exp_pre(r))
     picked, per = [], {}
     for r in cands:
         n = per.get(r["partner"]["id"], 0)
@@ -436,11 +461,9 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
                      "ref_me": list(ref_ids), "after_me": list(a_me.ids), "after_them": list(a_them.ids),
                      "me_starters_in": s_in, "me_starters_out": s_out,
                      "portfolio": portfolio(ctx, ref_ids, a_me.ids, facts, weeks_h)})
-    rows.sort(key=lambda r: -r["dMe"])
+    rows.sort(key=lambda r: -exp_pre(r))          # dMe is netted by now
 
-    # ---- §5 title odds for the top 25 by ΔROS (plus every consolidation among them)
-    tm = T.build(season, now, yahoo_rosters, league=lg)
-    base = tm.odds() if tm is not None else {}
+    # ---- §5 title odds for the top 25 by expected ΔROS (plus every consolidation among them)
     my_name = name_of[my_id]
     # one card per (partner, what we receive): the best version of each ask, not three
     best, seen_ask = [], set()
@@ -450,7 +473,6 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
             seen_ask.add(k)
             best.append(c)
     top = best[:TOP_SIM]
-    pri = load_priors()
     cards = []
     for c in top:
         partner = c["partner"]["name"]
@@ -466,17 +488,9 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
         tags = tags_for(c, ctx, facts, env)
         if not tags:
             continue
-        # §6.3 counterparty
-        give_val = sum(float(fc_by_name.get(n, 0) or 0) for n in _names(ctx, c["giveIds"]))
-        get_val = sum(float(fc_by_name.get(n, 0) or 0) for n in _names(ctx, c["getIds"]))
-        fair = give_val / get_val if get_val > 0 else 1.0
-        need_fit = 1.0 if any(s["id"] in c["giveIds"] for s in c["them"]["startersIn"]) else 0.0
-        pb = bias_by_name.get(partner) or {}
-        bias = (np.mean([pb.get(ctx.players[i]["pos"], 1.0) for i in c["giveIds"]])
-                - np.mean([pb.get(ctx.players[i]["pos"], 1.0) for i in c["getIds"]]))
-        p_them_now = (base.get(partner) or {}).get("p_playoffs", 0.0)
-        urg = urgency(p_them_now)
-        pa = p_accept(pri, d_them, fair, need_fit, float(bias), urg, float(c["dThem"]))
+        # §6.3 counterparty, now with what it does to their title odds
+        cp = counterparty(c, d_them)
+        pa, fair, urg, p_them_now = cp["pa"], cp["fair"], cp["urg"], cp["p_now"]
         # pitch: the slot our outgoing player fills for them
         weak = None
         for s in c["them"]["startersOut"]:
@@ -520,9 +534,11 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
             "they_would_bench": [s["name"] for s in c["them"]["startersOut"] if s["id"] not in c["getIds"]],
             "fa_add": c["fa_add"] if c["consolidation"] else None,
             "pitch": pitch, "p_accept": round(pa, 3), "flag": flag(pri, pa, d_them),
+            "exp_title": round(pa * (0.0 if us.get("noise", True) else d_us), 5),
+            "exp_ros": round(pa * c["dMe"], 3),
             "fairness": round(fair, 2), "ranks": {"give": ranks(c["giveIds"]), "get": ranks(c["getIds"])},
         })
-    cards.sort(key=lambda k: (-(0.0 if k["us"]["title_noise"] else k["us"]["d_title"]), -k["us"]["d_ros"]))
+    cards.sort(key=lambda k: (-k["exp_title"], -k["exp_ros"]))
     # keep any one manager from filling the page
     per, kept = {}, []
     for k in cards:
