@@ -360,6 +360,34 @@ _SEARCH_LOCK = threading.Lock()
 TEAM_SHOW = 60              # offers shown for a team search; its targets are ranked over all of them
 
 
+def _deal_inputs(eng):
+    """What the acceptance model needs about every other manager, built once per engine:
+    standings and title sensitivity (season sim), positional bias, and
+    each roster's needs (mega/trade_league.py deal_odds)."""
+    def build():
+        from mega.market import seed_bias
+        from mega.trade_theses import load_priors
+        season = _current_season()
+        ctx = eng.ctx
+        id_of = {t["name"]: tid for tid, t in ctx.teams.items()}
+        return (TL.accept_context(ctx, _season_model(season, data.current_week(season, 1))),
+                {id_of[n]: b for n, b in seed_bias().items() if n in id_of},
+                TL.team_profiles(ctx), load_priors())
+    return _cached(f"deal_inputs:{id(eng)}", ENGINE_TTL, build)
+
+
+def _rank(eng, results, order):
+    """Stamp every offer with its chance of a yes, then order: "accept" by that chance
+    (mega/trade_league.py by_deal_odds), "gain" by what it does for me."""
+    try:
+        TL.deal_odds(eng.ctx, results, *_deal_inputs(eng))
+    except Exception:
+        pass            # no odds is still a usable list; the rank falls back to my gain
+    if order == "accept" and any("p_accept" in r for r in results):
+        return TL.by_deal_odds(results)
+    return sorted(results, key=lambda r: -r["dMe"])
+
+
 def _search(eng, me, req, flags, shapes, lap):
     try:
         if req.mine:
@@ -374,11 +402,8 @@ def _search(eng, me, req, flags, shapes, lap):
     results, swap_ids = TL.net_free_swap(eng, me, out["results"])
     results, _ = TL.drop_padding(results, eng.ctx.cfg["padTolerance"])
     lap("net_free_swap")
-    if req.order == "accept":
-        rank = {"LIKELY": 0, "NEEDS_PITCH": 1, "EXPLOIT": 2, "LONGSHOT": 3}
-        results = sorted(results, key=lambda r: (rank.get(r["flag"], 9), -r["dMe"]))
-    else:
-        results = sorted(results, key=lambda r: -r["dMe"])
+    results = _rank(eng, results, req.order)
+    lap("deal_odds")
     return out, TL.collapse_variants(eng.ctx, results), swap_ids
 
 
@@ -422,6 +447,9 @@ def _package(season, next_week, eng, me, req, out, results, swap_ids, clock, lap
             "d_them": round(r["dThem"], 2),
             "mkt_ratio": round(r["market"]["ratio"], 2),
             "flag": r["flag"],
+            # chance they say yes (mega/trade_league.py deal_odds); absent if it couldn't build
+            "p_accept": round(r["p_accept"], 3) if r.get("p_accept") is not None else None,
+            "need_fit": bool(r.get("need_fit")),
             "fa_add": r.get("fa_add") or [],
             # players in this offer who are on injured reserve, with the share of the
             # remaining games each is projected to play (how they're valued)
@@ -537,11 +565,7 @@ def trade_team(req: TradeTeamRequest):
         results, swap_ids = TL.net_free_swap(eng, me, out["results"], lite=True)
         results, _ = TL.drop_padding(results, eng.ctx.cfg["padTolerance"])
         out = {**{k: v for k, v in out.items() if k != "results"}, "targets": TL.targets_of(results)}
-        if req.order == "accept":
-            rank = {"LIKELY": 0, "NEEDS_PITCH": 1, "EXPLOIT": 2, "LONGSHOT": 3}
-            results = sorted(results, key=lambda r: (rank.get(r["flag"], 9), -r["dMe"]))
-        else:
-            results = sorted(results, key=lambda r: -r["dMe"])
+        results = _rank(eng, results, req.order)
         results = TL.collapse_variants(eng.ctx, results)
         # keep only what can be shown: the best TEAM_SHOW overall and per shape (the page's
         # filter), so a cached search stays small however many offers it found

@@ -517,6 +517,87 @@ def assess(b: Board, pool: list, cuffs: dict, fc_by_name: dict, roles: dict, fla
     return pd.DataFrame(rows)
 
 
+RIVAL_ALTS = 6     # (J) free agents per position, best by ppg, a rival weighs a claim against
+RIVAL_MIN = COVER_ONLY_START   # (J) pts/wk net a rival must gain to bother bidding: the league's
+                               # settled claims drew 2-5 bidders, not the 6-9 a 0.02 floor implies
+
+
+def rival_bids(b: Board, rows: pd.DataFrame, faab_left: dict, now: int) -> pd.DataFrame:
+    """Price each claim against the other eleven rosters (handoff §5.4: beat the likeliest
+    top bid by a dollar, or walk away).
+
+    A rival's interest is his own horizon gain from the add — his roster rebuilt with the
+    player and forced back to size, on the same engine context that priced ours — and his
+    bid is that gain through the same faab.suggest curve, capped by what he has left. One
+    pricing rule for all twelve teams, so the comparison is like for like.
+
+    His gain is net of what he could add for free instead — the COVER_REPLACEMENT-th best
+    gain among the other free agents at that position, the rule cover_baseline applies to
+    ours. Without it every thin bench "wants" every free agent for bye cover alone, and
+    six to nine teams turned up interested in a backup quarterback.
+
+      nobody gains (or nobody can pay) -> $1, the floor that still wins a tie
+      top rival + $1 within my ceiling -> bid that
+      top rival exactly at my ceiling  -> bid the ceiling (a tie goes by reverse standings)
+      top rival + $1 over my ceiling   -> pass, with the number
+    """
+    from . import faab as fb
+    ctx = b.ctx
+    cols = {"bid": [], "rival_top": [], "rival_team": [], "rivals_n": [], "bid_note": []}
+    gain_memo: dict = {}
+
+    def gain(tid, pid):
+        k = (tid, pid)
+        if k not in gain_memo:
+            t = ctx.teams[tid]
+            gain_memo[k] = te.settle(list(t["roster"]) + [pid], ctx, {pid}).value - ctx.base[tid].value
+        return gain_memo[k]
+
+    by_pos: dict = {}            # the free agents a rival would consider instead, best first
+    for pid in rows["pid"]:
+        by_pos.setdefault(ctx.players[pid]["pos"], []).append(pid)
+    for pos in by_pos:
+        by_pos[pos].sort(key=lambda i: -(ctx.players[i].get("ppg") or 0))
+        by_pos[pos] = by_pos[pos][:RIVAL_ALTS]
+
+    def free_alt(tid, pid):
+        alts = sorted((gain(tid, a) for a in by_pos.get(ctx.players[pid]["pos"], []) if a != pid), reverse=True)
+        return max(0.0, alts[COVER_REPLACEMENT - 1]) if len(alts) >= COVER_REPLACEMENT else 0.0
+
+    for r in rows.itertuples():
+        if r.lane not in ("bid_now", "early_signal", "stash"):
+            for k, v in (("bid", r.bid), ("rival_top", 0), ("rival_team", ""), ("rivals_n", 0), ("bid_note", "")):
+                cols[k].append(v)
+            continue
+        top, who, n = 0, "", 0
+        for tid, t in ctx.teams.items():
+            if tid == b.my_id:
+                continue
+            g = gain(tid, r.pid) - free_alt(tid, r.pid)
+            if g < RIVAL_MIN:
+                continue
+            n += 1
+            bid = fb.suggest(g, int(faab_left.get(t["name"], 0)), now)["bid"]
+            if bid > top:
+                top, who = bid, t["name"]
+        if top <= 0:
+            bid = 1 if r.fit > 0.05 else 0
+            note = ("no other team gains enough from him to bid" if n == 0 else
+                    f"{n} other team{'s' if n > 1 else ''} would add him, none likely to pay")
+        elif top + 1 <= r.max_bid:
+            bid = top + 1
+            note = f"beats {who}'s likely ${top} ({n} team{'s' if n > 1 else ''} interested)"
+        elif top <= r.max_bid:
+            bid = int(r.max_bid)
+            note = f"matches {who}'s likely ${top}; a tie goes to the worse record"
+        else:
+            bid = 0
+            note = f"likely outbid: {who} ~${top}, over your ${r.max_bid} ceiling"
+        for k, v in (("bid", bid), ("rival_top", top), ("rival_team", who), ("rivals_n", n), ("bid_note", note)):
+            cols[k].append(v)
+    return rows.assign(**cols)
+
+
 def _gain_with_ppg(b: Board, pid: str, ppg: float, insure_mine: dict, cuffs: dict) -> float:
     """START + COVER if his value were `ppg` — the "gain if his role expands" (§3.3)."""
     p = b.ctx.players[pid]
@@ -637,6 +718,8 @@ def run(season: int, now: int, yahoo_rosters: pd.DataFrame | None = None) -> dic
 
     rows = assess(b, lg["freeAgents"], cuffs, fc_by_name, roles, flat, baselines, pct_ros,
                   budget_left, now, avail)
+    if not rows.empty and not bud.empty:
+        rows = rival_bids(b, rows, dict(zip(bud["team"], pd.to_numeric(bud["faab_left"], errors="coerce").fillna(0))), now)
 
     # HANDOFF v1.3 §5 / D1: rank by the change in title odds. Only lane players are
     # simulated — the rest have no fit, so there is nothing to price.

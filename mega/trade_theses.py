@@ -57,7 +57,7 @@ def load_priors() -> dict:
     try:
         return json.loads(PRIORS.read_text())
     except Exception:
-        return {"status": "missing", "a0": -0.75, "a": 20.0, "b": 4.0, "c": 0.8, "d": 2.0, "e": 1.0,
+        return {"status": "missing", "a0": -0.75, "a": 20.0, "b": 4.0, "c": 0.8, "d": 2.0, "e": 1.0, "g": 0.5,
                 "flags": {"LIKELY": 0.5, "EXPLOIT": 0.3, "NEEDS_PITCH": 0.15}}
 
 
@@ -71,9 +71,9 @@ def urgency(p_playoffs: float) -> float:
 
 
 def p_accept(pri: dict, d_title_them: float, fairness: float, need_fit: float, bias: float,
-             urg: float) -> float:
+             urg: float, d_lineup_them: float = 0.0) -> float:
     z = (pri["a0"] + pri["a"] * d_title_them + pri["b"] * (fairness - 1.0) + pri["c"] * need_fit
-         + pri["d"] * bias + pri["e"] * urg)
+         + pri["d"] * bias + pri["e"] * urg + pri.get("g", 0.0) * d_lineup_them)
     return 1.0 / (1.0 + math.exp(-z))
 
 
@@ -476,7 +476,7 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
                 - np.mean([pb.get(ctx.players[i]["pos"], 1.0) for i in c["getIds"]]))
         p_them_now = (base.get(partner) or {}).get("p_playoffs", 0.0)
         urg = urgency(p_them_now)
-        pa = p_accept(pri, d_them, fair, need_fit, float(bias), urg)
+        pa = p_accept(pri, d_them, fair, need_fit, float(bias), urg, float(c["dThem"]))
         # pitch: the slot our outgoing player fills for them
         weak = None
         for s in c["them"]["startersOut"]:

@@ -431,6 +431,65 @@ def targets_of(results: list) -> list[dict]:
     return sorted(targets.values(), key=lambda t: -t["best_d_me"])
 
 
+ACCEPT_MIN_GAIN = 0.5   # (J) pts/wk: under this an offer ranks below every real one, however
+                        #     likely the yes — a sure deal that changes nothing isn't worth making
+
+
+def accept_context(ctx, season_model, n: int = 1500) -> dict:
+    """team id -> {"p_playoffs", "title_per_pt"}: where each manager stands, and how much
+    one more point a week moves his title odds. A contender's title odds move more per
+    point than a team already out, so the same lineup gain matters more to him. Read off
+    the season simulation on common draws (mega/sim.py delta), once per team."""
+    from . import sim as SIM
+    if season_model is None:
+        return {}
+    base = SIM.delta(season_model, season_model.means, n=n)
+    out = {}
+    for tid, t in ctx.teams.items():
+        name = t.get("name")
+        if name not in season_model.teams:
+            continue
+        after = {k: v + (1.0 if k[0] == name else 0.0) for k, v in season_model.means.items()}
+        d = SIM.delta(season_model, after, n=n, team=name)
+        out[tid] = {"p_playoffs": base[name]["p_playoffs"], "title_per_pt": d.get("d_title", 0.0)}
+    return out
+
+
+def deal_odds(ctx, results: list, acc: dict, bias_by_id: dict, profiles: dict,
+              priors: dict) -> list:
+    """Stamp each offer with `p_accept`: the chance the other manager says yes, from the
+    acceptance model the Trades page cards use (mega/trade_theses.py p_accept) — what the
+    deal does to HIS title odds, whether it's fair by the rankings he sees (the engine's
+    market ratio, capped at MAX_OVERPAY: the cards use FantasyCalc, which has no value for
+    a lot of the players a search turns up), whether what I send fills
+    a position his roster is short at (team_profiles), his positional bias, and how much he
+    has to play for. Mutates and returns `results`."""
+    from .trade_theses import p_accept, urgency
+    import numpy as np
+    for r in results:
+        pid = r["partner"]["id"]
+        a = acc.get(pid) or {}
+        fair = min(float(r["market"]["ratio"]), MAX_OVERPAY)
+        short = {n["pos"] for n in (profiles.get(pid) or {}).get("needs") or []}
+        need_fit = 1.0 if any(ctx.players[i]["pos"] in short for i in r["giveIds"]) else 0.0
+        pb = bias_by_id.get(pid) or {}
+        bias = (np.mean([pb.get(ctx.players[i]["pos"], 1.0) for i in r["giveIds"]])
+                - np.mean([pb.get(ctx.players[i]["pos"], 1.0) for i in r["getIds"]]))
+        d_title = float(a.get("title_per_pt", 0.0)) * float(r["dThem"])
+        r["p_accept"] = p_accept(priors, d_title, fair, need_fit, float(bias),
+                                 urgency(float(a.get("p_playoffs", 0.0))), float(r["dThem"]))
+        r["need_fit"] = bool(need_fit)
+    return results
+
+
+def by_deal_odds(results: list) -> list:
+    """Most likely yes first, among offers worth at least ACCEPT_MIN_GAIN to me; the rest
+    after, the same way. Odds are an estimate, so within a point of each other they tie and
+    my gain decides."""
+    return sorted(results, key=lambda r: (r["dMe"] < ACCEPT_MIN_GAIN,
+                                          -round(r.get("p_accept", 0.0), 2), -r["dMe"]))
+
+
 def net_free_swap(engine, my_id: int, results: list, min_delta_me: float = 0.01,
                   lite: bool = False) -> tuple[list, list]:
     """Re-state offers that open a roster spot (2-for-1, 3-for-1) against the best add/drops
@@ -493,7 +552,7 @@ def ensure_detail(engine, my_id: int, results: list) -> list:
         if r.get("netted"):
             full = {**full, "dMe": r["dMe"], "netted": True, "fa_add": r["fa_add"], "swap_ids": r["swap_ids"],
                     "me": te._side(ctx, te.settle(list(r["swap_ids"]), ctx, set()), core["_after"]["me"])}
-        out.append(full)
+        out.append({**full, **{k: r[k] for k in ("p_accept", "need_fit") if k in r}})
     return out
 
 

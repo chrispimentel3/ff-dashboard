@@ -254,3 +254,20 @@ def test_a_dozen_interchangeable_cover_adds_are_each_worth_the_gap_not_the_hole(
     assert base == {"QB": 0.95}                      # the third-best of the QBs
     two = wv.cover_baseline({k: evs[k] for k in ("q0", "q1")}, {"q0": "QB", "q1": "QB"})
     assert two == {"QB": 0.0}                         # with only two there is no free alternative
+
+
+# ---------------------------------------------------------------- rival bids (§5.4)
+def test_a_claim_is_priced_against_what_the_other_rosters_would_pay():
+    b = board(extra_fa=[_p("fa_wr", "WR", "PHI", 13)])
+    rows = wv.assess(b, ["fa_wr"], {}, {}, {}, {}, {}, {}, 100, NOW)
+    broke = wv.rival_bids(b, rows, {"B": 0, "C": 0}, NOW).iloc[0]
+    assert broke["rival_top"] == 0 and broke["bid"] == 1          # nobody can pay: the $1 floor
+    rich = wv.rival_bids(b, rows, {"B": 100, "C": 100}, NOW).iloc[0]
+    assert rich["rival_top"] > 0 and rich["rival_team"] in ("B", "C") and rich["rivals_n"] == 2
+    top, ceiling = rich["rival_top"], rows.iloc[0]["max_bid"]
+    if top + 1 <= ceiling:
+        assert rich["bid"] == top + 1
+    elif top <= ceiling:
+        assert rich["bid"] == ceiling
+    else:
+        assert rich["bid"] == 0 and "outbid" in rich["bid_note"]

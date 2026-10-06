@@ -1,5 +1,5 @@
 {
-  "_doc": "HANDOFF v1.3 §6.3 counterparty model: P(accept) = sigmoid(a0 + a*dTitle_them + b*(fc_fairness - 1) + c*need_fit_them + d*bias_mgr + e*urgency_them). ESTIMATED priors, set by judgment and never fitted: Yahoo exposes only completed trades, not declined offers, so there is no data to fit an acceptance model on (decided with Chris 2026-09-27; cards label the odds 'est.'). a0 is an intercept added to the handoff formula so a neutral offer reads as more likely declined than accepted.",
+  "_doc": "HANDOFF v1.3 §6.3 counterparty model: P(accept) = sigmoid(a0 + a*dTitle_them + b*(fc_fairness - 1) + c*need_fit_them + d*bias_mgr + e*urgency_them + g*dLineup_them). ESTIMATED priors, set by judgment and never fitted: Yahoo exposes only completed trades, not declined offers, so there is no data to fit an acceptance model on (decided with Chris 2026-09-27; cards label the odds 'est.'). a0 is an intercept added to the handoff formula so a neutral offer reads as more likely declined than accepted.",
   "status": "estimated",
   "a0": -0.75,
   "a": 20.0,
@@ -7,12 +7,14 @@
   "c": 0.8,
   "d": 2.0,
   "e": 1.0,
+  "g": 0.5,
   "_units": {
     "a": "per unit of title probability: +5pp for them is +1.0 logit",
     "b": "per unit of FantasyCalc ratio (what they receive / what they give): 0.9 is -0.4 logit",
     "c": "need_fit_them is 1 when the player they receive starts for them, else 0",
     "d": "bias_mgr is their positional multiplier on what they receive minus on what they give (Undisputed, RB-heavy: an RB for a WR is +0.15)",
-    "e": "urgency_them is 1.0 at 25-50% playoff odds, 0.5 at 10-25% or 50-70%, 0 otherwise"
+    "e": "urgency_them is 1.0 at 25-50% playoff odds, 0.5 at 10-25% or 50-70%, 0 otherwise",
+    "g": "per pt/wk their own lineup gains (the engine's dThem). Added 2026-10-06 at Chris's ask: a manager judges a deal by his lineup, not by title math - one pt/wk is only ~0.3pp of title odds, so through `a` alone losing 2.6 pts/wk cost ~0.2 logit. -2 pts/wk is now -1.0 logit"
   },
   "flags": {"_doc": "(J) flag from P(accept); EXPLOIT = reasonably likely AND it lowers their title odds", "LIKELY": 0.5, "EXPLOIT": 0.3, "NEEDS_PITCH": 0.15}
 }

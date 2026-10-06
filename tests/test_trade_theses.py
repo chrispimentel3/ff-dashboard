@@ -58,6 +58,7 @@ def test_acceptance_moves_the_right_way():
     assert TT.p_accept(pri, 0.0, 1.0, 1.0, 0.0, 0.0) > base         # fills their lineup
     assert TT.p_accept(pri, 0.0, 1.0, 0.0, 0.15, 0.0) > base        # their positional bias
     assert TT.p_accept(pri, 0.0, 1.0, 0.0, 0.0, 1.0) > base         # on the bubble
+    assert TT.p_accept(pri, 0.0, 1.0, 0.0, 0.0, 0.0, -2.0) < base - 0.15  # costs his lineup 2 pts/wk
 
 
 def test_flags_come_from_p_accept():
