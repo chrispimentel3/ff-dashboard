@@ -447,7 +447,8 @@ def cover_baseline(evs: dict, pos_of: dict, k: int = COVER_REPLACEMENT) -> dict:
 
 
 def assess(b: Board, pool: list, cuffs: dict, fc_by_name: dict, roles: dict, flat: dict,
-           baselines: dict, pct_ros: dict, budget_left: int, now: int) -> pd.DataFrame:
+           baselines: dict, pct_ros: dict, budget_left: int, now: int,
+           avail: dict | None = None) -> pd.DataFrame:
     """Every free agent in `pool`, decomposed and placed in at most one lane."""
     from . import faab as fb
     from .roles import LADDER
@@ -509,6 +510,9 @@ def assess(b: Board, pool: list, cuffs: dict, fc_by_name: dict, roles: dict, fla
             "pct_ros": own, "market_on": bool(own is not None and own >= MARKET_ON),
             "bid": bid["bid"] if bid else 0, "max_bid": bid["max_worth"] if bid else 0,
             "role": rc.get("role") or "",
+            # already priced: build_board zeroes his weeks before `back`. This only labels it.
+            "out_status": (avail or {}).get(pid, {}).get("status", ""),
+            "out_back": (avail or {}).get(pid, {}).get("back"),
         })
     return pd.DataFrame(rows)
 
@@ -625,7 +629,7 @@ def run(season: int, now: int, yahoo_rosters: pd.DataFrame | None = None) -> dic
     budget_left = int(mine.iloc[0]) if not mine.empty else fb.BUDGET
 
     rows = assess(b, lg["freeAgents"], cuffs, fc_by_name, roles, flat, baselines, pct_ros,
-                  budget_left, now)
+                  budget_left, now, avail)
 
     # HANDOFF v1.3 §5 / D1: rank by the change in title odds. Only lane players are
     # simulated — the rest have no fit, so there is nothing to price.

@@ -247,6 +247,14 @@ LANE_ORDER = {"bid_now": 0, "early_signal": 1, "stash": 2, "trade_chip": 3}
 
 def lane_why(r) -> str:
     """One line saying which mechanism makes him worth a spot, in points per week."""
+    st = r.get("out_status")
+    if isinstance(st, str) and st and pd.notna(r.get("out_back")):
+        out = {"IR": "on injured reserve", "Out": "ruled out", "Doubtful": "doubtful"}.get(st, st)
+        return f"{out}, back week {int(r['out_back'])} — " + _lane_why(r)
+    return _lane_why(r)
+
+
+def _lane_why(r) -> str:
     lane, mech = r.get("lane"), r.get("mechanism")
     if lane == "bid_now":
         return (f"+{r['next3']:.1f} pts/wk over the next 3 weeks"

@@ -240,3 +240,21 @@ def test_near_duplicate_offers_fold_into_one_headline(eng):
     firsts = {k: i for i, k in reversed(list(enumerate(
         (r["shape"], max(r["giveIds"], key=mv), max(r["getIds"], key=mv)) for r in rows)))}
     assert [firsts[k] for k in keys] == sorted(firsts[k] for k in keys)   # order of first appearance kept
+
+
+def test_a_player_ruled_out_is_priced_for_the_games_he_plays():
+    # QB1 (18) is ruled out of a quarter of his remaining games: priced at 13.5, so the
+    # team loses about 4.5 pts/wk (a little less where QB2's depth weight shifts)
+    l2 = copy.deepcopy(LEAGUE)
+    l2["players"]["m_qb1"]["out"] = {"share": 0.25, "back": 8}
+    e = create_engine(l2)
+    assert e.team_value(1) < create_engine(LEAGUE).team_value(1) - 4.0
+    assert e.ctx.players["m_qb1"]["out"]["back"] == 8
+    assert create_engine(LEAGUE).team_value(1) == pytest.approx(99.475)   # absent = untouched
+
+
+def test_lane_why_says_when_he_is_out():
+    from mega.needs import lane_why
+    r = {"lane": "stash", "mechanism": "START", "start": 0.5, "out_status": "IR", "out_back": 8.0}
+    assert lane_why(r).startswith("on injured reserve, back week 8 — ")
+    assert not lane_why({**r, "out_status": float("nan"), "out_back": float("nan")}).startswith("on injured")

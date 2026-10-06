@@ -30,7 +30,7 @@
         "lane": "bid_now",
         "fit_pts": 0.091,
         "start": 0.061,
-        "cover": 0.029,
+        "cover": 0.03,
         "insure": 0.0,
         "next3": 6.11,
         "mechanism": "START",
@@ -51,9 +51,11 @@
         "max_bid": 1,
         "role": "Starting QB",
         "why": "+6.1 pts/wk over the next 3 weeks \u2014 starts for you",
-        "d_title": 0.025,
+        "d_title": 0.022,
         "se_title": 0.0027,
-        "title_noise": false
+        "title_noise": false,
+        "out_status": "",
+        "out_back": null
       },
       {
         "player": "C.J. Stroud",
@@ -84,9 +86,11 @@
         "max_bid": 2,
         "role": "Starting QB",
         "why": "+5.6 pts/wk over the next 3 weeks \u2014 covers a bye or injury",
-        "d_title": 0.0218,
+        "d_title": 0.0198,
         "se_title": 0.0026,
-        "title_noise": false
+        "title_noise": false,
+        "out_status": "",
+        "out_back": null
       }
     ],
     "early_signal": [
@@ -118,10 +122,12 @@
         "bid": 16,
         "max_bid": 24,
         "role": "Committee back",
-        "why": "target hog: 32% chance his role grows within 3 weeks, worth +2.7 pts/wk if it does",
-        "d_title": 0.0185,
-        "se_title": 0.0028,
-        "title_noise": false
+        "why": "on injured reserve, back week 8 \u2014 target hog: 32% chance his role grows within 3 weeks, worth +2.7 pts/wk if it does",
+        "d_title": 0.015,
+        "se_title": 0.0027,
+        "title_noise": false,
+        "out_status": "IR",
+        "out_back": 8.0
       },
       {
         "player": "Rachaad White",
@@ -129,11 +135,11 @@
         "nfl_team": "WAS",
         "ppg": 8.48,
         "lane": "early_signal",
-        "fit_pts": 0.333,
+        "fit_pts": 0.334,
         "start": 0.03,
         "cover": 0.111,
         "insure": 0.192,
-        "next3": 0.25,
+        "next3": 0.252,
         "mechanism": "INSURE",
         "handcuff": false,
         "insures": "Jacory Croskey-Merritt",
@@ -152,9 +158,11 @@
         "max_bid": 4,
         "role": "Receiving back",
         "why": "playing up: 25% chance his role grows within 3 weeks, worth +0.1 pts/wk if it does",
-        "d_title": -0.0028,
-        "se_title": 0.0013,
-        "title_noise": false
+        "d_title": -0.0008,
+        "se_title": 0.0012,
+        "title_noise": true,
+        "out_status": "",
+        "out_back": null
       },
       {
         "player": "Tyler Allgeier",
@@ -185,9 +193,11 @@
         "max_bid": 3,
         "role": "Backup RB",
         "why": "playing up: 25% chance his role grows within 3 weeks, worth +0.0 pts/wk if it does",
-        "d_title": -0.003,
+        "d_title": -0.0015,
         "se_title": 0.0013,
-        "title_noise": false
+        "title_noise": true,
+        "out_status": "",
+        "out_back": null
       }
     ],
     "stash": [
@@ -220,9 +230,11 @@
         "max_bid": 0,
         "role": "WR1",
         "why": "bye and injury cover: +0.04 pts/wk across the season",
-        "d_title": -0.0022,
-        "se_title": 0.0013,
-        "title_noise": true
+        "d_title": -0.0018,
+        "se_title": 0.0012,
+        "title_noise": true,
+        "out_status": "",
+        "out_back": null
       },
       {
         "player": "Chris Rodriguez Jr.",
@@ -253,9 +265,11 @@
         "max_bid": 2,
         "role": "Backup RB",
         "why": "insurance on Bhayshul Tuten: +0.20 pts/wk in expectation",
-        "d_title": -0.003,
-        "se_title": 0.0011,
-        "title_noise": false
+        "d_title": -0.0025,
+        "se_title": 0.0008,
+        "title_noise": false,
+        "out_status": "",
+        "out_back": null
       }
     ]
   },
@@ -284,8 +298,8 @@
     "fit_min": 0.02,
     "budget_left": 69,
     "title": {
-      "p_playoffs": 0.3785,
-      "p_title": 0.035166666666666666,
+      "p_playoffs": 0.37566666666666665,
+      "p_title": 0.036,
       "posture": "balanced",
       "seasons": 6000
     }

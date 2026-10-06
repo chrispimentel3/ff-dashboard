@@ -131,7 +131,7 @@ def build_league(season: int, yahoo_rosters: pd.DataFrame | None = None) -> dict
         if pid in players:
             return pid
         gid, nrm = row.get("gsis_id"), row.get("norm")
-        weekly, avail = None, None
+        weekly, avail, out_info = None, None, None
         pr = proj.get(gid) if isinstance(gid, str) else None
         if pr and pos in ("QB", "RB", "WR", "TE"):
             ppg, src = pr["ros_pg"], "proj_ros"
@@ -145,6 +145,14 @@ def build_league(season: int, yahoo_rosters: pd.DataFrame | None = None) -> dict
             left = [v for w, v in (pr.get("weeks") or {}).items()
                     if int(w) >= proj_week and not v.get("bye")]
             avail = (sum(float(v.get("p_active", 1.0)) for v in left) / len(left)) if left else None
+            # games he is already ruled out of: the unbroken run of zero-p_active weeks from
+            # now (byes skipped). The per-game trade engine prices him as healthy otherwise.
+            todo = sorted((int(w), v) for w, v in (pr.get("weeks") or {}).items()
+                          if int(w) >= proj_week and not v.get("bye"))
+            n_out = next((i for i, (_, v) in enumerate(todo) if float(v.get("p_active", 1.0)) > 0), len(todo))
+            if n_out and todo:
+                out_info = {"share": round(n_out / len(todo), 3),
+                            "back": todo[n_out][0] if n_out < len(todo) else None}
             vn = vegas_now.get(gid)
             wk_now = (pr.get("weeks") or {}).get(str(proj_week)) or {}
             if vn is not None and pd.notna(vn) and proj_week and not wk_now.get("bye"):
@@ -177,6 +185,8 @@ def build_league(season: int, yahoo_rosters: pd.DataFrame | None = None) -> dict
             players[pid]["weekly"] = weekly
         if weekly is not None and avail is not None:
             players[pid]["avail"] = round(avail, 3)
+        if out_info:
+            players[pid]["out"] = out_info
         return pid
 
     teams, seat_of = [], {}
@@ -187,6 +197,8 @@ def build_league(season: int, yahoo_rosters: pd.DataFrame | None = None) -> dict
         seat_of[str(team)] = tid
         ir = ir_rows[ir_rows["team"] == team] if not ir_rows.empty else ir_rows
         ir_ids = [pid for pid in (add(r) for _, r in ir.iterrows()) if pid]
+        for pid in ir_ids:               # an IR slot is already priced by `avail` (ir_value)
+            players[pid].pop("out", None)
         teams.append({"id": tid, "name": str(team), "roster": roster, "ir": ir_ids})
 
     free_agents: list[str] = []
@@ -407,7 +419,8 @@ def targets_of(results: list) -> list[dict]:
     for r in results:
         for p in r["get"]:
             t = targets.setdefault(p["id"], {"name": p["name"], "pos": p.get("pos"),
-                                             "best_d_me": 0.0, "offers": 0})
+                                             "best_d_me": 0.0, "offers": 0,
+                                             "out": p.get("out")})
             t["offers"] += 1
             if len(r["get"]) == 1:
                 t["best_d_me"] = max(t["best_d_me"], r["dMe"])

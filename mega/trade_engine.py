@@ -68,7 +68,9 @@ def merge(a: dict, b: dict | None) -> dict:
 
 def value_at(p: dict, week: int | None) -> float:
     if week is None:
-        return p.get("ppg") or 0.0
+        # per-game price, less the share of his remaining games he's already ruled out of
+        # (trade_league sets `out`; absent for everyone in the pinned tests)
+        return (p.get("ppg") or 0.0) * (1 - (p.get("out") or {}).get("share", 0.0))
     if p.get("bye") == week:
         return 0.0
     wk = (p.get("weekly") or {}).get(str(week), (p.get("weekly") or {}).get(week))
@@ -330,7 +332,8 @@ def _after_ir(ctx: Ctx, team_id, out_ids, in_ids) -> tuple[Settled, list]:
 def _info(ctx: Ctx, pid: str) -> dict:
     p = ctx.players[pid]
     return {"id": pid, "name": p.get("name") or pid, "pos": p["pos"], "nfl": p.get("nfl"),
-            "ppg": p.get("ppg") or 0, "ecr": p.get("ecr")}
+            "ppg": p.get("ppg") or 0, "ecr": p.get("ecr"),
+            **({"out": p["out"]} if p.get("out") else {})}
 
 
 def flag_for(lineup_ok: bool, market_ok: bool) -> str:

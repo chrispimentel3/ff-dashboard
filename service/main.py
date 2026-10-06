@@ -404,6 +404,9 @@ def _package(season, next_week, eng, me, req, out, results, swap_ids, clock, lap
     ctx = eng.ctx
     ir_of = lambda ids: [{"name": ctx.players[p]["name"], "avail": ctx.players[p].get("avail")}
                          for p in ids if p in ctx.ir_owner]
+    # injured but not in an IR slot: priced at the share of his games he is not ruled out of
+    out_of = lambda ids: [{"name": ctx.players[p]["name"], **ctx.players[p]["out"]}
+                          for p in ids if ctx.players[p].get("out")]
     profiles = TL.team_profiles(ctx)
     rows = []
     for i, r in enumerate(results):
@@ -423,6 +426,7 @@ def _package(season, next_week, eng, me, req, out, results, swap_ids, clock, lap
             # players in this offer who are on injured reserve, with the share of the
             # remaining games each is projected to play (how they're valued)
             "on_ir": ir_of(r["giveIds"] + r["getIds"]),
+            "out_now": out_of(r["giveIds"] + r["getIds"]),
             "netted": bool(r.get("netted")),
             "odds": o.get("d_playoffs"),
             "their_odds": o.get("their_d_playoffs"),
