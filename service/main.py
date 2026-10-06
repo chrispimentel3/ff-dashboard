@@ -244,8 +244,8 @@ def _title_odds_rows(season: int, next_week: int, eng, my_id, results: list,
         after = {my_name: list(core["_after"]["me"].ids) + (moved["me"] if moved else ir(my_name, my_id)),
                  partner: list(core["_after"]["them"].ids)
                  + (moved["them"] if moved else ir(partner, r["partner"]["id"]))}
-        if r.get("netted") and swap_ids:
-            d = tm.delta_vs({my_name: list(swap_ids) + ir(my_name, my_id)}, after, (my_name, partner))
+        if r.get("netted") and (r.get("swap_ids") or swap_ids):
+            d = tm.delta_vs({my_name: list(r.get("swap_ids") or swap_ids) + ir(my_name, my_id)}, after, (my_name, partner))
         else:
             d = tm.delta(after, (my_name, partner))
         us, them = d.get(my_name, {}), d.get(partner, {})
@@ -277,7 +277,8 @@ class TradeSearchRequest(BaseModel):
 class TradeTeamRequest(BaseModel):
     team: str
     flags: list[str] = PydField(default_factory=lambda: ["LIKELY", "EXPLOIT", "NEEDS_PITCH"])
-    two_player: bool = True
+    size: int = PydField(default=2, ge=1, le=3)   # most players on a side: 1, 2 (+1-for-2) or 3 (+2-for-2, 3-for-1)
+    shape: str | None = None                      # only this shape, e.g. "2-for-2"
     order: str = "accept"
     odds: bool = True
 
@@ -516,34 +517,40 @@ def trade_team(req: TradeTeamRequest):
     if partner is None:
         raise HTTPException(status_code=400, detail=f"No team called {req.team!r} to trade with.")
 
-    shapes = ("1-for-1", "2-for-1") if req.two_player else ("1-for-1",)
     flags = tuple(f.upper().replace(" ", "_") for f in req.flags) or ("LIKELY", "EXPLOIT", "NEEDS_PITCH")
-    key = (id(eng), "team", partner["id"], flags, shapes, req.order)
+    key = (id(eng), "team", partner["id"], flags, req.size, req.order)
     with _SEARCH_LOCK:
         hit = _searches.get(key)
         if hit is not None:
             _searches.move_to_end(key)
-    if hit is not None:
-        out, results, swap_ids = hit
-    else:
-        out = TL.find_with_team(eng, me, partner["id"], top_n=10**6, include_flags=flags, shapes=shapes)
+    if hit is None:
+        out = TL.find_with_team(eng, me, partner["id"], top_n=10**6, include_flags=flags, size=req.size)
         results, swap_ids = TL.net_free_swap(eng, me, out["results"])
         results, _ = TL.drop_padding(results, eng.ctx.cfg["padTolerance"])
-        out = {**out, "targets": TL.targets_of(results)}
+        out = {**{k: v for k, v in out.items() if k != "results"}, "targets": TL.targets_of(results)}
         if req.order == "accept":
             rank = {"LIKELY": 0, "NEEDS_PITCH": 1, "EXPLOIT": 2, "LONGSHOT": 3}
             results = sorted(results, key=lambda r: (rank.get(r["flag"], 9), -r["dMe"]))
         else:
             results = sorted(results, key=lambda r: -r["dMe"])
-        results = results[:TEAM_SHOW]
+        # keep only what can be shown: the best TEAM_SHOW overall and per shape (the page's
+        # filter), so a cached search stays small however many offers it found
+        counts = {}
+        for r in results:
+            counts[r["shape"]] = counts.get(r["shape"], 0) + 1
+        by_shape = {sh: [r for r in results if r["shape"] == sh][:TEAM_SHOW] for sh in counts}
+        hit = (out, {"all": results[:TEAM_SHOW], **by_shape}, swap_ids, counts)
         with _SEARCH_LOCK:
-            _searches[key] = (out, results, swap_ids)
+            _searches[key] = hit
             while len(_searches) > SEARCH_KEEP:
                 _searches.popitem(last=False)
+    out, lists, swap_ids, counts = hit
+    results = lists.get(req.shape or "all", [])
     lap("search")
     return _package(season, next_week, eng, me, req, out, results, swap_ids, clock, lap,
-                    extra={"team": partner["name"],
-                           "targets": [{**t, "best_d_me": round(t["best_d_me"], 2)} for t in out["targets"][:12]]})
+                    extra={"team": partner["name"], "profile": TL.team_profile(eng, partner["id"]),
+                           "shape_counts": counts,
+                           "targets": [{**t, "best_d_me": round(t["best_d_me"], 2)} for t in out["targets"] if t["best_d_me"] > 0][:12]})
 
 
 @app.post("/ask")

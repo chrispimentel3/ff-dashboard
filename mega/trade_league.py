@@ -16,6 +16,8 @@ Two league specifics the engine's defaults get wrong and this module fixes:
 """
 from __future__ import annotations
 
+import math
+
 import pandas as pd
 
 from .config import DATA, FLEX_ELIGIBLE, IR_SLOTS, LINEUP, MY_TEAM
@@ -229,30 +231,69 @@ def find_from_my_player(engine, my_id: int, give_ids: list[str], **opts) -> dict
 
 
 def drop_padding(results: list, pad: float) -> tuple[list, int]:
-    """A pair is padding when either of its players alone, for the same return, already does
-    as well for both sides. The engine checks that only against the player it searched from,
-    and a 2-for-1 restated by net_free_swap changes its numbers — so a search that merges many
-    starting points, or nets, runs this over the whole list."""
-    singles = {(r["giveIds"][0], frozenset(r["getIds"])): r for r in results if len(r["giveIds"]) == 1}
-    kept = [r for r in results if not (len(r["giveIds"]) == 2 and any(
-        (s := singles.get((g, frozenset(r["getIds"])))) and s["dMe"] >= r["dMe"] - pad
-        and s["dThem"] >= r["dThem"] - pad for g in r["giveIds"]))]
+    """A package is padding when taking one piece out of it — one of what I give, or one of
+    what I get — leaves an offer that is already as good for both sides. The engine checks
+    that only against the player it searched from, and a netted offer changes its numbers —
+    so a search that merges many starting points, or nets, runs this over the whole list."""
+    by_key = {(frozenset(r["giveIds"]), frozenset(r["getIds"])): r for r in results}
+
+    def padded(r) -> bool:
+        give, get = frozenset(r["giveIds"]), frozenset(r["getIds"])
+        subs = ([(give - {x}, get) for x in give] if len(give) > 1 else []) + \
+               ([(give, get - {y}) for y in get] if len(get) > 1 else [])
+        return any((q := by_key.get(k)) and q["dMe"] >= r["dMe"] - pad and q["dThem"] >= r["dThem"] - pad
+                   for k in subs)
+
+    kept = [r for r in results if not padded(r)]
     return kept, len(results) - len(kept)
+
+
+MAX_OVERPAY = 1.5      # the big shapes skip packages worth more than this times what I get, to them
+
+
+def _big_packages(engine, my_id: int, partner_id: int, include_flags, min_delta_me: float) -> list:
+    """2-for-2 and 3-for-1, which the engine's search does not build. Their numbers are too many
+    to run through the lineup optimizer (about 20,000), so only packages the other manager
+    could call fair are evaluated: his market test is `ratio >= 1 - tolerance`, and one worth
+    far more than what I get is a gift, not an offer."""
+    from itertools import combinations
+    from . import trade_engine as te
+    ctx = engine.ctx
+    bias = (ctx.cfg.get("market", {}).get("bias") or {}).get(str(partner_id)) or {}
+    floor = 1 - ctx.cfg["market"]["tolerance"]
+    valued = lambda ids: [i for i in ids if ctx.players[i]["pos"] in ctx.valued_pos]
+    mine = valued([*ctx.teams[my_id]["roster"], *ctx.ir.get(my_id, [])])
+    theirs = valued(ctx.teams[partner_id]["roster"])
+    mv = {i: te.market_value(ctx.players[i], ctx.cfg, bias) for i in mine + theirs}
+    out = []
+    for g_n, r_n in ((2, 2), (3, 1)):
+        for give in combinations(mine, g_n):
+            sent = sum(mv[i] for i in give)
+            for get in combinations(theirs, r_n):
+                got = sum(mv[i] for i in get)
+                if got <= 0 or not floor <= sent / got <= MAX_OVERPAY:
+                    continue
+                core = te.evaluate_core(ctx, my_id, partner_id, list(give), list(get))
+                if core["dMe"] >= min_delta_me and core["flag"] in include_flags:
+                    out.append(te.with_detail(ctx, my_id, core))
+    return out
 
 
 def find_with_team(engine, my_id: int, partner_id: int, top_n: int = 40,
                    include_flags: tuple[str, ...] = ("LIKELY", "EXPLOIT", "NEEDS_PITCH"),
-                   shapes: tuple[str, ...] = ("1-for-1", "2-for-1")) -> dict:
+                   size: int = 2) -> dict:
     """Every offer to one named team: the engine's own search, once per player of mine with
     `partners` pinned, merged (a pair found from either of its players is one offer) and ranked
-    like the single-player search."""
+    like the single-player search. `size` is the most players on a side: 1 is 1-for-1, 2 adds
+    2-for-1 and 1-for-2, 3 adds 2-for-2 and 3-for-1."""
     ctx = engine.ctx
     empty = {"results": [], "evaluated": 0, "padded": 0, "matched": 0}
     if partner_id == my_id or partner_id not in ctx.teams:
         return empty
     mine = [i for i in [*ctx.teams[my_id]["roster"], *ctx.ir.get(my_id, [])]
             if ctx.players[i]["pos"] in ctx.valued_pos]
-    opts = {"partners": [partner_id], "shapes": list(shapes), "includeFlags": list(include_flags),
+    shapes = ["1-for-1"] if size < 2 else ["1-for-1", "2-for-1", "1-for-2"]
+    opts = {"partners": [partner_id], "shapes": shapes, "includeFlags": list(include_flags),
             "topN": 10**6}
     seen, evaluated, padded = {}, 0, 0
     for pid in mine:
@@ -260,6 +301,9 @@ def find_with_team(engine, my_id: int, partner_id: int, top_n: int = 40,
         evaluated += out["evaluated"]
         padded += out["padded"]
         for r in out["results"]:
+            seen.setdefault((frozenset(r["giveIds"]), frozenset(r["getIds"])), r)
+    if size >= 3:
+        for r in _big_packages(engine, my_id, partner_id, include_flags, engine.ctx.cfg["search"]["minDeltaMe"]):
             seen.setdefault((frozenset(r["giveIds"]), frozenset(r["getIds"])), r)
     kept, n = drop_padding(list(seen.values()), ctx.cfg["padTolerance"])
     padded += n
@@ -269,51 +313,100 @@ def find_with_team(engine, my_id: int, partner_id: int, top_n: int = 40,
             "matched": len(results)}
 
 
+NEED_GAP = 1.0        # pts/wk below the league's average starters at a position to call it a need
+
+
+def team_profile(engine, team_id: int) -> dict:
+    """What one team is thin at and where it has players to spare, for pitching a trade.
+
+    A need is a position where the team's starters score NEED_GAP or more below the league's
+    average at it (each position's starters summed, so a team that starts three WRs through the
+    flex is not called thin at RB). Spare players are bench players who would start for the
+    typical team — the worst starter at their position, league-median — so they are worth
+    offering rather than sitting on."""
+    from statistics import median
+    from . import trade_engine as te
+    ctx = engine.ctx
+    pts, worst, benches = {}, {}, {}
+    for tid, t in ctx.teams.items():
+        lu = te.lineup(t["roster"], ctx)
+        starting = {e[0] for e in lu.starters}
+        for pos in ctx.valued_pos:
+            at = [e[2] for e in lu.starters if e[1] == pos]
+            pts.setdefault(pos, {})[tid] = sum(at)
+            if at:
+                worst.setdefault(pos, []).append(min(at))
+        benches[tid] = [i for i in t["roster"] if i not in starting and ctx.players[i]["pos"] in ctx.valued_pos]
+    if team_id not in ctx.teams:
+        return {"needs": [], "spare": []}
+    needs = []
+    for pos, by_team in pts.items():
+        gap = sum(by_team.values()) / len(by_team) - by_team[team_id]
+        if gap >= NEED_GAP:
+            needs.append({"pos": pos, "gap": round(gap, 1)})
+    typical = {pos: median(v) for pos, v in worst.items()}
+    spare = sorted((ctx.players[i] for i in benches[team_id]
+                    if (ctx.players[i].get("ppg") or 0) >= typical.get(ctx.players[i]["pos"], math.inf)),
+                   key=lambda p: -(p.get("ppg") or 0))
+    return {"needs": sorted(needs, key=lambda n: -n["gap"]),
+            "spare": [{"name": p["name"], "pos": p["pos"], "ppg": round(p.get("ppg") or 0, 1)} for p in spare[:3]]}
+
+
 def targets_of(results: list) -> list[dict]:
     """Their players, best change to my lineup first. Run on offers already restated by
     net_free_swap — before that, any trade that opens a roster spot is credited with the free
-    agent who fills it, and every player it touches looks equally good."""
+    agent who fills it, and every player it touches looks equally good. A player's gain is the
+    best offer where he is the only one I get: in a package of two, the second is a passenger
+    and would borrow the first's number. A player who only ever comes in a pair is listed
+    with a gain of 0 (a sweetener, not a target)."""
     targets: dict = {}
     for r in results:
         for p in r["get"]:
             t = targets.setdefault(p["id"], {"name": p["name"], "pos": p.get("pos"),
-                                             "best_d_me": r["dMe"], "offers": 0})
-            t["best_d_me"] = max(t["best_d_me"], r["dMe"])
+                                             "best_d_me": 0.0, "offers": 0})
             t["offers"] += 1
+            if len(r["get"]) == 1:
+                t["best_d_me"] = max(t["best_d_me"], r["dMe"])
     return sorted(targets.values(), key=lambda t: -t["best_d_me"])
 
 
 def net_free_swap(engine, my_id: int, results: list, min_delta_me: float = 0.01) -> tuple[list, list]:
-    """Re-state 2-for-1s against the best add/drop available WITHOUT trading — the same
-    netting the offer cards do (mega/trade_theses.py, handoff §6.5).
+    """Re-state offers that open a roster spot (2-for-1, 3-for-1) against the best add/drops
+    available WITHOUT trading — the same netting the offer cards do (mega/trade_theses.py,
+    handoff §6.5).
 
     A 2-for-1 opens a roster spot the engine fills with the best free agent, and credits
     the trade with him. That pickup was always available, so the trade only earns what it
-    adds beyond it. Rows with nothing left afterwards are dropped. Returns the rows and
-    the free-swap roster they are now measured against."""
+    adds beyond it; a 3-for-1 opens two spots and is netted against two. Rows with nothing
+    left afterwards are dropped. Returns the rows and the one-swap roster they are measured
+    against (a row measured against more carries its own as `swap_ids`)."""
     from . import trade_engine as te
     from .trade_theses import free_swap
 
     ctx = engine.ctx
-    swap_ids, swap_val = free_swap(ctx, ctx.base[my_id].ids)
-    swap_val_ir = None
-    swap = None
+    swaps: dict[int, tuple[list, float]] = {}      # k -> roster after k free swaps, its value
+
+    def swap_for(k: int) -> tuple[list, float]:
+        if k not in swaps:
+            ids, _ = swap_for(k - 1) if k > 1 else (ctx.base[my_id].ids, 0.0)
+            swaps[k] = free_swap(ctx, ids)
+        return swaps[k]
+
+    swap_ids = swap_for(1)[0]
     out = []
     for r in results:
         core = te.evaluate_core(ctx, my_id, r["partner"]["id"], r["giveIds"], r["getIds"])
         a_me = core["_after"]["me"]
-        if r["shape"] == "2-for-1" and a_me.added:
-            ref = swap_val
+        if len(r["giveIds"]) > len(r["getIds"]) and a_me.added:
+            ids, ref = swap_for(len(r["giveIds"]) - len(r["getIds"]))
             if "_after_ir" in core:          # an IR trade is valued counting IR players
-                if swap_val_ir is None:
-                    swap_val_ir = te.ir_value(list(swap_ids), ctx.ir.get(my_id, []), ctx)
-                ref = swap_val_ir
+                ref = te.ir_value(list(ids), ctx.ir.get(my_id, []), ctx)
             d = a_me.value - ref
             if d < min_delta_me:
                 continue
-            swap = swap or te.settle(list(swap_ids), ctx, set())
+            swap = te.settle(list(ids), ctx, set())
             r = {**r, "dMe": d, "me": te._side(ctx, swap, a_me), "netted": True,
-                 "fa_add": [ctx.players[i]["name"] for i in a_me.added]}
+                 "fa_add": [ctx.players[i]["name"] for i in a_me.added], "swap_ids": list(ids)}
         out.append(r)
     return out, list(swap_ids)
 

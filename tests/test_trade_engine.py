@@ -171,3 +171,40 @@ def test_a_team_search_is_every_offer_to_that_team_once(eng):
     assert [x["best_d_me"] for x in t] == sorted((x["best_d_me"] for x in t), reverse=True)
     assert {x["name"] for x in t} <= {p["name"] for p in LEAGUE["players"].values()}
     assert TL.find_with_team(eng, 1, 1)["results"] == []                # not a trade with yourself
+
+
+def test_padding_is_any_piece_that_changes_nothing():
+    from mega import trade_league as TL
+    o = lambda g, r, me, them: {"giveIds": g, "getIds": r, "dMe": me, "dThem": them}
+    single, pair = o(["a"], ["x"], 5.0, -1.0), o(["a", "b"], ["x"], 5.02, -1.0)
+    triple = o(["a", "b", "c"], ["x"], 5.02, -1.0)        # a on its own already does it
+    real = o(["a", "d"], ["x"], 6.5, -1.0)                 # d adds 1.5 pts for me: a real sweetener
+    extra = o(["a"], ["x", "y"], 5.0, -1.0)                # taking y too changes nothing
+    kept, n = TL.drop_padding([single, pair, triple, real, extra], 0.05)
+    assert kept == [single, real] and n == 3
+
+
+def test_a_big_search_adds_2_for_2_and_3_for_1_and_nets_every_spot_it_opens(eng):
+    from mega import trade_league as TL
+    wide = tuple(ALL_FLAGS)
+    two = TL.find_with_team(eng, 1, 2, top_n=10**6, include_flags=wide, size=2)
+    big = TL.find_with_team(eng, 1, 2, top_n=10**6, include_flags=wide, size=3)
+    shapes = lambda out: {r["shape"] for r in out["results"]}
+    assert shapes(two) <= {"1-for-1", "2-for-1", "1-for-2"}
+    assert shapes(big) - shapes(two) <= {"2-for-2", "3-for-1"} and shapes(big) >= shapes(two)
+    assert TL.find_with_team(eng, 1, 2, include_flags=wide, size=1)["results"] and \
+        shapes(TL.find_with_team(eng, 1, 2, top_n=10**6, include_flags=wide, size=1)) == {"1-for-1"}
+    rows, _ = TL.net_free_swap(eng, 1, big["results"])
+    assert all(r.get("netted") for r in rows if len(r["giveIds"]) > len(r["getIds"]) and r.get("fa_add"))
+
+
+def test_a_teams_needs_and_spare_players():
+    from mega import trade_league as TL
+    e = create_engine(LEAGUE)
+    for tid in (2, 3):
+        p = TL.team_profile(e, tid)
+        assert all(n["gap"] >= TL.NEED_GAP for n in p["needs"])
+        assert [n["gap"] for n in p["needs"]] == sorted((n["gap"] for n in p["needs"]), reverse=True)
+        assert len(p["spare"]) <= 3 and all(s["ppg"] > 0 for s in p["spare"])
+    assert "RB" in {n["pos"] for n in TL.team_profile(e, 3)["needs"]}      # "RB-thin B"
+    assert TL.team_profile(e, 99) == {"needs": [], "spare": []}
