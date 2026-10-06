@@ -184,14 +184,14 @@ def test_padding_is_any_piece_that_changes_nothing():
     assert kept == [single, real] and n == 3
 
 
-def test_a_big_search_adds_2_for_2_and_3_for_1_and_nets_every_spot_it_opens(eng):
+def test_a_big_search_adds_2_for_2_3_for_1_and_3_for_2_and_nets_every_spot_it_opens(eng):
     from mega import trade_league as TL
     wide = tuple(ALL_FLAGS)
     two = TL.find_with_team(eng, 1, 2, top_n=10**6, include_flags=wide, size=2)
     big = TL.find_with_team(eng, 1, 2, top_n=10**6, include_flags=wide, size=3)
     shapes = lambda out: {r["shape"] for r in out["results"]}
     assert shapes(two) <= {"1-for-1", "2-for-1", "1-for-2"}
-    assert shapes(big) - shapes(two) <= {"2-for-2", "3-for-1"} and shapes(big) >= shapes(two)
+    assert shapes(big) - shapes(two) <= {"2-for-2", "3-for-1", "3-for-2"} and shapes(big) >= shapes(two)
     assert TL.find_with_team(eng, 1, 2, include_flags=wide, size=1)["results"] and \
         shapes(TL.find_with_team(eng, 1, 2, top_n=10**6, include_flags=wide, size=1)) == {"1-for-1"}
     rows, _ = TL.net_free_swap(eng, 1, big["results"])
@@ -208,3 +208,19 @@ def test_a_teams_needs_and_spare_players():
         assert len(p["spare"]) <= 3 and all(s["ppg"] > 0 for s in p["spare"])
     assert "RB" in {n["pos"] for n in TL.team_profile(e, 3)["needs"]}      # "RB-thin B"
     assert TL.team_profile(e, 99) == {"needs": [], "spare": []}
+
+
+def test_lineup_detail_can_wait_until_the_list_is_cut(eng):
+    """The big search leaves rows without lineup detail and nets them lazily; ensure_detail
+    must give the same rows, numbers included, as netting with the detail up front."""
+    from mega import trade_league as TL
+    big = TL.find_with_team(eng, 1, 2, top_n=10**6, include_flags=tuple(ALL_FLAGS), size=3)
+    eager = TL.ensure_detail(eng, 1, TL.net_free_swap(eng, 1, big["results"])[0])
+    lazy, _ = TL.net_free_swap(eng, 1, big["results"], lite=True)
+    full = TL.ensure_detail(eng, 1, lazy)
+    key = lambda r: (tuple(sorted(r["giveIds"])), tuple(sorted(r["getIds"])))
+    a, b = {key(r): r for r in eager}, {key(r): r for r in full}
+    assert a.keys() == b.keys() and a
+    for k, r in b.items():
+        assert r["dMe"] == pytest.approx(a[k]["dMe"]) and "me" in r and "them" in r and "give" in r
+        assert r["me"]["valueAfter"] == pytest.approx(a[k]["me"]["valueAfter"])

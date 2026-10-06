@@ -525,7 +525,7 @@ def trade_team(req: TradeTeamRequest):
             _searches.move_to_end(key)
     if hit is None:
         out = TL.find_with_team(eng, me, partner["id"], top_n=10**6, include_flags=flags, size=req.size)
-        results, swap_ids = TL.net_free_swap(eng, me, out["results"])
+        results, swap_ids = TL.net_free_swap(eng, me, out["results"], lite=True)
         results, _ = TL.drop_padding(results, eng.ctx.cfg["padTolerance"])
         out = {**{k: v for k, v in out.items() if k != "results"}, "targets": TL.targets_of(results)}
         if req.order == "accept":
@@ -539,7 +539,10 @@ def trade_team(req: TradeTeamRequest):
         for r in results:
             counts[r["shape"]] = counts.get(r["shape"], 0) + 1
         by_shape = {sh: [r for r in results if r["shape"] == sh][:TEAM_SHOW] for sh in counts}
-        hit = (out, {"all": results[:TEAM_SHOW], **by_shape}, swap_ids, counts)
+        lists = {"all": results[:TEAM_SHOW], **by_shape}
+        shown = {id(r): r for lst in lists.values() for r in lst}      # lineup detail only for these
+        full = dict(zip(shown, TL.ensure_detail(eng, me, list(shown.values()))))
+        hit = (out, {k: [full[id(r)] for r in lst] for k, lst in lists.items()}, swap_ids, counts)
         with _SEARCH_LOCK:
             _searches[key] = hit
             while len(_searches) > SEARCH_KEEP:
@@ -550,7 +553,7 @@ def trade_team(req: TradeTeamRequest):
     return _package(season, next_week, eng, me, req, out, results, swap_ids, clock, lap,
                     extra={"team": partner["name"], "profile": TL.team_profile(eng, partner["id"]),
                            "shape_counts": counts,
-                           "targets": [{**t, "best_d_me": round(t["best_d_me"], 2)} for t in out["targets"] if t["best_d_me"] > 0][:12]})
+                           "targets": [{**t, "best_d_me": round(t["best_d_me"], 2)} for t in out["targets"] if t["best_d_me"] >= 0.05][:12]})
 
 
 @app.post("/ask")
