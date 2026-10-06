@@ -90,7 +90,7 @@ def test_offers_come_back_first_and_the_odds_call_reuses_the_search(monkeypatch)
     then asks again with odds — which must not run the search a second time."""
     from service import main as M
 
-    ctx = SimpleNamespace(players={"a": {"name": "A"}, "b": {"name": "B"}}, ir_owner={}, teams={})
+    ctx = SimpleNamespace(players={"a": {"name": "A", "pos": "RB"}, "b": {"name": "B", "pos": "WR"}}, ir_owner={}, teams={})
     eng = SimpleNamespace(ctx=ctx)
     row = {"partner": {"id": 2, "name": "Them"}, "shape": "1-for-1", "give": [{"name": "A"}],
            "get": [{"name": "B"}], "giveIds": ["a"], "getIds": ["b"], "dMe": 1.0, "dThem": 0.5,
