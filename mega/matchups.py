@@ -32,7 +32,9 @@ def _clean_difficulty(show: pd.DataFrame | None) -> list[dict]:
         return []
     df = show.copy()
     if "verdict" in df.columns:
-        df["verdict"] = df["verdict"].astype(str).map(lambda v: _VERDICT_EMOJI.sub("", v))
+        # a player with no verdict (a bye week) is "" — astype(str) leaves a missing value in an
+        # Arrow-backed column as NaN, which the regex then chokes on
+        df["verdict"] = df["verdict"].map(lambda v: _VERDICT_EMOJI.sub("", v) if isinstance(v, str) else "")
     return _records(df)
 
 

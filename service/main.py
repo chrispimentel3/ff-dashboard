@@ -404,11 +404,14 @@ def _package(season, next_week, eng, me, req, out, results, swap_ids, clock, lap
     ctx = eng.ctx
     ir_of = lambda ids: [{"name": ctx.players[p]["name"], "avail": ctx.players[p].get("avail")}
                          for p in ids if p in ctx.ir_owner]
+    profiles = TL.team_profiles(ctx)
     rows = []
     for i, r in enumerate(results):
         o = odds.get(i, {})
         rows.append({
             "partner": r["partner"]["name"],
+            "partner_profile": profiles.get(r["partner"]["id"]),
+            "give_pos": [ctx.players[p]["pos"] for p in r["giveIds"]],
             "shape": r["shape"],
             "give": [p["name"] for p in r["give"]],
             "get": [p["name"] for p in r["get"]],

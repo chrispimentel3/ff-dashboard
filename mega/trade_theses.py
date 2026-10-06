@@ -340,6 +340,7 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
     cfg = tl.engine_config()
     cfg["market"] = {"bias": {str(id_of[n]): b for n, b in bias_by_name.items() if n in id_of}}
     ctx = te.build_context(lg, cfg)
+    profiles = tl.team_profiles(ctx)       # who needs what, shown on each card
 
     # ---- §6.1 candidates from the engine, not from FantasyCalc
     me = ctx.teams[my_id]
@@ -499,7 +500,7 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
             return out
 
         cards.append({
-            "partner": partner, "shape": c["shape"],
+            "partner": partner, "shape": c["shape"], "partner_profile": profiles.get(c["partner"]["id"]),
             "give": [{"name": ctx.players[i]["name"], "pos": ctx.players[i]["pos"], "ros_pg": round(ctx.players[i]["ppg"], 2)} for i in c["giveIds"]],
             "get": [{"name": ctx.players[i]["name"], "pos": ctx.players[i]["pos"], "ros_pg": round(ctx.players[i]["ppg"], 2)} for i in c["getIds"]],
             "tags": [t["tag"] for t in tags[:2]], "all_tags": [t["tag"] for t in tags],

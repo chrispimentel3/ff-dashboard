@@ -355,8 +355,8 @@ def collapse_variants(ctx, results: list) -> list:
 NEED_GAP = 1.0        # pts/wk below the league's average starters at a position to call it a need
 
 
-def team_profile(engine, team_id: int) -> dict:
-    """What one team is thin at and where it has players to spare, for pitching a trade.
+def team_profiles(ctx) -> dict:
+    """What every team is thin at and where it has players to spare, for pitching a trade.
 
     A need is a position where the team's starters score NEED_GAP or more below the league's
     average at it (each position's starters summed, so a team that starts three WRs through the
@@ -365,7 +365,6 @@ def team_profile(engine, team_id: int) -> dict:
     offering rather than sitting on."""
     from statistics import median
     from . import trade_engine as te
-    ctx = engine.ctx
     pts, worst, benches = {}, {}, {}
     for tid, t in ctx.teams.items():
         lu = te.lineup(t["roster"], ctx)
@@ -376,19 +375,25 @@ def team_profile(engine, team_id: int) -> dict:
             if at:
                 worst.setdefault(pos, []).append(min(at))
         benches[tid] = [i for i in t["roster"] if i not in starting and ctx.players[i]["pos"] in ctx.valued_pos]
-    if team_id not in ctx.teams:
-        return {"needs": [], "spare": []}
-    needs = []
-    for pos, by_team in pts.items():
-        gap = sum(by_team.values()) / len(by_team) - by_team[team_id]
-        if gap >= NEED_GAP:
-            needs.append({"pos": pos, "gap": round(gap, 1)})
     typical = {pos: median(v) for pos, v in worst.items()}
-    spare = sorted((ctx.players[i] for i in benches[team_id]
-                    if (ctx.players[i].get("ppg") or 0) >= typical.get(ctx.players[i]["pos"], math.inf)),
-                   key=lambda p: -(p.get("ppg") or 0))
-    return {"needs": sorted(needs, key=lambda n: -n["gap"]),
-            "spare": [{"name": p["name"], "pos": p["pos"], "ppg": round(p.get("ppg") or 0, 1)} for p in spare[:3]]}
+    out = {}
+    for tid in ctx.teams:
+        needs = []
+        for pos, by_team in pts.items():
+            gap = sum(by_team.values()) / len(by_team) - by_team[tid]
+            if gap >= NEED_GAP:
+                needs.append({"pos": pos, "gap": round(gap, 1)})
+        spare = sorted((ctx.players[i] for i in benches[tid]
+                        if (ctx.players[i].get("ppg") or 0) >= typical.get(ctx.players[i]["pos"], math.inf)),
+                       key=lambda p: -(p.get("ppg") or 0))
+        out[tid] = {"needs": sorted(needs, key=lambda n: -n["gap"]),
+                    "spare": [{"name": p["name"], "pos": p["pos"], "ppg": round(p.get("ppg") or 0, 1)}
+                              for p in spare[:3]]}
+    return out
+
+
+def team_profile(engine, team_id: int) -> dict:
+    return team_profiles(engine.ctx).get(team_id, {"needs": [], "spare": []})
 
 
 def targets_of(results: list) -> list[dict]:

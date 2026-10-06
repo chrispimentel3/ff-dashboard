@@ -135,3 +135,12 @@ def test_every_card_is_complete(live):
         for side in ("us", "them"):
             assert {"d_week", "d_ros", "d_title"} <= set(c[side])
         assert 0.0 <= c["p_accept"] <= 1.0
+
+
+def test_every_team_gets_a_profile_and_in_a_two_team_league_nobody_shares_a_need():
+    from mega import trade_league as TL
+    prof = TL.team_profiles(_ctx())
+    assert set(prof) == {1, 2}
+    needs = {t: {n["pos"] for n in p["needs"]} for t, p in prof.items()}
+    assert not (needs[1] & needs[2])           # each is below the average where the other is above it
+    assert all(n["gap"] >= TL.NEED_GAP for p in prof.values() for n in p["needs"])
