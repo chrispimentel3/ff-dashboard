@@ -15,10 +15,10 @@
     "headshot_url": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/ahtbv63jyg8ampmyrxn9"
   },
   "ownership": {
-    "kind": "free_agent",
+    "kind": "waivers",
     "team": null,
     "slot": null,
-    "waiver_until": null
+    "waiver_until": "Oct 7"
   },
   "nfl_status": "Active",
   "out_reason": null,
@@ -26,8 +26,8 @@
     "2026": {
       "games": 1,
       "pts_pg": 12.040000000000001,
-      "xfp_pg": 13.764000000000001,
-      "vs_exp_pg": -1.7240000000000002,
+      "xfp_pg": 13.705799999999998,
+      "vs_exp_pg": -1.6657999999999973,
       "usage_label": "Pass att/g",
       "usage_value": 33.0,
       "usage_fmt": "33.0",
@@ -45,7 +45,7 @@
         },
         {
           "stat": "Expected pts/g",
-          "value_fmt": "13.8",
+          "value_fmt": "13.7",
           "pos_rank": "\u2014",
           "means": "What his volume should score."
         },
@@ -120,7 +120,7 @@
         {
           "week": 4,
           "game": "vs IND",
-          "snap_pct": null,
+          "snap_pct": 0.84,
           "completions": 15,
           "attempts": 33,
           "passing_yards": 186,
@@ -131,8 +131,8 @@
           "rushing_yards": 16,
           "rushing_tds": 0,
           "half_ppr": 12.040000000000001,
-          "xfp": 13.764000000000001,
-          "vs_exp": -1.7240000000000002
+          "xfp": 13.705799999999998,
+          "vs_exp": -1.6657999999999973
         }
       ],
       "role": {
@@ -145,17 +145,26 @@
             "him": 0.10841467701376309,
             "role_avg": 0.09304274937133278,
             "vs_role": 116.52136006974717,
-            "nfl_avg": 0.1297568710359408,
-            "vs_nfl": 83.55216656213433,
+            "nfl_avg": 0.1290828325058793,
+            "vs_nfl": 83.98845524932618,
+            "fmt": "{:.1%}"
+          },
+          {
+            "metric": "snap %",
+            "him": 0.7297785267212327,
+            "role_avg": 0.6082089552238806,
+            "vs_role": 119.98812586582228,
+            "nfl_avg": 0.8778169390152729,
+            "vs_nfl": 83.13561681093687,
             "fmt": "{:.1%}"
           },
           {
             "metric": "xFP share",
-            "him": 0.20009845126080453,
-            "role_avg": 0.13445219346011003,
-            "vs_role": 148.82498091797274,
-            "nfl_avg": 0.21753296997777108,
-            "vs_nfl": 91.98534423598036,
+            "him": 0.19986802615998797,
+            "role_avg": 0.1344861945531808,
+            "vs_role": 148.61601729756194,
+            "nfl_avg": 0.21806145974070776,
+            "vs_nfl": 91.65674044264713,
             "fmt": "{:.1%}"
           }
         ]

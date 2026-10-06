@@ -51,13 +51,13 @@
         },
         {
           "stat": "Snap share",
-          "value_fmt": "1%",
+          "value_fmt": "7%",
           "pos_rank": "\u2014",
           "means": "Share of his offense's plays he was on the field for."
         },
         {
           "stat": "Routes/game (est.)",
-          "value_fmt": "0.0",
+          "value_fmt": "6.1",
           "pos_rank": "\u2014",
           "means": "Pass routes run per game. Estimated from snap share \u00d7 team dropbacks \u2014 nflverse has no charted route count. Under ~25 is a part-time role."
         },
@@ -75,13 +75,13 @@
         },
         {
           "stat": "Targets per route (est.)",
-          "value_fmt": "\u2014",
+          "value_fmt": "0.0%",
           "pos_rank": "\u2014",
           "means": "How often he's thrown to when he's actually in a route. Around 20%+ is a featured receiver. This is what separates a real role from empty snaps."
         },
         {
           "stat": "1st downs per route (est.)",
-          "value_fmt": "\u2014",
+          "value_fmt": "0.0%",
           "pos_rank": "\u2014",
           "means": "The single best read on a receiver. 12%+ is the league-winner line for a WR. Tight ends read lower \u2014 the route estimate counts their blocking snaps, so judge a TE against TEs."
         },
@@ -117,7 +117,7 @@
         },
         {
           "stat": "Yds per route (est.)",
-          "value_fmt": "\u2014",
+          "value_fmt": "0.00",
           "pos_rank": "\u2014",
           "means": "Receiving yards per route run. About 2.0+ is a WR1's efficiency; on the same route estimate."
         },
@@ -144,8 +144,8 @@
         {
           "week": 4,
           "game": "@ WAS",
-          "snap_pct": null,
-          "routes": 0.0,
+          "snap_pct": 0.17,
+          "routes": 6.0,
           "targets": 0,
           "tgt_pct": 0.0,
           "receptions": 0,
@@ -166,20 +166,47 @@
         "rows": [
           {
             "metric": "target share",
-            "him": 0.0339458764864327,
-            "role_avg": 0.05035305012154184,
+            "him": 0.031954636337837995,
+            "role_avg": 0.047399377234459694,
             "vs_role": 67.41573033707864,
-            "nfl_avg": 0.12275695549580201,
-            "vs_nfl": 27.65291494019951,
+            "nfl_avg": 0.12258340920044984,
+            "vs_nfl": 26.067668166729966,
             "fmt": "{:.1%}"
           },
           {
             "metric": "air-yards share",
-            "him": 0.05652061449473446,
-            "role_avg": 0.07098989180538648,
+            "him": 0.05341771636718829,
+            "role_avg": 0.0670926517571885,
             "vs_role": 79.61783439490446,
-            "nfl_avg": 0.167706290048385,
-            "vs_nfl": 33.70214347859444,
+            "nfl_avg": 0.16696155804480653,
+            "vs_nfl": 31.994021254193665,
+            "fmt": "{:.1%}"
+          },
+          {
+            "metric": "TPRR (est.)",
+            "him": 0.16126909141172827,
+            "role_avg": 0.17113875980612603,
+            "vs_role": 94.23294383716548,
+            "nfl_avg": 0.21210981153825484,
+            "vs_nfl": 76.03094370891125,
+            "fmt": "{:.3f}"
+          },
+          {
+            "metric": "1D/RR (est.)",
+            "him": 0.056259023135120746,
+            "role_avg": 0.05912823331501191,
+            "vs_role": 95.14747859181732,
+            "nfl_avg": 0.08293502897629448,
+            "vs_nfl": 67.83505574128563,
+            "fmt": "{:.3f}"
+          },
+          {
+            "metric": "snap %",
+            "him": 0.19992341505890748,
+            "role_avg": 0.23650583829037233,
+            "vs_role": 84.5321267771198,
+            "nfl_avg": 0.4921890953645089,
+            "vs_nfl": 40.61922885773136,
             "fmt": "{:.1%}"
           }
         ]
@@ -188,7 +215,7 @@
         "bye": false,
         "opponent": "WAS",
         "home": false,
-        "ease_rank": 4,
+        "ease_rank": 5,
         "out_reason": null,
         "projection": 1.3,
         "proj_source": "nflverse-est",
