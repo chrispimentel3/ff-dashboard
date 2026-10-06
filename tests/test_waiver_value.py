@@ -244,3 +244,13 @@ def test_a_backup_qb_behind_our_own_qb_still_gets_insure():
                           xfp_pg={"q1": 20.0}, vol_ratio={}, avail={}, ages={})
     ev = wv.evaluate(b, "fa_qb", {}, cuffs)
     assert ev["handcuff"] is True and ev["insure"] > 0
+
+
+def test_a_dozen_interchangeable_cover_adds_are_each_worth_the_gap_not_the_hole():
+    ev = lambda f: {"start": 0.0, "insure": 0.0, "cover": f, "fit": f, "next3": f}
+    evs = {f"q{i}": ev(v) for i, v in enumerate([1.3, 1.1, 0.95, 0.9, 0.9, 0.85])}
+    evs["rb"] = {"start": 1.4, "insure": 0.0, "cover": 0.1, "fit": 1.5, "next3": 1.5}   # a starter is untouched
+    base = wv.cover_baseline(evs, {k: ("RB" if k == "rb" else "QB") for k in evs})
+    assert base == {"QB": 0.95}                      # the third-best of the QBs
+    two = wv.cover_baseline({k: evs[k] for k in ("q0", "q1")}, {"q0": "QB", "q1": "QB"})
+    assert two == {"QB": 0.0}                         # with only two there is no free alternative

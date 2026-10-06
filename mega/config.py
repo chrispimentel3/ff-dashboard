@@ -25,7 +25,7 @@ TEAM_BY_SEAT = {
     4: "Heartbreak Drake",
     5: "L'Omar",
     6: "Allen Moore connection",   # was "Barkley’s Balls Deep" (Andrew), renamed 2026-10-01
-    7: "Saquon Enjoyer",           # was "A Place in the Hampton" (Alex), renamed 2026-10-01
+    7: "Saquon Hater",             # was "Saquon Enjoyer" and before that "A Place in the Hampton" (Alex), renamed 2026-10-05
     8: "TaylorMade",
     9: "Revenge of the Smith",
     10: "Don R.I.C.O",
@@ -40,6 +40,7 @@ FORMER_NAMES = {
     "Barkley’s Balls Deep": 6,
     "Barkley's Balls Deep": 6,
     "A Place in the Hampton": 7,
+    "Saquon Enjoyer": 7,
 }
 # Manager names as the standings page shows them. Teams get renamed; managers haven't,
 # so this is what pins a renamed team to its seat (mega/teams.py).

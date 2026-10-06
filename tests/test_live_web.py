@@ -33,6 +33,6 @@ def test_starters_only_with_their_nfl_teams_and_defenses_by_city_or_nickname():
     assert me["K"]["nfl_team"] == "BAL" and me["K"]["proj_avg"]
     assert me["DEF"]["key"] == "DEF:CAR"
     # the old name is followed to the new one, and Washington is ESPN's WSH
-    them = {s["slot"]: s for s in out["teams"]["Saquon Enjoyer"]}
+    them = {s["slot"]: s for s in out["teams"]["Saquon Hater"]}
     assert them["DEF"]["key"] == "DEF:WSH" and them["WR"]["player"] is None
-    assert out["matchups"] == [["TaylorMade", "Saquon Enjoyer"]]
+    assert out["matchups"] == [["TaylorMade", "Saquon Hater"]]

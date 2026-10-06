@@ -425,6 +425,27 @@ def insure_mine(b: Board, cuffs: dict) -> dict:
     return out
 
 
+COVER_ONLY_START = 0.25     # pts/wk of START under which an add is judged as pure cover
+COVER_REPLACEMENT = 3       # the k-th best cover-only add at a position is what a miss still gets
+
+
+def cover_baseline(evs: dict, pos_of: dict, k: int = COVER_REPLACEMENT) -> dict:
+    """(J) Cover is a hole in a week, and one body fills it: when a dozen free quarterbacks
+    would each cover our QB's bye the same ~14 pts, none is worth that to us, because the
+    next one is there for nothing. Returns pos -> fit of the k-th best cover-only add at
+    that position, netted off every such add's fit (its price), not its lane: the hole is
+    still a reason to claim one; 0 when fewer than k compete."""
+    by_pos: dict = {}
+    for pid, ev in evs.items():
+        if ev["start"] < COVER_ONLY_START and ev["insure"] <= 0 and ev["cover"] > 0:
+            by_pos.setdefault(pos_of[pid], []).append(ev)
+    out = {}
+    for pos, lst in by_pos.items():
+        f = sorted((e["fit"] for e in lst), reverse=True)
+        out[pos] = f[k - 1] if len(lst) >= k else 0.0
+    return out
+
+
 def assess(b: Board, pool: list, cuffs: dict, fc_by_name: dict, roles: dict, flat: dict,
            baselines: dict, pct_ros: dict, budget_left: int, now: int) -> pd.DataFrame:
     """Every free agent in `pool`, decomposed and placed in at most one lane."""
@@ -434,11 +455,15 @@ def assess(b: Board, pool: list, cuffs: dict, fc_by_name: dict, roles: dict, fla
     mine_ins = insure_mine(b, cuffs)
     share_mu = (baselines.get("role") or {}).get("xfp_share") or {}
     rows = []
+    pool = [pid for pid in pool if b.ctx.players[pid]["pos"] in b.ctx.valued_pos]
+    evs = {pid: evaluate(b, pid, mine_ins, cuffs) for pid in pool}
+    base = cover_baseline(evs, {pid: b.ctx.players[pid]["pos"] for pid in pool})
     for pid in pool:
         p = b.ctx.players[pid]
-        if p["pos"] not in b.ctx.valued_pos:
-            continue
-        ev = evaluate(b, pid, mine_ins, cuffs)
+        ev = evs[pid]
+        if ev["start"] < COVER_ONLY_START and ev["insure"] <= 0 and ev["cover"] > 0:
+            bf = base.get(p["pos"], 0.0)
+            ev = {**ev, "cover": max(0.0, ev["cover"] - bf), "fit": ev["fit"] - bf}
         flip, n_buyers = _flip(b.ctx, b.my_id, pid, fc_by_name.get(p["name"]))
 
         rc = roles.get(pid) or {}

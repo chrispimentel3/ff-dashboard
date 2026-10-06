@@ -102,6 +102,7 @@ def build(season: int, week: int, rosters: pd.DataFrame, fixtures: pd.DataFrame,
         out_teams[str(team)] = starters
 
     fx = fixtures[fixtures["week"] == week] if fixtures is not None and not fixtures.empty else pd.DataFrame()
-    matchups = [[str(a), str(b)] for a, b in zip(fx.get("home", []), fx.get("away", []))]
+    matchups = ([[str(a), str(b)] for a, b in zip(teams.canonical(fx["home"]), teams.canonical(fx["away"]))]
+                if not fx.empty else [])
     return {"available": True, "season": season, "week": week, "my_team": my_team,
             "matchups": matchups, "teams": out_teams}
