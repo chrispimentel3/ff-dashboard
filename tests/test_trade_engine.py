@@ -258,3 +258,9 @@ def test_lane_why_says_when_he_is_out():
     r = {"lane": "stash", "mechanism": "START", "start": 0.5, "out_status": "IR", "out_back": 8.0}
     assert lane_why(r).startswith("on injured reserve, back week 8 — ")
     assert not lane_why({**r, "out_status": float("nan"), "out_back": float("nan")}).startswith("on injured")
+
+
+def test_lane_why_season_out():
+    from mega.needs import lane_why
+    r = {"lane": "stash", "mechanism": "START", "start": 0.5, "out_status": "Out", "out_back": 18.0}
+    assert lane_why(r).startswith("out for the season — ")

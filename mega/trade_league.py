@@ -119,6 +119,8 @@ def build_league(season: int, yahoo_rosters: pd.DataFrame | None = None) -> dict
     except Exception:
         vegas_now = {}
 
+    from .status import out_for_season
+    season_out = out_for_season()      # norm -> label, from data/player_status.csv
     players: dict[str, dict] = {}
     unpriced: list[str] = []
     sources = {"proj_ros": 0, "fantasypros_ros": 0, "nflverse": 0, "none": 0}
@@ -150,7 +152,9 @@ def build_league(season: int, yahoo_rosters: pd.DataFrame | None = None) -> dict
             todo = sorted((int(w), v) for w, v in (pr.get("weeks") or {}).items()
                           if int(w) >= proj_week and not v.get("bye"))
             n_out = next((i for i, (_, v) in enumerate(todo) if float(v.get("p_active", 1.0)) > 0), len(todo))
-            if n_out and todo:
+            if nrm in season_out:
+                out_info = {"share": 1.0, "back": None}      # data/player_status.csv
+            elif n_out and todo:
                 out_info = {"share": round(n_out / len(todo), 3),
                             "back": todo[n_out][0] if n_out < len(todo) else None}
             vn = vegas_now.get(gid)

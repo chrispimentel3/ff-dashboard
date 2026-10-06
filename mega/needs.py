@@ -249,6 +249,8 @@ def lane_why(r) -> str:
     """One line saying which mechanism makes him worth a spot, in points per week."""
     st = r.get("out_status")
     if isinstance(st, str) and st and pd.notna(r.get("out_back")):
+        if int(r["out_back"]) > 17:
+            return "out for the season — " + _lane_why(r)
         out = {"IR": "on injured reserve", "Out": "ruled out", "Doubtful": "doubtful"}.get(st, st)
         return f"{out}, back week {int(r['out_back'])} — " + _lane_why(r)
     return _lane_why(r)
