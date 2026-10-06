@@ -47,6 +47,9 @@ STACK_TEAM = 3                # handoff §6.2: 3+ starters from one offense
 MAX_PER_PARTNER = 3           # (J) keep the list from being one manager's roster
 SIM_PER_PARTNER = 5           # (J) ...and the 25 simulations from being one manager's either
 FAIR_MIN = 0.80               # (J) they get back at least 80% of what they give, by FantasyCalc
+FAIR_MAX = 1.30               # (J) ...and at most 130%. Ranking by expected gain rewards paying
+                              # more (the yes gets likelier) and nothing charged us for the value
+                              # handed over: every card became a 150-180% overpay (Chris 2026-10-06)
 # Lead-tag priority. LINEUP (our own fallback: the incoming player simply starts) outranks
 # PORTFOLIO so "spreads your byes" rides as the second reason rather than the headline.
 TAG_ORDER = ["SELL_HIGH", "BUY_LOW", "ROLE_EXPIRY", "TRAJECTORY", "CONTINGENCY",
@@ -396,7 +399,7 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
     # with Chris 2026-10-06). Before the title sim there is no title term; once a candidate
     # is simulated the card re-reads its odds with it.
     exp_pre = lambda r: counterparty(r, 0.0)["pa"] * r["dMe"]
-    cands = sorted((r for r in cands if r["flag"] != "LONGSHOT" and fc_fair(r) >= FAIR_MIN),
+    cands = sorted((r for r in cands if r["flag"] != "LONGSHOT" and FAIR_MIN <= fc_fair(r) <= FAIR_MAX),
                    key=lambda r: -exp_pre(r))
     picked, per = [], {}
     for r in cands:

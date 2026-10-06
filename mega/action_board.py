@@ -80,7 +80,10 @@ def headline(IB: dict | None) -> tuple[str, str]:
     nw = 0 if w is None or w.empty else len(worth_claiming(w))
     th = IB.get("theses") or {}
     if th.get("available"):
-        nt, trade_bit = len(th.get("cards") or []), "raise{} your title odds"
+        # a consolidation card can cost title odds while it adds lineup points; count only the gains
+        nt = sum(1 for c in th.get("cards") or [] if (c.get("us") or {}).get("d_title", 0) > 0
+                 and not (c.get("us") or {}).get("title_noise", True))
+        trade_bit = "raise{} your title odds"
     else:
         nt, trade_bit = (0 if tr is None or tr.empty else len(tr)), "clear{} the fairness filter"
     bits = []
@@ -140,7 +143,13 @@ def build(agg: pd.DataFrame, IB: dict | None, BASIS: dict, season: int) -> dict:
         tr = IB.get("trades")
         cards = (IB.get("theses") or {}).get("cards") or []
         if cards:
-            # HANDOFF v1.3: the same engine-built, title-odds-ranked offers as the Trades tab
+            # HANDOFF v1.3: the same engine-built offers as the Trades tab, best first, one
+            # per manager — the home board is a shortlist, not three asks of one roster
+            seen, top = set(), []
+            for c in cards:
+                if c["partner"] not in seen and len(top) < 5:
+                    seen.add(c["partner"])
+                    top.append(c)
             payload["trades"] = [{
                 "partner": c["partner"],
                 "give": " + ".join(f"{g['name']} ({g['pos']})" for g in c["give"]),
@@ -150,7 +159,8 @@ def build(agg: pd.DataFrame, IB: dict | None, BASIS: dict, season: int) -> dict:
                 "addresses": c["tags"][0].replace("_", " ").lower(),
                 "fairness": c["fairness"],
                 "d_title": c["us"]["d_title"], "thesis": c["thesis"],
-            } for c in cards[:5]]
+                "d_me": c["us"]["d_ros"], "p_accept": c["p_accept"], "flag": c["flag"],
+            } for c in top]
         elif tr is not None and not tr.empty:
             tr5 = tr.head(5).copy()
             tr5["give"] = tr5["give"] + " (" + tr5["give_pos"] + ")"
