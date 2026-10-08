@@ -71,11 +71,7 @@ def build(lu: pd.DataFrame | None, ts: pd.DataFrame, next_week: int) -> dict:
         f"Start {', '.join(short_name(r['player']) for r in moved[:2])} — that is "
         f"worth {proj_total:.0f} points in week {next_week}, more than your current nine."
     )
-    subhead = (
-        f"{n_close} call{'s' if n_close != 1 else ''} within two points"
-        + (f", and {est} of {len(starters)} starters run on estimates rather than real "
-           "projections — break those on target share." if est else ".")
-    )
+    subhead = _subhead(n_close, est, len(starters))
 
     cols = [c for c in COLS if c in lu.columns]
     sview = starters.assign(_o=starters["lineup"].map(SLOT_ORDER)).sort_values("_o")[cols]
@@ -97,6 +93,12 @@ def build(lu: pd.DataFrame | None, ts: pd.DataFrame, next_week: int) -> dict:
     }
 
 
+def _subhead(n_close: int, est: int, n: int) -> str:
+    return (f"{n_close} call{'s' if n_close != 1 else ''} within two points"
+            + (f", and {est} of {n} starters run on our own estimates rather than FantasyPros "
+               "projections — for skill players, break those on target share." if est else "."))
+
+
 def add_kdef(payload: dict, rows: list[dict]) -> dict:
     """Fold my kicker and defense (mega/kdef.py lineup_rows) into a built payload: the
     starter of each joins the lineup and the projected total, any second one the bench."""
@@ -109,6 +111,9 @@ def add_kdef(payload: dict, rows: list[dict]) -> dict:
     out["bench"] = list(out["bench"]) + [{k: v for k, v in r.items() if k != "start"} for r in rows if not r["start"]]
     new = round(old + sum(float(r["proj_adj"]) for r in starts), 1)
     out["kpis"] = {**out["kpis"], "proj_total": new, "starters_n": len(out["starters"])}
+    k = out["kpis"]
+    out["subhead"] = _subhead(int(k.get("close_calls") or 0),
+                              k["starters_n"] - int(k.get("fp_backed") or 0), k["starters_n"])
     # ponytail: the headline's number is swapped in place; build() owns its wording
     out["headline"] = out["headline"].replace(f"{old:.0f} points", f"{new:.0f} points", 1)
     return out

@@ -381,18 +381,21 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
     def counterparty(c, d_title_them: float) -> dict:
         """§6.3 — the chance they say yes, and the inputs it was read from."""
         partner = name_of[c["partner"]["id"]]
-        give_val = sum(float(fc_by_name.get(n, 0) or 0) for n in _names(ctx, c["giveIds"]))
+        give_vals = {i: float(fc_by_name.get(ctx.players[i]["name"], 0) or 0) for i in c["giveIds"]}
         get_val = sum(float(fc_by_name.get(n, 0) or 0) for n in _names(ctx, c["getIds"]))
-        fair = give_val / get_val if get_val > 0 else 1.0
+        fair = sum(give_vals.values()) / get_val if get_val > 0 else 1.0
+        # judged by his roster: a piece that would sit behind his starter is a backup to him
+        sits = tl.sits_for_them(ctx, c["partner"]["id"], c["giveIds"], c["getIds"])
+        fair_them = tl.to_them(give_vals, sits) / get_val if get_val > 0 else 1.0
         need_fit = 1.0 if any(s["id"] in c["giveIds"] for s in c["them"]["startersIn"]) else 0.0
         pb = bias_by_name.get(partner) or {}
-        fair_x = min(fair, tl.MAX_OVERPAY)   # past 1.5x an overpay stops buying more yes (the search caps it too)
+        fair_x = min(fair_them, tl.MAX_OVERPAY)   # past 1.5x an overpay stops buying more yes (the search caps it too)
         bias = (np.mean([pb.get(ctx.players[i]["pos"], 1.0) for i in c["giveIds"]])
                 - np.mean([pb.get(ctx.players[i]["pos"], 1.0) for i in c["getIds"]]))
         p_now = (base.get(partner) or {}).get("p_playoffs", 0.0)
         urg = urgency(p_now)
         return {"pa": p_accept(pri, d_title_them, fair_x, need_fit, float(bias), urg, float(c["dThem"])),
-                "fair": fair, "urg": urg, "p_now": p_now}
+                "fair": fair, "urg": urg, "p_now": p_now, "sits": tl.sits_text(ctx, sits)}
 
     # Chosen by EXPECTED gain — the chance they say yes times what it does for us — so the
     # page offers deals a manager would take, not the 2-for-1s that wreck his lineup (picked
@@ -539,7 +542,7 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
             "pitch": pitch, "p_accept": round(pa, 3), "flag": flag(pri, pa, d_them),
             "exp_title": round(pa * (0.0 if us.get("noise", True) else d_us), 5),
             "exp_ros": round(pa * c["dMe"], 3),
-            "fairness": round(fair, 2), "ranks": {"give": ranks(c["giveIds"]), "get": ranks(c["getIds"])},
+            "fairness": round(fair, 2), "sits_for_them": cp["sits"], "ranks": {"give": ranks(c["giveIds"]), "get": ranks(c["getIds"])},
         })
     cards.sort(key=lambda k: (-k["exp_title"], -k["exp_ros"]))
     # keep any one manager from filling the page

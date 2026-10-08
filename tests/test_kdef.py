@@ -29,7 +29,9 @@ def test_kicker_and_defense_join_the_start_sit_total():
     rows = [{"lineup": "K", "player": "K1", "pos": "K", "proj_adj": 8.3, "start": True},
             {"lineup": "DEF", "player": "D1", "pos": "DEF", "proj_adj": 6.6, "start": True},
             {"lineup": "BENCH", "player": "D2", "pos": "DEF", "proj_adj": 5.0, "start": False}]
+    payload["kpis"].update(close_calls=2, fp_backed=5)
     out = start_sit.add_kdef(payload, rows)
+    assert "4 of 9 starters" in out["subhead"]
     assert out["kpis"]["proj_total"] == pytest.approx(102.9)
     assert out["kpis"]["starters_n"] == 9 and len(out["bench"]) == 1
     assert "103 points" in out["headline"]
@@ -45,3 +47,16 @@ def test_stats_rows_get_the_new_columns_and_old_rows_are_padded():
     assert all(len(r) == len(out["columns"]) for r in out["rows"])
     bears = out["rows"][-1]
     assert bears[out["columns"].index("sacks_pg")] == 2.5 and bears[out["columns"].index("pts_pg")] == 5.0
+
+
+def test_current_kicker_is_the_active_one_on_the_roster_not_the_last_to_kick():
+    import pandas as pd
+    k = pd.DataFrame({"gsis_id": ["a", "a", "b"], "player": ["Old", "Old", "Bee"],
+                      "team": ["KC", "KC", "BUF"], "week": [3, 4, 4]})
+    roster = pd.DataFrame({"team": ["KC", "KC", "KC", "KC"], "week": [4, 5, 5, 5],
+                           "gsis_id": ["a", "a", "n", "x"], "full_name": ["Old", "Old", "New", "Dev"],
+                           "status": ["ACT", "RES", "ACT", "DEV"]})
+    cur = kdef.current_kickers(k, roster).set_index("team")
+    assert cur.loc["KC", "player"] == "New"          # Old went on IR, New signed, no kicks yet
+    assert cur.loc["BUF", "player"] == "Bee"         # no roster rows: last to kick
+    assert kdef.current_kickers(k, roster.iloc[:0]).set_index("team").loc["KC", "player"] == "Old"

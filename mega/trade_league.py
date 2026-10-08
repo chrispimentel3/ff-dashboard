@@ -455,23 +455,59 @@ def accept_context(ctx, season_model, n: int = 1500) -> dict:
     return out
 
 
+BENCH_CREDIT = 0.5   # (J) what a player who wouldn't start for them is worth to them, as a share
+                     # of his market value: depth and resale, not points. A manager starting
+                     # Bowers doesn't price Kittle like a TE1 (Chris 2026-10-08).
+
+
+def sits_for_them(ctx, their_id, give_ids, get_ids) -> dict:
+    """{pid I send: names of their starters at his position} for each piece that wouldn't
+    crack their lineup after the trade — the throw-in they'd value as a backup."""
+    from . import trade_engine as te
+    t = ctx.teams[their_id]
+    after = [i for i in t["roster"] if i not in set(get_ids)] + list(give_ids)
+    starts = te.lineup(after, ctx, None).starters
+    on = {e[0] for e in starts}
+    return {i: [ctx.players[e[0]]["name"] for e in starts
+                if ctx.players[e[0]]["pos"] == ctx.players[i]["pos"]]
+            for i in give_ids if i not in on}
+
+
+def to_them(give_vals: dict, sits: dict) -> float:
+    """What they receive, by their roster: pieces that would sit count at BENCH_CREDIT."""
+    return sum(v * (BENCH_CREDIT if pid in sits else 1.0) for pid, v in give_vals.items())
+
+
+def sits_text(ctx, sits: dict) -> list[str]:
+    return [f"{ctx.players[i]['name']} wouldn't start for them"
+            + (f" (they start {' & '.join(n)})" if n else "")
+            + f", so he counts at {BENCH_CREDIT:.0%} of his market value to them" for i, n in sits.items()]
+
+
 def deal_odds(ctx, results: list, acc: dict, bias_by_id: dict, profiles: dict,
               priors: dict) -> list:
     """Stamp each offer with `p_accept`: the chance the other manager says yes, from the
     acceptance model the Trades page cards use (mega/trade_theses.py p_accept) — what the
     deal does to HIS title odds, whether it's fair by the rankings he sees (the engine's
     market ratio, capped at MAX_OVERPAY: the cards use FantasyCalc, which has no value for
-    a lot of the players a search turns up), whether what I send fills
+    a lot of the players a search turns up — with anything that wouldn't start for him at
+    BENCH_CREDIT, see sits_for_them), whether what I send fills
     a position his roster is short at (team_profiles), his positional bias, and how much he
     has to play for. Mutates and returns `results`."""
+    from . import trade_engine as te
     from .trade_theses import p_accept, urgency
     import numpy as np
     for r in results:
         pid = r["partner"]["id"]
         a = acc.get(pid) or {}
-        fair = min(float(r["market"]["ratio"]), MAX_OVERPAY)
+        sits = sits_for_them(ctx, pid, r["giveIds"], r["getIds"])
+        mb = (ctx.cfg.get("market", {}).get("bias") or {}).get(str(pid)) or {}
+        got = float(r["market"]["mvYouGet"])
+        sent = to_them({i: te.market_value(ctx.players[i], ctx.cfg, mb) for i in r["giveIds"]}, sits)
+        fair = min(sent / got if got > 0 else MAX_OVERPAY, MAX_OVERPAY)
+        r["sits_for_them"] = sits_text(ctx, sits)
         short = {n["pos"] for n in (profiles.get(pid) or {}).get("needs") or []}
-        need_fit = 1.0 if any(ctx.players[i]["pos"] in short for i in r["giveIds"]) else 0.0
+        need_fit = 1.0 if any(ctx.players[i]["pos"] in short for i in r["giveIds"] if i not in sits) else 0.0
         pb = bias_by_id.get(pid) or {}
         bias = (np.mean([pb.get(ctx.players[i]["pos"], 1.0) for i in r["giveIds"]])
                 - np.mean([pb.get(ctx.players[i]["pos"], 1.0) for i in r["getIds"]]))
@@ -480,6 +516,21 @@ def deal_odds(ctx, results: list, acc: dict, bias_by_id: dict, profiles: dict,
                                  urgency(float(a.get("p_playoffs", 0.0))), float(r["dThem"]))
         r["need_fit"] = bool(need_fit)
     return results
+
+
+def owner_of(ctx, pid):
+    """Team id holding `pid`, on his roster or in an IR slot; None for a free agent."""
+    return next((tid for tid, t in ctx.teams.items() if pid in t["roster"]), ctx.ir_owner.get(pid))
+
+
+def verdict(r: dict) -> str:
+    """One line on a trade typed into the evaluator: what it does for my lineup, then the
+    chance they say yes. Even within ACCEPT_MIN_GAIN, the search's own bar for a real gain."""
+    d, p = float(r["dMe"]), r.get("p_accept")
+    head = (f"Good for you: +{d:.1f} pts/wk to your lineup." if d >= ACCEPT_MIN_GAIN else
+            f"Bad for you: it costs your lineup {-d:.1f} pts/wk." if d <= -ACCEPT_MIN_GAIN else
+            f"About even for your lineup ({d:+.1f} pts/wk) — decide it on need, not points.")
+    return head + (f" About {p:.0%} chance they'd accept." if p is not None else "")
 
 
 def by_deal_odds(results: list) -> list:
@@ -552,7 +603,7 @@ def ensure_detail(engine, my_id: int, results: list) -> list:
         if r.get("netted"):
             full = {**full, "dMe": r["dMe"], "netted": True, "fa_add": r["fa_add"], "swap_ids": r["swap_ids"],
                     "me": te._side(ctx, te.settle(list(r["swap_ids"]), ctx, set()), core["_after"]["me"])}
-        out.append({**full, **{k: r[k] for k in ("p_accept", "need_fit") if k in r}})
+        out.append({**full, **{k: r[k] for k in ("p_accept", "need_fit", "sits_for_them") if k in r}})
     return out
 
 

@@ -274,3 +274,21 @@ def test_status_rows_say_when_each_player_is_back(tmp_path, monkeypatch):
     monkeypatch.setattr(status, "STATUS_CSV", f)
     got = status.back_weeks(5)
     assert got == {status.norm("Tyler Out"): 9, status.norm("Season Guy"): status.SEASON_BACK}   # Murray's row has run out
+
+
+def test_a_piece_that_would_sit_behind_their_starter_is_a_backup_to_them(eng):
+    from mega import trade_league as tl
+    ctx = eng.ctx
+    sits = tl.sits_for_them(ctx, 3, ["m_te2"], ["b_wr6"])          # B starts b_te1 (12)
+    assert list(sits) == ["m_te2"] and sits["m_te2"] == [ctx.players["b_te1"]["name"]]
+    assert tl.sits_for_them(ctx, 2, ["m_te1"], ["a_wr5"]) == {}    # 10 beats A's 9: he starts
+    assert tl.to_them({"m_te2": 40.0, "m_wr1": 60.0}, sits) == pytest.approx(40 * tl.BENCH_CREDIT + 60)
+    assert "wouldn't start for them (they start" in tl.sits_text(ctx, sits)[0]
+
+
+def test_evaluator_verdict():
+    from mega import trade_league as tl
+    assert tl.verdict({"dMe": 2.04, "p_accept": 0.31}) == \
+        "Good for you: +2.0 pts/wk to your lineup. About 31% chance they'd accept."
+    assert tl.verdict({"dMe": -1.5}).startswith("Bad for you: it costs your lineup 1.5")
+    assert tl.verdict({"dMe": 0.2}).startswith("About even")

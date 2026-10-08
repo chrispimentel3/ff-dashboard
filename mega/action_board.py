@@ -160,6 +160,7 @@ def build(agg: pd.DataFrame, IB: dict | None, BASIS: dict, season: int) -> dict:
                 "fairness": c["fairness"],
                 "d_title": c["us"]["d_title"], "thesis": c["thesis"],
                 "d_me": c["us"]["d_ros"], "p_accept": c["p_accept"], "flag": c["flag"],
+                "sits_for_them": c.get("sits_for_them") or [],
             } for c in top]
         elif tr is not None and not tr.empty:
             tr5 = tr.head(5).copy()

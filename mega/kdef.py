@@ -18,7 +18,8 @@ Projection for week w, team T against opponent O:
        recoveries) at league rate x T's rate x what O gives up, each shrunk toward the
        league with K_SHRINK games. TDs, safeties and blocks are mostly noise: league rate.
   K    his points per game, shrunk toward the league kicker, scaled by his team's implied
-       total over the league's (more points, more kicks).
+       total over the league's (more points, more kicks). "His" is the active kicker on the
+       team's latest NFL roster, so a signing with no kicks yet projects at the league kicker.
 """
 from __future__ import annotations
 
@@ -132,6 +133,39 @@ def k_weekly(season: int) -> pd.DataFrame:
                          "pts": ps["pts"]})
 
 
+@functools.lru_cache(maxsize=2)
+def _k_roster(season: int) -> pd.DataFrame:
+    """Kickers on each team's latest NFL weekly roster (team, week, gsis_id, full_name, status)."""
+    try:
+        import nflreadpy as nfl
+        from .ids import canon_team
+        r = nfl.load_rosters_weekly(seasons=[season]).to_pandas()
+        r = r[r["position"] == "K"][["team", "week", "gsis_id", "full_name", "status"]].copy()
+        r["team"] = r["team"].map(canon_team)
+        return r
+    except Exception:
+        return pd.DataFrame(columns=["team", "week", "gsis_id", "full_name", "status"])
+
+
+def current_kickers(k: pd.DataFrame, roster: pd.DataFrame) -> pd.DataFrame:
+    """team, gsis_id, player: each team's kicker now. The active kicker on its latest weekly
+    roster — so an injured or cut kicker gives way to his replacement before the new man has
+    kicked — and, where that roster is missing or names nobody active, whoever kicked last."""
+    last = k.sort_values("week").groupby("team").tail(1)[["team", "gsis_id", "player"]]
+    if roster.empty:
+        return last.reset_index(drop=True)
+    latest = roster[roster["week"] == roster.groupby("team")["week"].transform("max")]
+    act = latest[latest["status"] == "ACT"]
+    kicked = k.groupby("gsis_id")["week"].max().to_dict()
+    out = []
+    for team, g in act.groupby("team"):
+        g = g.assign(_k=g["gsis_id"].map(kicked).fillna(-1)).sort_values("_k", ascending=False)
+        out.append({"team": team, "gsis_id": g.iloc[0]["gsis_id"], "player": g.iloc[0]["full_name"]})
+    have = {o["team"] for o in out}
+    out += [r for r in last.to_dict("records") if r["team"] not in have]
+    return pd.DataFrame(out, columns=["team", "gsis_id", "player"])
+
+
 # ======================================================================== projection
 def _shrunk(total: float, n: float, prior: float) -> float:
     return (total + K_SHRINK * prior) / (n + K_SHRINK)
@@ -197,7 +231,7 @@ def _project(season: int, weeks: tuple) -> dict:
     k_rows = []
     if not k.empty:
         lg_k = float(k["pts"].mean())
-        last = k.sort_values("week").groupby("team").tail(1)          # the team's current kicker
+        last = current_kickers(k, _k_roster(season))
         lg_imp = sum(imp_of.values()) / len(imp_of) if imp_of else lg_pts
         for r in last.itertuples():
             mine = k[k["gsis_id"] == r.gsis_id]

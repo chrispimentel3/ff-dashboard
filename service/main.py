@@ -274,6 +274,12 @@ class TradeSearchRequest(BaseModel):
     odds: bool = True
 
 
+class TradeEvalRequest(BaseModel):
+    give: list[str]        # pids from /trade-pool: mine
+    get: list[str]         # pids from /trade-pool: all on one other team
+    odds: bool = True
+
+
 class TradeTeamRequest(BaseModel):
     team: str
     flags: list[str] = PydField(default_factory=lambda: ["LIKELY", "EXPLOIT", "NEEDS_PITCH"])
@@ -450,6 +456,8 @@ def _package(season, next_week, eng, me, req, out, results, swap_ids, clock, lap
             # chance they say yes (mega/trade_league.py deal_odds); absent if it couldn't build
             "p_accept": round(r["p_accept"], 3) if r.get("p_accept") is not None else None,
             "need_fit": bool(r.get("need_fit")),
+            # what I send that would sit on their bench, counted at half value to them
+            "sits_for_them": r.get("sits_for_them") or [],
             "fa_add": r.get("fa_add") or [],
             # players in this offer who are on injured reserve, with the share of the
             # remaining games each is projected to play (how they're valued)
@@ -527,6 +535,50 @@ def trade_search(req: TradeSearchRequest):
                 _searches.popitem(last=False)
 
     return _package(season, next_week, eng, me, req, out, results, swap_ids, clock, lap)
+
+
+@app.post("/trade-evaluate")
+def trade_evaluate(req: TradeEvalRequest):
+    """"Evaluate a trade" — one trade exactly as typed (an offer I got, or one I'm thinking of
+    sending), on the same engine, netting, acceptance model and odds as the search."""
+    import math
+    from mega import trade_engine as te
+    clock, t0 = {}, time.perf_counter()
+
+    def lap(name):
+        nonlocal t0
+        now = time.perf_counter()
+        clock[name] = round(now - t0, 2)
+        t0 = now
+
+    season = _current_season()
+    next_week = data.current_week(season, 1)
+    eng, rep = _trade_engine(season)
+    lap("engine")
+    if eng is None:
+        raise HTTPException(status_code=503, detail="League rosters unavailable this run.")
+    me = rep.get("my_team_id")
+    if me is None:
+        raise HTTPException(status_code=503, detail="Could not resolve your team's roster.")
+    ctx = eng.ctx
+    give, get = list(dict.fromkeys(req.give)), list(dict.fromkeys(req.get))
+    if not give or not get:
+        raise HTTPException(status_code=400, detail="Pick at least one player on each side.")
+    if any(p not in ctx.players for p in give + get):
+        raise HTTPException(status_code=400, detail="One of those players isn't in this week's league data.")
+    if any(TL.owner_of(ctx, p) != me for p in give):
+        raise HTTPException(status_code=400, detail="Everyone you give has to be on your roster.")
+    owners = {TL.owner_of(ctx, p) for p in get}
+    if len(owners) != 1 or None in owners or me in owners:
+        raise HTTPException(status_code=400, detail="Everyone you get has to come from the same other team.")
+    their = owners.pop()
+
+    row = te.with_detail(ctx, me, te.evaluate_core(ctx, me, their, give, get))
+    results, swap_ids = TL.net_free_swap(eng, me, [row], min_delta_me=-math.inf)
+    results = _rank(eng, results, "gain")
+    lap("evaluate")
+    return _package(season, next_week, eng, me, req, {"evaluated": 1, "padded": 0, "matched": 1},
+                    results, swap_ids, clock, lap, extra={"verdict": TL.verdict(results[0])})
 
 
 @app.post("/trade-team")
