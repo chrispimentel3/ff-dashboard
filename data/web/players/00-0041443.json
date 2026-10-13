@@ -26,8 +26,8 @@
     "2026": {
       "games": 1,
       "pts_pg": 0.0,
-      "xfp_pg": null,
-      "vs_exp_pg": null,
+      "xfp_pg": 4.781000000000001,
+      "vs_exp_pg": -4.781000000000001,
       "usage_label": "Target share",
       "usage_value": 0.1111111111111111,
       "usage_fmt": "11.1%",
@@ -45,7 +45,7 @@
         },
         {
           "stat": "Expected pts/g",
-          "value_fmt": "\u2014",
+          "value_fmt": "4.8",
           "pos_rank": "\u2014",
           "means": "What his targets should score."
         },
@@ -155,8 +155,8 @@
           "receiving_air_yards": 33,
           "receiving_yards_after_catch": 0,
           "half_ppr": 0.0,
-          "xfp": null,
-          "vs_exp": null
+          "xfp": 4.781000000000001,
+          "vs_exp": -4.781000000000001
         }
       ],
       "role": {
@@ -171,6 +171,15 @@
             "vs_role": 128.2763532763533,
             "nfl_avg": 0.12177245508982036,
             "vs_nfl": 52.59746084759644,
+            "fmt": "{:.1%}"
+          },
+          {
+            "metric": "air-yards share",
+            "him": 0.10661110092785098,
+            "role_avg": 0.07152832019692774,
+            "vs_role": 149.047399176068,
+            "nfl_avg": 0.16584165531198078,
+            "vs_nfl": 64.2848750679041,
             "fmt": "{:.1%}"
           },
           {
@@ -217,6 +226,15 @@
             "nfl_avg": 0.4912454727906065,
             "vs_nfl": 89.26879843936261,
             "fmt": "{:.1%}"
+          },
+          {
+            "metric": "xFP share",
+            "him": 0.06555539346984424,
+            "role_avg": 0.03177178871074409,
+            "vs_role": 206.33208305226998,
+            "nfl_avg": 0.07616548683994151,
+            "vs_nfl": 86.06968351374957,
+            "fmt": "{:.1%}"
           }
         ]
       },
@@ -226,16 +244,16 @@
         "home": false,
         "ease_rank": 13,
         "out_reason": null,
-        "projection": 3.1,
+        "projection": 3.5,
         "proj_source": "nflverse-est",
-        "matchup_mult": 1.028,
-        "matchup_pct": 2.8,
+        "matchup_mult": 1.022,
+        "matchup_pct": 2.2,
         "matchup_basis": "defense+vegas",
         "matchup_def_rank": 13,
         "matchup_def_pct": 1.6,
-        "matchup_vegas_pct": 2.2,
-        "matchup_baseline": 3.1,
-        "expected_pts": 3.2,
+        "matchup_vegas_pct": 1.6,
+        "matchup_baseline": 3.5,
+        "expected_pts": 3.5,
         "delta_pts": 0.1
       }
     }
