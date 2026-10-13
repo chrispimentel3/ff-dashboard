@@ -15,22 +15,22 @@
     "headshot_url": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/fxyjf9d5qkwqjdd8ypvv"
   },
   "ownership": {
-    "kind": "free_agent",
+    "kind": "waivers",
     "team": null,
     "slot": null,
-    "waiver_until": null
+    "waiver_until": "Oct 14"
   },
   "nfl_status": "Active",
   "out_reason": null,
   "seasons": {
     "2026": {
-      "games": 1,
-      "pts_pg": 4.12,
-      "xfp_pg": 3.6,
-      "vs_exp_pg": 0.52,
+      "games": 2,
+      "pts_pg": 14.08,
+      "xfp_pg": 10.811,
+      "vs_exp_pg": 3.269,
       "usage_label": "Pass att/g",
-      "usage_value": 9.0,
-      "usage_fmt": "9.0",
+      "usage_value": 20.5,
+      "usage_fmt": "20.5",
       "ranks": {
         "pts_pg": null,
         "xfp_pg": null,
@@ -39,73 +39,73 @@
       "card": [
         {
           "stat": "Pts/game",
-          "value_fmt": "4.1",
+          "value_fmt": "14.1",
           "pos_rank": "\u2014",
           "means": "Half-PPR fantasy points per game."
         },
         {
           "stat": "Expected pts/g",
-          "value_fmt": "3.6",
+          "value_fmt": "10.8",
           "pos_rank": "\u2014",
           "means": "What his volume should score."
         },
         {
           "stat": "Pass att/g",
-          "value_fmt": "9.0",
+          "value_fmt": "20.5",
           "pos_rank": "\u2014",
           "means": "Dropback volume."
         },
         {
           "stat": "Pass yds/g",
-          "value_fmt": "63",
+          "value_fmt": "132",
           "pos_rank": "\u2014",
           "means": ""
         },
         {
           "stat": "Pass TD",
-          "value_fmt": "0",
+          "value_fmt": "2",
           "pos_rank": "\u2014",
           "means": ""
         },
         {
           "stat": "Completion %",
-          "value_fmt": "88.9%",
+          "value_fmt": "78.0%",
           "pos_rank": "\u2014",
           "means": ""
         },
         {
           "stat": "CPOE",
-          "value_fmt": "+8.4",
+          "value_fmt": "+6.8",
           "pos_rank": "\u2014",
           "means": "Completion % over expected, given throw difficulty. Plus is accurate."
         },
         {
           "stat": "Yds/att",
-          "value_fmt": "7.0",
+          "value_fmt": "6.4",
           "pos_rank": "\u2014",
           "means": ""
         },
         {
           "stat": "EPA/dropback",
-          "value_fmt": "+0.03",
+          "value_fmt": "+0.08",
           "pos_rank": "\u2014",
           "means": "Points added per dropback, sacks included. Above +0.10 is good."
         },
         {
           "stat": "Carries/g",
-          "value_fmt": "4.0",
+          "value_fmt": "5.0",
           "pos_rank": "\u2014",
           "means": "Rushing volume \u2014 the fantasy QB cheat code."
         },
         {
           "stat": "Rush yds",
-          "value_fmt": "16",
+          "value_fmt": "36",
           "pos_rank": "\u2014",
           "means": ""
         },
         {
           "stat": "Rush TD",
-          "value_fmt": "0",
+          "value_fmt": "1",
           "pos_rank": "\u2014",
           "means": ""
         },
@@ -133,38 +133,64 @@
           "half_ppr": 4.12,
           "xfp": 3.6,
           "vs_exp": 0.52
+        },
+        {
+          "week": 5,
+          "game": "@ ATL",
+          "snap_pct": 1.0,
+          "completions": 24,
+          "attempts": 32,
+          "passing_yards": 201,
+          "passing_tds": 2,
+          "passing_interceptions": 0,
+          "sacks_suffered": 3,
+          "carries": 6,
+          "rushing_yards": 20,
+          "rushing_tds": 1,
+          "half_ppr": 24.04,
+          "xfp": 18.022,
+          "vs_exp": 6.018000000000001
         }
       ],
       "role": {
         "headline": "Backup QB",
-        "from_usage": false,
-        "games": 1,
+        "from_usage": true,
+        "games": 2,
         "rows": [
           {
             "metric": "carry share",
-            "him": 0.1124558120191308,
-            "role_avg": 0.09679767103347889,
-            "vs_role": 116.17615467239528,
-            "nfl_avg": 0.1284802043422733,
-            "vs_nfl": 87.5277344045521,
+            "him": 0.1346063177746346,
+            "role_avg": 0.10334158415841584,
+            "vs_role": 130.2537781579698,
+            "nfl_avg": 0.1250881730543146,
+            "vs_nfl": 107.60914840141372,
+            "fmt": "{:.1%}"
+          },
+          {
+            "metric": "inside-10 share",
+            "him": 0.19863013698630136,
+            "role_avg": 0.1643835616438356,
+            "vs_role": 120.83333333333334,
+            "nfl_avg": 0.24686192468619247,
+            "vs_nfl": 80.46203854190853,
             "fmt": "{:.1%}"
           },
           {
             "metric": "snap %",
-            "him": 0.5678012835999622,
-            "role_avg": 0.6567893194399218,
-            "vs_role": 86.45105314504134,
-            "nfl_avg": 0.8804347826086957,
-            "vs_nfl": 64.49100998913151,
+            "him": 0.7199359847453011,
+            "role_avg": 0.6164532824843367,
+            "vs_role": 116.78678745028722,
+            "nfl_avg": 0.8527250167032547,
+            "vs_nfl": 84.4276842643443,
             "fmt": "{:.1%}"
           },
           {
             "metric": "xFP share",
-            "him": 0.05389029729984755,
-            "role_avg": 0.14328412063250287,
-            "vs_role": 37.61079529396432,
-            "nfl_avg": 0.21784507479102086,
-            "vs_nfl": 24.737900249314613,
+            "him": 0.14808736831524946,
+            "role_avg": 0.14302263427900366,
+            "vs_role": 103.54121154443686,
+            "nfl_avg": 0.21204860427265385,
+            "vs_nfl": 69.83652112363706,
             "fmt": "{:.1%}"
           }
         ]
@@ -173,19 +199,19 @@
         "bye": false,
         "opponent": "ATL",
         "home": false,
-        "ease_rank": 13,
+        "ease_rank": 12,
         "out_reason": null,
         "projection": 14.5,
         "proj_source": "ffanalytics",
-        "matchup_mult": 0.927,
-        "matchup_pct": -7.3,
-        "matchup_basis": "defense+vegas",
-        "matchup_def_rank": 14,
-        "matchup_def_pct": 1.3,
-        "matchup_vegas_pct": -7.7,
-        "matchup_baseline": 7.7,
-        "expected_pts": 7.1,
-        "delta_pts": -0.6
+        "matchup_mult": null,
+        "matchup_pct": null,
+        "matchup_basis": null,
+        "matchup_def_rank": null,
+        "matchup_def_pct": null,
+        "matchup_vegas_pct": null,
+        "matchup_baseline": null,
+        "expected_pts": null,
+        "delta_pts": null
       }
     },
     "2025": {
