@@ -75,6 +75,10 @@ def implied(sched: pd.DataFrame) -> pd.DataFrame:
     s = sched
     if "game_type" in s.columns:
         s = s[s["game_type"].astype(str).str.upper() == "REG"]
+    # a game with no posted line yet is priced from the ratings the posted ones imply
+    # (mega/power.py) — before, it fell back to the team's average: every week 8-17 neutral
+    from .power import fill
+    s = fill(s)
     tl, sl = _nan(s, "total_line"), _nan(s, "spread_line")
     rows = []
     for side, sign in (("home_team", 1.0), ("away_team", -1.0)):
@@ -106,9 +110,10 @@ def team_volume(ffo: pd.DataFrame, sched: pd.DataFrame, weeks) -> pd.DataFrame:
 
         teamXFP_c,w = perGame_c * (implied_w / implied_avg) ^ gamma * (1 + beta_c * spread_w / 7)
 
-    Weeks with no posted line fall back to the team's own average implied total, so the
-    ratio is 1 and the game-script term is 0 — Vegas only prices a week or two ahead, and
-    a missing line must not read as a low-scoring game.
+    Weeks with no posted line are priced by implied() from market power ratings
+    (mega/power.py); a team the ratings can't price falls back to its own average implied
+    total, so the ratio is 1 and the game-script term 0 — a missing line must not read as a
+    low-scoring game.
     """
     if ffo is None or ffo.empty:
         return pd.DataFrame()
