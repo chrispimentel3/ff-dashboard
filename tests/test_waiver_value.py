@@ -257,7 +257,9 @@ def test_a_dozen_interchangeable_cover_adds_are_each_worth_the_gap_not_the_hole(
 
 
 # ---------------------------------------------------------------- rival bids (§5.4)
-def test_a_claim_is_priced_against_what_the_other_rosters_would_pay():
+def test_a_claim_is_priced_against_what_the_other_rosters_would_pay(monkeypatch):
+    from mega import faab_market as FM
+    monkeypatch.setattr(FM, "load_table", lambda: {})             # the rival-estimate path
     b = board(extra_fa=[_p("fa_wr", "WR", "PHI", 13)])
     rows = wv.assess(b, ["fa_wr"], {}, {}, {}, {}, {}, {}, 100, NOW)
     broke = wv.rival_bids(b, rows, {"B": 0, "C": 0}, NOW).iloc[0]
@@ -271,3 +273,16 @@ def test_a_claim_is_priced_against_what_the_other_rosters_would_pay():
         assert rich["bid"] == ceiling
     else:
         assert rich["bid"] == 0 and "outbid" in rich["bid_note"]
+
+
+def test_the_bid_is_the_leagues_price_capped_at_his_worth():
+    from mega.waiver_value import bid_vs_rivals
+    prices = [0] * 6 + [2, 3, 5, 8]                         # 60% of comparable claims cleared at $0
+    bid, note = bid_vs_rivals(15, "X", 2, 1.0, 20, prices)
+    assert bid == 4 and "wins" in note                     # $4 beats 8 of 10: the 80% target
+    bid, note = bid_vs_rivals(15, "X", 2, 1.0, 3, prices)
+    assert bid == 3 and "ceiling" in note                  # worth only $3 to us: bid it, say the odds
+    assert bid_vs_rivals(15, "X", 0, 1.0, 20, prices)[0] == 1   # nobody else wants him: $1 as before
+    assert bid_vs_rivals(15, "X", 2, 1.0, 20, None)[0] == 16    # no table: the rival estimate decides
+    assert bid_vs_rivals(15, "X", 2, 1.0, 20, prices, rival_cash=0)[0] == 1   # they're broke: $1 wins
+    assert bid_vs_rivals(15, "X", 2, 1.0, 20, prices, rival_cash=2)[0] == 3

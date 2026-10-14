@@ -522,13 +522,33 @@ RIVAL_MIN = COVER_ONLY_START   # (J) pts/wk net a rival must gain to bother bidd
                                # settled claims drew 2-5 bidders, not the 6-9 a 0.02 floor implies
 
 
-def bid_vs_rivals(top: int, who: str, n: int, fit: float, max_bid: int) -> tuple[int, str]:
+def bid_vs_rivals(top: int, who: str, n: int, fit: float, max_bid: int,
+                  prices: list | None = None, rival_cash: int | None = None) -> tuple[int, str]:
     """(bid, why) once the likeliest top rival bid is known — shared with the K/DEF
-    streamers (mega/kdef.py) so every claim on the board follows one rule."""
+    streamers (mega/kdef.py) so every claim on the board follows one rule.
+
+    The rosters say WHETHER anyone else wants him; what it costs comes from `prices`, what
+    this league has actually had to beat on comparable claims (mega/faab_market.py) —
+    calibrated on 513 claims, where the rival estimate below is the uncalibrated suggest
+    curve. Bid the smallest amount that wins TARGET_P of the time, never above the value
+    ceiling — and never above what the richest interested rival can bid, plus a dollar
+    (`rival_cash`). Without a price table, the rival estimate decides as before."""
+    if n == 0:
+        return (1 if fit > 0.05 else 0, "no other team gains enough from him to bid")
+    if prices:
+        from . import faab_market as FM
+        want = max(1, FM.price(prices, FM.TARGET_P))
+        if rival_cash is not None:
+            want = min(want, int(rival_cash) + 1)
+        rival = f"; {who} the likeliest rival" if who else ""
+        if want <= max_bid:
+            return want, f"wins {FM.p_win(prices, want):.0%} of claims like this in this league{rival}"
+        if max_bid >= 1:
+            return int(max_bid), (f"{FM.p_win(prices, int(max_bid)):.0%} to win at your ${max_bid} ceiling — "
+                                  f"the league pays more for players like him{rival}")
+        return 0, f"the league pays more for players like him than he's worth to you{rival}"
     if top <= 0:
-        return (1 if fit > 0.05 else 0,
-                "no other team gains enough from him to bid" if n == 0 else
-                f"{n} other team{'s' if n > 1 else ''} would add him, none likely to pay")
+        return (1 if fit > 0.05 else 0, f"{n} other team{'s' if n > 1 else ''} would add him, none likely to pay")
     from . import league_memory as LM
     agg = LM.faab_aggression(who)
     habit = f" — {who} bids {agg:.1f}x the league on the same player" if abs(agg - 1.0) >= 0.10 else ""
@@ -539,7 +559,7 @@ def bid_vs_rivals(top: int, who: str, n: int, fit: float, max_bid: int) -> tuple
     return 0, f"likely outbid: {who} ~${top}, over your ${max_bid} ceiling" + habit
 
 
-def rival_bids(b: Board, rows: pd.DataFrame, faab_left: dict, now: int) -> pd.DataFrame:
+def rival_bids(b: Board, rows: pd.DataFrame, faab_left: dict, now: int, season: int | None = None) -> pd.DataFrame:
     """Price each claim against the other eleven rosters (handoff §5.4: beat the likeliest
     top bid by a dollar, or walk away).
 
@@ -560,8 +580,14 @@ def rival_bids(b: Board, rows: pd.DataFrame, faab_left: dict, now: int) -> pd.Da
       top rival + $1 over my ceiling   -> pass, with the number
     """
     from . import faab as fb
+    from . import faab_market as FM
     from . import league_memory as LM
     ctx = b.ctx
+    table = FM.load_table()
+    try:
+        last = FM.last_games(season, now - 1) if season else {}
+    except Exception:
+        last = {}
     cols = {"bid": [], "rival_top": [], "rival_team": [], "rivals_n": [], "bid_note": []}
     gain_memo: dict = {}
 
@@ -588,7 +614,7 @@ def rival_bids(b: Board, rows: pd.DataFrame, faab_left: dict, now: int) -> pd.Da
             for k, v in (("bid", r.bid), ("rival_top", 0), ("rival_team", ""), ("rivals_n", 0), ("bid_note", "")):
                 cols[k].append(v)
             continue
-        top, who, n = 0, "", 0
+        top, who, n, cash = 0, "", 0, 0
         for tid, t in ctx.teams.items():
             if tid == b.my_id:
                 continue
@@ -596,10 +622,12 @@ def rival_bids(b: Board, rows: pd.DataFrame, faab_left: dict, now: int) -> pd.Da
             if g < RIVAL_MIN:
                 continue
             n += 1
+            cash = max(cash, int(faab_left.get(t["name"], 0)))
             bid = fb.suggest(g, int(faab_left.get(t["name"], 0)), now, LM.faab_aggression(t["name"]))["bid"]
             if bid > top:
                 top, who = bid, t["name"]
-        bid, note = bid_vs_rivals(top, who, n, r.fit, r.max_bid)
+        prices = FM.lookup(ctx.players[r.pid]["pos"], last.get(r.pid), table) if table else None
+        bid, note = bid_vs_rivals(top, who, n, r.fit, r.max_bid, prices, cash)
         for k, v in (("bid", bid), ("rival_top", top), ("rival_team", who), ("rivals_n", n), ("bid_note", note)):
             cols[k].append(v)
     return rows.assign(**cols)
@@ -726,7 +754,8 @@ def run(season: int, now: int, yahoo_rosters: pd.DataFrame | None = None) -> dic
     rows = assess(b, lg["freeAgents"], cuffs, fc_by_name, roles, flat, baselines, pct_ros,
                   budget_left, now, avail)
     if not rows.empty and not bud.empty:
-        rows = rival_bids(b, rows, dict(zip(bud["team"], pd.to_numeric(bud["faab_left"], errors="coerce").fillna(0))), now)
+        rows = rival_bids(b, rows, dict(zip(bud["team"], pd.to_numeric(bud["faab_left"], errors="coerce").fillna(0))), now,
+                          season)
 
     # HANDOFF v1.3 §5 / D1: rank by the change in title odds. Only lane players are
     # simulated — the rest have no fit, so there is nothing to price.

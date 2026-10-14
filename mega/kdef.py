@@ -342,6 +342,7 @@ def streamers(season: int, week: int, ros: pd.DataFrame, my_team: str, faab_left
     helps him most — counting every rival on every streamer had all six "likely outbid"."""
     from . import faab as fb
     from . import league_memory as LM
+    from . import faab_market as FM
     from .waiver_value import RIVAL_MIN, bid_vs_rivals
 
     weeks = [w for w in range(int(week), int(week) + STREAM_WEEKS) if w <= fb.LAST_WEEK]
@@ -381,7 +382,8 @@ def streamers(season: int, week: int, ros: pd.DataFrame, my_team: str, faab_left
             bids = chase.get(k, [])
             n = len(bids)
             who, top = max(bids, key=lambda x: x[1]) if bids else ("", 0)
-            bid, note = bid_vs_rivals(top, who, n, g3, my["max_worth"])
+            cash = max((int(faab_left.get(t, 0)) for t, _ in bids), default=0)
+            bid, note = bid_vs_rivals(top, who, n, g3, my["max_worth"], FM.lookup(pos, None) or None, cash)
             rows.append({"player": nick.get(k, k) if pos == "DEF" else k, "team": k if pos == "DEF" else
                          P[P["player"] == k]["team"].iloc[0], "pos": pos,
                          "weeks": [{"week": w, "opp": opp.get((k, w)), "proj": round(by.get((k, w), 0.0), 1)} for w in weeks],

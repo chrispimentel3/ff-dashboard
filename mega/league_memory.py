@@ -71,7 +71,7 @@ def parse_row(text: str) -> dict | None:
     out = {"kind": "move", "team": m["team"], "date": m["date"]}
     p = _PAID.match(t)
     if p:
-        out.update(kind="claim", pos=p["pos"], bid=int(p["bid"]))
+        out.update(kind="claim", pos=p["pos"], bid=int(p["bid"]), player=p["player"].strip())
     return out
 
 

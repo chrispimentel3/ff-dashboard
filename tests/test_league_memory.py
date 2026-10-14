@@ -8,7 +8,8 @@ from mega import league_memory as LM
 
 def test_rows_parse_into_claims_moves_and_trades():
     claim = LM.parse_row(" Taysom Hill NO - TE NA $8 Waiver Mark Andrews Bal - TE To Waivers Undisputed Dec 24, 4:35 am")
-    assert claim == {"kind": "claim", "team": "Undisputed", "date": "Dec 24, 4:35 am", "pos": "TE", "bid": 8}
+    assert claim == {"kind": "claim", "team": "Undisputed", "date": "Dec 24, 4:35 am", "pos": "TE", "bid": 8,
+                     "player": "Taysom Hill"}
     assert LM.parse_row(" Titans Ten - DEF $21 Waiver Kimani Vidal LAC - RB To Waivers Undisputed Dec 24, 4:35 am")["pos"] == "DEF"
     move = LM.parse_row(" Eddy Pineiro SF - K Free Agent Bed Bath & Bijan Dec 20, 2:12 pm")
     assert move["kind"] == "move" and move["team"] == "Bed Bath & Bijan"
