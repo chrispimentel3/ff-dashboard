@@ -184,6 +184,18 @@ def test_padding_is_any_piece_that_changes_nothing():
     assert kept == [single, real] and n == 3
 
 
+def test_once_odds_are_in_a_throw_in_has_to_buy_a_likelier_yes():
+    from mega import trade_league as TL
+    o = lambda g, me, them, p: {"giveIds": g, "getIds": ["love"], "dMe": me, "dThem": them, "p_accept": p}
+    watson = o(["watson"], 0.82, -0.82, 0.83)
+    plus_boston = o(["watson", "boston"], 0.74, -0.74, 0.83)    # their lineup a hair better, same yes
+    sweetener = o(["watson", "egbuka"], 0.80, -0.90, 0.90)      # a likelier yes: a real sweetener
+    kept, n = TL.drop_padding([watson, plus_boston, sweetener], 0.05)
+    assert kept == [watson, sweetener] and n == 1
+    no_odds = [{k: v for k, v in r.items() if k != "p_accept"} for r in (watson, plus_boston)]
+    assert len(TL.drop_padding(no_odds, 0.05)[0]) == 2          # before odds: their lineup decides, as before
+
+
 def test_a_big_search_adds_2_for_2_3_for_1_and_3_for_2_and_nets_every_spot_it_opens(eng):
     from mega import trade_league as TL
     wide = tuple(ALL_FLAGS)
@@ -280,10 +292,21 @@ def test_a_piece_that_would_sit_behind_their_starter_is_a_backup_to_them(eng):
     from mega import trade_league as tl
     ctx = eng.ctx
     sits = tl.sits_for_them(ctx, 3, ["m_te2"], ["b_wr6"])          # B starts b_te1 (12)
-    assert list(sits) == ["m_te2"] and sits["m_te2"] == [ctx.players["b_te1"]["name"]]
+    assert list(sits) == ["m_te2"] and sits["m_te2"] == ("sits", [ctx.players["b_te1"]["name"]])
     assert tl.sits_for_them(ctx, 2, ["m_te1"], ["a_wr5"]) == {}    # 10 beats A's 9: he starts
     assert tl.to_them({"m_te2": 40.0, "m_wr1": 60.0}, sits) == pytest.approx(40 * tl.BENCH_CREDIT + 60)
     assert "wouldn't start for them (they start" in tl.sits_text(ctx, sits)[0]
+
+
+def test_a_third_tight_end_is_a_luxury_even_if_he_starts():
+    """Mega Bowl's flex is RB/WR, so a TE only ever replaces their one TE: a team already
+    holding two counts a third at BENCH_CREDIT (Kittle offered to Kraft-and-Likely)."""
+    from mega import trade_league as tl
+    ctx = create_engine(LEAGUE, {"flexEligible": ["RB", "WR"]}).ctx
+    sits = tl.sits_for_them(ctx, 2, ["m_te1"], ["a_wr5"])          # 10 starts over a_te1 (9); A also has a_te2
+    assert sits == {"m_te1": ("surplus", [ctx.players["a_te1"]["name"], ctx.players["a_te2"]["name"]])}
+    assert "already have" in tl.sits_text(ctx, sits)[0]
+    assert tl.sits_for_them(ctx, 2, ["m_te1"], ["a_te2"]) == {}    # they send a TE back: one left, a real need
 
 
 def test_evaluator_verdict():

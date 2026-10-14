@@ -246,19 +246,33 @@ def find_from_my_player(engine, my_id: int, give_ids: list[str], **opts) -> dict
             "evaluated": out["evaluated"], "padded": out["padded"], "matched": out["matched"]}
 
 
+ODDS_PAD = 0.01   # chances of a yes within a point of each other tie (by_deal_odds rounds the same way)
+
+
 def drop_padding(results: list, pad: float) -> tuple[list, int]:
     """A package is padding when taking one piece out of it — one of what I give, or one of
     what I get — leaves an offer that is already as good for both sides. The engine checks
     that only against the player it searched from, and a netted offer changes its numbers —
-    so a search that merges many starting points, or nets, runs this over the whole list."""
+    so a search that merges many starting points, or nets, runs this over the whole list.
+
+    "As good for them" is their lineup until deal_odds has stamped `p_accept`; from then on
+    it is the chance they say yes, so a throw-in has to buy a likelier yes to stay. Their
+    lineup alone kept Watson + Boston for Love beside Watson for Love: Boston nudged their
+    bench by hundredths, left the yes at 83%, and cost me 0.08 (Chris 2026-10-13)."""
     by_key = {(frozenset(r["giveIds"]), frozenset(r["getIds"])): r for r in results}
+
+    def as_good(q, r) -> bool:
+        if "p_accept" in q and "p_accept" in r:
+            them = q["p_accept"] >= r["p_accept"] - ODDS_PAD
+        else:
+            them = q["dThem"] >= r["dThem"] - pad
+        return q["dMe"] >= r["dMe"] - pad and them
 
     def padded(r) -> bool:
         give, get = frozenset(r["giveIds"]), frozenset(r["getIds"])
         subs = ([(give - {x}, get) for x in give] if len(give) > 1 else []) + \
                ([(give, get - {y}) for y in get] if len(get) > 1 else [])
-        return any((q := by_key.get(k)) and q["dMe"] >= r["dMe"] - pad and q["dThem"] >= r["dThem"] - pad
-                   for k in subs)
+        return any((q := by_key.get(k)) and as_good(q, r) for k in subs)
 
     kept = [r for r in results if not padded(r)]
     return kept, len(results) - len(kept)
@@ -461,27 +475,43 @@ BENCH_CREDIT = 0.5   # (J) what a player who wouldn't start for them is worth to
 
 
 def sits_for_them(ctx, their_id, give_ids, get_ids) -> dict:
-    """{pid I send: names of their starters at his position} for each piece that wouldn't
-    crack their lineup after the trade — the throw-in they'd value as a backup."""
+    """{pid I send: (why, their players)} for each piece they'd value as a backup, not a starter:
+
+      * "sits": he wouldn't crack their lineup; the names are their starters at his position.
+      * "surplus": he'd start, but at a position only one of theirs can play (no flex — QB and
+        TE here) where they already hold a starter and a backup; the names are those players.
+        A manager with Kraft and Likely is set at tight end, and prices a third one as a
+        luxury however he projects (Chris 2026-10-13: Kittle offered for Love)."""
     from . import trade_engine as te
-    t = ctx.teams[their_id]
-    after = [i for i in t["roster"] if i not in set(get_ids)] + list(give_ids)
-    starts = te.lineup(after, ctx, None).starters
+    kept = [i for i in ctx.teams[their_id]["roster"] if i not in set(get_ids)]
+    starts = te.lineup(kept + list(give_ids), ctx, None).starters
     on = {e[0] for e in starts}
-    return {i: [ctx.players[e[0]]["name"] for e in starts
-                if ctx.players[e[0]]["pos"] == ctx.players[i]["pos"]]
-            for i in give_ids if i not in on}
+    flex = set(ctx.cfg["flexEligible"])
+    out = {}
+    for i in give_ids:
+        pos = ctx.players[i]["pos"]
+        if i not in on:
+            out[i] = ("sits", [ctx.players[e[0]]["name"] for e in starts if ctx.players[e[0]]["pos"] == pos])
+        elif ctx.cfg["slots"].get(pos) == 1 and pos not in flex:
+            held = [ctx.players[k]["name"] for k in kept if ctx.players[k]["pos"] == pos]
+            if len(held) >= 2:
+                out[i] = ("surplus", held)
+    return out
 
 
 def to_them(give_vals: dict, sits: dict) -> float:
-    """What they receive, by their roster: pieces that would sit count at BENCH_CREDIT."""
+    """What they receive, by their roster: pieces they'd hold as backups count at BENCH_CREDIT."""
     return sum(v * (BENCH_CREDIT if pid in sits else 1.0) for pid, v in give_vals.items())
 
 
 def sits_text(ctx, sits: dict) -> list[str]:
-    return [f"{ctx.players[i]['name']} wouldn't start for them"
-            + (f" (they start {' & '.join(n)})" if n else "")
-            + f", so he counts at {BENCH_CREDIT:.0%} of his market value to them" for i, n in sits.items()]
+    out = []
+    for i, (why, names) in sits.items():
+        p = ctx.players[i]
+        head = (f"{p['name']} wouldn't start for them" + (f" (they start {' & '.join(names)})" if names else "")
+                if why == "sits" else f"They already have {' & '.join(names)} at {p['pos']}, so {p['name']} is a luxury")
+        out.append(head + f" — he counts at {BENCH_CREDIT:.0%} of his market value to them")
+    return out
 
 
 def deal_odds(ctx, results: list, acc: dict, bias_by_id: dict, profiles: dict,

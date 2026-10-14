@@ -389,6 +389,8 @@ def _rank(eng, results, order):
         TL.deal_odds(eng.ctx, results, *_deal_inputs(eng))
     except Exception:
         pass            # no odds is still a usable list; the rank falls back to my gain
+    # again, now that "as good for them" can mean as likely a yes (mega/trade_league.py drop_padding)
+    results, _ = TL.drop_padding(results, eng.ctx.cfg["padTolerance"])
     if order == "accept" and any("p_accept" in r for r in results):
         return TL.by_deal_odds(results)
     return sorted(results, key=lambda r: -r["dMe"])

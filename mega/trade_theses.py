@@ -387,7 +387,8 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
         # judged by his roster: a piece that would sit behind his starter is a backup to him
         sits = tl.sits_for_them(ctx, c["partner"]["id"], c["giveIds"], c["getIds"])
         fair_them = tl.to_them(give_vals, sits) / get_val if get_val > 0 else 1.0
-        need_fit = 1.0 if any(s["id"] in c["giveIds"] for s in c["them"]["startersIn"]) else 0.0
+        need_fit = 1.0 if any(s["id"] in c["giveIds"] and s["id"] not in sits
+                              for s in c["them"]["startersIn"]) else 0.0
         pb = bias_by_name.get(partner) or {}
         fair_x = min(fair_them, tl.MAX_OVERPAY)   # past 1.5x an overpay stops buying more yes (the search caps it too)
         bias = (np.mean([pb.get(ctx.players[i]["pos"], 1.0) for i in c["giveIds"]])
