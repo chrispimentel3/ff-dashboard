@@ -103,6 +103,14 @@ def optimize_lineup(roster: pd.DataFrame, season: int, week: int) -> pd.DataFram
             df.loc[hit.notna(), "proj"] = 0.0
         except Exception:
             pass
+    # A player on bye has no game, so nothing to project — week 5's start/sit carried Bryce
+    # Young at 17.6 through Carolina's bye (mega/scorecard.py caught it). Only when the
+    # schedule answered: a failed fetch leaves every opponent blank, which isn't a bye.
+    if "opp" in df.columns and df["opp"].notna().any():
+        bye = df["opp"].isna()
+        df.loc[bye, "proj"] = 0.0
+        status = df["report_status"] if "report_status" in df.columns else pd.Series(None, index=df.index, dtype=object)
+        df["report_status"] = status.where(~bye | status.notna(), "BYE")
     # FantasyPros already prices the matchup; only nudge the nflverse estimates.
     # df.get returns a bare str when the column is absent, and str has no .eq
     is_est = df["proj_source"].eq("nflverse-est") if "proj_source" in df.columns \

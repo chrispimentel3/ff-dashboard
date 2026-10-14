@@ -109,7 +109,11 @@ def projections(season: int, week: int | None = None) -> pd.DataFrame:
     path = proj_path(season, week)
     if not path.is_file():
         return pd.DataFrame(columns=["gsis_id", "player", "pos", "proj"])
-    df = pd.read_csv(path)
+    return from_frame(pd.read_csv(path))
+
+
+def from_frame(df: pd.DataFrame) -> pd.DataFrame:
+    """`projections` on an already-read file (the scorecard reads past weeks out of git)."""
     if df.empty or "id" not in df.columns:
         return pd.DataFrame(columns=["gsis_id", "player", "pos", "proj"])
     if "avg_type" in df.columns:

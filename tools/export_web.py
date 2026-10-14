@@ -233,6 +233,17 @@ def main() -> None:
     except Exception as e:
         print(f"[export_web] history failed: {type(e).__name__}: {e}", file=sys.stderr)
 
+    # The scorecard: every finished week's calls, read out of git as they stood at kickoff and
+    # graded against what happened (mega/scorecard.py).
+    try:
+        from mega import scorecard as _scorecard
+        sc_path = OUT_DIR / "scorecard.json"
+        sc_path.write_text(json.dumps(_scorecard.build(_season, _next_week), separators=(",", ":"), default=str))
+        written.append(sc_path)
+        print(f"wrote {sc_path.relative_to(ROOT)}")
+    except Exception as e:
+        print(f"[export_web] scorecard failed: {type(e).__name__}: {e}", file=sys.stderr)
+
     # The weekly digest — the week just played and the one coming, in sentences. Built
     # from the league files and the league.json written above; see mega/digest_web.py.
     try:
