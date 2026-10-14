@@ -20,7 +20,7 @@ import time
 from collections import OrderedDict, defaultdict
 
 import pandas as pd
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field as PydField
 
@@ -287,6 +287,53 @@ class TradeTeamRequest(BaseModel):
     shape: str | None = None                      # only this shape, e.g. "2-for-2"
     order: str = "accept"
     odds: bool = True
+
+
+class OfferIn(BaseModel):
+    action: str = PydField(pattern="^(sent|accepted|declined|withdrawn)$")
+    id: str | None = None                 # the offer an outcome answers
+    partner: str | None = None
+    give: list[str] = PydField(default_factory=list, max_length=4)
+    get: list[str] = PydField(default_factory=list, max_length=4)
+    p_accept: float | None = None         # the model's estimate when it was sent
+    d_me: float | None = None
+    d_them: float | None = None
+    source: str | None = PydField(default=None, max_length=20)   # "card", "window", ...
+
+
+def _offer_gate(passcode: str | None):
+    from service import offer_log as OL
+    if not OL.configured():
+        raise HTTPException(status_code=503, detail="The offer log isn't set up on the server yet.")
+    if not OL.passcode_ok(passcode):
+        raise HTTPException(status_code=401, detail="Wrong passcode.")
+    return OL
+
+
+@app.get("/offers")
+def offers_list(x_offer_passcode: str | None = Header(default=None)):
+    OL = _offer_gate(x_offer_passcode)
+    rows, _ = OL.read()
+    return {"offers": OL.offers(rows)}
+
+
+@app.post("/offers")
+def offers_add(req: OfferIn, x_offer_passcode: str | None = Header(default=None)):
+    OL = _offer_gate(x_offer_passcode)
+    if req.action == "sent":
+        if not (req.partner and req.give and req.get):
+            raise HTTPException(status_code=400, detail="A sent offer needs the partner and both sides.")
+        entry = OL.new_sent(req.partner, req.give, req.get, req.p_accept, req.d_me, req.d_them, req.source)
+    else:
+        if not req.id:
+            raise HTTPException(status_code=400, detail="An outcome needs the id of the offer it answers.")
+        entry = {"ts": int(time.time()), "id": req.id, "action": req.action}
+    try:
+        OL.append(entry)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="No sent offer with that id.")
+    rows, _ = OL.read()
+    return {"entry": entry, "offers": OL.offers(rows)}
 
 
 @app.get("/health")
