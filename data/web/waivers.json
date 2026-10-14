@@ -2,23 +2,23 @@
   "available": true,
   "need_aware": true,
   "headline": "Nothing on the wire improves your lineup over the next three weeks. Hold the budget.",
-  "subhead": "0 to bid on now, 2 worth a stash or a watch; the league has spent $322 in FAAB so far.",
+  "subhead": "0 to bid on now, 2 worth a stash or a watch; the league has spent $446 in FAAB so far.",
   "faab": {
     "known": true,
-    "mine": 69,
-    "richer": 8,
+    "mine": 63,
+    "richer": 7,
     "max_rival": 100,
-    "median_rival": 86.0,
+    "median_rival": 70.0,
     "teams": 12
   },
   "market": {
     "claims": 5,
-    "median": 10.0,
-    "max": 12.0,
+    "median": 6.0,
+    "max": 17.0,
     "contested": 5,
-    "listed_spend": 45.0,
-    "league_spend": 322.0,
-    "unlisted_spend": 277.0
+    "listed_spend": 39.0,
+    "league_spend": 446.0,
+    "unlisted_spend": 407.0
   },
   "lanes": {
     "bid_now": [],
@@ -29,11 +29,11 @@
         "nfl_team": "TB",
         "ppg": 7.89,
         "lane": "early_signal",
-        "fit_pts": 0.04,
-        "start": 0.01,
-        "cover": 0.021,
+        "fit_pts": 0.041,
+        "start": 0.009,
+        "cover": 0.023,
         "insure": 0.009,
-        "next3": 0.138,
+        "next3": 0.144,
         "mechanism": "COVER",
         "handcuff": false,
         "insures": "Bucky Irving",
@@ -43,18 +43,18 @@
         "drop_flip": 0.0,
         "signal": "ROLE+",
         "p_expand": 0.254,
-        "gain_if_expands": 0.031,
+        "gain_if_expands": 0.032,
         "signal_score": 0.008,
-        "pct_ros": 53.0,
+        "pct_ros": 52.0,
         "market_on": true,
         "flip": 0.0,
         "bid": 0,
         "max_bid": 0,
         "role": "Receiving back",
         "why": "playing up: 25% chance his role grows within 3 weeks, worth +0.0 pts/wk if it does",
-        "d_title": 0.0025,
-        "se_title": 0.0012,
-        "title_noise": false,
+        "d_title": 0.0018,
+        "se_title": 0.001,
+        "title_noise": true,
         "out_status": "",
         "out_back": null,
         "rival_top": 3,
@@ -86,14 +86,14 @@
         "p_expand": null,
         "gain_if_expands": 0.0,
         "signal_score": 0.0,
-        "pct_ros": 63.0,
+        "pct_ros": 64.0,
         "market_on": true,
         "flip": 0.0,
         "bid": 0,
         "max_bid": 2,
         "role": "Starting QB",
         "why": "bye and injury cover: +0.56 pts/wk across the season",
-        "d_title": -0.0013,
+        "d_title": 0.0018,
         "se_title": 0.0027,
         "title_noise": true,
         "out_status": "",
@@ -127,10 +127,10 @@
     ],
     "tau_bid": 1.0,
     "fit_min": 0.02,
-    "budget_left": 69,
+    "budget_left": 63,
     "title": {
-      "p_playoffs": 0.654,
-      "p_title": 0.08683333333333333,
+      "p_playoffs": 0.6715,
+      "p_title": 0.0895,
       "posture": "balanced",
       "seasons": 6000
     }
@@ -146,31 +146,7 @@
     "DEF": {
       "mine": [
         {
-          "player": "Bears",
-          "weeks": [
-            {
-              "week": 6,
-              "opp": "ATL",
-              "proj": 5.9
-            },
-            {
-              "week": 7,
-              "opp": "NE",
-              "proj": 6.3
-            },
-            {
-              "week": 8,
-              "opp": "SEA",
-              "proj": 5.6
-            }
-          ]
-        }
-      ],
-      "rows": [
-        {
           "player": "Chiefs",
-          "team": "KC",
-          "pos": "DEF",
           "weeks": [
             {
               "week": 6,
@@ -187,15 +163,39 @@
               "opp": "DEN",
               "proj": 5.2
             }
+          ]
+        }
+      ],
+      "rows": [
+        {
+          "player": "Steelers",
+          "team": "PIT",
+          "pos": "DEF",
+          "weeks": [
+            {
+              "week": 6,
+              "opp": "TB",
+              "proj": 8.4
+            },
+            {
+              "week": 7,
+              "opp": "NO",
+              "proj": 7.8
+            },
+            {
+              "week": 8,
+              "opp": "CLE",
+              "proj": 7.6
+            }
           ],
-          "gain_next": 3.2,
-          "gain_avg": 1.07,
+          "gain_next": -0.7,
+          "gain_avg": 1.44,
           "bid": 0,
-          "max_bid": 3,
-          "rival_top": 5,
-          "rival_team": "Don R.I.C.O",
-          "rivals_n": 6,
-          "bid_note": "likely outbid: Don R.I.C.O ~$5, over your $3 ceiling"
+          "max_bid": 4,
+          "rival_top": 12,
+          "rival_team": "BillsMafia",
+          "rivals_n": 11,
+          "bid_note": "likely outbid: BillsMafia ~$12, over your $4 ceiling"
         },
         {
           "player": "Bengals",
@@ -218,44 +218,44 @@
               "proj": 8.3
             }
           ],
-          "gain_next": -5.9,
-          "gain_avg": 0.93,
-          "bid": 2,
-          "max_bid": 2,
-          "rival_top": 2,
-          "rival_team": "BillsMafia",
-          "rivals_n": 3,
-          "bid_note": "matches BillsMafia's likely $2; a tie goes to the worse record"
+          "gain_next": -9.1,
+          "gain_avg": 1.04,
+          "bid": 1,
+          "max_bid": 3,
+          "rival_top": 0,
+          "rival_team": "",
+          "rivals_n": 0,
+          "bid_note": "no other team gains enough from him to bid"
         },
         {
-          "player": "Vikings",
-          "team": "MIN",
+          "player": "Jets",
+          "team": "NYJ",
           "pos": "DEF",
           "weeks": [
             {
               "week": 6,
-              "opp": null,
-              "proj": 0.0
+              "opp": "NE",
+              "proj": 6.2
             },
             {
               "week": 7,
-              "opp": "IND",
-              "proj": 8.2
+              "opp": "MIA",
+              "proj": 8.6
             },
             {
               "week": 8,
-              "opp": "DET",
-              "proj": 4.1
+              "opp": "LV",
+              "proj": 5.3
             }
           ],
-          "gain_next": -5.9,
-          "gain_avg": 0.65,
-          "bid": 2,
+          "gain_next": -2.9,
+          "gain_avg": 0.93,
+          "bid": 1,
           "max_bid": 2,
-          "rival_top": 1,
-          "rival_team": "Heartbreak Drake",
-          "rivals_n": 1,
-          "bid_note": "beats Heartbreak Drake's likely $1 (1 team interested)"
+          "rival_top": 0,
+          "rival_team": "",
+          "rivals_n": 0,
+          "bid_note": "no other team gains enough from him to bid"
         },
         {
           "player": "Panthers",
@@ -278,18 +278,18 @@
               "proj": 5.9
             }
           ],
-          "gain_next": 0.1,
-          "gain_avg": 0.6,
-          "bid": 0,
-          "max_bid": 1,
-          "rival_top": 2,
-          "rival_team": "Saquon Hater",
-          "rivals_n": 1,
-          "bid_note": "likely outbid: Saquon Hater ~$2, over your $1 ceiling"
+          "gain_next": -3.1,
+          "gain_avg": 0.81,
+          "bid": 1,
+          "max_bid": 2,
+          "rival_top": 0,
+          "rival_team": "",
+          "rivals_n": 0,
+          "bid_note": "no other team gains enough from him to bid"
         },
         {
-          "player": "Lions",
-          "team": "DET",
+          "player": "Vikings",
+          "team": "MIN",
           "pos": "DEF",
           "weeks": [
             {
@@ -299,49 +299,49 @@
             },
             {
               "week": 7,
-              "opp": "GB",
-              "proj": 5.5
+              "opp": "IND",
+              "proj": 8.2
             },
             {
               "week": 8,
-              "opp": "MIN",
-              "proj": 6.5
+              "opp": "DET",
+              "proj": 4.1
             }
           ],
-          "gain_next": -5.9,
-          "gain_avg": 0.32,
+          "gain_next": -9.1,
+          "gain_avg": 0.79,
           "bid": 1,
-          "max_bid": 1,
+          "max_bid": 2,
           "rival_top": 0,
           "rival_team": "",
           "rivals_n": 0,
           "bid_note": "no other team gains enough from him to bid"
         },
         {
-          "player": "Falcons",
-          "team": "ATL",
+          "player": "Texans",
+          "team": "HOU",
           "pos": "DEF",
           "weeks": [
             {
               "week": 6,
-              "opp": "CHI",
-              "proj": 4.9
+              "opp": "JAX",
+              "proj": 5.2
             },
             {
               "week": 7,
-              "opp": "SF",
-              "proj": 3.0
+              "opp": "NYG",
+              "proj": 8.0
             },
             {
               "week": 8,
-              "opp": "TB",
-              "proj": 6.5
+              "opp": null,
+              "proj": 0.0
             }
           ],
-          "gain_next": -1.0,
-          "gain_avg": 0.31,
+          "gain_next": -3.9,
+          "gain_avg": 0.72,
           "bid": 1,
-          "max_bid": 1,
+          "max_bid": 2,
           "rival_top": 0,
           "rival_team": "",
           "rivals_n": 0,
@@ -352,27 +352,57 @@
     "K": {
       "mine": [
         {
-          "player": "Chad Ryland",
+          "player": "Dominic Zvada",
           "weeks": [
             {
               "week": 6,
-              "opp": "LA",
-              "proj": 7.4
+              "opp": "NO",
+              "proj": 9.3
             },
             {
               "week": 7,
-              "opp": "DEN",
-              "proj": 7.6
+              "opp": "HOU",
+              "proj": 7.3
             },
             {
               "week": 8,
-              "opp": "DAL",
-              "proj": 8.6
+              "opp": null,
+              "proj": 0.0
             }
           ]
         }
       ],
       "rows": [
+        {
+          "player": "Will Reichard",
+          "team": "MIN",
+          "pos": "K",
+          "weeks": [
+            {
+              "week": 6,
+              "opp": null,
+              "proj": 0.0
+            },
+            {
+              "week": 7,
+              "opp": "IND",
+              "proj": 12.4
+            },
+            {
+              "week": 8,
+              "opp": "DET",
+              "proj": 11.4
+            }
+          ],
+          "gain_next": -9.3,
+          "gain_avg": 5.52,
+          "bid": 9,
+          "max_bid": 13,
+          "rival_top": 8,
+          "rival_team": "Crabcakes and Football",
+          "rivals_n": 9,
+          "bid_note": "beats Crabcakes and Football's likely $8 (9 teams interested)"
+        },
         {
           "player": "Tyler Loop",
           "team": "BAL",
@@ -394,14 +424,44 @@
               "proj": 9.9
             }
           ],
-          "gain_next": 2.7,
-          "gain_avg": 2.76,
-          "bid": 7,
-          "max_bid": 7,
-          "rival_top": 7,
-          "rival_team": "Crabcakes and Football",
-          "rivals_n": 8,
-          "bid_note": "matches Crabcakes and Football's likely $7; a tie goes to the worse record"
+          "gain_next": 0.8,
+          "gain_avg": 5.05,
+          "bid": 4,
+          "max_bid": 12,
+          "rival_top": 3,
+          "rival_team": "Allen Moore connection",
+          "rivals_n": 1,
+          "bid_note": "beats Allen Moore connection's likely $3 (1 team interested)"
+        },
+        {
+          "player": "Ryan Fitzgerald",
+          "team": "CAR",
+          "pos": "K",
+          "weeks": [
+            {
+              "week": 6,
+              "opp": "PHI",
+              "proj": 8.3
+            },
+            {
+              "week": 7,
+              "opp": "TB",
+              "proj": 10.1
+            },
+            {
+              "week": 8,
+              "opp": "GB",
+              "proj": 9.6
+            }
+          ],
+          "gain_next": -1.0,
+          "gain_avg": 4.15,
+          "bid": 1,
+          "max_bid": 10,
+          "rival_top": 0,
+          "rival_team": "",
+          "rivals_n": 0,
+          "bid_note": "no other team gains enough from him to bid"
         },
         {
           "player": "Matt Gay",
@@ -424,40 +484,10 @@
               "proj": 9.7
             }
           ],
-          "gain_next": 2.9,
-          "gain_avg": 1.77,
+          "gain_next": 1.0,
+          "gain_avg": 4.07,
           "bid": 1,
-          "max_bid": 4,
-          "rival_top": 0,
-          "rival_team": "",
-          "rivals_n": 0,
-          "bid_note": "no other team gains enough from him to bid"
-        },
-        {
-          "player": "Eddy Pineiro",
-          "team": "SF",
-          "pos": "K",
-          "weeks": [
-            {
-              "week": 6,
-              "opp": "WAS",
-              "proj": 10.3
-            },
-            {
-              "week": 7,
-              "opp": "ATL",
-              "proj": 9.6
-            },
-            {
-              "week": 8,
-              "opp": null,
-              "proj": 0.0
-            }
-          ],
-          "gain_next": 2.9,
-          "gain_avg": 1.63,
-          "bid": 1,
-          "max_bid": 4,
+          "max_bid": 10,
           "rival_top": 0,
           "rival_team": "",
           "rivals_n": 0,
@@ -484,70 +514,40 @@
               "proj": 8.9
             }
           ],
-          "gain_next": 4.2,
-          "gain_avg": 1.52,
-          "bid": 0,
-          "max_bid": 4,
+          "gain_next": 2.3,
+          "gain_avg": 3.73,
+          "bid": 7,
+          "max_bid": 9,
           "rival_top": 6,
-          "rival_team": "BillsMafia",
-          "rivals_n": 3,
-          "bid_note": "likely outbid: BillsMafia ~$6, over your $4 ceiling"
+          "rival_team": "deez nuts",
+          "rivals_n": 1,
+          "bid_note": "beats deez nuts's likely $6 (1 team interested)"
         },
         {
-          "player": "Ryan Fitzgerald",
-          "team": "CAR",
+          "player": "Harrison Mevis",
+          "team": "LA",
           "pos": "K",
           "weeks": [
             {
               "week": 6,
-              "opp": "PHI",
-              "proj": 8.3
+              "opp": "ARI",
+              "proj": 10.6
             },
             {
               "week": 7,
-              "opp": "TB",
-              "proj": 10.1
+              "opp": "LV",
+              "proj": 9.2
             },
             {
               "week": 8,
-              "opp": "GB",
-              "proj": 9.6
+              "opp": "LAC",
+              "proj": 7.4
             }
           ],
-          "gain_next": 0.9,
-          "gain_avg": 1.52,
+          "gain_next": 1.2,
+          "gain_avg": 3.51,
           "bid": 1,
-          "max_bid": 4,
-          "rival_top": 0,
-          "rival_team": "",
-          "rivals_n": 0,
-          "bid_note": "no other team gains enough from him to bid"
-        },
-        {
-          "player": "Cairo Santos",
-          "team": "CHI",
-          "pos": "K",
-          "weeks": [
-            {
-              "week": 6,
-              "opp": "ATL",
-              "proj": 9.6
-            },
-            {
-              "week": 7,
-              "opp": "NE",
-              "proj": 9.1
-            },
-            {
-              "week": 8,
-              "opp": "SEA",
-              "proj": 8.2
-            }
-          ],
-          "gain_next": 2.2,
-          "gain_avg": 1.23,
-          "bid": 1,
-          "max_bid": 3,
+          "max_bid": 8,
           "rival_top": 0,
           "rival_team": "",
           "rivals_n": 0,
