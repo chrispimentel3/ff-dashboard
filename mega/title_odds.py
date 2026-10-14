@@ -38,8 +38,9 @@ N_SEASONS = 6000          # handoff §5
 SEED = 2026
 REG_LAST = 14
 PLAYOFF_WEEKS = (15, 16, 17)
-KDEF_MEAN = 15.0          # (J) a half-PPR kicker + defense per week; same for every team,
-KDEF_SD = 7.0             #     so it sets game-to-game noise and never a trade's delta
+KDEF_MEAN = 15.0          # (J) a half-PPR kicker + defense per week, for a team-week kdef.project can't price
+KDEF_SD = 7.0             #     game-to-game noise around each team's own K + DEF mean
+STREAM_RANK = 3           # (J) the free-agent K or DEF a team streams on a bye: the 3rd best left that week
 DEFAULT_Q = (0.35, 0.90, 1.75)   # (J) p10/p50/p90 multipliers for a player the projection lacks
 NOISE_Z = 2.0             # |Δ| under 2 SE is noise
 TW_CACHE_MAX = 400        # trade-variant team-week arrays kept before they are flushed
@@ -66,6 +67,7 @@ class Model:
     proj_sd: dict                  # pos -> sd of the season-long projection error
     rosters: dict                  # team -> [pids]
     n: int = N_SEASONS
+    kdef: dict = field(default_factory=dict)      # (team, week) -> his K + DEF expected points
     _tw: dict = field(default_factory=dict)       # team-week totals for trade variants
     _tw_base: dict = field(default_factory=dict)  # ... and for the rosters as they stand
     _z0: dict = field(default_factory=dict)       # each player's season-long draw: one array
@@ -119,7 +121,7 @@ class Model:
             else:
                 total += np.where(on, x, 0.0)
         z, _ = self._dice(f"{team}|kdef|{w}")
-        total += KDEF_MEAN + KDEF_SD * z
+        total += self.kdef.get((team, w), KDEF_MEAN) + KDEF_SD * z
         if not is_base and len(self._tw) > TW_CACHE_MAX:
             self._tw.clear()            # every new roster adds 15 weeks of arrays; a live
                                         # service would otherwise grow without bound
@@ -287,4 +289,38 @@ def build(season: int, now: int, yahoo_rosters=None, n: int = N_SEASONS, league:
         dist[pid] = d
     proj_sd = {pos: float(v) for pos, v in (proj_ros.load_params().get("proj_err_sd") or {}).items()}
     rosters = {t["name"]: list(t["roster"]) + list(t.get("ir") or []) for t in league["teams"]}
-    return Model(season_obj, ctx, dist, proj_sd, rosters, n=n)
+    try:
+        from .yahoo import cached_rosters
+        kd = kdef_means(season, range(int(now), PLAYOFF_WEEKS[-1] + 1),
+                        yahoo_rosters if yahoo_rosters is not None else cached_rosters())
+    except Exception:
+        kd = {}                        # every team falls back to the league-wide KDEF_MEAN
+    return Model(season_obj, ctx, dist, proj_sd, rosters, n=n, kdef=kd)
+
+
+def kdef_means(season: int, weeks, yahoo_rosters) -> dict:
+    """(fantasy team, week) -> the K + DEF he'll start: the better of each he rosters
+    (mega/kdef.py's weekly projection, schedule and Vegas-implied), or on a bye — or with
+    none rostered — what he can stream, the STREAM_RANK-th best unrostered that week.
+    Only then: crediting every team the stream whenever it beat his own assumed everyone
+    streams perfectly every week, and put 7 of 12 teams at the same number.
+    K/DEF never move in a trade, so this shifts standings odds, not a trade's delta."""
+    from . import kdef
+    ros = kdef.rostered(yahoo_rosters)
+    proj = kdef.project(season, list(weeks))
+    out = {}
+    for pos, key in (("K", "player"), ("DEF", "team")):
+        p = proj.get(pos)
+        if p is None or p.empty:
+            continue
+        held = set(ros.loc[ros["pos"] == pos, "key"].dropna())
+        for w, g in p.groupby("week"):
+            val = dict(zip(g[key], g["proj"]))
+            free = sorted((v for k, v in val.items() if k not in held), reverse=True)
+            stream = free[STREAM_RANK - 1] if len(free) >= STREAM_RANK else (free[-1] if free else 0.0)
+            for team, mine in ros[ros["pos"] == pos].groupby("fantasy_team"):
+                best = max((val.get(k, 0.0) for k in mine["key"]), default=0.0)
+                out[(team, int(w))] = out.get((team, int(w)), 0.0) + (best if best > 0 else stream)
+            for team in set(ros["fantasy_team"]) - set(ros.loc[ros["pos"] == pos, "fantasy_team"]):
+                out[(team, int(w))] = out.get((team, int(w)), 0.0) + stream
+    return out

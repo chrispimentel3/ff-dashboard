@@ -73,6 +73,20 @@ def _teams() -> dict:
     return out
 
 
+@functools.lru_cache(maxsize=1)
+def _cities() -> dict:
+    """Yahoo sometimes names a defense by its city ("Houston"): city -> abbreviation, only for
+    a city with one team — "New York" and "Los Angeles" are two each and stay unresolved."""
+    import nflreadpy as nfl
+    from .ids import canon_team
+    t = nfl.load_teams().to_pandas().drop_duplicates("team_nick")
+    seen: dict = {}
+    for abbr, name, nick in zip(t["team_abbr"], t["team_name"], t["team_nick"]):
+        city = str(name).replace(str(nick), "").strip()
+        seen.setdefault(city, set()).add(canon_team(abbr))
+    return {c: next(iter(a)) for c, a in seen.items() if len(a) == 1}
+
+
 def _games(season: int) -> pd.DataFrame:
     """team, week, opp, scored, allowed — regular-season games played."""
     from . import season as S
@@ -253,9 +267,15 @@ def rostered(yahoo_rosters: pd.DataFrame) -> pd.DataFrame:
     is_d = (r["slot"] == "DEF") | (r.get("pos") == "DEF")
     nick = _teams()
     out = []
+    from .ids import canon_team
     for row in r[is_k | is_d].itertuples():
         pos = "K" if bool(is_k.loc[row.Index]) else "DEF"
-        key = row.player if pos == "K" else nick.get(str(row.player))
+        # a defense by nickname, else the team the scrape carries, else an unambiguous city
+        nfl_team = getattr(row, "nfl_team", None)
+        key = row.player if pos == "K" else (
+            nick.get(str(row.player))
+            or (canon_team(nfl_team) if isinstance(nfl_team, str) and nfl_team else None)
+            or _cities().get(str(row.player)))
         out.append({"fantasy_team": row.team, "slot": row.slot, "pos": pos, "player": row.player, "key": key})
     return pd.DataFrame(out, columns=["fantasy_team", "slot", "pos", "player", "key"])
 
