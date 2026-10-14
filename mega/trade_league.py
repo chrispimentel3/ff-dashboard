@@ -524,6 +524,7 @@ def deal_odds(ctx, results: list, acc: dict, bias_by_id: dict, profiles: dict,
     BENCH_CREDIT, see sits_for_them), whether what I send fills
     a position his roster is short at (team_profiles), his positional bias, and how much he
     has to play for. Mutates and returns `results`."""
+    from . import league_memory as LM
     from . import trade_engine as te
     from .trade_theses import p_accept, urgency
     import numpy as np
@@ -543,7 +544,8 @@ def deal_odds(ctx, results: list, acc: dict, bias_by_id: dict, profiles: dict,
                 - np.mean([pb.get(ctx.players[i]["pos"], 1.0) for i in r["getIds"]]))
         d_title = float(a.get("title_per_pt", 0.0)) * float(r["dThem"])
         r["p_accept"] = p_accept(priors, d_title, fair, need_fit, float(bias),
-                                 urgency(float(a.get("p_playoffs", 0.0))), float(r["dThem"]))
+                                 urgency(float(a.get("p_playoffs", 0.0))), float(r["dThem"]),
+                                 LM.trade_offset(ctx.teams[pid].get("name")))
         r["need_fit"] = bool(need_fit)
     return results
 

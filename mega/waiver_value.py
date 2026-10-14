@@ -529,11 +529,14 @@ def bid_vs_rivals(top: int, who: str, n: int, fit: float, max_bid: int) -> tuple
         return (1 if fit > 0.05 else 0,
                 "no other team gains enough from him to bid" if n == 0 else
                 f"{n} other team{'s' if n > 1 else ''} would add him, none likely to pay")
+    from . import league_memory as LM
+    agg = LM.faab_aggression(who)
+    habit = f" — {who} bids {agg:.1f}x the league on the same player" if abs(agg - 1.0) >= 0.10 else ""
     if top + 1 <= max_bid:
-        return top + 1, f"beats {who}'s likely ${top} ({n} team{'s' if n > 1 else ''} interested)"
+        return top + 1, f"beats {who}'s likely ${top} ({n} team{'s' if n > 1 else ''} interested)" + habit
     if top <= max_bid:
-        return int(max_bid), f"matches {who}'s likely ${top}; a tie goes to the worse record"
-    return 0, f"likely outbid: {who} ~${top}, over your ${max_bid} ceiling"
+        return int(max_bid), f"matches {who}'s likely ${top}; a tie goes to the worse record" + habit
+    return 0, f"likely outbid: {who} ~${top}, over your ${max_bid} ceiling" + habit
 
 
 def rival_bids(b: Board, rows: pd.DataFrame, faab_left: dict, now: int) -> pd.DataFrame:
@@ -542,8 +545,9 @@ def rival_bids(b: Board, rows: pd.DataFrame, faab_left: dict, now: int) -> pd.Da
 
     A rival's interest is his own horizon gain from the add — his roster rebuilt with the
     player and forced back to size, on the same engine context that priced ours — and his
-    bid is that gain through the same faab.suggest curve, capped by what he has left. One
-    pricing rule for all twelve teams, so the comparison is like for like.
+    bid is that gain through the same faab.suggest curve, capped by what he has left, and
+    scaled by how he has actually bid against the league on the same player (his FAAB
+    aggression, mega/league_memory.py — 1.0 for anyone without history).
 
     His gain is net of what he could add for free instead — the COVER_REPLACEMENT-th best
     gain among the other free agents at that position, the rule cover_baseline applies to
@@ -556,6 +560,7 @@ def rival_bids(b: Board, rows: pd.DataFrame, faab_left: dict, now: int) -> pd.Da
       top rival + $1 over my ceiling   -> pass, with the number
     """
     from . import faab as fb
+    from . import league_memory as LM
     ctx = b.ctx
     cols = {"bid": [], "rival_top": [], "rival_team": [], "rivals_n": [], "bid_note": []}
     gain_memo: dict = {}
@@ -591,7 +596,7 @@ def rival_bids(b: Board, rows: pd.DataFrame, faab_left: dict, now: int) -> pd.Da
             if g < RIVAL_MIN:
                 continue
             n += 1
-            bid = fb.suggest(g, int(faab_left.get(t["name"], 0)), now)["bid"]
+            bid = fb.suggest(g, int(faab_left.get(t["name"], 0)), now, LM.faab_aggression(t["name"]))["bid"]
             if bid > top:
                 top, who = bid, t["name"]
         bid, note = bid_vs_rivals(top, who, n, r.fit, r.max_bid)

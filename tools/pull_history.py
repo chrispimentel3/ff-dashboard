@@ -11,6 +11,11 @@ row text) and its settled FAAB claims with the losing bids, into
 data/history/transactions/<year>.json — the raw material for fitting each manager's bidding,
 positional lean and trading habits. Rows are kept as text; parsing belongs to the fit.
 
+`--managers` reads each team page's manager into data/history/managers/<year>.json (2026 is
+the live league) — team names change every season, the person behind them doesn't. Yahoo's
+profile handle is the stable key; the repo is public and handles carry real names, so only a
+hash of it is stored, with the display name the league already sees.
+
 Why one at a time: pulling all six seasons back-to-back made Yahoo answer "Request denied"
 to every page, including the live league. A season is ~14 page loads at REQUEST_DELAY apart;
 the rest between seasons is the caller's job. On a rate-limit or an expired session this
@@ -20,7 +25,9 @@ Exit codes: 0 saved (or already had it) · 5 rate-limited · 6 session expired �
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -32,6 +39,8 @@ from mega.yahoo import AuthExpired, LeagueSession  # noqa: E402
 
 OUT = ROOT / "data" / "history" / "seasons"
 TX_OUT = ROOT / "data" / "history" / "transactions"
+MGR_OUT = ROOT / "data" / "history" / "managers"
+LIVE_YEAR = 2026
 PAGE = 25          # rows per transactions page; `count=` is the offset
 MAX_PAGES = 80     # a season runs ~15-30 pages; this only stops a page that never ends
 DELAY = 8.0     # seconds between page loads; the module's own 4s is what got us blocked
@@ -58,8 +67,56 @@ def _patient(fn):
     return wrapped
 
 
-def path(year: int, tx: bool = False) -> Path:
-    return (TX_OUT if tx else OUT) / f"{year}.json"
+def path(year: int, tx: bool = False, mgr: bool = False) -> Path:
+    return (MGR_OUT if mgr else TX_OUT if tx else OUT) / f"{year}.json"
+
+
+_PROFILE = re.compile(r'profiles\.sports\.yahoo\.com/profile/([A-Za-z0-9_.-]+)\?sport=football">([^<]+)</a>')
+
+
+def parse_manager(html: str) -> dict | None:
+    """The team's own manager: the profile link in the team caption (the page's other
+    profile link is the signed-in viewer's "View Your Profile" button)."""
+    from mega.yahoo import team_name_from
+    m = _PROFILE.search(html)
+    team = team_name_from(html)
+    if not m or not team:
+        return None
+    return {"team": team, "manager": m.group(2).strip(),
+            "manager_key": hashlib.sha256(m.group(1).lower().encode()).hexdigest()[:12]}
+
+
+def pull_managers(year: int) -> int:
+    import time
+    if year == LIVE_YEAR:
+        from mega.config import LEAGUE_URL as base
+    else:
+        base = f"https://football.fantasysports.yahoo.com/{year}/f1/{yh.SEASON_LEAGUE_IDS[year]}"
+    print(f"[history] pulling {year} managers, {DELAY:.0f}s between pages")
+    rows = []
+    try:
+        with LeagueSession() as s:
+            get = _patient(s.get)
+            for n in range(1, 13):
+                time.sleep(DELAY)
+                html = get(f"{base}/{n}")
+                yh._check_denied(html)
+                r = parse_manager(html)
+                if r:
+                    rows.append({"team_num": n, **r})
+    except yh.RateLimited as e:
+        print(f"[history] RATE LIMITED on {year}: {e}\n[history] nothing saved; wait before the next run")
+        return 5
+    except AuthExpired as e:
+        print(f"[history] session expired: {e}")
+        return 6
+    if len(rows) < 10:
+        print(f"[history] {year}: only {len(rows)} managers found — not saving")
+        return 7
+    MGR_OUT.mkdir(parents=True, exist_ok=True)
+    path(year, mgr=True).write_text(json.dumps({"year": year, "teams": rows}, indent=1))
+    print(f"[history] saved {year}: {len(rows)} managers -> {path(year, mgr=True).relative_to(ROOT)}")
+    return 0
 
 
 def _paged(fetch, parse, url: str, sig) -> list[dict]:
@@ -113,9 +170,10 @@ def _records(df) -> list[dict]:
 
 
 def main(argv: list[str]) -> int:
-    tx = "--tx" in argv
-    argv = [a for a in argv if a != "--tx"]
-    missing = [y for y in sorted(yh.SEASON_LEAGUE_IDS, reverse=True) if not path(y, tx).exists()]
+    tx, mgr = "--tx" in argv, "--managers" in argv
+    argv = [a for a in argv if a not in ("--tx", "--managers")]
+    years = sorted(set(yh.SEASON_LEAGUE_IDS) | ({LIVE_YEAR} if mgr else set()), reverse=True)
+    missing = [y for y in years if not path(y, tx, mgr).exists()]
     if argv and argv[0] == "--next":
         if not missing:
             print("[history] every season is already saved")
@@ -123,11 +181,11 @@ def main(argv: list[str]) -> int:
         year = missing[0]
     elif argv:
         year = int(argv[0])
-        if year not in yh.SEASON_LEAGUE_IDS:
+        if year not in years:
             print(f"[history] no league id for {year}")
             return 7
-        if path(year, tx).exists():
-            print(f"[history] {year} already saved ({path(year, tx).name})")
+        if path(year, tx, mgr).exists():
+            print(f"[history] {year} already saved ({path(year, tx, mgr).name})")
             return 0
     else:
         print(__doc__)
@@ -135,6 +193,8 @@ def main(argv: list[str]) -> int:
     if tx:
         yh.REQUEST_DELAY = DELAY
         return pull_tx(year)
+    if mgr:
+        return pull_managers(year)
 
     yh.REQUEST_DELAY = DELAY
     yh.roster, yh.standings = _patient(yh.roster), _patient(yh.standings)

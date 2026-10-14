@@ -321,6 +321,7 @@ def streamers(season: int, week: int, ros: pd.DataFrame, my_team: str, faab_left
     A team needs one kicker and one defense, so each rival bids only on the streamer that
     helps him most — counting every rival on every streamer had all six "likely outbid"."""
     from . import faab as fb
+    from . import league_memory as LM
     from .waiver_value import RIVAL_MIN, bid_vs_rivals
 
     weeks = [w for w in range(int(week), int(week) + STREAM_WEEKS) if w <= fb.LAST_WEEK]
@@ -348,7 +349,8 @@ def streamers(season: int, week: int, ros: pd.DataFrame, my_team: str, faab_left
             rg = {k: sum(max(0.0, by.get((k, w), 0.0) - best(t, w)) for w in weeks) / len(weeks) for k in free}
             k_best = max(rg, key=rg.get, default=None)
             if k_best is not None and rg[k_best] >= RIVAL_MIN:
-                chase.setdefault(k_best, []).append((t, fb.suggest(rg[k_best], int(faab_left.get(t, 0)), price_week)["bid"]))
+                chase.setdefault(k_best, []).append((t, fb.suggest(rg[k_best], int(faab_left.get(t, 0)), price_week,
+                                                                    LM.faab_aggression(t))["bid"]))
         rows = []
         for k in free:
             gains = [by.get((k, w), 0.0) - mine_w[w] for w in weeks]

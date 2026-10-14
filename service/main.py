@@ -371,13 +371,13 @@ def _deal_inputs(eng):
     standings and title sensitivity (season sim), positional bias, and
     each roster's needs (mega/trade_league.py deal_odds)."""
     def build():
-        from mega.market import seed_bias
+        from mega.league_memory import bias
         from mega.trade_theses import load_priors
         season = _current_season()
         ctx = eng.ctx
         id_of = {t["name"]: tid for tid, t in ctx.teams.items()}
         return (TL.accept_context(ctx, _season_model(season, data.current_week(season, 1))),
-                {id_of[n]: b for n, b in seed_bias().items() if n in id_of},
+                {id_of[n]: b for n, b in bias().items() if n in id_of},
                 TL.team_profiles(ctx), load_priors())
     return _cached(f"deal_inputs:{id(eng)}", ENGINE_TTL, build)
 

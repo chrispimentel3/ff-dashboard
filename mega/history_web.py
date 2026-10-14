@@ -38,6 +38,25 @@ def _seat(team: str) -> int | None:
     return None
 
 
+def _who(year: int, team: str) -> tuple[object, str, int | None]:
+    """(key, name today, seat) for a season's team. The manager behind it (pulled per season,
+    mega/league_memory.py) is exact across renames; without that file it falls back to the
+    name-only match, which can't follow a rename it hasn't been told about."""
+    from .league_memory import _name
+    by_team, now = _owners()
+    k = by_team.get((int(year), _name(team)))
+    if k is not None:
+        cur = now.get(k)
+        return (SEAT_BY_TEAM.get(cur, k) if cur else k), (cur or team), SEAT_BY_TEAM.get(cur) if cur else None
+    seat = _seat(team)
+    return (seat if seat is not None else team), (TEAM_BY_SEAT.get(seat, team) if seat is not None else team), seat
+
+
+def _owners():
+    from .league_memory import owners
+    return owners()
+
+
 def _load(directory: Path = SEASONS_DIR) -> list[dict]:
     out = []
     for f in sorted(directory.glob("*.json")):
@@ -65,14 +84,14 @@ def season_view(s: dict) -> dict:
             "rank": int(r["rank"]), "team": r["team"], "record": _record(r),
             "wins": int(r["wins"]), "losses": int(r["losses"]), "ties": int(r.get("ties") or 0),
             "pf": float(r["points_for"]), "pa": float(r["points_against"]),
-            "made_playoffs": bool(r.get("made_playoffs")), "seat": _seat(r["team"]),
+            "made_playoffs": bool(r.get("made_playoffs")), "seat": _who(s["year"], r["team"])[2],
             "mine": r["team"] == MY_TEAM,
         })
     rosters = {team: [{"slot": p.get("slot"), "player": p["player"], "pos": p.get("pos"),
                        "nfl_team": p.get("nfl_team")} for p in ps]
                for team, ps in (s.get("rosters") or {}).items()}
     return {"year": s["year"], "league_name": s.get("league_name"), "champion": s.get("champion"),
-            "champion_seat": _seat(s.get("champion") or ""), "standings": rows, "rosters": rosters}
+            "champion_seat": _who(s["year"], s.get("champion") or "")[2], "standings": rows, "rosters": rosters}
 
 
 def records(seasons: list[dict]) -> list[dict]:
@@ -99,12 +118,9 @@ def records(seasons: list[dict]) -> list[dict]:
 def all_time(seasons: list[dict]) -> dict:
     by_key: dict[object, dict] = {}
     for s in seasons:
-        champ = s.get("champion") or ""
-        champ_key = _seat(champ) if _seat(champ) is not None else champ
+        champ_key = _who(s["year"], s.get("champion") or "")[0]
         for r in s["standings"]:
-            seat = _seat(r["team"])
-            key = seat if seat is not None else r["team"]
-            name = TEAM_BY_SEAT.get(seat, r["team"]) if seat is not None else r["team"]
+            key, name, seat = _who(s["year"], r["team"])
             m = by_key.setdefault(key, {"seat": seat, "team": name, "seasons": 0, "titles": 0, "playoffs": 0,
                                         "wins": 0, "losses": 0, "ties": 0, "pf": 0.0, "years_won": []})
             m["seasons"] += 1
@@ -137,5 +153,32 @@ def build(expected_years: list[int] | None = None, directory: Path = SEASONS_DIR
         "seasons": [season_view(s) for s in seasons],
         "records": records(seasons),
         "all_time": all_time(seasons),
+        "habits": habits(),
         "missing": sorted(set(expected_years or []) - have, reverse=True),
     }
+
+
+HABIT_MIN_BIDS = 5
+
+
+def habits() -> list[dict]:
+    """How each manager plays, fitted from the transaction history (mega/league_memory.py):
+    what the waiver and trade models now assume about him, shown so it can be checked."""
+    from .league_memory import fit
+    f = fit()
+    lean = f.get("_bias") or {}
+    rows = []
+    for team, m in f.items():
+        if team.startswith("_"):
+            continue
+        tilt = sorted(((p, v) for p, v in (lean.get(team) or {}).items() if v >= 1.05), key=lambda pv: -pv[1])
+        rows.append({"team": team, "manager": m["manager"], "seat": SEAT_BY_TEAM.get(team), "mine": team == MY_TEAM,
+                     "seasons": m["seasons"], "trades": m["trades"],
+                     "trades_per_season": round(m["trades"] / m["seasons"], 1) if m["seasons"] else None,
+                     "trade_offset": m["trade_offset"],
+                     # the model uses it shrunk toward 1.0 at any count; shown once there's enough to read
+                     "faab_aggression": m["faab_aggression"] if m["contested_bids"] >= HABIT_MIN_BIDS else None,
+                     "contested_bids": m["contested_bids"],
+                     "lean": [{"pos": p, "mult": round(v, 2)} for p, v in tilt[:2]]})
+    rows.sort(key=lambda r: (r["faab_aggression"] is None, -(r["faab_aggression"] or 0)))
+    return rows

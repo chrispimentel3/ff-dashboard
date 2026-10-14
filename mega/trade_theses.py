@@ -74,9 +74,11 @@ def urgency(p_playoffs: float) -> float:
 
 
 def p_accept(pri: dict, d_title_them: float, fairness: float, need_fit: float, bias: float,
-             urg: float, d_lineup_them: float = 0.0) -> float:
+             urg: float, d_lineup_them: float = 0.0, habit: float = 0.0) -> float:
+    """`habit` is ln(his trades per season / the league's), from mega/league_memory.py: the
+    same offer is likelier to land with a manager who trades three times a year."""
     z = (pri["a0"] + pri["a"] * d_title_them + pri["b"] * (fairness - 1.0) + pri["c"] * need_fit
-         + pri["d"] * bias + pri["e"] * urg + pri.get("g", 0.0) * d_lineup_them)
+         + pri["d"] * bias + pri["e"] * urg + pri.get("g", 0.0) * d_lineup_them + habit)
     return 1.0 / (1.0 + math.exp(-z))
 
 
@@ -329,7 +331,7 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
     from . import title_odds as T
     from . import trade_league as tl
     from .config import MY_TEAM
-    from .market import seed_bias
+    from . import league_memory as LM
     from .sources import fantasycalc_values
     from .waiver_value import _birthdays, _rosters_weekly, availability
 
@@ -339,7 +341,7 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
         return {"available": False, "cards": [], "meta": {"error": "no league"}}
     name_of = {t["id"]: t["name"] for t in lg["teams"]}
     id_of = {v: k for k, v in name_of.items()}
-    bias_by_name = seed_bias()
+    bias_by_name = LM.bias()
     cfg = tl.engine_config()
     cfg["market"] = {"bias": {str(id_of[n]): b for n, b in bias_by_name.items() if n in id_of}}
     ctx = te.build_context(lg, cfg)
@@ -395,7 +397,8 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
                 - np.mean([pb.get(ctx.players[i]["pos"], 1.0) for i in c["getIds"]]))
         p_now = (base.get(partner) or {}).get("p_playoffs", 0.0)
         urg = urgency(p_now)
-        return {"pa": p_accept(pri, d_title_them, fair_x, need_fit, float(bias), urg, float(c["dThem"])),
+        return {"pa": p_accept(pri, d_title_them, fair_x, need_fit, float(bias), urg, float(c["dThem"]),
+                               LM.trade_offset(partner)),
                 "fair": fair, "urg": urg, "p_now": p_now, "sits": tl.sits_text(ctx, sits)}
 
     # Chosen by EXPECTED gain — the chance they say yes times what it does for us — so the
