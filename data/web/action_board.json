@@ -1,5 +1,5 @@
 {
-  "headline": "16 trades raise your title odds.",
+  "headline": "19 trades raise your title odds.",
   "subhead": "Everything below is ranked by what it adds to your starting nine, not by name.",
   "basis": null,
   "xfp_available": true,
@@ -100,36 +100,68 @@
   "waivers": [],
   "trades": [
     {
+      "partner": "Undisputed",
+      "give": "Bryce Young (QB) + Denzel Boston (WR)",
+      "give_val": 26.7,
+      "get": "Caleb Williams (QB)",
+      "get_val": 19.2,
+      "addresses": "lineup",
+      "fairness": 1.22,
+      "d_title": 0.0128,
+      "thesis": "Caleb Williams starts for you over Jayden Daniels: +1.41 pts/wk to your lineup for the rest of the season.",
+      "d_me": 1.41,
+      "p_accept": 0.743,
+      "flag": "LIKELY",
+      "sits_for_them": []
+    },
+    {
+      "partner": "Revenge of the Smith",
+      "give": "Kaelon Black (RB) + Jayden Daniels (QB)",
+      "give_val": 23.8,
+      "get": "Dak Prescott (QB)",
+      "get_val": 20.3,
+      "addresses": "lineup",
+      "fairness": 1.26,
+      "d_title": 0.018,
+      "thesis": "Dak Prescott starts for you over Jayden Daniels: +2.56 pts/wk to your lineup for the rest of the season.",
+      "d_me": 2.56,
+      "p_accept": 0.493,
+      "flag": "EXPLOIT",
+      "sits_for_them": [
+        "Kaelon Black wouldn't start for them (they start James Cook III & Dameon Pierce & Josh Jacobs) \u2014 he counts at 50% of his market value to them"
+      ]
+    },
+    {
+      "partner": "deez nuts",
+      "give": "Kaelon Black (RB) + Malik Nabers (WR)",
+      "give_val": 17.9,
+      "get": "George Pickens (WR)",
+      "get_val": 12.9,
+      "addresses": "buy low",
+      "fairness": 1.3,
+      "d_title": 0.0108,
+      "thesis": "Buy George Pickens low: -4.5 pts/g under what his usage earns, and his usage ranks WR10 against consensus WR11.",
+      "d_me": 0.97,
+      "p_accept": 0.736,
+      "flag": "LIKELY",
+      "sits_for_them": [
+        "Kaelon Black wouldn't start for them (they start Jahmyr Gibbs & Bhayshul Tuten) \u2014 he counts at 50% of his market value to them"
+      ]
+    },
+    {
       "partner": "Allen Moore connection",
       "give": "Josh Downs (WR) + Emeka Egbuka (WR)",
       "give_val": 18.5,
       "get": "Cam Skattebo (RB)",
       "get_val": 12.2,
       "addresses": "lineup",
-      "fairness": 1.21,
-      "d_title": 0.0165,
+      "fairness": 1.19,
+      "d_title": 0.0168,
       "thesis": "Cam Skattebo starts for you over Emeka Egbuka: +2.42 pts/wk to your lineup for the rest of the season.",
       "d_me": 2.42,
-      "p_accept": 0.481,
+      "p_accept": 0.461,
       "flag": "EXPLOIT",
       "sits_for_them": []
-    },
-    {
-      "partner": "Revenge of the Smith",
-      "give": "Kaelon Black (RB) + Emeka Egbuka (WR)",
-      "give_val": 15.8,
-      "get": "Jaylen Waddle (WR)",
-      "get_val": 11.1,
-      "addresses": "lineup",
-      "fairness": 1.1,
-      "d_title": 0.0123,
-      "thesis": "Jaylen Waddle starts for you over Emeka Egbuka: +1.34 pts/wk to your lineup for the rest of the season.",
-      "d_me": 1.34,
-      "p_accept": 0.541,
-      "flag": "LIKELY",
-      "sits_for_them": [
-        "Kaelon Black wouldn't start for them (they start James Cook III & Dameon Pierce & Josh Jacobs) \u2014 he counts at 50% of his market value to them"
-      ]
     },
     {
       "partner": "Don R.I.C.O",
@@ -138,45 +170,13 @@
       "get": "Derrick Henry (RB)",
       "get_val": 17.3,
       "addresses": "consolidation",
-      "fairness": 1.19,
-      "d_title": 0.0138,
+      "fairness": 1.27,
+      "d_title": 0.014,
       "thesis": "Two for one: -0.1 this week, but +2.31 pts/wk for the rest of the season \u2014 already net of picking up C.J. Stroud, which you could do anyway.",
       "d_me": 2.31,
-      "p_accept": 0.432,
-      "flag": "EXPLOIT",
+      "p_accept": 0.511,
+      "flag": "LIKELY",
       "sits_for_them": []
-    },
-    {
-      "partner": "Heartbreak Drake",
-      "give": "Breece Hall (RB) + Denzel Boston (WR)",
-      "give_val": 21.7,
-      "get": "Ashton Jeanty (RB)",
-      "get_val": 15.2,
-      "addresses": "lineup",
-      "fairness": 0.93,
-      "d_title": 0.0237,
-      "thesis": "Ashton Jeanty starts for you over Breece Hall: +2.36 pts/wk to your lineup for the rest of the season.",
-      "d_me": 2.36,
-      "p_accept": 0.219,
-      "flag": "NEEDS_PITCH",
-      "sits_for_them": []
-    },
-    {
-      "partner": "BillsMafia",
-      "give": "Denzel Boston (WR) + Breece Hall (RB)",
-      "give_val": 21.7,
-      "get": "D'Andre Swift (RB)",
-      "get_val": 14.5,
-      "addresses": "lineup",
-      "fairness": 1.28,
-      "d_title": 0.0127,
-      "thesis": "D'Andre Swift starts for you over Breece Hall: +1.73 pts/wk to your lineup for the rest of the season.",
-      "d_me": 1.73,
-      "p_accept": 0.4,
-      "flag": "EXPLOIT",
-      "sits_for_them": [
-        "Denzel Boston wouldn't start for them (they start Chris Olave & Justin Jefferson & Davante Adams) \u2014 he counts at 50% of his market value to them"
-      ]
     }
   ],
   "roster_src": "scraped Yahoo rosters",
