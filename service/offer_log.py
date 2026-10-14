@@ -38,9 +38,16 @@ def passcode_ok(given: str | None) -> bool:
     return bool(want) and hmac.compare_digest((given or "").encode(), want.encode())
 
 
+def _url(path: str) -> str:
+    """The repo's API URL, `path` under it. No trailing slash on the repo itself: GitHub
+    answers 404 to /repos/owner/name/ (which kept the log from ever creating its branch)."""
+    base = f"{API}/repos/{os.environ['OFFER_LOG_REPO'].strip()}"
+    return f"{base}/{path}" if path else base
+
+
 def _call(method: str, path: str, body: dict | None = None):
     req = urllib.request.Request(
-        f"{API}/repos/{os.environ['OFFER_LOG_REPO']}/{path}", method=method,
+        _url(path), method=method,
         data=json.dumps(body).encode() if body is not None else None,
         headers={"Authorization": f"Bearer {os.environ['GITHUB_TOKEN']}", "Accept": "application/vnd.github+json",
                  "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "mega-bowl-offer-log"})

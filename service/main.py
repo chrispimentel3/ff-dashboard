@@ -301,6 +301,20 @@ class OfferIn(BaseModel):
     source: str | None = PydField(default=None, max_length=20)   # "card", "window", ...
 
 
+def _github(fn, *a):
+    """Run a log read or write; a GitHub refusal becomes a message the page can show (an
+    uncaught one is a bare 500 without CORS headers, which the browser reports as unreachable)."""
+    import urllib.error
+    try:
+        return fn(*a)
+    except urllib.error.HTTPError as e:
+        hint = {401: " — the token is wrong or expired", 403: " — the token can't write to that repo",
+                404: " — the repo name is wrong, or the token can't see it"}.get(e.code, "")
+        raise HTTPException(status_code=502, detail=f"GitHub refused the offer log ({e.code}){hint}.")
+    except OSError as e:
+        raise HTTPException(status_code=502, detail=f"Couldn't reach GitHub: {e}.")
+
+
 def _offer_gate(passcode: str | None):
     from service import offer_log as OL
     if not OL.configured():
@@ -313,7 +327,7 @@ def _offer_gate(passcode: str | None):
 @app.get("/offers")
 def offers_list(x_offer_passcode: str | None = Header(default=None)):
     OL = _offer_gate(x_offer_passcode)
-    rows, _ = OL.read()
+    rows, _ = _github(OL.read)
     return {"offers": OL.offers(rows)}
 
 
@@ -329,10 +343,10 @@ def offers_add(req: OfferIn, x_offer_passcode: str | None = Header(default=None)
             raise HTTPException(status_code=400, detail="An outcome needs the id of the offer it answers.")
         entry = {"ts": int(time.time()), "id": req.id, "action": req.action}
     try:
-        OL.append(entry)
+        _github(OL.append, entry)
     except KeyError:
         raise HTTPException(status_code=404, detail="No sent offer with that id.")
-    rows, _ = OL.read()
+    rows, _ = _github(OL.read)
     return {"entry": entry, "offers": OL.offers(rows)}
 
 

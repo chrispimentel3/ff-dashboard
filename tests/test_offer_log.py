@@ -75,3 +75,9 @@ def test_the_passcode_gate(monkeypatch):
     assert OL.passcode_ok("hunter2") and not OL.passcode_ok("hunter3") and not OL.passcode_ok(None)
     monkeypatch.delenv("OFFER_PASSCODE")
     assert not OL.passcode_ok("")                        # unset never opens the gate
+
+
+def test_the_repo_url_has_no_trailing_slash(monkeypatch):
+    monkeypatch.setenv("OFFER_LOG_REPO", " chrispimentel3/mega-bowl-private ")
+    assert OL._url("") == "https://api.github.com/repos/chrispimentel3/mega-bowl-private"
+    assert OL._url("git/refs").endswith("/mega-bowl-private/git/refs")
