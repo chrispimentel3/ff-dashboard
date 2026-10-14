@@ -29,9 +29,10 @@ def test_kicker_and_defense_join_the_start_sit_total():
     rows = [{"lineup": "K", "player": "K1", "pos": "K", "proj_adj": 8.3, "start": True},
             {"lineup": "DEF", "player": "D1", "pos": "DEF", "proj_adj": 6.6, "start": True},
             {"lineup": "BENCH", "player": "D2", "pos": "DEF", "proj_adj": 5.0, "start": False}]
-    payload["kpis"].update(close_calls=2, fp_backed=5)
+    payload["kpis"].update(close_calls=2, differs=[])
+    payload["subhead"] = "2 calls within two points; the consensus would set the same lineup."
     out = start_sit.add_kdef(payload, rows)
-    assert "4 of 9 starters" in out["subhead"]
+    assert out["subhead"] == payload["subhead"]          # K/DEF don't change who we part with
     assert out["kpis"]["proj_total"] == pytest.approx(102.9)
     assert out["kpis"]["starters_n"] == 9 and len(out["bench"]) == 1
     assert "103 points" in out["headline"]

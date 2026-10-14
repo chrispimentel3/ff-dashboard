@@ -145,3 +145,29 @@ def test_every_team_gets_a_profile_and_in_a_two_team_league_nobody_shares_a_need
     needs = {t: {n["pos"] for n in p["needs"]} for t, p in prof.items()}
     assert not (needs[1] & needs[2])           # each is below the average where the other is above it
     assert all(n["gap"] >= TL.NEED_GAP for p in prof.values() for n in p["needs"])
+
+
+def test_a_rival_who_loses_a_starter_at_a_thin_position_opens_a_window():
+    import copy
+    import json
+    import pathlib
+    from mega import trade_engine as te
+    from mega import trade_league as tl
+    from mega import trade_theses as TT
+    league = json.loads((pathlib.Path(__file__).parent / "fixtures" / "sample_league.json").read_text())
+
+    def wins(lg):
+        ctx = te.create_engine(lg).ctx
+        return TT.windows(ctx, 1, tl.team_profiles(ctx))
+
+    assert not [w for w in wins(league) if w["team"] == "Opponent B"]        # thin at RB, but nobody hurt
+    on_ir = copy.deepcopy(league)
+    b = next(t for t in on_ir["teams"] if t["id"] == 3)
+    b["roster"].remove("b_rb1")
+    b["ir"] = ["b_rb1"]                                                      # his 11-pt back goes on IR
+    w = [w for w in wins(on_ir) if w["team"] == "Opponent B"]
+    assert w and w[0]["pos"] == "RB" and w[0]["drop"] == 6.0 and w[0]["lost"][0]["ir"]
+    out = copy.deepcopy(league)
+    out["players"]["b_rb1"]["out"] = {"share": 0.5, "back": 9}               # out half his games instead
+    w = [w for w in wins(out) if w["team"] == "Opponent B"]
+    assert w and w[0]["drop"] == 5.5 and w[0]["lost"][0]["back"] == 9

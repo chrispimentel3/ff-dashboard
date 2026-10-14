@@ -84,11 +84,17 @@ def best_lineup(rows: list[dict]) -> list[dict]:
     return out
 
 
-def grade_lineup(ss: dict, by_norm: dict, playing: set | None = None) -> dict | None:
+def grade_lineup(ss: dict, by_norm: dict, playing: set | None = None, ours_exp: dict | None = None) -> dict | None:
     """`playing` is the teams with a game that week: a close call against a player on bye
-    wasn't a call at all (it was the bye bug week 5 found), so it's set aside, not scored."""
+    wasn't a call at all (it was the bye bug week 5 found), so it's set aside, not scored.
+
+    `ours_exp` (name -> our expected points that week) prices the shadow lineups: the one our
+    projections would have set and the one the consensus would have, each scored on what
+    happened. Since week 6 the published lineup IS ours and each row carries `consensus`;
+    before that the published number was the consensus."""
     from .intel import _norm
     rows = [{"player": r["player"], "pos": r["pos"], "slot": r["lineup"], "proj": r.get("proj_adj"),
+             "consensus": r.get("consensus"), "source": r.get("proj_source"),
              "bye": bool(playing) and r.get("nfl_team") not in playing,
              "close": r.get("close_call") or "", "pts": float(by_norm.get(_norm(r["player"]), 0.0))}
             for r in (ss.get("starters") or []) + (ss.get("bench") or []) if r.get("pos") in SKILL]
@@ -106,10 +112,36 @@ def grade_lineup(ss: dict, by_norm: dict, playing: set | None = None) -> dict | 
             if over in pts:
                 calls.append({"started": over, "sat": r["player"], "started_pts": round(pts[over], 1),
                               "sat_pts": round(r["pts"], 1), "right": pts[over] >= r["pts"]})
+    def shadow(key):
+        cand = [{**r, "pts_key": 0.0 if r["bye"] or not (r["proj"] or 0) else key(r)} for r in rows]
+        lu = best_lineup([{**r, "pts": r["pts_key"]} for r in cand])
+        return round(sum(pts[r["player"]] for r in lu), 1)
+
+    ours_map = ours_exp or {}
+    shadows = {
+        "ours": shadow(lambda r: float(r["proj"]) if r["source"] == "ours"
+                       else float(ours_map.get(r["player"], r["proj"] or 0.0))),
+        "consensus": shadow(lambda r: float(r["consensus"] if r["consensus"] is not None else r["proj"] or 0.0)),
+    }
     return {"ours": round(sum(r["pts"] for r in ours), 1), "best": round(sum(r["pts"] for r in best), 1),
+            "shadow": shadows,
             "left": round(sum(r["pts"] for r in best) - sum(r["pts"] for r in ours), 1),
             "should_have_started": [r["player"] for r in best if r["slot"] == "BENCH"],
             "calls": calls, "bye_calls": byes}
+
+
+def _ours_by_name(season: int, week: int, before: datetime, ss: dict) -> dict:
+    """Our expected points that week for each Start/Sit row, by name, from the projection
+    file as it stood at kickoff."""
+    from . import ids
+    from .proj_ros import week_expected
+    txt = snapshot(f"data/proj_ros_{season}.json", before)
+    exp = week_expected(season, week, json.loads(txt)) if txt else {}
+    rows = pd.DataFrame([{"player": r["player"]} for r in (ss.get("starters") or []) + (ss.get("bench") or [])])
+    if not exp or rows.empty:
+        return {}
+    res, _ = ids.resolve(rows, name_col="player")
+    return {n: exp[g] for n, g in zip(res["player"], res["gsis_id"]) if isinstance(g, str) and g in exp}
 
 
 def _consensus(text: str) -> pd.DataFrame:
@@ -185,7 +217,8 @@ def build(season: int, now_week: int) -> dict:
         by_gsis, by_norm = _pts(act, w)
         ss_txt = snapshot("data/web/start_sit.json", before)
         ss = json.loads(ss_txt) if ss_txt else {}
-        lineup = grade_lineup(ss, by_norm, sched[w]["teams"]) if int(ss.get("next_week") or 0) == w else None
+        lineup = (grade_lineup(ss, by_norm, sched[w]["teams"], _ours_by_name(season, w, before, ss))
+                  if int(ss.get("next_week") or 0) == w else None)
         proj = grade_projections(season, w, before, by_gsis)
         wv_txt = snapshot("data/web/waivers.json", before)
         if wv_txt:
@@ -207,6 +240,7 @@ def build(season: int, now_week: int) -> dict:
             "lineup_weeks": len(graded),
             "points_left": round(sum(g["left"] for g in graded), 1),
             "perfect_weeks": sum(1 for g in graded if g["left"] <= 0.05),
+            "shadow": {k: round(sum(g["shadow"][k] for g in graded), 1) for k in ("ours", "consensus")},
             "calls": len(calls), "calls_right": sum(c["right"] for c in calls),
             "projections": summarize_projections(proj_rows),
             "waivers": len(waivers), "waivers_right": sum(w["right"] for w in waivers),

@@ -17,7 +17,7 @@ from mega.ui import short_name
 
 COLS = [
     "lineup", "player", "pos", "nfl_team", "report_status", "opp", "ease_rank",
-    "proj", "proj_adj", "proj_source", "vegas", "vegas_edge",
+    "proj", "proj_adj", "proj_source", "consensus", "vegas", "vegas_edge",
     "tgt_pct", "tm_rank", "start_sit", "close_call",
     # the matchup verdict the player cards show: the fitted model's % on a normal week,
     # what that's worth in points, and its two parts (defense rank, Vegas team line)
@@ -60,10 +60,9 @@ def build(lu: pd.DataFrame | None, ts: pd.DataFrame, next_week: int) -> dict:
     bench = lu[~lu["start"]]
     proj_total = float(starters["proj_adj"].sum())
     n_close = int((bench["close_call"] != "").sum())
-    fp_cov = int((starters["proj_source"] == "FantasyPros").sum())
+    differs = _differs(lu)
     moved = [r for _, r in lu.iterrows()
              if str(r.get("lineup", "")) != "BENCH" and str(r.get("slot", "")) == "BN"]
-    est = int((starters["proj_source"] != "FantasyPros").sum())
 
     headline = (
         f"Your best legal lineup projects {proj_total:.0f} points in week {next_week}."
@@ -71,7 +70,7 @@ def build(lu: pd.DataFrame | None, ts: pd.DataFrame, next_week: int) -> dict:
         f"Start {', '.join(short_name(r['player']) for r in moved[:2])} — that is "
         f"worth {proj_total:.0f} points in week {next_week}, more than your current nine."
     )
-    subhead = _subhead(n_close, est, len(starters))
+    subhead = _subhead(n_close, differs)
 
     cols = [c for c in COLS if c in lu.columns]
     sview = starters.assign(_o=starters["lineup"].map(SLOT_ORDER)).sort_values("_o")[cols]
@@ -84,7 +83,7 @@ def build(lu: pd.DataFrame | None, ts: pd.DataFrame, next_week: int) -> dict:
         "kpis": {
             "proj_total": round(proj_total, 1),
             "close_calls": n_close,
-            "fp_backed": fp_cov,
+            "differs": differs,
             "starters_n": len(starters),
         },
         "starters": _records(sview),
@@ -93,10 +92,22 @@ def build(lu: pd.DataFrame | None, ts: pd.DataFrame, next_week: int) -> dict:
     }
 
 
-def _subhead(n_close: int, est: int, n: int) -> str:
+def _differs(lu: pd.DataFrame) -> list[str]:
+    """Our starters the consensus projection would bench: where the lineup parts with it.
+    A player zeroed out (ruled out, on bye) is zero on both sides."""
+    if "consensus" not in lu.columns:
+        return []
+    from .lineup import fill
+    cons = pd.to_numeric(lu["consensus"], errors="coerce").fillna(0.0)
+    cons = cons.where(pd.to_numeric(lu["proj"], errors="coerce").fillna(0.0) > 0, 0.0)
+    theirs = set(fill(lu.assign(proj_adj=cons)))
+    return [short_name(r["player"]) for i, r in lu[lu["start"]].iterrows() if i not in theirs]
+
+
+def _subhead(n_close: int, differs: list[str]) -> str:
     return (f"{n_close} call{'s' if n_close != 1 else ''} within two points"
-            + (f", and {est} of {n} starters run on our own estimates rather than FantasyPros "
-               "projections — for skill players, break those on target share." if est else "."))
+            + (f"; we part with the consensus on {', '.join(differs)}." if differs
+               else "; the consensus would set the same lineup."))
 
 
 def add_kdef(payload: dict, rows: list[dict]) -> dict:
@@ -111,9 +122,6 @@ def add_kdef(payload: dict, rows: list[dict]) -> dict:
     out["bench"] = list(out["bench"]) + [{k: v for k, v in r.items() if k != "start"} for r in rows if not r["start"]]
     new = round(old + sum(float(r["proj_adj"]) for r in starts), 1)
     out["kpis"] = {**out["kpis"], "proj_total": new, "starters_n": len(out["starters"])}
-    k = out["kpis"]
-    out["subhead"] = _subhead(int(k.get("close_calls") or 0),
-                              k["starters_n"] - int(k.get("fp_backed") or 0), k["starters_n"])
     # ponytail: the headline's number is swapped in place; build() owns its wording
     out["headline"] = out["headline"].replace(f"{old:.0f} points", f"{new:.0f} points", 1)
     return out

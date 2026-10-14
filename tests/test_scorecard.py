@@ -53,3 +53,23 @@ def test_a_player_on_bye_projects_zero(monkeypatch):
     out = L.optimize_lineup(roster, 2026, 5).set_index("player")
     assert out.loc["Young", "proj_adj"] == 0 and out.loc["Young", "report_status"] == "BYE"
     assert out.loc["Daniels", "proj_adj"] == pytest.approx(18.5) and out.loc["Daniels", "lineup"] == "QB"
+
+
+def test_start_sit_names_the_starters_the_consensus_would_bench():
+    from mega import start_sit
+    rows = [("Daniels", "QB", 18, 18), ("Young", "QB", 15, 19),          # ours starts Daniels, consensus Young
+            ("R One", "RB", 14, 14), ("R Two", "RB", 12, 12), ("W One", "WR", 13, 13), ("W Two", "WR", 11, 11),
+            ("T One", "TE", 9, 9), ("W Three", "WR", 10, 8), ("Out Guy", "WR", 0, 30)]   # ruled out: 0 on both
+    lu = pd.DataFrame([{"player": p, "pos": pos, "proj": o, "proj_adj": o, "consensus": c} for p, pos, o, c in rows])
+    from mega.lineup import fill
+    lu["lineup"] = lu.index.map(lambda i: fill(lu).get(i, "BENCH"))
+    lu["start"] = lu["lineup"] != "BENCH"
+    assert start_sit._differs(lu) == [start_sit.short_name("Daniels")]
+
+
+def test_week_expected_only_for_the_week_it_was_built_for():
+    from mega.proj_ros import week_expected
+    d = {"meta": {"week": 6}, "players": {"g1": {"weeks": {"6": {"expected": 12.5}, "7": {"expected": 3.0}}},
+                                         "g2": {"weeks": {"7": {"expected": 9.0}}}}}
+    assert week_expected(2026, 6, d) == {"g1": 12.5}
+    assert week_expected(2026, 5, d) == {}

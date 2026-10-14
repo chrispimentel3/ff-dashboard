@@ -80,6 +80,7 @@ def build(trades: pd.DataFrame | None, roster_src: str | None, season: int | Non
     `groups` stays in the payload (empty) so an older page build can't break on it."""
     if theses and theses.get("available"):
         return {"available": True, "version": 3, "cards": theses.get("cards") or [],
+                "windows": theses.get("windows") or [],
                 "meta": theses.get("meta") or {}, "groups": [], "roster_src": roster_src,
                 "impact_available": True}
     if trades is None or trades.empty:

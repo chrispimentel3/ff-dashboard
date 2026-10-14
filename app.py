@@ -489,6 +489,17 @@ def _my_roster_projected(season: int, week: int) -> pd.DataFrame:
             r[c] = r[c].where(r[c].notna(), r[f"{c}_n"])
         r = r[[c for c in r.columns if not c.endswith("_n") and c != "norm"]]
     r["proj"] = pd.to_numeric(r["proj"], errors="coerce").fillna(0.0)
+    # Start/Sit sets the lineup on our weekly projection (mega/proj_ros.py, the number the
+    # waiver and trade pages price with): the scorecard graded it nearer the actual score than
+    # the consensus, and it would have set +19 pts of better lineups over weeks 3-5. The
+    # consensus stays beside it, and the scorecard grades both lineups every week.
+    from mega.proj_ros import week_expected
+    ours = week_expected(season, week)
+    r["consensus"] = r["proj"]
+    if ours:
+        hit = r["gsis_id"].map(ours)
+        r["proj"] = hit.where(hit.notna(), r["proj"])
+        r["proj_source"] = r["proj_source"].where(hit.isna(), "ours")
     v = _vegas(season, week)
     if not v.empty:
         r = r.merge(v[["gsis_id", "vegas", "vegas_parts", "vegas_complete"]],
@@ -963,7 +974,7 @@ def _tab_start():
         ui.kpi_row([
             (f"Wk {next_week} proj total", f"{k['proj_total']:.1f}", "optimal starting 9 (skill)"),
             ("Close calls", str(k["close_calls"]), "bench within 2 pts of a starter"),
-            ("FantasyPros-backed", f"{k['fp_backed']}/{k['starters_n']}", "starters with FP projection"),
+            ("Vs consensus", str(len(k.get("differs") or [])), "starters the consensus would bench"),
         ])
         st.write("")
 

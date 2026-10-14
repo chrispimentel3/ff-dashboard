@@ -84,6 +84,25 @@ def attach_matchup(players: pd.DataFrame, season: int, week: int) -> pd.DataFram
     return df
 
 
+def fill(df: pd.DataFrame) -> dict:
+    """Greedy legal fill by `proj_adj`: index -> slot for every starter (exact for this lineup)."""
+    df = df.sort_values("proj_adj", ascending=False)
+    assigned, used = {}, set()
+
+    def take(pos_ok, n, label):
+        picks = df[df["pos"].isin(pos_ok) & ~df.index.isin(used)].head(n)
+        used.update(picks.index)
+        for i in picks.index:
+            assigned[i] = label
+
+    take(["QB"], LINEUP["QB"], "QB")
+    take(["RB"], LINEUP["RB"], "RB")
+    take(["WR"], LINEUP["WR"], "WR")
+    take(["TE"], LINEUP["TE"], "TE")
+    take(list(FLEX_ELIGIBLE), LINEUP["W/R"], "FLEX")
+    return assigned
+
+
 def optimize_lineup(roster: pd.DataFrame, season: int, week: int) -> pd.DataFrame:
     """roster needs: player, pos, nfl_team, proj, proj_source (+ optional ecr/start_sit).
     Returns the roster with matchup-adjusted proj, lineup slot assignment, and flags."""
@@ -119,22 +138,7 @@ def optimize_lineup(roster: pd.DataFrame, season: int, week: int) -> pd.DataFram
     adj_factor = (0.80 + 0.20 * effective_mult).where(is_est, 1.0)
     df["proj_adj"] = (pd.to_numeric(df["proj"], errors="coerce") * adj_factor).round(2)
     df = df.sort_values("proj_adj", ascending=False)
-
-    # greedy legal fill
-    assigned, used = {}, set()
-
-    def take(pos_ok, n, label):
-        picks = df[df["pos"].isin(pos_ok) & ~df.index.isin(used)].head(n)
-        used.update(picks.index)
-        for i in picks.index:
-            assigned[i] = label
-
-    take(["QB"], LINEUP["QB"], "QB")
-    take(["RB"], LINEUP["RB"], "RB")
-    take(["WR"], LINEUP["WR"], "WR")
-    take(["TE"], LINEUP["TE"], "TE")
-    take(list(FLEX_ELIGIBLE), LINEUP["W/R"], "FLEX")
-
+    assigned = fill(df)
     df["lineup"] = df.index.map(lambda i: assigned.get(i, "BENCH"))
     df["start"] = df["lineup"] != "BENCH"
 

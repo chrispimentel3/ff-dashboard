@@ -401,6 +401,16 @@ def cached(season: int) -> dict:
         return {}
 
 
+def week_expected(season: int, week: int, data: dict | None = None) -> dict:
+    """gsis_id -> expected points in `week` (0 on a bye, discounted by the chance he plays),
+    when the file was built for that week; {} otherwise. What Start/Sit sets the lineup from."""
+    d = cached(season) if data is None else data
+    if int((d.get("meta") or {}).get("week") or 0) != int(week):
+        return {}
+    return {g: float(w["expected"]) for g, p in (d.get("players") or {}).items()
+            if (w := (p.get("weeks") or {}).get(str(week))) and w.get("expected") is not None}
+
+
 def load_params() -> dict:
     try:
         return json.loads(PARAMS.read_text())
