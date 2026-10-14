@@ -57,7 +57,7 @@
         },
         {
           "stat": "Routes/game (est.)",
-          "value_fmt": "0.0",
+          "value_fmt": "3.1",
           "pos_rank": "\u2014",
           "means": "Pass routes run per game. Estimated from snap share \u00d7 team dropbacks \u2014 nflverse has no charted route count. Under ~25 is a part-time role."
         },
@@ -75,13 +75,13 @@
         },
         {
           "stat": "Targets per route (est.)",
-          "value_fmt": "\u2014",
+          "value_fmt": "0.0%",
           "pos_rank": "\u2014",
           "means": "How often he's thrown to when he's actually in a route. Around 20%+ is a featured receiver. This is what separates a real role from empty snaps."
         },
         {
           "stat": "1st downs per route (est.)",
-          "value_fmt": "\u2014",
+          "value_fmt": "0.0%",
           "pos_rank": "\u2014",
           "means": "The single best read on a receiver. 12%+ is the league-winner line for a WR. Tight ends read lower \u2014 the route estimate counts their blocking snaps, so judge a TE against TEs."
         },
@@ -117,7 +117,7 @@
         },
         {
           "stat": "Yds per route (est.)",
-          "value_fmt": "\u2014",
+          "value_fmt": "0.00",
           "pos_rank": "\u2014",
           "means": "Receiving yards per route run. About 2.0+ is a WR1's efficiency; on the same route estimate."
         },
@@ -145,7 +145,7 @@
           "week": 5,
           "game": "@ LA",
           "snap_pct": 0.11,
-          "routes": 0.0,
+          "routes": 3.0,
           "targets": 0,
           "tgt_pct": 0.0,
           "receptions": 0,
@@ -183,6 +183,24 @@
             "fmt": "{:.1%}"
           },
           {
+            "metric": "TPRR (est.)",
+            "him": 0.15942087285797468,
+            "role_avg": 0.16433103574200028,
+            "vs_role": 97.01202949165697,
+            "nfl_avg": 0.20881988832818402,
+            "vs_nfl": 76.34372096178252,
+            "fmt": "{:.3f}"
+          },
+          {
+            "metric": "1D/RR (est.)",
+            "him": 0.05308835710593584,
+            "role_avg": 0.05445095827165485,
+            "vs_role": 97.49756256093599,
+            "nfl_avg": 0.08091565303039389,
+            "vs_nfl": 65.60950213921473,
+            "fmt": "{:.3f}"
+          },
+          {
             "metric": "snap %",
             "him": 0.18046441481890815,
             "role_avg": 0.25629312395907683,
@@ -201,12 +219,12 @@
         "out_reason": null,
         "projection": 0.9,
         "proj_source": "nflverse-est",
-        "matchup_mult": 1.022,
-        "matchup_pct": 2.2,
+        "matchup_mult": 1.026,
+        "matchup_pct": 2.6,
         "matchup_basis": "defense+vegas",
         "matchup_def_rank": 13,
         "matchup_def_pct": 1.6,
-        "matchup_vegas_pct": 1.6,
+        "matchup_vegas_pct": 2.0,
         "matchup_baseline": 0.9,
         "expected_pts": 1.0,
         "delta_pts": 0.0
