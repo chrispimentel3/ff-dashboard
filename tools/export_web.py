@@ -233,6 +233,18 @@ def main() -> None:
     except Exception as e:
         print(f"[export_web] history failed: {type(e).__name__}: {e}", file=sys.stderr)
 
+    # The playoff plan: weeks 15-17 lineups, thin spots, stashes, handcuffs (mega/playoff_plan.py).
+    try:
+        from mega import playoff_plan as _playoff_plan
+        from mega.yahoo import cached_rosters as _cros_pp
+        pp_path = OUT_DIR / "playoffs.json"
+        pp_path.write_text(json.dumps(_playoff_plan.build(_season, _next_week, _cros_pp()),
+                                      separators=(",", ":"), default=str))
+        written.append(pp_path)
+        print(f"wrote {pp_path.relative_to(ROOT)}")
+    except Exception as e:
+        print(f"[export_web] playoff plan failed: {type(e).__name__}: {e}", file=sys.stderr)
+
     # The scorecard: every finished week's calls, read out of git as they stood at kickoff and
     # graded against what happened (mega/scorecard.py).
     try:

@@ -67,6 +67,17 @@ SCORING = dict(
 # Starting lineup: 1 QB, 2 RB, 2 WR, 1 TE, 1 W/R (flex), 1 K, 1 DEF.
 LINEUP = {"QB": 1, "RB": 2, "WR": 2, "TE": 1, "W/R": 1, "K": 1, "DEF": 1}
 IR_SLOTS = 1   # Yahoo league settings, "Roster Positions: ... BN x6, IR" (read 2026-09-30)
+# Yahoo league settings "Trade End Date: November 28, 2026" (read 2026-10-14). Trades
+# processed after this day are rejected, so the Trades page closes and Playoffs takes over.
+TRADE_DEADLINE = "2026-11-28"
+
+
+def trades_open(today=None) -> bool:
+    """True through the deadline day itself (Eastern — Yahoo's league clock)."""
+    import datetime as dt
+    from zoneinfo import ZoneInfo
+    today = today or dt.datetime.now(ZoneInfo("America/New_York")).date()
+    return today <= dt.date.fromisoformat(TRADE_DEADLINE)
 # The flex is W/R: RB or WR only. A TE can't start there in Mega Bowl (Chris, 2026-09-18) —
 # this used to include TE, which let Start/Sit put a second tight end in an illegal slot.
 FLEX_ELIGIBLE = {"RB", "WR"}

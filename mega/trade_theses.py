@@ -367,6 +367,9 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
     from .sources import fantasycalc_values
     from .waiver_value import _birthdays, _rosters_weekly, availability
 
+    from .config import TRADE_DEADLINE, trades_open
+    if not trades_open():
+        return {"available": False, "closed": True, "deadline": TRADE_DEADLINE, "cards": [], "windows": []}
     lg = tl.build_league(season, yahoo_rosters)
     my_id = lg.get("report", {}).get("my_team_id")
     if not lg.get("teams") or my_id is None:
@@ -618,7 +621,7 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
         pass
     mine = base.get(my_name, {})
     return {
-        "available": True, "cards": kept, "windows": win,
+        "available": True, "cards": kept, "windows": win, "deadline": TRADE_DEADLINE,
         "meta": {"evaluated": evaluated, "simulated": len(top), "shown": len(kept),
                  "p_playoffs": mine.get("p_playoffs"), "p_title": mine.get("p_title"),
                  "posture": T.posture(mine.get("p_playoffs", 0.0)) if mine else None,

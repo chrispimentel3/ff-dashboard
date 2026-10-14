@@ -494,8 +494,15 @@ def _package(season, next_week, eng, me, req, out, results, swap_ids, clock, lap
     }
 
 
+def _require_trades_open():
+    from mega.config import TRADE_DEADLINE, trades_open
+    if not trades_open():
+        raise HTTPException(status_code=403, detail=f"Trading closed at the deadline ({TRADE_DEADLINE}).")
+
+
 @app.post("/trade-search")
 def trade_search(req: TradeSearchRequest):
+    _require_trades_open()
     """"Trade around one player" — the live search app.py's own Trades tab runs, wrapped
     as an endpoint so the statically-generated mega-bowl-web Trades page can offer it too
     (see mega/trades.py's docstring for why this couldn't just be precomputed: the question
@@ -541,6 +548,7 @@ def trade_search(req: TradeSearchRequest):
 
 @app.post("/trade-evaluate")
 def trade_evaluate(req: TradeEvalRequest):
+    _require_trades_open()
     """"Evaluate a trade" — one trade exactly as typed (an offer I got, or one I'm thinking of
     sending), on the same engine, netting, acceptance model and odds as the search."""
     import math
@@ -585,6 +593,7 @@ def trade_evaluate(req: TradeEvalRequest):
 
 @app.post("/trade-team")
 def trade_team(req: TradeTeamRequest):
+    _require_trades_open()
     """"Trade with one team" — every offer to the team the page picked, plus their players
     ranked by what they'd add to my lineup (`targets`)."""
     clock, t0 = {}, time.perf_counter()

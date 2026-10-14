@@ -161,6 +161,13 @@ def build_league(season: int, yahoo_rosters: pd.DataFrame | None = None) -> dict
             wk_now = (pr.get("weeks") or {}).get(str(proj_week)) or {}
             if vn is not None and pd.notna(vn) and proj_week and not wk_now.get("bye"):
                 weekly[proj_week] = round(float(vn) * float(wk_now.get("p_active", 1.0)), 2)
+            # the weeks he's ruled out of score nothing, whoever ruled him out: the feed's
+            # are 0 already, but an override that holds him longer has to reach `weekly` too,
+            # or anything read by week (the playoff plan, the waiver horizon) prices him back.
+            # Achane, out for the season by data/player_status.csv, carried 12+ pts/wk in
+            # weeks 8-17 until this.
+            for w, _ in todo[:n_out]:
+                weekly[w] = 0.0
         else:
             ppg, src = fp_by_gsis.get(gid), "fantasypros_ros"
         if ppg is None or pd.isna(ppg):

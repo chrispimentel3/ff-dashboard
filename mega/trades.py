@@ -78,9 +78,12 @@ def build(trades: pd.DataFrame | None, roster_src: str | None, season: int | Non
     export — engine-built offers ranked by title odds, each with its thesis, kill condition
     and both teams' numbers. The FantasyCalc-fairness list below is the fallback only;
     `groups` stays in the payload (empty) so an older page build can't break on it."""
+    if theses and theses.get("closed"):
+        return {"available": False, "closed": True, "deadline": theses.get("deadline"), "groups": [],
+                "roster_src": roster_src}
     if theses and theses.get("available"):
         return {"available": True, "version": 3, "cards": theses.get("cards") or [],
-                "windows": theses.get("windows") or [],
+                "windows": theses.get("windows") or [], "deadline": theses.get("deadline"),
                 "meta": theses.get("meta") or {}, "groups": [], "roster_src": roster_src,
                 "impact_available": True}
     if trades is None or trades.empty:

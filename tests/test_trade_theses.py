@@ -171,3 +171,13 @@ def test_a_rival_who_loses_a_starter_at_a_thin_position_opens_a_window():
     out["players"]["b_rb1"]["out"] = {"share": 0.5, "back": 9}               # out half his games instead
     w = [w for w in wins(out) if w["team"] == "Opponent B"]
     assert w and w[0]["drop"] == 5.5 and w[0]["lost"][0]["back"] == 9
+
+
+def test_trades_close_after_the_deadline_day(monkeypatch):
+    import datetime as dt
+    from mega import config, trade_theses as TT
+    d = dt.date.fromisoformat(config.TRADE_DEADLINE)
+    assert config.trades_open(d) and not config.trades_open(d + dt.timedelta(days=1))
+    monkeypatch.setattr(config, "trades_open", lambda today=None: False)
+    out = TT.run(2026, 13)
+    assert out["closed"] and out["cards"] == [] and out["windows"] == [] and out["deadline"] == config.TRADE_DEADLINE
