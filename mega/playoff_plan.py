@@ -15,6 +15,10 @@ injury risk between now and the playoffs is already in it. Lineups are the engin
     three weeks — a player you'd start in week 16 against a soft defense shows up here even if
     he's no help now.
   * **Handcuffs**: the named backup behind each playoff starter, and who holds him.
+  * **Blocks**: free agents worth a roster spot to keep away from a rival. For each, the rival
+    whose playoff lineup he'd help most (the likeliest claimant) is given him in the title
+    simulation, and what that does to TaylorMade's title odds is the value of holding him —
+    shown only when it clears the simulation's own noise.
 """
 from __future__ import annotations
 
@@ -22,6 +26,8 @@ from .title_odds import PLAYOFF_WEEKS
 
 THIN_GAP = 1.5       # (J) pts/wk below the league's average starters at a position to call it thin
 STASHES = 8
+BLOCK_MIN_GAIN = 1.5     # (J) pts a rival's playoff lineup gains over the 3 weeks before he's worth blocking
+BLOCK_SIM = 8            # rival claims run through the title simulation (each ~2 s)
 CUFF_POS = ("RB", "QB")   # a backup who inherits the job: a receiver's "handcuff" inherits nothing
 EASY, TOUGH = 8, 25  # opponent ease rank (1 = allows the most to the position) for the tags
 
@@ -138,11 +144,49 @@ def build(season: int, now: int, yahoo_rosters=None) -> dict:
             cuffs.append({"starter": P[pid]["name"], "cuff": (P.get(g) or {}).get("name") or names.get(g, g),
                           "clear_two": c["clear_two"], "owner": owner.get(g, "free agent"),
                           "mine": owner.get(g) == my_name})
+    blocks = _blocks(season, now, yahoo_rosters, lg, ctx, me, weeks, squad, pts) if ctx.fa else []
     return {
-        "available": True, "season": season, "weeks": weeks,
+        "available": True, "season": season, "weeks": weeks, "blocks": blocks,
         "lineups": lineups,
         "rank": {"mine": ranked.index(my_name) + 1, "of": len(ranked), "avg": round(totals[my_name], 1),
                  "league": round(sum(totals.values()) / len(totals), 1),
                  "best": {"team": ranked[0], "avg": round(totals[ranked[0]], 1)}},
         "thin": thin, "stashes": stash[:STASHES], "handcuffs": cuffs,
     }
+
+
+def _blocks(season, now, yahoo_rosters, lg, ctx, me, weeks, squad, pts) -> list[dict]:
+    """Free agents a rival would start in the playoffs, ranked by what his claim would cost
+    TaylorMade's title odds (title_odds delta, paired seasons)."""
+    from . import title_odds as T
+    P = ctx.players
+    cands = []
+    base = {tid: {w: pts(squad(tid), w) for w in weeks} for tid in ctx.teams if tid != me}
+    for f in ctx.fa:
+        gains = {tid: sum(pts(squad(tid) + [f], w) - base[tid][w] for w in weeks) for tid in base}
+        tid = max(gains, key=gains.get)
+        if gains[tid] >= BLOCK_MIN_GAIN:
+            cands.append((gains[tid], f, tid))
+    if not cands:
+        return []
+    try:
+        tm = T.build(season, now, yahoo_rosters, league=lg)
+    except Exception:
+        tm = None
+    if tm is None:
+        return []
+    my_name = ctx.teams[me]["name"]
+    out = []
+    for gain, f, tid in sorted(cands, reverse=True)[:BLOCK_SIM]:
+        rival = ctx.teams[tid]["name"]
+        if rival not in tm.rosters:
+            continue
+        d = tm.delta({rival: list(tm.rosters[rival]) + [f]}, (my_name, rival))
+        us = d.get(my_name) or {}
+        if us.get("noise", True) or us.get("d_title", 0.0) >= 0:
+            continue
+        out.append({"name": P[f]["name"], "pos": P[f]["pos"], "team": P[f].get("nfl"), "rival": rival,
+                    "rival_gain": round(gain, 1), "my_title_drop": round(-us["d_title"], 4),
+                    "se": round(us.get("se_title", 0.0), 4),
+                    "rival_title_gain": round((d.get(rival) or {}).get("d_title", 0.0), 4)})
+    return sorted(out, key=lambda b: -b["my_title_drop"])
