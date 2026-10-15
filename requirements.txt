@@ -1,7 +1,4 @@
-# Cloud / app runtime — everything the Streamlit app needs to serve.
-# Requires Python 3.10+ (nflreadpy constraint). On Streamlit Community Cloud,
-# pick Python 3.12 in the app's Advanced settings.
-streamlit>=1.63  # tested version; width="stretch" and pixel column widths need a recent release
+# The data pipeline and the Ask API (service/). Requires Python 3.10+ (nflreadpy constraint).
 nflreadpy>=0.1.5
 polars>=1.0
 pandas>=2.2
@@ -15,5 +12,5 @@ feedparser>=6.0
 python-dotenv>=1.0
 markdown>=3.6            # nicer HTML for the emailed digest
 
-# Desktop-only extras (live Yahoo pull, browser scrape) are NOT installed in the
-# cloud — they can't run on an unattended host. See requirements-local.txt.
+# Desktop-only extras (live Yahoo pull, browser scrape) are NOT installed on Render —
+# they can't run on an unattended host. See requirements-local.txt.

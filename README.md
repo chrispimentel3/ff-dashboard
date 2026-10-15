@@ -21,69 +21,19 @@ uv pip install -r requirements.txt
 (If you'd rather not use `uv`, install Python 3.12 from python.org, then
 `python3.12 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`.)
 
-## Run the dashboard
+## How it fits together
+
+This repo is the data and analysis. The site people use is **mega-bowl-web** (Next.js on
+Vercel), which reads the JSON this repo publishes:
 
 ```bash
-uv run streamlit run app.py
+PYTHONPATH=. .venv/bin/python tools/publish_web.py   # scrape, rebuild data/web/*.json, commit
 ```
 
-Opens at http://localhost:8501.
-
-## Host it online (Streamlit Community Cloud)
-
-GitHub alone can't run this app (Pages only serves static files — this is a Python
-server). The free, purpose-built host is **Streamlit Community Cloud**, which runs
-the app straight from your GitHub repo and redeploys on every push.
-
-**1. Push this folder to a private GitHub repo**
-```bash
-cd ff-dashboard
-git init && git add -A && git commit -m "FF dashboard"
-gh repo create ff-dashboard --private --source=. --push
-# (or create the repo in the GitHub UI and `git remote add origin … && git push -u origin main`)
-```
-`.env`, `data/`, and `.streamlit/secrets.toml` are gitignored, so no secrets or
-cache ever leave your machine. Your `roster.csv` and draft-board HTML **are**
-committed — keep the repo **private** so your team/league data stays private.
-
-**2. Deploy**
-1. Go to https://share.streamlit.io → **New app** → sign in with GitHub and
-   authorize access to your private repo.
-2. Pick the repo, branch `main`, main file `app.py`.
-3. **Advanced settings → Python version → 3.12**.
-4. **Advanced settings → Secrets** → paste the contents of
-   `.streamlit/secrets.toml.example` with your real values (at minimum
-   `FANTASYPROS_API_KEY`). Save.
-5. Deploy. First build takes a few minutes (nflverse data downloads on first load).
-
-**What runs in the cloud vs. locally**
-- ✅ Everything except the live Yahoo roster — projections, matchups, waivers,
-  trades, draft value, archetypes, news all work from public data + your draft board.
-- ⚠️ The **live Yahoo pull** (`pull_league.py` / browser scrape) is desktop-only
-  (interactive OAuth / a real browser), so the cloud app uses the **offline
-  draft-board approximation** for rosters. Run the live pull locally when you want
-  the current roster, commit the refreshed `data/yahoo_api/` if you want the cloud
-  app to see it (note: `data/` is gitignored by default — force-add it if so).
-- ⚠️ Keep the deployed app **private**: in the app's Settings you can restrict
-  viewers to specific emails, or keep the URL unlisted.
-
-**Keeping it fresh / the Tuesday digest** — Community Cloud serves a web page; it
-doesn't run scheduled jobs. For the automated Tuesday email, add a **GitHub Actions**
-scheduled workflow that runs `tuesday.py --email` (ask me to wire it up).
-
-## What it shows
-
-| Tab | Content |
-|-----|---------|
-| Team overview | Per-player half-PPR/game, rolling avg, last week, expected points (xFP), target/carry share, injury status, next matchup implied team total |
-| Actual vs expected | Season actual half-PPR vs `ff_opportunity` expected — sell-high / buy-low signal |
-| Usage trends | Weekly snap share, target share, points, targets, carries |
-| Matchups | Vegas totals/spreads and implied team points for your players' upcoming week |
-| **Waiver wire** | Ranked pickup targets — recent points + volume + FantasyCalc value/trend + industry add rank |
-| **Trades** | 1-for-1 ideas targeting your positional needs, fairness-scored |
-| **Draft value** | Every pick vs its current trade value — risers/fallers, your regression watch |
-| **News** | NFL headlines filtered to your roster / watchlist |
-| Raw data | Mapped roster + CSV downloads |
+`tools/export_web.py` builds every file the site reads from the `mega/` modules — one
+`mega/*_web.py` per page. The interactive parts of the site (trade search, evaluating a
+trade, Ask anything, the offer log) call the **Ask API** in `service/`, hosted on Render
+(`render.yaml`).
 
 ---
 
@@ -118,7 +68,7 @@ One-time setup:
    code back. The token is cached into `.env`; later runs are silent.
 
 That writes `data/yahoo_api/*.json`. `mega/yahoo_api.py` turns it into rosters /
-standings / transactions, and `tuesday.py` + the dashboard pick it up automatically.
+standings / transactions, and `tuesday.py` and the export pick it up automatically.
 
 **B. Browser scrape (no developer app)**
 ```bash
@@ -168,7 +118,7 @@ unpriced ones), and never spends the last 40. The $30 tier is 20,000 credits and
 daily: `ODDS_REFRESH_HOURS=24`.
 
 Raw per-book prices stay out of git; the derived points are published to
-`data/build/vegas_<season>_wk<NN>.csv`, which is what the hosted app reads.
+`data/build/vegas_<season>_wk<NN>.csv`, which is what the site reads.
 
 ## Automating Tuesdays
 
@@ -180,19 +130,18 @@ Raw per-book prices stay out of git; the derived points are published to
 
 Edit `roster.csv`. Columns: `name, slot, pos, nfl_team, gsis_id`.
 Leave `gsis_id` blank — names are matched automatically against `ff_playerids`.
-If a player shows as **unmatched** in the app, look up their `gsis_id` in the
-Raw data tab's `ff_playerids` download and paste it into `roster.csv`.
+If a player can't be matched, the export says so — add a row to `data/id_overrides.csv`
+(`yahoo_id,name,gsis_id,note`).
 
 ## Scoring
 
-`SCORING` at the top of `app.py` holds Yahoo default half-PPR weights
+`SCORING` in `mega/config.py` holds Yahoo default half-PPR weights
 (0.5/rec, 0.04/pass yd, 4/pass TD, -1/INT, 0.1/rush-rec yd, 6/rush-rec TD,
 -2/fumble lost). Adjust if your league uses bonuses or different values.
 
 ## Data freshness
 
-nflverse re-runs after each game and finalizes mid-week. The app caches for 6h;
-hit **Clear data cache** in the sidebar to force a refresh.
+nflverse re-runs after each game and finalizes mid-week; every publish reads the latest.
 
 ## Raw pull without the UI
 
@@ -201,8 +150,3 @@ python fetch_raw.py 2025
 ```
 
 Writes CSVs to `./data/`.
-
-## Not covered
-
-Kicker and DST are not in the offensive datasets — track those separately
-(`nfl.load_team_stats()` or manually).

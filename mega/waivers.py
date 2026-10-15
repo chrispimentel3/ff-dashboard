@@ -12,7 +12,7 @@ import json
 import pandas as pd
 
 from mega.action_board import worth_claiming
-from mega.ui import short_name
+from mega.ids import short_name
 
 LANE_COLS = ["player", "pos", "nfl_team", "ppg", "lane", "fit_pts", "start", "cover", "insure",
              "next3", "mechanism", "handcuff", "insures", "drop", "drop_cost", "drop_insure",

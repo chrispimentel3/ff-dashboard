@@ -13,7 +13,7 @@ import json
 
 import pandas as pd
 
-from mega.ui import short_name
+from mega.ids import short_name
 
 COLS = [
     "lineup", "player", "pos", "nfl_team", "report_status", "opp", "ease_rank",

@@ -74,6 +74,15 @@ def canon_pos(p: object) -> str:
     return _POS_ALIAS.get(v, v)
 
 
+_SUFFIXES = {"jr", "jr.", "sr", "sr.", "ii", "iii", "iv", "v"}
+
+
+def short_name(full: str) -> str:
+    """Surname without generational suffix — 'Marvin Mims Jr.' -> 'Mims'."""
+    toks = [t for t in str(full).split() if t.lower().strip(".") not in _SUFFIXES]
+    return toks[-1] if toks else str(full)
+
+
 def norm(s: object) -> str:
     """Lowercase, strip punctuation and generational suffixes. Matches nflverse merge_name."""
     s = str(s).lower().replace(".", "").replace("'", "").replace("-", " ")

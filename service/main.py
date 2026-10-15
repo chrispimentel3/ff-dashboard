@@ -69,8 +69,8 @@ async def _release_memory(request, call_next):
     return response
 
 
-PW_TTL = 6 * 3600       # matches app.py's CACHE_TTL for the player-week index
-ROSTER_TTL = 30 * 60    # matches app.py's ownership/roster cache TTL
+PW_TTL = 6 * 3600       # the player-week index
+ROSTER_TTL = 30 * 60    # ownership / rosters
 
 _cache: dict[str, tuple[float, object]] = {}
 _locks: defaultdict[str, threading.Lock] = defaultdict(threading.Lock)
@@ -128,9 +128,9 @@ def _rostered() -> dict:
     return _cached("rostered", ROSTER_TTL, build)
 
 
-ENGINE_TTL = 30 * 60      # matches app.py's _trade_engine/_trade_pool cache TTL
-SEASON_MODEL_TTL = 6 * 3600  # matches app.py's _season_model cache TTL
-SIM_TOP = 12              # matches app.py's SIM_TOP — only the best candidates get simulated
+ENGINE_TTL = 30 * 60      # the trade engine and its player pool
+SEASON_MODEL_TTL = 6 * 3600  # the season simulation
+SIM_TOP = 12              # only the best candidates get simulated
 
 
 def _league(season: int) -> dict:
@@ -195,7 +195,7 @@ def _season_model(season: int, next_week: int):
 
 def _trade_odds(season: int, next_week: int, rows: list[tuple]) -> dict:
     """(key, partner, dMe, dThem) -> what the deal does to both teams' playoff chances —
-    same 1,500-season simulation app.py's own trade search runs, on the same dice before
+    same 1,500-season simulation, on the same dice before
     and after so an offer that changes nothing reads as exactly zero."""
     s = _season_model(season, next_week)
     if s is None or MY_TEAM not in s.teams:
@@ -563,11 +563,11 @@ def _require_trades_open():
 
 @app.post("/trade-search")
 def trade_search(req: TradeSearchRequest):
-    _require_trades_open()
-    """"Trade around one player" — the live search app.py's own Trades tab runs, wrapped
+    """"Trade around one player" — the live search, wrapped
     as an endpoint so the statically-generated mega-bowl-web Trades page can offer it too
     (see mega/trades.py's docstring for why this couldn't just be precomputed: the question
     space is one pick out of the whole league, not a fixed list)."""
+    _require_trades_open()
     clock, t0 = {}, time.perf_counter()
 
     def lap(name):     # seconds per step, returned as `timings` — Render's CPU is ~10x slower
@@ -609,9 +609,9 @@ def trade_search(req: TradeSearchRequest):
 
 @app.post("/trade-evaluate")
 def trade_evaluate(req: TradeEvalRequest):
-    _require_trades_open()
     """"Evaluate a trade" — one trade exactly as typed (an offer I got, or one I'm thinking of
     sending), on the same engine, netting, acceptance model and odds as the search."""
+    _require_trades_open()
     import math
     from mega import trade_engine as te
     clock, t0 = {}, time.perf_counter()
@@ -654,9 +654,9 @@ def trade_evaluate(req: TradeEvalRequest):
 
 @app.post("/trade-team")
 def trade_team(req: TradeTeamRequest):
-    _require_trades_open()
     """"Trade with one team" — every offer to the team the page picked, plus their players
     ranked by what they'd add to my lineup (`targets`)."""
+    _require_trades_open()
     clock, t0 = {}, time.perf_counter()
 
     def lap(name):

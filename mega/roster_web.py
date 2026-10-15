@@ -10,7 +10,7 @@ import json
 
 import pandas as pd
 
-from mega.ui import short_name
+from mega.ids import short_name
 
 ROSTER_COLS = [
     "slot", "player", "pos", "games", "half_ppr_pg", "roll_pg", "last_wk",
@@ -72,28 +72,4 @@ def build(agg: pd.DataFrame | None, roll: int) -> dict:
             "injury_flags": n_hurt,
         },
         "roster": _records(agg, ROSTER_COLS),
-    }
-
-
-def build_routes(rt: pd.DataFrame | None, pool: pd.DataFrame | None, gsis_list: set,
-                  threshold: float, min_routes: int) -> dict:
-    """`rt` is app.py's `_rt` (my roster's route table); `pool` is `rz.totals()` over every
-    qualified WR/TE in the league, used for the scatter (mine vs everyone else)."""
-    if rt is None or rt.empty:
-        return {"available": False, "table": [], "scatter": [], "threshold": threshold,
-                "min_routes": min_routes}
-
-    scatter = pd.DataFrame()
-    if pool is not None and not pool.empty:
-        qualified = pool[pool["qualified"] & pool["fd_rr"].notna()].copy()
-        if len(qualified) >= 8:
-            qualified["mine"] = qualified["gsis_id"].isin(gsis_list)
-            scatter = qualified
-
-    return {
-        "available": True,
-        "table": _records(rt, ROUTE_COLS),
-        "scatter": _records(scatter, SCATTER_COLS + ["mine"]),
-        "threshold": threshold,
-        "min_routes": min_routes,
     }
