@@ -59,6 +59,9 @@ TAG_ORDER = ["SELL_HIGH", "BUY_LOW", "ROLE_EXPIRY", "TRAJECTORY", "CONTINGENCY",
 WINDOW_MIN = 2.0              # (J) pts/wk an injury has to take out of a position's starters to open a window
                               #     (and it must leave a real need there — team_profiles — so a deep team never qualifies)
 WINDOW_OFFERS = 3
+BYE_MIN = 15.0                # (J) pts/wk of starters on bye in one week that makes a manager shop
+BYE_AHEAD = 3                 # weeks ahead a bye crunch is looked for
+BYE_CONTENDER = 0.15          # (J) playoff odds below this and a bye week isn't worth trading for
 
 
 def windows(ctx, my_id, profiles: dict) -> list[dict]:
@@ -85,6 +88,32 @@ def windows(ctx, my_id, profiles: dict) -> list[dict]:
                             "gap": need[pos],
                             "lost": [{"name": ctx.players[i]["name"], "ir": i in ir,
                                       "back": (ctx.players[i].get("out") or {}).get("back")} for i in lost]})
+    return sorted(out, key=lambda w: -w["drop"])
+
+
+def bye_windows(ctx, my_id, byes: dict, now: int, odds: dict) -> list[dict]:
+    """Rivals still in it (playoff odds BYE_CONTENDER+) whose usual starters lose BYE_MIN or
+    more to byes in one of the next BYE_AHEAD weeks: a manager short that week is shopping
+    for a body who plays it. The position is the one the byes cost most."""
+    out = []
+    for tid, t in ctx.teams.items():
+        if tid == my_id or (odds.get(t.get("name")) or {}).get("p_playoffs", 0.0) < BYE_CONTENDER:
+            continue
+        starters = te.lineup(t["roster"], ctx, None).starters
+        for w in range(int(now), int(now) + BYE_AHEAD):
+            gone = [e for e in starters if byes.get(ctx.players[e[0]].get("nfl")) == w]
+            lost = sum(e[2] for e in gone)
+            if lost < BYE_MIN:
+                continue
+            by_pos: dict = {}
+            for e in gone:
+                by_pos[e[1]] = by_pos.get(e[1], 0.0) + e[2]
+            pos = max(by_pos, key=by_pos.get)
+            out.append({"team_id": tid, "team": t.get("name"), "pos": pos, "kind": "bye", "week": w,
+                        "drop": round(lost, 1), "gap": None,
+                        "lost": [{"name": ctx.players[e[0]]["name"], "ir": False, "back": w + 1, "bye": True}
+                                 for e in gone]})
+            break                   # his next crunch is the one to pitch
     return sorted(out, key=lambda w: -w["drop"])
 
 
@@ -595,12 +624,16 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
     # ---- trade windows: offers to a rival an injury just made a buyer, sending the position
     # he lost and that would start for him, netted like every card, by expected gain
     import types
-    win = windows(ctx, my_id, profiles)
+    from .waiver_value import bye_weeks
+    byes = bye_weeks(S.schedules(season))
+    win = windows(ctx, my_id, profiles) + bye_windows(ctx, my_id, byes, now, base)
     shell = types.SimpleNamespace(ctx=ctx)
     for w in win:
+        # a bye window wants a body who plays that week: not one on bye himself
+        plays = lambda g: w.get("kind") != "bye" or byes.get(ctx.players[g].get("nfl")) != w["week"]
         pool = [r for r in all_cands if r["partner"]["id"] == w["team_id"]
-                and any(ctx.players[g]["pos"] == w["pos"] and any(s["id"] == g for s in r["them"]["startersIn"])
-                        for g in r["giveIds"])]
+                and any(ctx.players[g]["pos"] == w["pos"] and plays(g)
+                        and any(s["id"] == g for s in r["them"]["startersIn"]) for g in r["giveIds"])]
         pool, _ = tl.net_free_swap(shell, my_id, pool)
         offers = []
         for r in pool:

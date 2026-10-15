@@ -181,3 +181,21 @@ def test_trades_close_after_the_deadline_day(monkeypatch):
     monkeypatch.setattr(config, "trades_open", lambda today=None: False)
     out = TT.run(2026, 13)
     assert out["closed"] and out["cards"] == [] and out["windows"] == [] and out["deadline"] == config.TRADE_DEADLINE
+
+
+def test_a_contender_with_starters_on_bye_opens_a_window():
+    import json
+    import pathlib
+    from mega import trade_engine as te
+    from mega import trade_theses as TT
+    league = json.loads((pathlib.Path(__file__).parent / "fixtures" / "sample_league.json").read_text())
+    for pid, p in league["players"].items():
+        p["nfl"] = "AAA" if pid in ("b_wr1", "b_wr2") else "ZZZ"        # B's two best receivers share a team
+    ctx = te.create_engine(league).ctx
+    odds = {"Opponent B": {"p_playoffs": 0.6}}
+    got = [w for w in TT.bye_windows(ctx, 1, {"AAA": 8}, 7, odds) if w["team"] == "Opponent B"]
+    assert got and got[0]["week"] == 8 and got[0]["pos"] == "WR" and got[0]["drop"] == 34.0   # 18 + 16 on bye
+    assert {l["name"] for l in got[0]["lost"]} == {league["players"]["b_wr1"]["name"], league["players"]["b_wr2"]["name"]}
+    assert not TT.bye_windows(ctx, 1, {"AAA": 11}, 7, odds)            # outside the next three weeks
+    odds["Opponent B"]["p_playoffs"] = 0.05                            # out of it: no window
+    assert not TT.bye_windows(ctx, 1, {"AAA": 8}, 7, odds)
