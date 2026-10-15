@@ -43,6 +43,7 @@ KDEF_SD = 7.0             #     game-to-game noise around each team's own K + DE
 STREAM_RANK = 3           # (J) the free-agent K or DEF a team streams on a bye: the 3rd best left that week
 DEFAULT_Q = (0.35, 0.90, 1.75)   # (J) p10/p50/p90 multipliers for a player the projection lacks
 NOISE_Z = 2.0             # |Δ| under 2 SE is noise
+ROOT_MIN_SEASONS = 30     # a game one side wins in fewer simulated seasons than this is too lopsided to split
 TW_CACHE_MAX = 400        # trade-variant team-week arrays kept before they are flushed
                           # (the current rosters' own are kept for the life of the model)
 POSTURE = ((0.70, "protect"), (0.35, "balanced"), (0.0, "swing"))   # handoff §5, on P(playoffs)
@@ -229,6 +230,53 @@ class Model:
                       "p_title": float(b["title"][i].mean()), "p_playoffs": float(b["made"][i].mean()),
                       "noise": abs(float(dt_.mean())) < NOISE_Z * se_t or float(dt_.mean()) == 0.0}
         return out
+
+    def rooting(self, team: str, week: int) -> dict:
+        """Who `team` should root for in `week`: each game's result splits the base run's
+        seasons in two, and P(playoffs | home wins) − P(playoffs | away wins) is what that
+        game is worth to that team. The split is on the same seasons, so it carries what a result
+        says about a team's strength too (a win is partly a sign it's better than projected)
+        — which is the question a fan is asking: how do my odds look after this result."""
+        base = self._base()
+        if team not in base["teams"]:
+            return {"week": week, "mine": None, "games": []}
+        i = base["teams"].index(team)
+        made, title = base["made"][i], base["title"][i]
+
+        def split(mask):
+            n1, n2 = int(mask.sum()), int((~mask).sum())
+            if min(n1, n2) < ROOT_MIN_SEASONS:
+                return None
+            p1, p2 = float(made[mask].mean()), float(made[~mask].mean())
+            se = math.sqrt(p1 * (1 - p1) / n1 + p2 * (1 - p2) / n2)
+            return {"p_first": n1 / self.n, "playoffs": (p1, p2), "se": se,
+                    "title": (float(title[mask].mean()), float(title[~mask].mean()))}
+
+        mine, games = None, []
+        for g in self.season.schedule:
+            h, a = g["home"], g["away"]
+            if int(g["week"]) != week or h not in base["teams"] or a not in base["teams"]:
+                continue
+            hw = self.team_week(h, self.rosters.get(h, []), week) > self.team_week(a, self.rosters.get(a, []), week)
+            if team in (h, a):
+                s = split(hw if team == h else ~hw)
+                if s:
+                    opp = a if team == h else h
+                    mine = {"opp": opp, "p_win": s["p_first"], "playoffs_if_win": s["playoffs"][0],
+                            "playoffs_if_lose": s["playoffs"][1], "title_if_win": s["title"][0],
+                            "title_if_lose": s["title"][1]}
+                continue
+            s = split(hw)
+            if not s:
+                continue
+            d = s["playoffs"][0] - s["playoffs"][1]
+            root, other = (h, a) if d >= 0 else (a, h)
+            games.append({"root_for": root, "against": other, "d_playoffs": abs(d), "se": s["se"],
+                          "d_title": abs(s["title"][0] - s["title"][1]),
+                          "p_root_wins": s["p_first"] if root == h else 1 - s["p_first"],
+                          "noise": abs(d) < NOISE_Z * s["se"]})
+        games.sort(key=lambda r: -r["d_playoffs"])
+        return {"week": week, "mine": mine, "games": games}
 
     def _base(self):
         if not hasattr(self, "_base_run"):

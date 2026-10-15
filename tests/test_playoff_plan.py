@@ -22,3 +22,32 @@ def test_each_team_starts_its_own_kdef_and_streams_only_on_a_bye(monkeypatch):
     assert m[("A", 6)] == 9.0 + 7.0          # his own, even when a free agent projects higher
     assert m[("A", 7)] == 6.0 + 7.0          # KC on bye: the 3rd-best free defense
     assert m[("B", 6)] == 4.0 + 8.0          # no kicker: the 3rd-best free kicker
+
+
+def test_rooting_splits_seasons_on_each_game():
+    import numpy as np
+    from mega import title_odds as T
+
+    n = 4000
+    rng = np.random.default_rng(1)
+    scores = {t: rng.normal(100, 20, n).astype(np.float32) for t in "ABCD"}
+
+    class Season:
+        teams = list("ABCD")
+        schedule = [{"home": "A", "away": "B", "week": 7}, {"home": "C", "away": "D", "week": 7}]
+
+    m = T.Model.__new__(T.Model)
+    m.n, m.season, m.rosters = n, Season(), {}
+    m.team_week = lambda team, ids, w: scores[team]
+    # A makes the playoffs exactly when A beats B and C loses to D
+    a_wins, c_wins = scores["A"] > scores["B"], scores["C"] > scores["D"]
+    made = np.zeros((4, n), bool)
+    made[0] = a_wins & ~c_wins
+    m._base_run = {"teams": list("ABCD"), "made": made, "title": np.zeros((4, n), bool)}
+
+    r = m.rooting("A", 7)
+    assert r["mine"]["opp"] == "B"
+    assert r["mine"]["playoffs_if_lose"] == 0.0 and r["mine"]["playoffs_if_win"] > 0.4
+    (g,) = r["games"]
+    assert g["root_for"] == "D" and g["against"] == "C" and not g["noise"]
+    assert abs(g["p_root_wins"] - float((~c_wins).mean())) < 1e-9

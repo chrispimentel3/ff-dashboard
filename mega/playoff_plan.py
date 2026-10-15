@@ -19,6 +19,8 @@ injury risk between now and the playoffs is already in it. Lineups are the engin
     whose playoff lineup he'd help most (the likeliest claimant) is given him in the title
     simulation, and what that does to TaylorMade's title odds is the value of holding him —
     shown only when it clears the simulation's own noise.
+  * **Rooting guide**: this week's other league games, ranked by how far each result moves
+    TaylorMade's playoff odds (title_odds.Model.rooting), and what its own game is worth.
 """
 from __future__ import annotations
 
@@ -144,9 +146,15 @@ def build(season: int, now: int, yahoo_rosters=None) -> dict:
             cuffs.append({"starter": P[pid]["name"], "cuff": (P.get(g) or {}).get("name") or names.get(g, g),
                           "clear_two": c["clear_two"], "owner": owner.get(g, "free agent"),
                           "mine": owner.get(g) == my_name})
-    blocks = _blocks(season, now, yahoo_rosters, lg, ctx, me, weeks, squad, pts) if ctx.fa else []
+    try:
+        from . import title_odds as T
+        tm = T.build(season, now, yahoo_rosters, league=lg)
+    except Exception:
+        tm = None
+    blocks = _blocks(tm, ctx, me, weeks, squad, pts) if ctx.fa and tm else []
+    rooting = tm.rooting(my_name, int(now)) if tm and now <= T.REG_LAST else None
     return {
-        "available": True, "season": season, "weeks": weeks, "blocks": blocks,
+        "available": True, "season": season, "weeks": weeks, "blocks": blocks, "rooting": rooting,
         "lineups": lineups,
         "rank": {"mine": ranked.index(my_name) + 1, "of": len(ranked), "avg": round(totals[my_name], 1),
                  "league": round(sum(totals.values()) / len(totals), 1),
@@ -155,10 +163,9 @@ def build(season: int, now: int, yahoo_rosters=None) -> dict:
     }
 
 
-def _blocks(season, now, yahoo_rosters, lg, ctx, me, weeks, squad, pts) -> list[dict]:
+def _blocks(tm, ctx, me, weeks, squad, pts) -> list[dict]:
     """Free agents a rival would start in the playoffs, ranked by what his claim would cost
     TaylorMade's title odds (title_odds delta, paired seasons)."""
-    from . import title_odds as T
     P = ctx.players
     cands = []
     base = {tid: {w: pts(squad(tid), w) for w in weeks} for tid in ctx.teams if tid != me}
@@ -168,12 +175,6 @@ def _blocks(season, now, yahoo_rosters, lg, ctx, me, weeks, squad, pts) -> list[
         if gains[tid] >= BLOCK_MIN_GAIN:
             cands.append((gains[tid], f, tid))
     if not cands:
-        return []
-    try:
-        tm = T.build(season, now, yahoo_rosters, league=lg)
-    except Exception:
-        tm = None
-    if tm is None:
         return []
     my_name = ctx.teams[me]["name"]
     out = []
