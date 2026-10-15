@@ -324,6 +324,11 @@ def build(season: int, now: int, write: bool = True) -> dict:
     edges = quant.get("_tier_edges") or {}
     allowed = cfg.get("disagreement_allowed") or {}
     team_now = _current_teams(season)
+    try:
+        curve = json.loads(RETURN_CURVE.read_text())["curve"]
+    except Exception:
+        curve = {}
+    missed_now = recent_misses(season, now, sched) if curve else {}
 
     players = {}
     for r in m.itertuples():
@@ -332,6 +337,10 @@ def build(season: int, now: int, write: bool = True) -> dict:
         team = team_now.get(r.gsis_id) or (r.team if isinstance(r.team, str) else None)
         q = (quant.get(r.pos) or {}).get(tier(r.ros_pg, r.pos, edges)) or [0.35, 0.9, 1.75]
         a = avail.get(r.gsis_id)
+        # games back after an absence: the one just behind him, or the one ahead (avail)
+        played_weeks = [w for w in weeks if byes.get(team) != w and not (a and w < a["back"])]
+        missed = missed_now.get(r.gsis_id, 0) + (sum(1 for w in weeks if a and w < a["back"] and byes.get(team) != w))
+        back_k = {w: i + 1 for i, w in enumerate(played_weeks[:2])} if missed else {}
         wk = {}
         for w in weeks:
             if byes.get(team) == w:
@@ -349,6 +358,7 @@ def build(season: int, now: int, write: bool = True) -> dict:
             else:
                 pa = 1.0 - cg.miss_hazard(r.pos, ages.get(r.gsis_id), w - now)
             base = float(r.ros_pg) * ratio.get((team, w), 1.0) ** fw.GAMMA
+            base *= return_factor(curve, r.pos, missed, back_k.get(w, 0))
             wk[w] = {"median": round(base * q[1], 2), "p10": round(base * q[0], 2), "p90": round(base * q[2], 2),
                      "p_active": round(pa, 3), "expected": round(base * pa, 2),
                      "mean_if_active": round(base, 2)}
@@ -409,6 +419,43 @@ def week_expected(season: int, week: int, data: dict | None = None) -> dict:
         return {}
     return {g: float(w["expected"]) for g, p in (d.get("players") or {}).items()
             if (w := (p.get("weeks") or {}).get(str(week))) and w.get("expected") is not None}
+
+
+RETURN_CURVE = ROOT / "config" / "return_curve.json"
+
+
+def return_factor(curve: dict, pos: str, missed: int, k: int) -> float:
+    """His k-th game back (1 or 2) after missing `missed` games: the share of his normal
+    output, from tools/fit_return.py (first games back run 80-94% of the level before)."""
+    if missed <= 0 or k not in (1, 2):
+        return 1.0
+    row = (curve.get(pos) or {}).get("2+" if missed >= 2 else "1")
+    return float(row[k - 1]) if row else 1.0
+
+
+def recent_misses(season: int, now: int, sched: pd.DataFrame) -> dict:
+    """gsis_id -> his team's games he missed in a row just before `now` (byes don't count),
+    for players with a game played earlier this season."""
+    from .intel import weekly
+    w = weekly(season)
+    w = w[w["season_type"].astype(str).str.upper().eq("REG") & (w["week"] < now)]
+    s = sched[sched["game_type"].astype(str).str.upper() == "REG"] if "game_type" in sched.columns else sched
+    team_weeks: dict = {}
+    for h, a, wk in zip(s["home_team"], s["away_team"], s["week"]):
+        team_weeks.setdefault(_canon(h), set()).add(int(wk))
+        team_weeks.setdefault(_canon(a), set()).add(int(wk))
+    out = {}
+    for gid, g in w.groupby("gsis_id"):
+        played = set(g["week"].astype(int))
+        games = sorted((x for x in team_weeks.get(_canon(g["team"].iloc[-1]), ()) if x < now), reverse=True)
+        n = 0
+        for wk in games:
+            if wk in played:
+                break
+            n += 1
+        if n and played:
+            out[gid] = n
+    return out
 
 
 def load_params() -> dict:

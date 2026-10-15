@@ -118,3 +118,13 @@ def test_backup_rule_leaves_non_quarterbacks_and_chained_cuffs_alone():
     P._backup_qbs(players, cuffs)
     assert rb["weeks"][4]["expected"] == 10.0 and "backup_of" not in rb
     assert players["b"]["backup_of"] == "c"
+
+
+def test_first_games_back_from_an_absence_are_discounted():
+    from mega.proj_ros import return_factor
+    curve = {"WR": {"1": [0.88, 0.93], "2+": [0.80, 0.89]}}
+    assert return_factor(curve, "WR", 0, 1) == 1.0          # never left
+    assert return_factor(curve, "WR", 1, 1) == 0.88
+    assert return_factor(curve, "WR", 3, 2) == 0.89         # out three: the 2+ row, second game back
+    assert return_factor(curve, "WR", 3, 3) == 1.0          # third game back: full strength
+    assert return_factor(curve, "TE", 2, 1) == 1.0          # no curve for him: untouched
