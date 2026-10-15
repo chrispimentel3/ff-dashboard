@@ -21,21 +21,29 @@ import pandas as pd
 from . import teams
 
 ODDS_CSV = Path(__file__).resolve().parent.parent / "data" / "history" / "playoff_odds_weekly.csv"
+ODDS_MODEL = "player"    # which simulation the odds came from: rows without it are mega/sim.py's
+                         # team-level odds, and a change is only quoted between rows of one model
 
 
 # ───────────────────────────────────────────────────────────── odds history
 def snapshot_odds(season: int, week: int, playoff_odds: list[dict], path: Path = ODDS_CSV) -> bool:
     """Keep the odds as they stood after `week` — once: the first export after the week is
     final writes it and later ones leave it (the sim reruns daily with new rosters, but
-    "after week 3" should mean one number). Returns whether it wrote."""
+    "after week 3" should mean one number) — unless the one on file came from another model.
+    Returns whether it wrote."""
     if not playoff_odds or week < 1:
         return False
     have = pd.read_csv(path) if path.is_file() else pd.DataFrame(columns=["season", "week"])
-    if ((have["season"] == season) & (have["week"] == week)).any():
+    if "model" not in have.columns:
+        have["model"] = None
+    this = (have["season"] == season) & (have["week"] == week)
+    if (this & (have["model"] == ODDS_MODEL)).any():
         return False
+    have = have[~this]
     rows = pd.DataFrame(playoff_odds)[["team", "p_playoffs", "p_bye", "p_title"]]
     rows.insert(0, "week", week)
     rows.insert(0, "season", season)
+    rows["model"] = ODDS_MODEL
     rows["snapshot_date"] = dt.date.today().isoformat()
     path.parent.mkdir(parents=True, exist_ok=True)
     pd.concat([have, rows], ignore_index=True).sort_values(["season", "week"]).to_csv(path, index=False)
@@ -161,6 +169,10 @@ def build(season: int, my_team: str, scores: pd.DataFrame, fixtures: pd.DataFram
     movers = {"available": False, "rows": []}
     if odds_hist is not None and not odds_hist.empty and odds_now:
         prev = odds_hist[odds_hist["week"] == week - 1]
+        if "model" in prev.columns:
+            prev = prev[prev["model"] == ODDS_MODEL]
+        else:
+            prev = prev.iloc[0:0]
         if not prev.empty:
             p = prev.set_index("team")
             rows = []

@@ -21,7 +21,7 @@ def test_the_week_just_played_is_told_in_sentences():
     fx = pd.DataFrame([{"week": 3, "home": "A", "away": "B"}, {"week": 3, "home": "C", "away": "D"}])
     league = {"playoff_odds": [{"team": t, "p_playoffs": p, "p_title": p / 4}
                                for t, p in (("A", .9), ("B", .6), ("C", .1), ("D", .4))]}
-    hist = pd.DataFrame([{"week": 1, "team": t, "p_playoffs": p, "p_title": p / 4}
+    hist = pd.DataFrame([{"week": 1, "team": t, "p_playoffs": p, "p_title": p / 4, "model": D.ODDS_MODEL}
                          for t, p in (("A", .7), ("B", .5), ("C", .3), ("D", .5))])
     d = D.build(2026, "A", _scores(), fx, league, {"headline": "do things"}, hist)
     assert d["week"] == 2 and d["next_week"] == 3
@@ -42,3 +42,37 @@ def test_odds_are_kept_once_per_week(tmp_path):
     assert D.snapshot_odds(2026, 3, odds, path)
     assert not D.snapshot_odds(2026, 3, [{**odds[0], "p_playoffs": .9}], path)
     assert pd.read_csv(path)["p_playoffs"].tolist() == [.5]
+
+
+def test_a_change_is_only_quoted_between_odds_of_one_model(tmp_path):
+    path = tmp_path / "odds.csv"
+    old = pd.DataFrame([{"season": 2026, "week": 3, "team": "A", "p_playoffs": .5, "p_bye": .1, "p_title": .1}])
+    old.to_csv(path, index=False)                       # written by the team-level sim, no model column
+    # the same week from the player model replaces it, once
+    assert D.snapshot_odds(2026, 3, [{"team": "A", "p_playoffs": .7, "p_bye": .2, "p_title": .2}], path)
+    assert not D.snapshot_odds(2026, 3, [{"team": "A", "p_playoffs": .9, "p_bye": .2, "p_title": .2}], path)
+    h = pd.read_csv(path)
+    assert h["p_playoffs"].tolist() == [.7] and h["model"].tolist() == [D.ODDS_MODEL]
+    # a week-before row from the other model gives no change at all
+    fx = pd.DataFrame([{"week": 3, "home": "A", "away": "B"}])
+    league = {"playoff_odds": [{"team": "A", "p_playoffs": .9, "p_title": .2}]}
+    hist = pd.DataFrame([{"week": 1, "team": "A", "p_playoffs": .2, "p_title": .1}])
+    d = D.build(2026, "A", _scores(), fx, league, {"headline": "x"}, hist)
+    assert not d["odds_movers"]["available"]
+
+
+def test_league_table_reads_seeds_off_the_simulation():
+    import numpy as np
+    from mega import title_odds as T
+
+    class Season:
+        byes = 2
+
+    m = T.Model.__new__(T.Model)
+    m.season = Season()
+    seed = np.array([[1, 2, 3, 1], [2, 1, 1, 3], [3, 3, 2, 2]])
+    m._base_run = {"teams": ["A", "B", "C"], "seed": seed,
+                   "made": seed <= 2, "title": seed == 1}
+    t = {r["team"]: r for r in m.league_table()}
+    assert t["A"]["p_bye"] == .75 and t["A"]["mean_seed"] == 1.75 and t["C"]["p_bye"] == .5
+    assert m.league_table()[-1]["team"] == "C"          # fewest playoff seasons sorts last

@@ -214,8 +214,19 @@ def _season_model(season: int):
 
 @st.cache_data(ttl=dt.timedelta(hours=6), show_spinner=False)
 def _odds(season: int) -> pd.DataFrame:
+    """The player-level title simulation (mega/title_odds.py) — the same one that prices
+    trades and the rooting guide, so the site quotes one set of odds. The team-level
+    mega/sim.py is the fallback when the player model can't be built."""
     from mega import sim as SIM
+    from mega import title_odds as T
+    from mega.yahoo import cached_rosters
 
+    try:
+        m = T.build(season, int(next_week), cached_rosters())
+        if m is not None:
+            return pd.DataFrame(m.league_table())
+    except Exception:
+        pass
     s = _season_model(season)
     return SIM.simulate(s, n=6000) if s is not None else pd.DataFrame()
 
@@ -752,8 +763,8 @@ def _tab_league():
                  fmt={"PLAYOFFS": "{:.0%}", "BYE": "{:.0%}", "TITLE": "{:.0%}",
                       "SEED": "{:.1f}"}, legend=False, logos=False, roles=False)
         st.caption(
-            "6,000 simulated seasons. Each week's score is drawn around the team's own "
-            "average, with this league's own spread. "
+            "6,000 simulated seasons, every starter's score drawn from his own projection "
+            "(injury odds and byes included) and the real bracket played out. "
             + f"**{_sched_note(_season_model(int(season)))}**"
         )
         st.write("")

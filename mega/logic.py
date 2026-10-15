@@ -246,32 +246,30 @@ TOPICS = [
     },
     {
         "key": "playoff_odds",
-        "title": "Why playoff odds move so much early in the season",
+        "title": "How the playoff odds are simulated",
         "headline": (
-            "A team's projected points per week is itself a guess, especially a few weeks "
-            "in — and the simulation now says so explicitly, instead of quietly treating "
-            "an early-season average as gospel and simulating 6,000 seasons as if it were."
+            "Every number on the site that says \"playoff odds\" or \"title odds\" comes from one "
+            "simulation that plays out the rest of the season player by player — so a team's "
+            "odds reflect who is actually on its roster now, not just what it has scored so far."
         ),
         "detail": (
-            "- **The simulation.** 6,000 simulated seasons; every remaining game is a score "
-            "drawn around each team's projected points per week, with this league's own "
-            "week-to-week scoring spread layered on top.\n"
-            "- **What was missing.** Early on, that scoring spread was the *only* "
-            "randomness — the points-per-week estimate itself was treated as a known "
-            "constant. Over a dozen-plus remaining weeks, even a modest, noisy edge from "
-            "three games compounds into near-certainty through sheer repetition, which is "
-            "exactly how a 3-0 start turned into a 99% playoff lock in week 3.\n"
-            "- **The fix.** Each team's points-per-week estimate now carries its own "
-            "uncertainty — textbook standard error of the mean: `this league's weekly "
-            "scoring spread ÷ √(games played)` — wide with three games on file, narrowing "
-            "every week as more come in.\n"
-            "- **How it's applied.** Each simulated season draws that team's *true* level "
-            "ONCE (not re-rolled every week — a team is consistently better or worse than "
-            "its early-season average, not randomly different each Sunday), and every "
-            "week's score is then drawn around that fixed level.\n"
-            "- **Net effect.** Early-season odds spread out and pull back from the extremes, "
-            "then tighten toward what the record actually shows as the season goes on and "
-            "each team's true level becomes clearer."
+            "- **6,000 simulated seasons.** Every remaining week, each team's best lineup is set "
+            "from its current roster, and every starter draws a score from his own projection: "
+            "his median, his realistic floor and ceiling, and the chance he doesn't play (his "
+            "backup comes in when he doesn't). Byes are in it.\n"
+            "- **Two kinds of uncertainty.** Week-to-week noise, plus one season-long draw per "
+            "player for how wrong his projection is — the projections' measured out-of-sample "
+            "error. That second one is what keeps early-season odds from running to 99% on a "
+            "fast start: a team is consistently better or worse than projected, not randomly "
+            "different each Sunday.\n"
+            "- **The real bracket.** The real remaining fixtures, wins then points for, then "
+            "Mega Bowl's six-team, two-bye bracket played week by week over weeks 15–17.\n"
+            "- **One simulation everywhere.** The same seasons price trades (how an offer moves "
+            "your title odds), the playoff blocks, and the rooting guide — a game's result splits "
+            "the seasons in two, and the difference in your odds is what it's worth to you.\n"
+            "- **Before October 2026** the League page used a simpler team-level simulation "
+            "(each team's points per week, with its uncertainty). Week-over-week changes are only "
+            "quoted between two weeks of the same simulation."
         ),
     },
     {

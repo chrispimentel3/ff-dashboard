@@ -152,10 +152,12 @@ class Model:
         made = np.zeros((len(teams), self.n), bool)
         for k in range(min(s.playoff_teams, len(teams))):
             made[order[k], np.arange(self.n)] = True
+        seed = np.empty_like(order)
+        seed[order, np.arange(self.n)] = np.arange(1, len(teams) + 1)[:, None]
         champ = self._bracket(order, teams, rosters)
         title = np.zeros((len(teams), self.n), bool)
         title[champ, np.arange(self.n)] = True
-        return {"teams": teams, "made": made, "title": title}
+        return {"teams": teams, "made": made, "title": title, "seed": seed}
 
     def _bracket(self, order: np.ndarray, teams: list, rosters: dict) -> np.ndarray:
         """Mega Bowl: seeds 1–2 bye; week 15 3v6 and 4v5; week 16 the top seed meets the
@@ -187,6 +189,16 @@ class Model:
         r = self.run(rosters)
         return {t: {"p_playoffs": float(r["made"][i].mean()), "p_title": float(r["title"][i].mean())}
                 for i, t in enumerate(r["teams"])}
+
+    def league_table(self) -> list[dict]:
+        """Every team's odds on the rosters as they stand — the League page's table, so the
+        site quotes one set of playoff odds (these) rather than mega/sim.py's team-level ones."""
+        r = self._base()
+        out = [{"team": t, "p_playoffs": float(r["made"][i].mean()),
+                "p_bye": float((r["seed"][i] <= self.season.byes).mean()),
+                "p_title": float(r["title"][i].mean()), "mean_seed": float(r["seed"][i].mean())}
+               for i, t in enumerate(r["teams"])]
+        return sorted(out, key=lambda x: (-x["p_playoffs"], x["mean_seed"]))
 
     def delta(self, rosters_after: dict, teams: tuple) -> dict:
         """Δ odds for `teams` when `rosters_after` replaces the current rosters, with a
