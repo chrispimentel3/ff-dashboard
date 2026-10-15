@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from mega import kdef, start_sit, stats_web
+from mega import kdef, start_sit
 
 
 def test_points_allowed_tiers_are_yahoos():
@@ -36,18 +36,6 @@ def test_kicker_and_defense_join_the_start_sit_total():
     assert out["kpis"]["proj_total"] == pytest.approx(102.9)
     assert out["kpis"]["starters_n"] == 9 and len(out["bench"]) == 1
     assert "103 points" in out["headline"]
-
-
-def test_stats_rows_get_the_new_columns_and_old_rows_are_padded():
-    base = stats_web.build({}, {})
-    base = {**base, "rows": [["g1", "A", "WR", "MIA", 2026, None, False] + [1.0] * len(stats_web.METRICS)]}
-    out = stats_web.add_kdef(base, [{"gsis_id": "DEF-CHI", "name": "Bears", "pos": "DEF", "team": "CHI",
-                                     "season": 2026, "owner": "FA", "mine": False, "games": 4, "pts": 20,
-                                     "pts_pg": 5.0, "sacks_pg": 2.5}], kdef.SEASON_METRICS)
-    assert len(out["columns"]) == len(base["columns"]) + len(kdef.SEASON_METRICS)
-    assert all(len(r) == len(out["columns"]) for r in out["rows"])
-    bears = out["rows"][-1]
-    assert bears[out["columns"].index("sacks_pg")] == 2.5 and bears[out["columns"].index("pts_pg")] == 5.0
 
 
 def test_current_kicker_is_the_active_one_on_the_roster_not_the_last_to_kick():

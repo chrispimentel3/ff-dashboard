@@ -283,55 +283,6 @@ def start_sit(c) -> dict:
     return build(lu, target_share(c.season, c.week, c.roll), c.next_week)
 
 
-def matchups(c) -> dict:
-    from mega.config import MY_TEAM
-    from mega.matchups import build
-    if c.sched.empty:
-        return {"available": False, "next_week": c.next_week, "my_team": "",
-                "team_environment": [], "vegas_players": [], "player_difficulty": []}
-    teams = {t for t in c.team_by_id.values() if t}
-    wk = c.sched[c.sched["week"] == c.next_week]
-    rows = []
-    for _, gm in wk.iterrows():
-        tl, sl = gm.get("total_line"), gm.get("spread_line")
-        for side, opp_side in (("home_team", "away_team"), ("away_team", "home_team")):
-            t = gm[side]
-            if t not in teams:
-                continue
-            home = side == "home_team"
-            imp = tl / 2 + (sl / 2 if home else -sl / 2) if pd.notna(tl) and pd.notna(sl) else None
-            rows.append({"team": t,
-                         "players": ", ".join(sorted(n for i, n in c.name_by_id.items() if c.team_by_id.get(i) == t)),
-                         "matchup": ("vs " if home else "@ ") + gm[opp_side], "total": tl,
-                         "spread": sl if home else (-sl if pd.notna(sl) else None), "implied_pts": imp})
-    mt = pd.DataFrame(rows).sort_values("implied_pts", ascending=False)
-    vb = vegas(c.season, c.next_week)
-    if not vb.empty:
-        vb = vb.copy()
-        try:
-            own_raw, _ = data.ownership()
-            own = {g: t for g, (t, _sl) in own_raw.items()}
-        except Exception:
-            own = {}
-        vb["owner"] = vb["gsis_id"].map(own).fillna("FA")
-    show = pd.DataFrame()
-    d = dvp(c.season)
-    if not d.empty:
-        pr = c.skill.rename(columns={"name": "player"})[["player", "pos", "nfl_team"]].copy()
-        teamopp = {}
-        for _, gm in wk.iterrows():
-            teamopp[gm["home_team"]] = "vs " + str(gm["away_team"])
-            teamopp[gm["away_team"]] = "@ " + str(gm["home_team"])
-        pr["matchup"] = pr["nfl_team"].map(teamopp)
-        pr["opp"] = pr["matchup"].str.replace("vs ", "", regex=False).str.replace("@ ", "", regex=False)
-        pr = pr.merge(d[["defense", "pos", "pa_pg", "ease_rank"]], left_on=["opp", "pos"],
-                      right_on=["defense", "pos"], how="left")
-        pr["verdict"] = pd.cut(pr["ease_rank"], [0, 8, 16, 24, 32],
-                               labels=["🟢 great", "🙂 good", "😐 tough", "🔴 avoid"])
-        show = pr[["player", "pos", "matchup", "ease_rank", "pa_pg", "verdict"]].sort_values("ease_rank")
-    return build(mt, vb, show, c.next_week, MY_TEAM)
-
-
 def waivers(c) -> dict:
     from mega.waivers import build
     if c.ib is None:
@@ -452,14 +403,6 @@ def news(c) -> dict:
     return build(list(c.skill["name"]))
 
 
-def downloads(c) -> dict:
-    from mega.downloads_web import build
-    c.sw.to_csv(OUT_DIR / "player_stats.csv", index=False)
-    if not c.ffo.empty:
-        c.ffo.to_csv(OUT_DIR / "ff_opportunity.csv", index=False)
-    return build(c.mapped, c.match)
-
-
 def _owner_info(gid: str, pteam: str, own: dict, fa: dict) -> dict:
     """Who holds him in this league — nothing at all when there is no league on file, so
     the card is then simply an NFL player card."""
@@ -526,10 +469,9 @@ def players(c) -> dict:
 
 
 EXPORTS = {
-    "action_board.json": action_board, "start_sit.json": start_sit, "matchups.json": matchups,
+    "action_board.json": action_board, "start_sit.json": start_sit,
     "waivers.json": waivers, "trades.json": trades, "archetypes.json": archetypes,
     "roster.json": roster, "league.json": league, "glossary.json": glossary, "news.json": news,
-    "downloads.json": downloads,
 }
 
 
@@ -542,11 +484,6 @@ def _write_players(payload: dict) -> list[Path]:
         {"available": payload.get("available", False), "index": payload.get("index", [])},
         indent=2, default=str))
     written.append(index_path)
-
-    if payload.get("stats"):
-        stats_path = OUT_DIR / "stats_table.json"
-        stats_path.write_text(json.dumps(payload["stats"], separators=(",", ":"), default=str))
-        written.append(stats_path)
 
     players_dir = OUT_DIR / "players"
     players_dir.mkdir(parents=True, exist_ok=True)
@@ -628,7 +565,6 @@ def main() -> None:
         from mega import faab as _fb
         from mega import kdef as _kdef
         from mega import start_sit as _start_sit
-        from mega import stats_web as _stats_web
         from mega.config import MY_TEAM as _MY_TEAM
         from mega.yahoo import cached_rosters as _cros0
 
@@ -652,13 +588,7 @@ def main() -> None:
                               for m in _pm.movers(_season, _next_week)
                               if (_owner.get(m["gsis_id"]) or ("FA",))[0] in ("FA", _MY_TEAM)]
         _wv_path.write_text(json.dumps(_wv, indent=2, default=str))
-        _st_path = OUT_DIR / "stats_table.json"
-        if _st_path.is_file():
-            _st_rows = [r for s_ in (_season, _season - 1) for r in _kdef.season_rows(s_, _kros, _MY_TEAM)]
-            _st_path.write_text(json.dumps(_stats_web.add_kdef(json.loads(_st_path.read_text()), _st_rows,
-                                                               _kdef.SEASON_METRICS),
-                                           separators=(",", ":"), default=str))
-        print("wrote K/DEF into rankings, start_sit, waivers and stats_table")
+        print("wrote K/DEF into rankings, start_sit and waivers")
     except Exception as e:
         print(f"[export_web] K/DEF failed: {type(e).__name__}: {e}", file=sys.stderr)
 
