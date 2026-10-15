@@ -72,6 +72,57 @@ def shop_hold(agg: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     return sell.reindex(columns=ACOLS), buy.reindex(columns=ACOLS)
 
 
+PEAK = 0.97          # (J) his trade value within 3% of its season high is "at the peak"
+SCHED_SHIFT = 1.5    # (J) pts of team implied total between the next 3 games and the rest that's a real turn
+AHEAD = 3
+
+
+def sell_timing(players: list[str], season: int, now: int) -> dict:
+    """player -> {"call", "why"}: when to sell a sell-high candidate. Two things move his
+    price: his trade value (FantasyCalc, saved weekly — at its high, the market can only
+    cool) and his offense's market-implied points over the next three games against the rest
+    of the season (mega/power.py prices every game). A judgment rule, not a fitted one: there
+    is no history of trade values to backtest on."""
+    from . import season as S
+    from .forward import implied
+    from .config import DATA
+    from .intel import _norm
+    try:
+        tv = pd.read_csv(DATA / "history" / "trade_value_weekly.csv")
+        tv = tv[tv["season"] == season]
+    except Exception:
+        tv = pd.DataFrame()
+    imp = implied(S.schedules(season))
+    team_of = {}
+    try:
+        from .intel import weekly
+        w = weekly(season)
+        team_of = dict(zip(w["norm"], w["team"]))      # last row wins: his current team
+    except Exception:
+        pass
+    out = {}
+    for name in players:
+        n = _norm(name)
+        hist = tv[tv["norm"] == n].sort_values("week") if not tv.empty else tv
+        peak = bool(len(hist)) and float(hist["value"].iloc[-1]) >= PEAK * float(hist["value"].max())
+        team = team_of.get(n)
+        t = imp[imp["team"] == team] if team else imp.iloc[0:0]
+        nxt = t[(t["week"] >= now) & (t["week"] < now + AHEAD)]["implied"].mean()
+        later = t[(t["week"] >= now + AHEAD) & (t["week"] <= 17)]["implied"].mean()
+        shift = float(nxt - later) if pd.notna(nxt) and pd.notna(later) else 0.0
+        env = f"his offense projects {nxt:.1f} pts over the next {AHEAD} games, {later:.1f} after" if pd.notna(nxt) and pd.notna(later) else ""
+        if shift >= SCHED_SHIFT:
+            call, why = "after", f"sell after week {now + AHEAD - 1}: {env} — let the soft stretch lift his value first"
+        elif shift <= -SCHED_SHIFT:
+            call, why = ("now", f"sell now: {env}, and his value is at its high") if peak else \
+                        ("hold", f"no rush: {env}; his value is already off its high")
+        else:
+            call, why = ("now", "sell now: his value is at its season high and his schedule doesn't change") if peak \
+                else ("hold", "no rush: his value isn't at its high and his schedule is flat")
+        out[name] = {"call": call, "why": why}
+    return out
+
+
 def headline(IB: dict | None) -> tuple[str, str]:
     if not IB:
         return "", ""
@@ -98,6 +149,17 @@ def headline(IB: dict | None) -> tuple[str, str]:
     return main, sub
 
 
+def _with_timing(rows: list[dict], season: int) -> list[dict]:
+    if not rows:
+        return rows
+    try:
+        from .data import current_week
+        t = sell_timing([r["player"] for r in rows], season, current_week(season, 1))
+    except Exception:
+        return rows
+    return [{**r, "timing": t.get(r["player"])} for r in rows]
+
+
 def _records(df: pd.DataFrame | None) -> list[dict]:
     if df is None or df.empty:
         return []
@@ -122,7 +184,7 @@ def build(agg: pd.DataFrame, IB: dict | None, BASIS: dict, season: int) -> dict:
             "weeks": BASIS["weeks"],
         },
         "xfp_available": xfp_available,
-        "shop": _records(sell),
+        "shop": _with_timing(_records(sell), season),
         "hold": _records(buy),
         "waivers": [],
         "trades": [],

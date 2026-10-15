@@ -286,3 +286,23 @@ def test_fixtures_naming_an_unknown_team_are_ignored():
     s = sim.from_league(_scores(teams), _standings(teams), {t: 100.0 for t in teams},
                         [5], fixtures=fx)
     assert s.approx_weeks == (5,)
+
+
+def test_sell_timing_reads_the_schedule_turn_and_the_value_peak(monkeypatch, tmp_path):
+    import pandas as pd
+    from mega import action_board as AB, season as S, config, forward, intel
+    (tmp_path / "history").mkdir()
+    pd.DataFrame([{"season": 2026, "week": w, "norm": n, "value": v} for n, vals in
+                  {"soft now": [100, 120], "peaked": [100, 120], "cooled": [130, 100]}.items()
+                  for w, v in zip((5, 6), vals)]).to_csv(tmp_path / "history" / "trade_value_weekly.csv", index=False)
+    monkeypatch.setattr(config, "DATA", tmp_path)
+    imp = pd.DataFrame([{"team": t, "week": w, "implied": (26 if w < 9 else 22) if t == "SOFT" else
+                         (20 if w < 9 else 25) if t == "HARD" else 23} for t in ("SOFT", "HARD", "FLAT") for w in range(6, 18)])
+    monkeypatch.setattr(forward, "implied", lambda s: imp)
+    monkeypatch.setattr(S, "schedules", lambda s: None)
+    monkeypatch.setattr(intel, "weekly", lambda s: pd.DataFrame({"norm": ["soft now", "peaked", "cooled"],
+                                                                 "team": ["SOFT", "HARD", "HARD"]}))
+    t = AB.sell_timing(["Soft Now", "Peaked", "Cooled"], 2026, 6)
+    assert t["Soft Now"]["call"] == "after"        # next three softer: let them lift his value
+    assert t["Peaked"]["call"] == "now"            # tough stretch ahead, value at its high
+    assert t["Cooled"]["call"] == "hold"           # tough ahead, but the value already cooled
