@@ -250,8 +250,8 @@ def build_context(league: dict, config: dict | None = None) -> Ctx:
     if missing:
         raise ValueError("Rostered ids missing from players: " + ", ".join(missing))
 
-    valued_pos = set(cfg["slots"]) | set(cfg["flexEligible"])
-    pos_order = list(valued_pos)
+    pos_order = list(dict.fromkeys([*cfg["slots"], *cfg["flexEligible"]]))   # config order, not set order
+    valued_pos = set(pos_order)
 
     fa = [pid for pid in (league.get("freeAgents") or [])
           if pid in players and pid not in rostered and players[pid]["pos"] in valued_pos]
@@ -274,7 +274,7 @@ def build_context(league: dict, config: dict | None = None) -> Ctx:
         repl[w] = r
 
     fa_candidates = []
-    for pos in valued_pos:
+    for pos in pos_order:
         same = [pid for pid in fa if players[pid]["pos"] == pos]
         same.sort(key=lambda pid: -(players[pid].get("ppg") or 0))
         fa_candidates.extend(same[: cfg["faCandidatesPerPos"]])

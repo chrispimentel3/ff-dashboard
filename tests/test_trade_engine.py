@@ -315,3 +315,10 @@ def test_evaluator_verdict():
         "Good for you: +2.0 pts/wk to your lineup. About 31% chance they'd accept."
     assert tl.verdict({"dMe": -1.5}).startswith("Bad for you: it costs your lineup 1.5")
     assert tl.verdict({"dMe": 0.2}).startswith("About even")
+
+
+def test_pos_order_is_config_order_not_set_order():
+    # Set order follows PYTHONHASHSEED; it decided starter order, bench grouping and the
+    # title-odds FLEX backup, so publishes drifted between processes.
+    from mega.trade_engine import build_context
+    assert build_context(LEAGUE).pos_order == ["QB", "RB", "WR", "TE"]

@@ -406,7 +406,7 @@ def team_profiles(ctx) -> dict:
     for tid, t in ctx.teams.items():
         lu = te.lineup(t["roster"], ctx)
         starting = {e[0] for e in lu.starters}
-        for pos in ctx.valued_pos:
+        for pos in ctx.pos_order:
             at = [e[2] for e in lu.starters if e[1] == pos]
             pts.setdefault(pos, {})[tid] = sum(at)
             if at:
