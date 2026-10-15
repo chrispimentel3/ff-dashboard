@@ -204,6 +204,21 @@ def grade_waivers(snaps: dict, act: pd.DataFrame, through: int) -> list[dict]:
     return out
 
 
+def grade_movers(snaps: dict, act: pd.DataFrame) -> list[dict]:
+    """Each week's prop movers (the books raised his role) against what he then scored, and
+    against his average before that week — did the market's move show up on the field?"""
+    out = []
+    for week, wv in sorted(snaps.items()):
+        for m in wv.get("prop_movers") or []:
+            g = act[act["gsis_id"] == m["gsis_id"]]
+            now = g.loc[g["week"] == week, "half_ppr"]
+            before = g.loc[g["week"] < week, "half_ppr"]
+            out.append({"week": week, "player": m["player"], "pos": m["pos"], "kind": m["kind"],
+                        "pts": round(float(now.sum()), 1) if len(now) else 0.0,
+                        "before": round(float(before.mean()), 1) if len(before) else None})
+    return out
+
+
 def build(season: int, now_week: int) -> dict:
     """Every finished week with a pre-kickoff snapshot, graded."""
     act = actuals(season)
@@ -233,6 +248,7 @@ def build(season: int, now_week: int) -> dict:
     calls = [c for g in graded for c in g["calls"]]
     through = max((x["week"] for x in weeks), default=0)
     waivers = grade_waivers(wv_snaps, act, through) if through else []
+    movers = grade_movers({w: s for w, s in wv_snaps.items() if w <= through}, act) if through else []
     return {
         "available": bool(weeks), "season": season, "through_week": through,
         "weeks": sorted(weeks, key=lambda x: -x["week"]),
@@ -246,4 +262,5 @@ def build(season: int, now_week: int) -> dict:
             "waivers": len(waivers), "waivers_right": sum(w["right"] for w in waivers),
         },
         "waivers": waivers,
+        "movers": movers,
     }

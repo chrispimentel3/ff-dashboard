@@ -189,6 +189,13 @@ def main() -> None:
         _wv = json.loads(_wv_path.read_text())
         _wv["streamers"] = _kdef.streamers(_season, _next_week, _kros, _MY_TEAM, _left,
                                            int(_left.get(_MY_TEAM, _fb.BUDGET)))
+        # role changes the books priced (mega/prop_moves.py): free agents and my own players
+        from mega import prop_moves as _pm
+        from mega.data import ownership as _own
+        _owner = _own()[0]
+        _wv["prop_movers"] = [{**m, "owner": (_owner.get(m["gsis_id"]) or ("FA",))[0]}
+                              for m in _pm.movers(_season, _next_week)
+                              if (_owner.get(m["gsis_id"]) or ("FA",))[0] in ("FA", _MY_TEAM)]
         _wv_path.write_text(json.dumps(_wv, indent=2, default=str))
         _st_path = OUT_DIR / "stats_table.json"
         if _st_path.is_file():
