@@ -89,3 +89,14 @@ def test_the_live_blend_switches_on_only_after_winning_walk_forward():
     assert lb["tested"] == 5 and lb["active"] and lb["weights"]["QB"] < 0.8
     early = S.live_blend([r for r in rows if r["week"] <= 5])
     assert not early["active"]                                      # two tested weeks: not yet
+
+
+def test_matchup_tags_are_graded_against_each_players_own_average():
+    act = pd.DataFrame([{"gsis_id": g, "week": w, "half_ppr": p} for g, pts in
+                        {"good": [10, 10, 15], "tough": [10, 10, 5], "flat": [10, 10, 10]}.items()
+                        for w, p in zip((3, 4, 5), pts)])
+    snaps = {5: {"rows": [{"gsis_id": "good", "matchup_pct": 8.0}, {"gsis_id": "tough", "matchup_pct": -9.0},
+                          {"gsis_id": "flat", "matchup_pct": 1.0}]}}
+    m = S.grade_matchups(snaps, act)
+    assert m == {"good": {"n": 1, "vs_avg_pct": 50.0}, "tough": {"n": 1, "vs_avg_pct": -50.0},
+                 "neutral": {"n": 1, "vs_avg_pct": 0.0}}

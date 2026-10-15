@@ -221,6 +221,77 @@ def future_weeks(df: pd.DataFrame, pos: str, k: float, rho: float) -> dict:
             "with_modeled_lines_gain_pct": round(100 * (dev_base - dev_mod) / dev_base, 3)}
 
 
+def rb_split(df: pd.DataFrame, k: float, rho: float) -> dict:
+    """RBs: a rushing and a receiving defense rating, blended by the back's own mix (his
+    share of baseline points from catches), against today's one pooled rating."""
+    d = df[df["pos"] == "RB"].copy()
+    pooled = ratings(df, "RB", k, rho, None)
+    rush = ratings(df, "RB", k, rho, None, actual="rush_pts", base="base_rush_pts")
+    rec = ratings(df, "RB", k, rho, None, actual="rec_pts", base="base_rec_pts")
+    tot = (d["base_rush_pts"] + d["base_rec_pts"]).replace(0, np.nan)
+    mix = (d["base_rec_pts"] / tot).fillna(0.3)
+    split = mix * rec + (1 - mix) * rush
+    a = evaluate(df, "RB", k, rho, None, ["def", "impl"], rating_col=pooled)
+    b = evaluate(df, "RB", k, rho, None, ["def", "impl"], rating_col=split)
+    return {"pooled": a["dev_gain_pct"], "split": b["dev_gain_pct"], "mae_pooled": a["mae"], "mae_split": b["mae"],
+            "beta_split": {kk: round(v, 3) for kk, v in b["beta"].items()}}
+
+
+SECONDARY = {"CB", "FS", "SS", "S", "DB"}
+FRONT = {"DE", "DT", "NT", "DL", "LB", "OLB", "ILB", "MLB", "EDGE"}
+
+
+def def_absences() -> pd.DataFrame:
+    """(season, week, team) -> secondary/front starters out that week: the sum of their usual
+    defensive snap share (games before), for players ruled Out or Doubtful on the report."""
+    import nflreadpy as nfl
+    pl = nfl.load_players().to_pandas()
+    pfr_of = dict(zip(pl["gsis_id"], pl["pfr_id"]))
+    out = []
+    for s in SEASONS:
+        sn = nfl.load_snap_counts(seasons=[s]).to_pandas()
+        sn = sn[(sn["game_type"] == "REG") & (sn["defense_snaps"] > 0)].sort_values("week")
+        sn["usual"] = sn.groupby("pfr_player_id")["defense_pct"].transform(lambda x: x.expanding().mean().shift())
+        usual = sn.dropna(subset=["usual"]).drop_duplicates(["pfr_player_id", "week"])
+        inj = nfl.load_injuries(seasons=[s]).to_pandas()
+        inj = inj[(inj["game_type"] == "REG") & inj["report_status"].isin(["Out", "Doubtful"])]
+        inj = inj.assign(pfr=inj["gsis_id"].map(pfr_of)).dropna(subset=["pfr"])
+        # his usual share going into the week he's listed: his latest earlier one
+        last = {}
+        for r in usual.itertuples():
+            last.setdefault(r.pfr_player_id, []).append((int(r.week), float(r.usual), r.position, r.team))
+        for r in inj.itertuples():
+            hist = [h for h in last.get(r.pfr, []) if h[0] < int(r.week)]
+            if not hist:
+                continue
+            wk, share, pos, team = hist[-1]
+            if share < 0.5:
+                continue        # a starter: half the defensive snaps or more
+            unit = "sec" if pos in SECONDARY else "front" if pos in FRONT else None
+            if unit:
+                out.append({"season": s, "week": int(r.week), "team": r.team, "unit": unit, "share": share})
+    a = pd.DataFrame(out)
+    t = a.pivot_table(index=["season", "week", "team"], columns="unit", values="share", aggfunc="sum", fill_value=0.0)
+    return t.reset_index().rename(columns={"sec": "sec_out", "front": "front_out"})
+
+
+def absences_test(df: pd.DataFrame, pos: str, k: float, rho: float, ab: pd.DataFrame) -> dict:
+    d = df.merge(ab.rename(columns={"team": "opponent_team"}), on=["season", "week", "opponent_team"], how="left")
+    d[["sec_out", "front_out"]] = d[["sec_out", "front_out"]].fillna(0.0)
+    d.index = df.index
+    x = d.loc[d["pos"] == pos, "front_out" if pos == "RB" else "sec_out"]
+    base = evaluate(df, pos, k, rho, None, ["def", "impl"])
+    dd = base["_d"]
+    y, off = np.maximum(dd["half_ppr"].to_numpy(), 0.0), np.log(dd["base"].to_numpy())
+    X = np.column_stack([design(dd, ["def", "impl"]), x.loc[dd.index].to_numpy()])
+    tr, te = dd["season"].isin(TRAIN).to_numpy(), dd["season"].isin(TEST).to_numpy()
+    beta = poisson_fit(y[tr], X[tr], off[tr])
+    mu = np.exp(off + X @ beta)
+    bd = deviance(y[te], np.exp(off[te]))
+    return {"now": base["dev_gain_pct"], "with_absences": round(100 * (bd - deviance(y[te], mu[te])) / bd, 3),
+            "b_absent": round(float(beta[-1]), 3), "share_weeks_with_absence": round(float((x > 0).mean()), 3)}
+
+
 def main() -> None:
     df = load_rows()
     print(f"[matchup] {len(df):,} player-games, {df['season'].min()}-{df['season'].max()}")
@@ -234,6 +305,17 @@ def main() -> None:
             ch = choose(df, pos, feats_options=(("def", "impl"), ("def", "impl", "spread")), hls=(None, 2.0, 4.0, 8.0))
             r = evaluate(df, pos, ch["k"], ch["rho"], ch["hl"], ch["feats"])
             print(f"[{pos}] chosen on 2020-22 {ch}:  {line(r)}  {({k: round(v, 3) for k, v in r['beta'].items()})}")
+        if pos == "RB":
+            sp = rb_split(df, c["k"], c["rho"])
+            print(f"[RB] rushing/receiving split: dev -{sp['split']}% (pooled -{sp['pooled']}%), "
+                  f"MAE {sp['mae_split']} vs {sp['mae_pooled']}  {sp['beta_split']}")
+        if "--absences" in sys.argv:
+            ab = AB if "AB" in globals() else None
+            if ab is None:
+                globals()["AB"] = ab = def_absences()
+            t = absences_test(df, pos, c["k"], c["rho"], ab)
+            print(f"[{pos}] + {'front seven' if pos == 'RB' else 'secondary'} starters out: dev -{t['with_absences']}% "
+                  f"(now -{t['now']}%)  b={t['b_absent']} per starter-share out; {t['share_weeks_with_absence']:.0%} of games have one")
         fw = future_weeks(df, pos, c["k"], c["rho"])
         print(f"[{pos}] weeks past the lines (n={fw['n']}): defense only -{fw['defense_only_gain_pct']}%, "
               f"with modeled lines -{fw['with_modeled_lines_gain_pct']}%")

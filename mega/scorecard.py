@@ -256,12 +256,38 @@ def live_blend(rows: list[dict]) -> dict:
             "active": tested >= MIN_TESTED and gain > 0}
 
 
+MATCHUP_EDGE = 5.0      # matchup tags at +5% or better / -5% or worse are the ones the page calls out
+
+
+def grade_matchups(snaps: dict, act: pd.DataFrame) -> dict:
+    """The published matchup % for every ranked player, against what he then scored relative
+    to his own average before that week: did good matchups beat it and tough ones fall short?"""
+    rows = []
+    for week, rk in snaps.items():
+        for r in rk.get("rows") or []:
+            pct, g = r.get("matchup_pct"), r.get("gsis_id")
+            if pct is None or not g:
+                continue
+            mine = act[act["gsis_id"] == g]
+            before = mine.loc[mine["week"] < week, "half_ppr"]
+            now = mine.loc[mine["week"] == week, "half_ppr"]
+            if len(before) < 2 or not len(now) or before.mean() < MIN_PROJ:
+                continue
+            rows.append({"bucket": "good" if pct >= MATCHUP_EDGE else "tough" if pct <= -MATCHUP_EDGE else "neutral",
+                         "pts": float(now.iloc[0]), "avg": float(before.mean())})
+    if not rows:
+        return {}
+    d = pd.DataFrame(rows)
+    return {b: {"n": len(g), "vs_avg_pct": round(float(100 * (g["pts"].sum() / g["avg"].sum() - 1)), 1)}
+            for b, g in d.groupby("bucket")}
+
+
 def build(season: int, now_week: int) -> dict:
     """Every finished week with a pre-kickoff snapshot, graded."""
     act = actuals(season)
     played = set(act["week"].unique())
     sched = schedule(season)
-    weeks, proj_rows, wv_snaps = [], [], {}
+    weeks, proj_rows, wv_snaps, rk_snaps = [], [], {}, {}
     for w in sorted(sched):
         if w >= now_week or w not in played:
             continue
@@ -272,6 +298,9 @@ def build(season: int, now_week: int) -> dict:
         lineup = (grade_lineup(ss, by_norm, sched[w]["teams"], _ours_by_name(season, w, before, ss))
                   if int(ss.get("next_week") or 0) == w else None)
         proj = grade_projections(season, w, before, by_gsis)
+        rk_txt = snapshot("data/web/rankings.json", before)
+        if rk_txt and int(json.loads(rk_txt).get("next_week") or 0) == w:
+            rk_snaps[w] = json.loads(rk_txt)
         wv_txt = snapshot("data/web/waivers.json", before)
         if wv_txt:
             wv_snaps[w] = json.loads(wv_txt)
@@ -306,4 +335,5 @@ def build(season: int, now_week: int) -> dict:
         "waivers": waivers,
         "movers": movers,
         "live_blend": lb,
+        "matchups": grade_matchups(rk_snaps, act),
     }
