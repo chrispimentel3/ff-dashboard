@@ -33,6 +33,10 @@ ROOT = Path(__file__).resolve().parents[1]
 ET = ZoneInfo("America/New_York")
 SKILL = ("QB", "RB", "WR", "TE")
 MIN_PROJ = 5.0            # fantasy-relevant: the consensus projects him for 5+ points
+LIVE_BLEND = ROOT / "data" / "build" / "live_blend.json"
+K_LIVE = 150              # (J) player-weeks of "ours only" in every position's live weight
+MIN_TESTED = 4            # walk-forward weeks the live blend has to win before Start/Sit uses it
+W_GRID = [i / 20 for i in range(21)]
 
 
 def _git(*args: str) -> str:
@@ -219,6 +223,39 @@ def grade_movers(snaps: dict, act: pd.DataFrame) -> list[dict]:
     return out
 
 
+def fit_blend(rows: list[dict]) -> dict:
+    """pos -> weight on ours (the rest on the consensus) that missed least on these graded
+    player-weeks, shrunk toward 1.0 (ours alone, what Start/Sit uses) by K_LIVE."""
+    out = {}
+    d = pd.DataFrame(rows)
+    for pos, g in d.groupby("pos"):
+        mae = {w: float((w * g["ours"] + (1 - w) * g["consensus"] - g["actual"]).abs().mean()) for w in W_GRID}
+        best = min(mae, key=mae.get)
+        out[pos] = round((len(g) * best + K_LIVE * 1.0) / (len(g) + K_LIVE), 3)
+    return out
+
+
+def live_blend(rows: list[dict]) -> dict:
+    """Walk forward: fit on the weeks before, grade on the next. The blend switches on for
+    Start/Sit only once it has beaten ours-alone over MIN_TESTED tested weeks."""
+    if not rows:
+        return {"active": False, "weights": {}, "tested": 0}
+    d = pd.DataFrame(rows)
+    weeks = sorted(d["week"].unique())
+    tested, ours_err, blend_err = 0, 0.0, 0.0
+    for w in weeks[1:]:
+        train, test = d[d["week"] < w], d[d["week"] == w]
+        wt = fit_blend(train.to_dict("records"))
+        blended = [x * r.ours + (1 - x) * r.consensus for r, x in zip(test.itertuples(), (wt.get(p, 1.0) for p in test["pos"]))]
+        blend_err += float((pd.Series(blended, index=test.index) - test["actual"]).abs().sum())
+        ours_err += float((test["ours"] - test["actual"]).abs().sum())
+        tested += 1
+    n = len(d[d["week"] > weeks[0]]) or 1
+    gain = (ours_err - blend_err) / n
+    return {"weights": fit_blend(rows), "tested": tested, "mae_gain": round(gain, 3),
+            "active": tested >= MIN_TESTED and gain > 0}
+
+
 def build(season: int, now_week: int) -> dict:
     """Every finished week with a pre-kickoff snapshot, graded."""
     act = actuals(season)
@@ -248,6 +285,11 @@ def build(season: int, now_week: int) -> dict:
     calls = [c for g in graded for c in g["calls"]]
     through = max((x["week"] for x in weeks), default=0)
     waivers = grade_waivers(wv_snaps, act, through) if through else []
+    lb = live_blend(proj_rows)
+    try:
+        LIVE_BLEND.write_text(json.dumps({"season": season, "through_week": through, **lb}, indent=1))
+    except Exception:
+        pass
     movers = grade_movers({w: s for w, s in wv_snaps.items() if w <= through}, act) if through else []
     return {
         "available": bool(weeks), "season": season, "through_week": through,
@@ -263,4 +305,5 @@ def build(season: int, now_week: int) -> dict:
         },
         "waivers": waivers,
         "movers": movers,
+        "live_blend": lb,
     }

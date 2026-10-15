@@ -498,6 +498,18 @@ def _my_roster_projected(season: int, week: int) -> pd.DataFrame:
     r["consensus"] = r["proj"]
     if ours:
         hit = r["gsis_id"].map(ours)
+        # the live blend (mega/scorecard.py live_blend): this season's graded weeks re-weight
+        # ours against the consensus by position — only once it has won the walk-forward test
+        try:
+            import json as _json
+            from mega.scorecard import LIVE_BLEND
+            lb = _json.loads(LIVE_BLEND.read_text())
+            w = (lb.get("weights") or {}) if lb.get("active") and int(lb.get("season", 0)) == int(season) else {}
+        except Exception:
+            w = {}
+        if w:
+            wt = r["pos"].map(lambda p: float(w.get(p, 1.0)))
+            hit = (wt * hit + (1 - wt) * r["consensus"]).where(hit.notna() & r["consensus"].notna(), hit)
         r["proj"] = hit.where(hit.notna(), r["proj"])
         r["proj_source"] = r["proj_source"].where(hit.isna(), "ours")
     v = _vegas(season, week)

@@ -73,3 +73,19 @@ def test_week_expected_only_for_the_week_it_was_built_for():
                                          "g2": {"weeks": {"7": {"expected": 9.0}}}}}
     assert week_expected(2026, 6, d) == {"g1": 12.5}
     assert week_expected(2026, 5, d) == {}
+
+
+def test_the_live_blend_switches_on_only_after_winning_walk_forward():
+    import random
+    rnd = random.Random(3)
+    rows = []
+    for w in range(3, 9):
+        for i in range(60):
+            truth = rnd.uniform(5, 20)
+            rows.append({"week": w, "pos": "QB", "actual": truth,
+                         "ours": truth + rnd.gauss(0, 6),          # ours is noisy at QB...
+                         "consensus": truth + rnd.gauss(0, 2)})    # ...the consensus is not
+    lb = S.live_blend(rows)
+    assert lb["tested"] == 5 and lb["active"] and lb["weights"]["QB"] < 0.8
+    early = S.live_blend([r for r in rows if r["week"] <= 5])
+    assert not early["active"]                                      # two tested weeks: not yet
