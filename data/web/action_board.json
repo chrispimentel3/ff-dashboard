@@ -1,5 +1,5 @@
 {
-  "headline": "19 trades raise your title odds.",
+  "headline": "12 trades raise your title odds.",
   "subhead": "Everything below is ranked by what it adds to your starting nine, not by name.",
   "basis": null,
   "xfp_available": true,
@@ -12,7 +12,11 @@
       "per_g": 6.3346,
       "tgt_pct": 0.1875,
       "tm_rank": 2.0,
-      "why": "scoring +6.3/g more than his opportunity; only 19% of targets"
+      "why": "scoring +6.3/g more than his opportunity; only 19% of targets",
+      "timing": {
+        "call": "after",
+        "why": "sell after week 8: his offense projects 25.3 pts over the next 3 games, 22.6 after \u2014 let the soft stretch lift his value first"
+      }
     },
     {
       "player": "Travis Kelce",
@@ -22,7 +26,11 @@
       "per_g": 4.03075,
       "tgt_pct": 0.12,
       "tm_rank": 4.0,
-      "why": "scoring +4.0/g more than his opportunity; only 12% of targets; #4 option on his own offense"
+      "why": "scoring +4.0/g more than his opportunity; only 12% of targets; #4 option on his own offense",
+      "timing": {
+        "call": "hold",
+        "why": "no rush: his offense projects 22.9 pts over the next 3 games, 25.6 after; his value is already off its high"
+      }
     },
     {
       "player": "Denzel Boston",
@@ -32,7 +40,11 @@
       "per_g": 4.0028,
       "tgt_pct": 0.1894736842,
       "tm_rank": 1.0,
-      "why": "scoring +4.0/g more than his opportunity; only 19% of targets"
+      "why": "scoring +4.0/g more than his opportunity; only 19% of targets",
+      "timing": {
+        "call": "hold",
+        "why": "no rush: his value isn't at its high and his schedule is flat"
+      }
     },
     {
       "player": "George Kittle",
@@ -42,7 +54,11 @@
       "per_g": 2.7974,
       "tgt_pct": 0.2317073171,
       "tm_rank": 2.0,
-      "why": "scoring +2.8/g more than his opportunity"
+      "why": "scoring +2.8/g more than his opportunity",
+      "timing": {
+        "call": "after",
+        "why": "sell after week 8: his offense projects 28.0 pts over the next 3 games, 25.9 after \u2014 let the soft stretch lift his value first"
+      }
     },
     {
       "player": "Jayden Daniels",
@@ -52,7 +68,11 @@
       "per_g": 2.0635333333,
       "tgt_pct": null,
       "tm_rank": null,
-      "why": "scoring +2.1/g more than his opportunity"
+      "why": "scoring +2.1/g more than his opportunity",
+      "timing": {
+        "call": "now",
+        "why": "sell now: his value is at its season high and his schedule doesn't change"
+      }
     }
   ],
   "hold": [
@@ -101,47 +121,34 @@
   "trades": [
     {
       "partner": "Revenge of the Smith",
-      "give": "Emeka Egbuka (WR)",
-      "give_val": 9.8,
-      "get": "Jaylen Waddle (WR)",
-      "get_val": 11.1,
+      "give": "Kaelon Black (RB) + Jayden Daniels (QB)",
+      "give_val": 23.8,
+      "get": "Dak Prescott (QB)",
+      "get_val": 20.3,
       "addresses": "lineup",
-      "fairness": 1.04,
-      "d_title": 0.0155,
-      "thesis": "Jaylen Waddle starts for you over Emeka Egbuka: +1.34 pts/wk to your lineup for the rest of the season.",
-      "d_me": 1.34,
-      "p_accept": 0.67,
-      "flag": "LIKELY",
-      "sits_for_them": []
-    },
-    {
-      "partner": "Don R.I.C.O",
-      "give": "Jayden Daniels (QB)",
-      "give_val": 17.8,
-      "get": "Jalen Hurts (QB)",
-      "get_val": 19.0,
-      "addresses": "lineup",
-      "fairness": 1.28,
-      "d_title": 0.0122,
-      "thesis": "Jalen Hurts starts for you over Jayden Daniels: +1.24 pts/wk to your lineup for the rest of the season.",
-      "d_me": 1.24,
-      "p_accept": 0.714,
-      "flag": "LIKELY",
-      "sits_for_them": []
+      "fairness": 1.22,
+      "d_title": 0.0172,
+      "thesis": "Dak Prescott starts for you over Jayden Daniels: +2.56 pts/wk to your lineup for the rest of the season.",
+      "d_me": 2.56,
+      "p_accept": 0.425,
+      "flag": "EXPLOIT",
+      "sits_for_them": [
+        "Kaelon Black wouldn't start for them (they start James Cook III & Dameon Pierce & Josh Jacobs) \u2014 he counts at 50% of his market value to them"
+      ]
     },
     {
       "partner": "Heartbreak Drake",
-      "give": "Bryce Young (QB) + Denzel Boston (WR)",
-      "give_val": 26.7,
-      "get": "Drake Maye (QB)",
-      "get_val": 19.4,
-      "addresses": "trajectory",
-      "fairness": 1.29,
-      "d_title": 0.011,
-      "thesis": "Drake Maye's role is growing \u2014 share up from 25% to 28%, top fifth at QB \u2014 and we rank him QB4 to consensus QB10.",
-      "d_me": 1.55,
-      "p_accept": 0.704,
-      "flag": "LIKELY",
+      "give": "Christian Watson (WR) + Breece Hall (RB)",
+      "give_val": 24.7,
+      "get": "Jonathan Taylor (RB)",
+      "get_val": 18.7,
+      "addresses": "lineup",
+      "fairness": 1.08,
+      "d_title": 0.0245,
+      "thesis": "Jonathan Taylor starts for you over Breece Hall: +2.92 pts/wk to your lineup for the rest of the season.",
+      "d_me": 2.92,
+      "p_accept": 0.271,
+      "flag": "NEEDS_PITCH",
       "sits_for_them": []
     },
     {
@@ -152,10 +159,10 @@
       "get_val": 15.4,
       "addresses": "lineup",
       "fairness": 1.26,
-      "d_title": 0.018,
+      "d_title": 0.0153,
       "thesis": "Javonte Williams starts for you over Christian Watson: +2.57 pts/wk to your lineup for the rest of the season.",
       "d_me": 2.57,
-      "p_accept": 0.366,
+      "p_accept": 0.365,
       "flag": "EXPLOIT",
       "sits_for_them": []
     },
@@ -167,12 +174,29 @@
       "get_val": 12.2,
       "addresses": "lineup",
       "fairness": 1.08,
-      "d_title": 0.0135,
+      "d_title": 0.0107,
       "thesis": "Cam Skattebo starts for you over Emeka Egbuka: +2.40 pts/wk to your lineup for the rest of the season.",
       "d_me": 2.4,
-      "p_accept": 0.481,
+      "p_accept": 0.476,
       "flag": "EXPLOIT",
       "sits_for_them": []
+    },
+    {
+      "partner": "Crabcakes and Football",
+      "give": "Jayden Daniels (QB) + Breece Hall (RB)",
+      "give_val": 30.5,
+      "get": "Chase Brown (RB)",
+      "get_val": 15.9,
+      "addresses": "consolidation",
+      "fairness": 1.23,
+      "d_title": 0.0183,
+      "thesis": "Two for one: -10.3 this week, but +3.03 pts/wk for the rest of the season \u2014 already net of picking up C.J. Stroud, which you could do anyway.",
+      "d_me": 3.03,
+      "p_accept": 0.169,
+      "flag": "NEEDS_PITCH",
+      "sits_for_them": [
+        "Jayden Daniels wouldn't start for them (they start Patrick Mahomes) \u2014 he counts at 50% of his market value to them"
+      ]
     }
   ],
   "roster_src": "scraped Yahoo rosters",
