@@ -63,13 +63,19 @@ def team_games(season: int) -> pd.DataFrame:
     only whether this week is better or worse than normal for his offense."""
     import nflreadpy as nfl
 
+    from .power import fill
     g = nfl.load_schedules(seasons=[season]).to_pandas()
     g = g[g["game_type"] == "REG"]
+    # a game with no posted line is priced from the market's power ratings (mega/power.py):
+    # backtested on 2023-25, weeks past the posted lines, it beats the defense-only formula at
+    # every position (QB deviance gain 1.14% -> 1.54%, RB 0.07 -> 0.28, WR 0.15 -> 0.26,
+    # TE -0.24 -> -0.01; tools/fit_matchup.py)
+    g = fill(g)
     home = g.assign(team=g["home_team"], opp=g["away_team"],
                      implied=(g["total_line"] + g["spread_line"]) / 2)
     away = g.assign(team=g["away_team"], opp=g["home_team"],
                      implied=(g["total_line"] - g["spread_line"]) / 2)
-    tg = pd.concat([home, away])[["game_id", "week", "team", "opp", "implied", "away_score"]]
+    tg = pd.concat([home, away])[["game_id", "week", "team", "opp", "implied", "away_score", "line_source"]]
     tg["impl_rel"] = tg["implied"] / tg.groupby("team")["implied"].transform("mean")
     tg["played"] = tg["away_score"].notna()
     return tg
@@ -145,7 +151,8 @@ def _week_matchups_core(D: pd.DataFrame, tg: pd.DataFrame, C: dict, from_week: i
             def_component = rating ** c["b_def"]
             if pd.notna(r.impl_rel):
                 vegas_component = float(r.impl_rel) ** c["b_impl"]
-                mult, basis = def_component * vegas_component, "defense+vegas"
+                market = getattr(r, "line_source", "posted") == "model"
+                mult, basis = def_component * vegas_component, "defense+market" if market else "defense+vegas"
                 vegas_pct = round((vegas_component - 1) * 100, 1)
             else:
                 mult, basis = rating ** c["b_def_only"], "defense_only"
@@ -168,8 +175,8 @@ def week_matchups(season: int, from_week: int) -> pd.DataFrame:
     components broken back out (both also as a %-change-to-baseline) so a caller
     can say *why* — "defense +6%, trending toward a shootout on the Vegas line
     +9%" reads as a reason, "+15%" alone doesn't. `basis` is "defense+vegas" once
-    a line exists for that game, else "defense_only" (a week Vegas hasn't priced
-    yet — no line is worse than reaching for a stale one)."""
+    a line is posted for that game, "defense+market" when it's priced from the market's power
+    ratings instead (mega/power.py), and "defense_only" only if neither exists."""
     D = defense_ratings(season, from_week)
     tg = team_games(season)
     return _week_matchups_core(D, tg, constants(), from_week)
