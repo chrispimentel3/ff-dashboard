@@ -1,5 +1,5 @@
 {
-  "headline": "12 trades raise your title odds.",
+  "headline": "1 free agent would start for you and 14 trades raise your title odds.",
   "subhead": "Everything below is ranked by what it adds to your starting nine, not by name.",
   "basis": null,
   "xfp_available": true,
@@ -15,7 +15,7 @@
       "why": "scoring +6.3/g more than his opportunity; only 19% of targets",
       "timing": {
         "call": "after",
-        "why": "sell after week 8: his offense projects 25.3 pts over the next 3 games, 22.6 after \u2014 let the soft stretch lift his value first"
+        "why": "sell after week 8: his offense projects 25.4 pts over the next 3 games, 22.6 after \u2014 let the soft stretch lift his value first"
       }
     },
     {
@@ -105,36 +105,81 @@
       "tgt_pct": 0.2558139535,
       "tm_rank": 1.0,
       "why": "scoring 2.0/g less than his opportunity; 26% target share; his team's #1 option"
-    },
-    {
-      "player": "Kaleb Johnson",
-      "pos": "RB",
-      "slot": "RB",
-      "half_ppr_pg": 2.02,
-      "per_g": -1.5626,
-      "tgt_pct": 0.0267857143,
-      "tm_rank": 10.0,
-      "why": "scoring 1.6/g less than his opportunity"
     }
   ],
-  "waivers": [],
+  "waivers": [
+    {
+      "player": "Kenny Gainwell",
+      "pos": "RB",
+      "gain": 0.273,
+      "bid": 2,
+      "max_bid": 6,
+      "drop": "Dylan Sampson",
+      "why": "+1.2 pts/wk over the next 3 weeks \u2014 starts for you"
+    }
+  ],
   "trades": [
     {
-      "partner": "Revenge of the Smith",
-      "give": "Kaelon Black (RB) + Jayden Daniels (QB)",
-      "give_val": 23.8,
-      "get": "Dak Prescott (QB)",
-      "get_val": 20.3,
+      "partner": "Allen Moore connection",
+      "give": "Emeka Egbuka (WR) + Denzel Boston (WR)",
+      "give_val": 18.8,
+      "get": "Cam Skattebo (RB)",
+      "get_val": 12.2,
       "addresses": "lineup",
       "fairness": 1.22,
-      "d_title": 0.0172,
-      "thesis": "Dak Prescott starts for you over Jayden Daniels: +2.56 pts/wk to your lineup for the rest of the season.",
-      "d_me": 2.56,
-      "p_accept": 0.425,
-      "flag": "EXPLOIT",
+      "d_title": 0.0147,
+      "thesis": "Cam Skattebo starts for you over Emeka Egbuka: +2.36 pts/wk to your lineup for the rest of the season.",
+      "d_me": 2.36,
+      "p_accept": 0.636,
+      "flag": "LIKELY",
+      "sits_for_them": []
+    },
+    {
+      "partner": "Revenge of the Smith",
+      "give": "Emeka Egbuka (WR)",
+      "give_val": 9.8,
+      "get": "Jaylen Waddle (WR)",
+      "get_val": 11.1,
+      "addresses": "lineup",
+      "fairness": 1.14,
+      "d_title": 0.0113,
+      "thesis": "Jaylen Waddle starts for you over Emeka Egbuka: +1.34 pts/wk to your lineup for the rest of the season.",
+      "d_me": 1.34,
+      "p_accept": 0.629,
+      "flag": "LIKELY",
+      "sits_for_them": []
+    },
+    {
+      "partner": "L'Omar",
+      "give": "Kaelon Black (RB) + Christian Watson (WR)",
+      "give_val": 18.0,
+      "get": "Jaylen Warren (RB)",
+      "get_val": 13.0,
+      "addresses": "trajectory",
+      "fairness": 1.19,
+      "d_title": 0.0098,
+      "thesis": "Jaylen Warren's role is growing \u2014 share up from 16% to 20%, top fifth at RB \u2014 and we rank him RB12 to consensus RB21.",
+      "d_me": 1.02,
+      "p_accept": 0.557,
+      "flag": "LIKELY",
       "sits_for_them": [
-        "Kaelon Black wouldn't start for them (they start James Cook III & Dameon Pierce & Josh Jacobs) \u2014 he counts at 50% of his market value to them"
+        "Kaelon Black wouldn't start for them (they start Bucky Irving & Quinshon Judkins) \u2014 he counts at 50% of his market value to them"
       ]
+    },
+    {
+      "partner": "Burrow-Chase combo",
+      "give": "Christian Watson (WR) + Denzel Boston (WR)",
+      "give_val": 20.9,
+      "get": "Javonte Williams (RB)",
+      "get_val": 15.4,
+      "addresses": "lineup",
+      "fairness": 1.21,
+      "d_title": 0.022,
+      "thesis": "Javonte Williams starts for you over Christian Watson: +3.36 pts/wk to your lineup for the rest of the season.",
+      "d_me": 3.36,
+      "p_accept": 0.235,
+      "flag": "NEEDS_PITCH",
+      "sits_for_them": []
     },
     {
       "partner": "Heartbreak Drake",
@@ -143,60 +188,13 @@
       "get": "Jonathan Taylor (RB)",
       "get_val": 18.7,
       "addresses": "lineup",
-      "fairness": 1.08,
-      "d_title": 0.0245,
-      "thesis": "Jonathan Taylor starts for you over Breece Hall: +2.92 pts/wk to your lineup for the rest of the season.",
+      "fairness": 1.05,
+      "d_title": 0.0225,
+      "thesis": "Jonathan Taylor starts for you over Christian Watson: +2.92 pts/wk to your lineup for the rest of the season.",
       "d_me": 2.92,
-      "p_accept": 0.271,
+      "p_accept": 0.217,
       "flag": "NEEDS_PITCH",
       "sits_for_them": []
-    },
-    {
-      "partner": "Burrow-Chase combo",
-      "give": "Christian Watson (WR) + Emeka Egbuka (WR)",
-      "give_val": 21.7,
-      "get": "Javonte Williams (RB)",
-      "get_val": 15.4,
-      "addresses": "lineup",
-      "fairness": 1.26,
-      "d_title": 0.0153,
-      "thesis": "Javonte Williams starts for you over Christian Watson: +2.57 pts/wk to your lineup for the rest of the season.",
-      "d_me": 2.57,
-      "p_accept": 0.365,
-      "flag": "EXPLOIT",
-      "sits_for_them": []
-    },
-    {
-      "partner": "Allen Moore connection",
-      "give": "Emeka Egbuka (WR) + Josh Downs (WR)",
-      "give_val": 18.5,
-      "get": "Cam Skattebo (RB)",
-      "get_val": 12.2,
-      "addresses": "lineup",
-      "fairness": 1.08,
-      "d_title": 0.0107,
-      "thesis": "Cam Skattebo starts for you over Emeka Egbuka: +2.40 pts/wk to your lineup for the rest of the season.",
-      "d_me": 2.4,
-      "p_accept": 0.476,
-      "flag": "EXPLOIT",
-      "sits_for_them": []
-    },
-    {
-      "partner": "Crabcakes and Football",
-      "give": "Jayden Daniels (QB) + Breece Hall (RB)",
-      "give_val": 30.5,
-      "get": "Chase Brown (RB)",
-      "get_val": 15.9,
-      "addresses": "consolidation",
-      "fairness": 1.23,
-      "d_title": 0.0183,
-      "thesis": "Two for one: -10.3 this week, but +3.03 pts/wk for the rest of the season \u2014 already net of picking up C.J. Stroud, which you could do anyway.",
-      "d_me": 3.03,
-      "p_accept": 0.169,
-      "flag": "NEEDS_PITCH",
-      "sits_for_them": [
-        "Jayden Daniels wouldn't start for them (they start Patrick Mahomes) \u2014 he counts at 50% of his market value to them"
-      ]
     }
   ],
   "roster_src": "scraped Yahoo rosters",
