@@ -83,7 +83,7 @@ def build(trades: pd.DataFrame | None, roster_src: str | None, season: int | Non
                 "roster_src": roster_src}
     if theses and theses.get("available"):
         return {"available": True, "version": 3, "cards": theses.get("cards") or [],
-                "windows": theses.get("windows") or [], "deadline": theses.get("deadline"),
+                "deadline": theses.get("deadline"),
                 "meta": theses.get("meta") or {}, "groups": [], "roster_src": roster_src,
                 "impact_available": True}
     if trades is None or trades.empty:

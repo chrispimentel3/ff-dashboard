@@ -147,32 +147,6 @@ def test_every_team_gets_a_profile_and_in_a_two_team_league_nobody_shares_a_need
     assert all(n["gap"] >= TL.NEED_GAP for p in prof.values() for n in p["needs"])
 
 
-def test_a_rival_who_loses_a_starter_at_a_thin_position_opens_a_window():
-    import copy
-    import json
-    import pathlib
-    from mega import trade_engine as te
-    from mega import trade_league as tl
-    from mega import trade_theses as TT
-    league = json.loads((pathlib.Path(__file__).parent / "fixtures" / "sample_league.json").read_text())
-
-    def wins(lg):
-        ctx = te.create_engine(lg).ctx
-        return TT.windows(ctx, 1, tl.team_profiles(ctx))
-
-    assert not [w for w in wins(league) if w["team"] == "Opponent B"]        # thin at RB, but nobody hurt
-    on_ir = copy.deepcopy(league)
-    b = next(t for t in on_ir["teams"] if t["id"] == 3)
-    b["roster"].remove("b_rb1")
-    b["ir"] = ["b_rb1"]                                                      # his 11-pt back goes on IR
-    w = [w for w in wins(on_ir) if w["team"] == "Opponent B"]
-    assert w and w[0]["pos"] == "RB" and w[0]["drop"] == 6.0 and w[0]["lost"][0]["ir"]
-    out = copy.deepcopy(league)
-    out["players"]["b_rb1"]["out"] = {"share": 0.5, "back": 9}               # out half his games instead
-    w = [w for w in wins(out) if w["team"] == "Opponent B"]
-    assert w and w[0]["drop"] == 5.5 and w[0]["lost"][0]["back"] == 9
-
-
 def test_trades_close_after_the_deadline_day(monkeypatch):
     import datetime as dt
     from mega import config, trade_theses as TT
@@ -180,22 +154,4 @@ def test_trades_close_after_the_deadline_day(monkeypatch):
     assert config.trades_open(d) and not config.trades_open(d + dt.timedelta(days=1))
     monkeypatch.setattr(config, "trades_open", lambda today=None: False)
     out = TT.run(2026, 13)
-    assert out["closed"] and out["cards"] == [] and out["windows"] == [] and out["deadline"] == config.TRADE_DEADLINE
-
-
-def test_a_contender_with_starters_on_bye_opens_a_window():
-    import json
-    import pathlib
-    from mega import trade_engine as te
-    from mega import trade_theses as TT
-    league = json.loads((pathlib.Path(__file__).parent / "fixtures" / "sample_league.json").read_text())
-    for pid, p in league["players"].items():
-        p["nfl"] = "AAA" if pid in ("b_wr1", "b_wr2") else "ZZZ"        # B's two best receivers share a team
-    ctx = te.create_engine(league).ctx
-    odds = {"Opponent B": {"p_playoffs": 0.6}}
-    got = [w for w in TT.bye_windows(ctx, 1, {"AAA": 8}, 7, odds) if w["team"] == "Opponent B"]
-    assert got and got[0]["week"] == 8 and got[0]["pos"] == "WR" and got[0]["drop"] == 34.0   # 18 + 16 on bye
-    assert {l["name"] for l in got[0]["lost"]} == {league["players"]["b_wr1"]["name"], league["players"]["b_wr2"]["name"]}
-    assert not TT.bye_windows(ctx, 1, {"AAA": 11}, 7, odds)            # outside the next three weeks
-    odds["Opponent B"]["p_playoffs"] = 0.05                            # out of it: no window
-    assert not TT.bye_windows(ctx, 1, {"AAA": 8}, 7, odds)
+    assert out["closed"] and out["cards"] == [] and out["deadline"] == config.TRADE_DEADLINE
