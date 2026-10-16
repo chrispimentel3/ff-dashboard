@@ -324,6 +324,23 @@ def _offer_gate(passcode: str | None):
     return OL
 
 
+@app.get("/refresh")
+def refresh_status(x_offer_passcode: str | None = Header(default=None)):
+    """Where the site's "Refresh league" request stands (service/refresh_request.py)."""
+    from service import refresh_request as RR
+    _offer_gate(x_offer_passcode)
+    state, _ = _github(RR.read)
+    return state
+
+
+@app.post("/refresh")
+def refresh_queue(x_offer_passcode: str | None = Header(default=None)):
+    """Ask the Mac for a refresh; it picks the request up within a minute while awake."""
+    from service import refresh_request as RR
+    _offer_gate(x_offer_passcode)
+    return _github(RR.request, int(time.time()))
+
+
 @app.get("/offers")
 def offers_list(x_offer_passcode: str | None = Header(default=None)):
     OL = _offer_gate(x_offer_passcode)
