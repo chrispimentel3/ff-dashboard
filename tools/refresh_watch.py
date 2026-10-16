@@ -47,7 +47,7 @@ YAHOO_SAYS = {
 
 
 def log(msg: str) -> None:
-    print(time.strftime("%Y-%m-%d %H:%M:%S"), msg, flush=True)
+    print(time.strftime("%Y-%m-%d %H:%M:%S"), f"[{os.getpid()}]", msg, flush=True)
 
 
 def gh(*args: str) -> subprocess.CompletedProcess:
@@ -108,12 +108,13 @@ def publish(stage: list[str], what: str) -> str | None:
 
 
 def wait_for_raw() -> bool:
-    """Until raw.githubusercontent.com serves the action board we just pushed."""
+    """Until raw.githubusercontent.com serves the action board we just pushed — at the exact URL
+    the site fetches: a cache-busting query would see the push before the site's URL does."""
     want = (ROOT / "data" / "web" / "action_board.json").read_bytes()
     deadline = time.time() + RAW_WAIT
     while time.time() < deadline:
         try:
-            with urllib.request.urlopen(f"{SITE_REPO_RAW}?t={int(time.time())}", timeout=20) as r:
+            with urllib.request.urlopen(SITE_REPO_RAW, timeout=20) as r:
                 if r.read() == want:
                     return True
         except OSError:
