@@ -34,9 +34,10 @@ sys.path.insert(0, str(ROOT))
 
 POS = ["QB", "RB", "WR", "TE"]
 MINB = {"QB": 12, "RB": 6, "WR": 6, "TE": 4}
-SEASONS = list(range(2015, 2026))
+SEASONS = list(range(2015, 2027))
 TRAIN = list(range(2016, 2023))
-TEST = [2023, 2024, 2025]
+TEST = [2023, 2024, 2025, 2026]
+FRESH = 2026          # held out of every earlier fit; scored on its own as well as pooled
 FIT_SEL, VAL_SEL = list(range(2016, 2020)), [2020, 2021, 2022]      # settings are chosen here, never on TEST
 
 
@@ -221,7 +222,7 @@ def future_weeks(df: pd.DataFrame, pos: str, k: float, rho: float) -> dict:
             "with_modeled_lines_gain_pct": round(100 * (dev_base - dev_mod) / dev_base, 3)}
 
 
-def rb_split(df: pd.DataFrame, k: float, rho: float) -> dict:
+def rb_split(df: pd.DataFrame, k: float, rho: float, test=None) -> dict:
     """RBs: a rushing and a receiving defense rating, blended by the back's own mix (his
     share of baseline points from catches), against today's one pooled rating."""
     d = df[df["pos"] == "RB"].copy()
@@ -231,9 +232,10 @@ def rb_split(df: pd.DataFrame, k: float, rho: float) -> dict:
     tot = (d["base_rush_pts"] + d["base_rec_pts"]).replace(0, np.nan)
     mix = (d["base_rec_pts"] / tot).fillna(0.3)
     split = mix * rec + (1 - mix) * rush
-    a = evaluate(df, "RB", k, rho, None, ["def", "impl"], rating_col=pooled)
-    b = evaluate(df, "RB", k, rho, None, ["def", "impl"], rating_col=split)
-    return {"pooled": a["dev_gain_pct"], "split": b["dev_gain_pct"], "mae_pooled": a["mae"], "mae_split": b["mae"],
+    a = evaluate(df, "RB", k, rho, None, ["def", "impl"], rating_col=pooled, test=test)
+    b = evaluate(df, "RB", k, rho, None, ["def", "impl"], rating_col=split, test=test)
+    return {"n": a["n_test"], "pooled": a["dev_gain_pct"], "split": b["dev_gain_pct"],
+            "mae_pooled": a["mae"], "mae_split": b["mae"],
             "beta_split": {kk: round(v, 3) for kk, v in b["beta"].items()}}
 
 
@@ -292,6 +294,21 @@ def absences_test(df: pd.DataFrame, pos: str, k: float, rho: float, ab: pd.DataF
             "b_absent": round(float(beta[-1]), 3), "share_weeks_with_absence": round(float((x > 0).mean()), 3)}
 
 
+def by_season(r: dict) -> str:
+    """Same fit, deviance gain scored one season at a time — a constant that only holds on
+    the seasons it was chosen near is worth knowing about."""
+    d, te, mu = r["_d"], r["_te"], r["_mu"]
+    y, off = np.maximum(d["half_ppr"].to_numpy(), 0.0), np.log(d["base"].to_numpy())
+    out = []
+    for s_ in sorted(d.loc[te, "season"].unique()):
+        m = te & d["season"].eq(s_).to_numpy()
+        b = deviance(y[m], np.exp(off[m]))
+        # signed, + = better than baseline: the house "dev -X%" style prints "--0.7%" when
+        # a season goes the wrong way, which is exactly the season worth reading.
+        out.append(f"{s_}: {100 * (b - deviance(y[m], mu[m])) / b:+.3f}% (n={int(m.sum()):,})")
+    return "  ".join(out)
+
+
 def main() -> None:
     df = load_rows()
     print(f"[matchup] {len(df):,} player-games, {df['season'].min()}-{df['season'].max()}")
@@ -305,10 +322,12 @@ def main() -> None:
             ch = choose(df, pos, feats_options=(("def", "impl"), ("def", "impl", "spread")), hls=(None, 2.0, 4.0, 8.0))
             r = evaluate(df, pos, ch["k"], ch["rho"], ch["hl"], ch["feats"])
             print(f"[{pos}] chosen on 2020-22 {ch}:  {line(r)}  {({k: round(v, 3) for k, v in r['beta'].items()})}")
+        print(f"[{pos}] by season (+ = better than baseline):  {by_season(cur)}")
         if pos == "RB":
-            sp = rb_split(df, c["k"], c["rho"])
-            print(f"[RB] rushing/receiving split: dev -{sp['split']}% (pooled -{sp['pooled']}%), "
-                  f"MAE {sp['mae_split']} vs {sp['mae_pooled']}  {sp['beta_split']}")
+            for label, t in (("2023-26", None), (f"{FRESH} only", [FRESH])):
+                sp = rb_split(df, c["k"], c["rho"], test=t)
+                print(f"[RB] rush/rec split, {label} (n={sp['n']:,}): {sp['split']:+.3f}% "
+                      f"vs pooled {sp['pooled']:+.3f}%, MAE {sp['mae_split']} vs {sp['mae_pooled']}")
         if "--absences" in sys.argv:
             ab = AB if "AB" in globals() else None
             if ab is None:

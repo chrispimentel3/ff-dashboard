@@ -3,17 +3,105 @@
   "version": 3,
   "cards": [
     {
-      "partner": "Don R.I.C.O",
+      "partner": "L'Omar",
+      "shape": "1-for-1",
+      "partner_profile": {
+        "needs": [
+          {
+            "pos": "TE",
+            "gap": 2.8
+          }
+        ],
+        "spare": []
+      },
+      "give": [
+        {
+          "name": "Christian Watson",
+          "pos": "WR",
+          "ros_pg": 12.26
+        }
+      ],
+      "get": [
+        {
+          "name": "Jaylen Warren",
+          "pos": "RB",
+          "ros_pg": 15.44
+        }
+      ],
+      "tags": [
+        "LINEUP"
+      ],
+      "all_tags": [
+        "LINEUP"
+      ],
+      "thesis": "Jaylen Warren starts for you over Christian Watson: +3.18 pts/wk to your lineup for the rest of the season.",
+      "kill": "Wrong if Jaylen Warren's projection falls below Christian Watson's (15.4 vs 12.3 now).",
+      "second": null,
+      "us": {
+        "d_week": 3.89,
+        "d_ros": 3.18,
+        "d_title": 0.0303,
+        "se_title": 0.0039,
+        "title_noise": false,
+        "p_title": 0.094,
+        "p_playoffs": 0.63
+      },
+      "them": {
+        "d_week": -3.89,
+        "d_ros": -3.18,
+        "d_title": -0.0287,
+        "se_title": 0.0035,
+        "title_noise": false,
+        "p_playoffs_now": 0.5523
+      },
+      "i_would_start": [
+        "Jaylen Warren"
+      ],
+      "i_would_bench": [],
+      "netted_free_swap": false,
+      "they_would_start": [
+        "Christian Watson"
+      ],
+      "they_would_bench": [],
+      "fa_add": null,
+      "pitch": "They start Jaylen Warren at RB (15.4/g) and sit at 55% playoff odds.",
+      "p_accept": 0.349,
+      "flag": "EXPLOIT",
+      "exp_title": 0.0106,
+      "exp_ros": 1.111,
+      "fairness": 1.28,
+      "sits_for_them": [],
+      "ranks": {
+        "give": [
+          {
+            "name": "Christian Watson",
+            "pos": "WR",
+            "our_rank": 12,
+            "ecr_rank": 14,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ],
+        "get": [
+          {
+            "name": "Jaylen Warren",
+            "pos": "RB",
+            "our_rank": 14,
+            "ecr_rank": 10,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ]
+      }
+    },
+    {
+      "partner": "L'Omar",
       "shape": "2-for-1",
       "partner_profile": {
         "needs": [
           {
-            "pos": "QB",
-            "gap": 2.1
-          },
-          {
-            "pos": "WR",
-            "gap": 1.8
+            "pos": "TE",
+            "gap": 2.8
           }
         ],
         "spare": []
@@ -22,19 +110,126 @@
         {
           "name": "Kaelon Black",
           "pos": "RB",
-          "ros_pg": 5.9
+          "ros_pg": 6.02
         },
         {
-          "name": "Christian Watson",
+          "name": "Emeka Egbuka",
           "pos": "WR",
-          "ros_pg": 12.21
+          "ros_pg": 10.05
         }
       ],
       "get": [
         {
-          "name": "Chuba Hubbard",
+          "name": "Quinshon Judkins",
           "pos": "RB",
-          "ros_pg": 13.49
+          "ros_pg": 12.06
+        }
+      ],
+      "tags": [
+        "BUY_LOW",
+        "LINEUP"
+      ],
+      "all_tags": [
+        "BUY_LOW",
+        "LINEUP"
+      ],
+      "thesis": "Buy Quinshon Judkins low: -4.5 pts/g under what his usage earns, and his usage ranks RB19 against consensus RB21.",
+      "kill": "Wrong if his share of his team's expected points falls below 15% (now 21%, minus one sd).",
+      "second": {
+        "tag": "LINEUP",
+        "thesis": "Quinshon Judkins starts for you over Emeka Egbuka: +2.01 pts/wk to your lineup for the rest of the season."
+      },
+      "us": {
+        "d_week": 1.86,
+        "d_ros": 2.01,
+        "d_title": 0.0203,
+        "se_title": 0.0038,
+        "title_noise": false,
+        "p_title": 0.084,
+        "p_playoffs": 0.589
+      },
+      "them": {
+        "d_week": -1.86,
+        "d_ros": -2.01,
+        "d_title": -0.0235,
+        "se_title": 0.0037,
+        "title_noise": false,
+        "p_playoffs_now": 0.5523
+      },
+      "i_would_start": [
+        "Quinshon Judkins"
+      ],
+      "i_would_bench": [],
+      "netted_free_swap": true,
+      "they_would_start": [
+        "Emeka Egbuka"
+      ],
+      "they_would_bench": [],
+      "fa_add": null,
+      "pitch": "They start Quinshon Judkins at FLEX (12.1/g) and sit at 55% playoff odds.",
+      "p_accept": 0.411,
+      "flag": "EXPLOIT",
+      "exp_title": 0.00837,
+      "exp_ros": 0.827,
+      "fairness": 1.22,
+      "sits_for_them": [
+        "Kaelon Black wouldn't start for them (they start Jaylen Warren & Bucky Irving) \u2014 he counts at 50% of his market value to them"
+      ],
+      "ranks": {
+        "give": [
+          {
+            "name": "Kaelon Black",
+            "pos": "RB",
+            "our_rank": 86,
+            "ecr_rank": 51,
+            "driver": "usage",
+            "view": "consensus view"
+          },
+          {
+            "name": "Emeka Egbuka",
+            "pos": "WR",
+            "our_rank": 19,
+            "ecr_rank": 33,
+            "driver": "usage",
+            "view": "consensus view"
+          }
+        ],
+        "get": [
+          {
+            "name": "Quinshon Judkins",
+            "pos": "RB",
+            "our_rank": 21,
+            "ecr_rank": 21,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ]
+      }
+    },
+    {
+      "partner": "Allen Moore connection",
+      "shape": "1-for-1",
+      "partner_profile": {
+        "needs": [
+          {
+            "pos": "WR",
+            "gap": 9.8
+          }
+        ],
+        "spare": []
+      },
+      "give": [
+        {
+          "name": "Emeka Egbuka",
+          "pos": "WR",
+          "ros_pg": 10.05
+        }
+      ],
+      "get": [
+        {
+          "name": "Cam Skattebo",
+          "pos": "RB",
+          "ros_pg": 12.48
         }
       ],
       "tags": [
@@ -43,25 +238,473 @@
       "all_tags": [
         "LINEUP"
       ],
-      "thesis": "Chuba Hubbard starts for you over Christian Watson: +1.28 pts/wk to your lineup for the rest of the season.",
-      "kill": "Wrong if Chuba Hubbard's projection falls below Christian Watson's (13.5 vs 12.2 now).",
+      "thesis": "Cam Skattebo starts for you over Emeka Egbuka: +2.43 pts/wk to your lineup for the rest of the season.",
+      "kill": "Wrong if Cam Skattebo's projection falls below Emeka Egbuka's (12.5 vs 10.1 now).",
       "second": null,
       "us": {
-        "d_week": 2.43,
-        "d_ros": 1.28,
-        "d_title": 0.0138,
+        "d_week": 0.58,
+        "d_ros": 2.43,
+        "d_title": 0.0137,
+        "se_title": 0.0034,
+        "title_noise": false,
+        "p_title": 0.0773,
+        "p_playoffs": 0.5492
+      },
+      "them": {
+        "d_week": -7.31,
+        "d_ros": -2.43,
+        "d_title": -0.0005,
+        "se_title": 0.0006,
+        "title_noise": true,
+        "p_playoffs_now": 0.0293
+      },
+      "i_would_start": [
+        "Cam Skattebo"
+      ],
+      "i_would_bench": [],
+      "netted_free_swap": false,
+      "they_would_start": [
+        "Emeka Egbuka"
+      ],
+      "they_would_bench": [],
+      "fa_add": null,
+      "pitch": "They start Cam Skattebo at RB (12.5/g) and sit at 3% playoff odds.",
+      "p_accept": 0.608,
+      "flag": "LIKELY",
+      "exp_title": 0.00831,
+      "exp_ros": 1.477,
+      "fairness": 1.3,
+      "sits_for_them": [],
+      "ranks": {
+        "give": [
+          {
+            "name": "Emeka Egbuka",
+            "pos": "WR",
+            "our_rank": 19,
+            "ecr_rank": 33,
+            "driver": "usage",
+            "view": "consensus view"
+          }
+        ],
+        "get": [
+          {
+            "name": "Cam Skattebo",
+            "pos": "RB",
+            "our_rank": 19,
+            "ecr_rank": 19,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ]
+      }
+    },
+    {
+      "partner": "deez nuts",
+      "shape": "2-for-1",
+      "partner_profile": {
+        "needs": [
+          {
+            "pos": "TE",
+            "gap": 1.6
+          }
+        ],
+        "spare": []
+      },
+      "give": [
+        {
+          "name": "Christian McCaffrey",
+          "pos": "RB",
+          "ros_pg": 18.51
+        },
+        {
+          "name": "Malik Nabers",
+          "pos": "WR",
+          "ros_pg": 12.68
+        }
+      ],
+      "get": [
+        {
+          "name": "Jahmyr Gibbs",
+          "pos": "RB",
+          "ros_pg": 23.7
+        }
+      ],
+      "tags": [
+        "LINEUP",
+        "PORTFOLIO"
+      ],
+      "all_tags": [
+        "LINEUP",
+        "PORTFOLIO"
+      ],
+      "thesis": "Jahmyr Gibbs starts for you over Christian McCaffrey: +1.73 pts/wk to your lineup for the rest of the season.",
+      "kill": "Wrong if Jahmyr Gibbs's projection falls below Christian McCaffrey's (23.7 vs 18.5 now).",
+      "second": {
+        "tag": "PORTFOLIO",
+        "thesis": "Spreads your byes: 3 starters off in week 8 today, 2 at most after."
+      },
+      "us": {
+        "d_week": 2.92,
+        "d_ros": 1.73,
+        "d_title": 0.03,
+        "se_title": 0.0044,
+        "title_noise": false,
+        "p_title": 0.0937,
+        "p_playoffs": 0.6217
+      },
+      "them": {
+        "d_week": -9.72,
+        "d_ros": -2.58,
+        "d_title": -0.0463,
+        "se_title": 0.0054,
+        "title_noise": false,
+        "p_playoffs_now": 0.8077
+      },
+      "i_would_start": [
+        "Jahmyr Gibbs",
+        "Josh Downs"
+      ],
+      "i_would_bench": [],
+      "netted_free_swap": true,
+      "they_would_start": [
+        "Christian McCaffrey",
+        "Malik Nabers"
+      ],
+      "they_would_bench": [
+        "Luther Burden III"
+      ],
+      "fa_add": null,
+      "pitch": "They start Jahmyr Gibbs at RB (23.7/g) and sit at 81% playoff odds.",
+      "p_accept": 0.27,
+      "flag": "NEEDS_PITCH",
+      "exp_title": 0.00811,
+      "exp_ros": 0.467,
+      "fairness": 1.24,
+      "sits_for_them": [],
+      "ranks": {
+        "give": [
+          {
+            "name": "Christian McCaffrey",
+            "pos": "RB",
+            "our_rank": 3,
+            "ecr_rank": 5,
+            "driver": "efficiency",
+            "view": "consensus view"
+          },
+          {
+            "name": "Malik Nabers",
+            "pos": "WR",
+            "our_rank": 9,
+            "ecr_rank": 12,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ],
+        "get": [
+          {
+            "name": "Jahmyr Gibbs",
+            "pos": "RB",
+            "our_rank": 1,
+            "ecr_rank": 1,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ]
+      }
+    },
+    {
+      "partner": "Don R.I.C.O",
+      "shape": "2-for-1",
+      "partner_profile": {
+        "needs": [
+          {
+            "pos": "WR",
+            "gap": 3.3
+          },
+          {
+            "pos": "QB",
+            "gap": 2.3
+          }
+        ],
+        "spare": []
+      },
+      "give": [
+        {
+          "name": "Christian Watson",
+          "pos": "WR",
+          "ros_pg": 12.26
+        },
+        {
+          "name": "Malik Nabers",
+          "pos": "WR",
+          "ros_pg": 12.68
+        }
+      ],
+      "get": [
+        {
+          "name": "Jaxon Smith-Njigba",
+          "pos": "WR",
+          "ros_pg": 18.73
+        }
+      ],
+      "tags": [
+        "LINEUP",
+        "PORTFOLIO"
+      ],
+      "all_tags": [
+        "LINEUP",
+        "PORTFOLIO"
+      ],
+      "thesis": "Jaxon Smith-Njigba starts for you over Malik Nabers: +3.01 pts/wk to your lineup for the rest of the season.",
+      "kill": "Wrong if Jaxon Smith-Njigba's projection falls below Malik Nabers's (18.7 vs 12.7 now).",
+      "second": {
+        "tag": "PORTFOLIO",
+        "thesis": "Spreads your byes: 3 starters off in week 8 today, 2 at most after."
+      },
+      "us": {
+        "d_week": 3.15,
+        "d_ros": 3.01,
+        "d_title": 0.0227,
+        "se_title": 0.0042,
+        "title_noise": false,
+        "p_title": 0.0863,
+        "p_playoffs": 0.616
+      },
+      "them": {
+        "d_week": -1.5,
+        "d_ros": -2.18,
+        "d_title": -0.0253,
+        "se_title": 0.0041,
+        "title_noise": false,
+        "p_playoffs_now": 0.6177
+      },
+      "i_would_start": [
+        "Jaxon Smith-Njigba",
+        "Josh Downs"
+      ],
+      "i_would_bench": [],
+      "netted_free_swap": true,
+      "they_would_start": [
+        "Malik Nabers",
+        "Christian Watson"
+      ],
+      "they_would_bench": [
+        "Deebo Samuel Sr."
+      ],
+      "fa_add": null,
+      "pitch": "They start Jaxon Smith-Njigba at WR (18.7/g) and sit at 62% playoff odds.",
+      "p_accept": 0.312,
+      "flag": "EXPLOIT",
+      "exp_title": 0.00706,
+      "exp_ros": 0.937,
+      "fairness": 1.06,
+      "sits_for_them": [],
+      "ranks": {
+        "give": [
+          {
+            "name": "Christian Watson",
+            "pos": "WR",
+            "our_rank": 12,
+            "ecr_rank": 14,
+            "driver": "efficiency",
+            "view": "consensus view"
+          },
+          {
+            "name": "Malik Nabers",
+            "pos": "WR",
+            "our_rank": 9,
+            "ecr_rank": 12,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ],
+        "get": [
+          {
+            "name": "Jaxon Smith-Njigba",
+            "pos": "WR",
+            "our_rank": 2,
+            "ecr_rank": 1,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ]
+      }
+    },
+    {
+      "partner": "Crabcakes and Football",
+      "shape": "2-for-1",
+      "partner_profile": {
+        "needs": [
+          {
+            "pos": "RB",
+            "gap": 8.5
+          }
+        ],
+        "spare": []
+      },
+      "give": [
+        {
+          "name": "Kaelon Black",
+          "pos": "RB",
+          "ros_pg": 6.02
+        },
+        {
+          "name": "Malik Nabers",
+          "pos": "WR",
+          "ros_pg": 12.68
+        }
+      ],
+      "get": [
+        {
+          "name": "Chase Brown",
+          "pos": "RB",
+          "ros_pg": 14.78
+        }
+      ],
+      "tags": [
+        "LINEUP",
+        "PORTFOLIO"
+      ],
+      "all_tags": [
+        "LINEUP",
+        "PORTFOLIO"
+      ],
+      "thesis": "Chase Brown starts for you over Malik Nabers: +2.10 pts/wk to your lineup for the rest of the season.",
+      "kill": "Wrong if Chase Brown's projection falls below Malik Nabers's (14.8 vs 12.7 now).",
+      "second": {
+        "tag": "PORTFOLIO",
+        "thesis": "Spreads your byes: 3 starters off in week 8 today, 2 at most after."
+      },
+      "us": {
+        "d_week": 3.01,
+        "d_ros": 2.1,
+        "d_title": 0.0258,
+        "se_title": 0.004,
+        "title_noise": false,
+        "p_title": 0.0895,
+        "p_playoffs": 0.6093
+      },
+      "them": {
+        "d_week": -4.88,
+        "d_ros": -3.07,
+        "d_title": -0.0367,
+        "se_title": 0.0058,
+        "title_noise": false,
+        "p_playoffs_now": 0.9422
+      },
+      "i_would_start": [
+        "Chase Brown"
+      ],
+      "i_would_bench": [],
+      "netted_free_swap": true,
+      "they_would_start": [
+        "Kyle Monangai",
+        "Malik Nabers"
+      ],
+      "they_would_bench": [
+        "Mike Evans"
+      ],
+      "fa_add": null,
+      "pitch": "They start Chase Brown at RB (14.8/g) and sit at 94% playoff odds.",
+      "p_accept": 0.226,
+      "flag": "NEEDS_PITCH",
+      "exp_title": 0.00583,
+      "exp_ros": 0.474,
+      "fairness": 1.27,
+      "sits_for_them": [
+        "Kaelon Black wouldn't start for them (they start Rhamondre Stevenson & Kyle Monangai) \u2014 he counts at 50% of his market value to them"
+      ],
+      "ranks": {
+        "give": [
+          {
+            "name": "Kaelon Black",
+            "pos": "RB",
+            "our_rank": 86,
+            "ecr_rank": 51,
+            "driver": "usage",
+            "view": "consensus view"
+          },
+          {
+            "name": "Malik Nabers",
+            "pos": "WR",
+            "our_rank": 9,
+            "ecr_rank": 12,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ],
+        "get": [
+          {
+            "name": "Chase Brown",
+            "pos": "RB",
+            "our_rank": 16,
+            "ecr_rank": 11,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ]
+      }
+    },
+    {
+      "partner": "Don R.I.C.O",
+      "shape": "2-for-1",
+      "partner_profile": {
+        "needs": [
+          {
+            "pos": "WR",
+            "gap": 3.3
+          },
+          {
+            "pos": "QB",
+            "gap": 2.3
+          }
+        ],
+        "spare": []
+      },
+      "give": [
+        {
+          "name": "Christian Watson",
+          "pos": "WR",
+          "ros_pg": 12.26
+        },
+        {
+          "name": "Denzel Boston",
+          "pos": "WR",
+          "ros_pg": 9.1
+        }
+      ],
+      "get": [
+        {
+          "name": "Chuba Hubbard",
+          "pos": "RB",
+          "ros_pg": 13.93
+        }
+      ],
+      "tags": [
+        "LINEUP"
+      ],
+      "all_tags": [
+        "LINEUP"
+      ],
+      "thesis": "Chuba Hubbard starts for you over Christian Watson: +1.62 pts/wk to your lineup for the rest of the season.",
+      "kill": "Wrong if Chuba Hubbard's projection falls below Christian Watson's (13.9 vs 12.3 now).",
+      "second": null,
+      "us": {
+        "d_week": 1.42,
+        "d_ros": 1.62,
+        "d_title": 0.008,
         "se_title": 0.0037,
         "title_noise": false,
         "p_title": 0.0717,
-        "p_playoffs": 0.6385
+        "p_playoffs": 0.5783
       },
       "them": {
-        "d_week": -0.15,
-        "d_ros": -1.11,
-        "d_title": -0.0142,
-        "se_title": 0.0044,
-        "title_noise": false,
-        "p_playoffs_now": 0.6735
+        "d_week": 0.23,
+        "d_ros": -0.96,
+        "d_title": -0.0058,
+        "se_title": 0.0041,
+        "title_noise": true,
+        "p_playoffs_now": 0.6177
       },
       "i_would_start": [
         "Chuba Hubbard"
@@ -70,36 +713,34 @@
       "netted_free_swap": true,
       "they_would_start": [
         "Christian Watson",
-        "Rico Dowdle"
+        "Denzel Boston"
       ],
       "they_would_bench": [
-        "Ladd McConkey"
+        "Deebo Samuel Sr."
       ],
       "fa_add": null,
-      "pitch": "They start Chuba Hubbard at RB (13.5/g) and sit at 67% playoff odds.",
-      "p_accept": 0.639,
+      "pitch": "They start Chuba Hubbard at RB (13.9/g) and sit at 62% playoff odds.",
+      "p_accept": 0.693,
       "flag": "LIKELY",
-      "exp_title": 0.00884,
-      "exp_ros": 0.818,
-      "fairness": 1.23,
-      "sits_for_them": [
-        "Kaelon Black wouldn't start for them (they start Derrick Henry & Emanuel Wilson & Rico Dowdle) \u2014 he counts at 50% of his market value to them"
-      ],
+      "exp_title": 0.00554,
+      "exp_ros": 1.121,
+      "fairness": 1.22,
+      "sits_for_them": [],
       "ranks": {
         "give": [
           {
-            "name": "Kaelon Black",
-            "pos": "RB",
-            "our_rank": 88,
-            "ecr_rank": 51,
-            "driver": "usage",
+            "name": "Christian Watson",
+            "pos": "WR",
+            "our_rank": 12,
+            "ecr_rank": 14,
+            "driver": "efficiency",
             "view": "consensus view"
           },
           {
-            "name": "Christian Watson",
+            "name": "Denzel Boston",
             "pos": "WR",
-            "our_rank": 11,
-            "ecr_rank": 14,
+            "our_rank": 32,
+            "ecr_rank": 35,
             "driver": "efficiency",
             "view": "consensus view"
           }
@@ -108,7 +749,7 @@
           {
             "name": "Chuba Hubbard",
             "pos": "RB",
-            "our_rank": 21,
+            "our_rank": 18,
             "ecr_rank": 12,
             "driver": "usage",
             "view": "consensus view"
@@ -117,33 +758,279 @@
       }
     },
     {
-      "partner": "Revenge of the Smith",
-      "shape": "1-for-1",
+      "partner": "Saquon Hater",
+      "shape": "2-for-1",
       "partner_profile": {
         "needs": [
           {
             "pos": "RB",
-            "gap": 7.3
+            "gap": 11.4
           },
           {
             "pos": "TE",
-            "gap": 1.4
+            "gap": 3.4
+          },
+          {
+            "pos": "QB",
+            "gap": 1.8
           }
         ],
         "spare": []
       },
       "give": [
         {
-          "name": "Jayden Daniels",
-          "pos": "QB",
-          "ros_pg": 17.75
+          "name": "Malik Nabers",
+          "pos": "WR",
+          "ros_pg": 12.68
+        },
+        {
+          "name": "Travis Kelce",
+          "pos": "TE",
+          "ros_pg": 8.41
         }
       ],
       "get": [
         {
-          "name": "Dak Prescott",
-          "pos": "QB",
-          "ros_pg": 20.27
+          "name": "Amon-Ra St. Brown",
+          "pos": "WR",
+          "ros_pg": 16.9
+        }
+      ],
+      "tags": [
+        "BUY_LOW",
+        "LINEUP"
+      ],
+      "all_tags": [
+        "BUY_LOW",
+        "LINEUP",
+        "PORTFOLIO"
+      ],
+      "thesis": "Buy Amon-Ra St. Brown low: -6.0 pts/g under what his usage earns, and his usage ranks WR2 against consensus WR3.",
+      "kill": "Wrong if his share of his team's expected points falls below 12% (now 16%, minus one sd).",
+      "second": {
+        "tag": "LINEUP",
+        "thesis": "Amon-Ra St. Brown starts for you over Malik Nabers: +4.08 pts/wk to your lineup for the rest of the season."
+      },
+      "us": {
+        "d_week": 5.67,
+        "d_ros": 4.08,
+        "d_title": 0.0228,
+        "se_title": 0.0037,
+        "title_noise": false,
+        "p_title": 0.0865,
+        "p_playoffs": 0.6237
+      },
+      "them": {
+        "d_week": -5.28,
+        "d_ros": -2.25,
+        "d_title": -0.0015,
+        "se_title": 0.0014,
+        "title_noise": true,
+        "p_playoffs_now": 0.1387
+      },
+      "i_would_start": [
+        "Amon-Ra St. Brown"
+      ],
+      "i_would_bench": [],
+      "netted_free_swap": true,
+      "they_would_start": [
+        "Malik Nabers",
+        "Travis Kelce"
+      ],
+      "they_would_bench": [
+        "Pat Freiermuth"
+      ],
+      "fa_add": null,
+      "pitch": "They start Amon-Ra St. Brown at WR (16.9/g) and sit at 14% playoff odds.",
+      "p_accept": 0.24,
+      "flag": "NEEDS_PITCH",
+      "exp_title": 0.00548,
+      "exp_ros": 0.978,
+      "fairness": 0.88,
+      "sits_for_them": [],
+      "ranks": {
+        "give": [
+          {
+            "name": "Malik Nabers",
+            "pos": "WR",
+            "our_rank": 9,
+            "ecr_rank": 12,
+            "driver": "efficiency",
+            "view": "consensus view"
+          },
+          {
+            "name": "Travis Kelce",
+            "pos": "TE",
+            "our_rank": 11,
+            "ecr_rank": 8,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ],
+        "get": [
+          {
+            "name": "Amon-Ra St. Brown",
+            "pos": "WR",
+            "our_rank": 3,
+            "ecr_rank": 3,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ]
+      }
+    },
+    {
+      "partner": "Heartbreak Drake",
+      "shape": "2-for-1",
+      "partner_profile": {
+        "needs": [
+          {
+            "pos": "WR",
+            "gap": 5.3
+          }
+        ],
+        "spare": []
+      },
+      "give": [
+        {
+          "name": "Denzel Boston",
+          "pos": "WR",
+          "ros_pg": 9.1
+        },
+        {
+          "name": "Malik Nabers",
+          "pos": "WR",
+          "ros_pg": 12.68
+        }
+      ],
+      "get": [
+        {
+          "name": "Ashton Jeanty",
+          "pos": "RB",
+          "ros_pg": 14.36
+        }
+      ],
+      "tags": [
+        "BUY_LOW",
+        "LINEUP"
+      ],
+      "all_tags": [
+        "BUY_LOW",
+        "LINEUP",
+        "PORTFOLIO"
+      ],
+      "thesis": "Buy Ashton Jeanty low: -6.5 pts/g under what his usage earns, and his usage ranks RB11 against consensus RB14.",
+      "kill": "Wrong if his share of his team's expected points falls below 10% (now 17%, minus one sd).",
+      "second": {
+        "tag": "LINEUP",
+        "thesis": "Ashton Jeanty starts for you over Malik Nabers: +1.63 pts/wk to your lineup for the rest of the season."
+      },
+      "us": {
+        "d_week": 3.02,
+        "d_ros": 1.63,
+        "d_title": 0.0185,
+        "se_title": 0.0039,
+        "title_noise": false,
+        "p_title": 0.0822,
+        "p_playoffs": 0.5742
+      },
+      "them": {
+        "d_week": -3.04,
+        "d_ros": -1.62,
+        "d_title": -0.0418,
+        "se_title": 0.0046,
+        "title_noise": false,
+        "p_playoffs_now": 0.736
+      },
+      "i_would_start": [
+        "Ashton Jeanty"
+      ],
+      "i_would_bench": [],
+      "netted_free_swap": true,
+      "they_would_start": [
+        "Malik Nabers"
+      ],
+      "they_would_bench": [],
+      "fa_add": null,
+      "pitch": "They start Ashton Jeanty at RB (14.4/g) and sit at 74% playoff odds.",
+      "p_accept": 0.293,
+      "flag": "NEEDS_PITCH",
+      "exp_title": 0.00542,
+      "exp_ros": 0.477,
+      "fairness": 1.29,
+      "sits_for_them": [
+        "Denzel Boston wouldn't start for them (they start Nico Collins & Malik Nabers & Tetairoa McMillan) \u2014 he counts at 50% of his market value to them"
+      ],
+      "ranks": {
+        "give": [
+          {
+            "name": "Denzel Boston",
+            "pos": "WR",
+            "our_rank": 32,
+            "ecr_rank": 35,
+            "driver": "efficiency",
+            "view": "consensus view"
+          },
+          {
+            "name": "Malik Nabers",
+            "pos": "WR",
+            "our_rank": 9,
+            "ecr_rank": 12,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ],
+        "get": [
+          {
+            "name": "Ashton Jeanty",
+            "pos": "RB",
+            "our_rank": 13,
+            "ecr_rank": 14,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ]
+      }
+    },
+    {
+      "partner": "BillsMafia",
+      "shape": "2-for-1",
+      "partner_profile": {
+        "needs": [
+          {
+            "pos": "TE",
+            "gap": 1.8
+          },
+          {
+            "pos": "RB",
+            "gap": 1.1
+          }
+        ],
+        "spare": [
+          {
+            "name": "Michael Wilson",
+            "pos": "WR",
+            "ppg": 11.7
+          }
+        ]
+      },
+      "give": [
+        {
+          "name": "Travis Kelce",
+          "pos": "TE",
+          "ros_pg": 8.41
+        },
+        {
+          "name": "Breece Hall",
+          "pos": "RB",
+          "ros_pg": 12.14
+        }
+      ],
+      "get": [
+        {
+          "name": "D'Andre Swift",
+          "pos": "RB",
+          "ros_pg": 14.9
         }
       ],
       "tags": [
@@ -152,42 +1039,276 @@
       "all_tags": [
         "LINEUP"
       ],
-      "thesis": "Dak Prescott starts for you over Jayden Daniels: +2.52 pts/wk to your lineup for the rest of the season.",
-      "kill": "Wrong if Dak Prescott's projection falls below Jayden Daniels's (20.3 vs 17.8 now).",
+      "thesis": "D'Andre Swift starts for you over Breece Hall: +2.62 pts/wk to your lineup for the rest of the season.",
+      "kill": "Wrong if D'Andre Swift's projection falls below Breece Hall's (14.9 vs 12.1 now).",
       "second": null,
       "us": {
-        "d_week": 1.37,
-        "d_ros": 2.52,
-        "d_title": 0.0162,
-        "se_title": 0.0035,
+        "d_week": 5.22,
+        "d_ros": 2.62,
+        "d_title": 0.0132,
+        "se_title": 0.0038,
         "title_noise": false,
-        "p_title": 0.074,
-        "p_playoffs": 0.5963
+        "p_title": 0.0768,
+        "p_playoffs": 0.5747
       },
       "them": {
-        "d_week": -1.37,
-        "d_ros": -2.52,
-        "d_title": -0.0088,
-        "se_title": 0.0029,
+        "d_week": -5.48,
+        "d_ros": -2.37,
+        "d_title": -0.0153,
+        "se_title": 0.0035,
         "title_noise": false,
-        "p_playoffs_now": 0.4348
+        "p_playoffs_now": 0.455
       },
       "i_would_start": [
-        "Dak Prescott"
+        "D'Andre Swift"
       ],
       "i_would_bench": [],
-      "netted_free_swap": false,
+      "netted_free_swap": true,
       "they_would_start": [
-        "Jayden Daniels"
+        "Breece Hall",
+        "Travis Kelce"
       ],
-      "they_would_bench": [],
+      "they_would_bench": [
+        "Dallas Goedert"
+      ],
       "fa_add": null,
-      "pitch": "They start Dak Prescott at QB (20.3/g) and sit at 43% playoff odds \u2014 the range where managers deal.",
-      "p_accept": 0.522,
-      "flag": "LIKELY",
-      "exp_title": 0.00844,
-      "exp_ros": 1.316,
-      "fairness": 1.05,
+      "pitch": "They start D'Andre Swift at RB (14.9/g) and sit at 46% playoff odds \u2014 the range where managers deal.",
+      "p_accept": 0.381,
+      "flag": "EXPLOIT",
+      "exp_title": 0.00502,
+      "exp_ros": 0.997,
+      "fairness": 1.2,
+      "sits_for_them": [
+        "They already have Dallas Goedert & Harold Fannin Jr. at TE, so Travis Kelce is a luxury \u2014 he counts at 50% of his market value to them"
+      ],
+      "ranks": {
+        "give": [
+          {
+            "name": "Travis Kelce",
+            "pos": "TE",
+            "our_rank": 11,
+            "ecr_rank": 8,
+            "driver": "efficiency",
+            "view": "consensus view"
+          },
+          {
+            "name": "Breece Hall",
+            "pos": "RB",
+            "our_rank": 23,
+            "ecr_rank": 20,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ],
+        "get": [
+          {
+            "name": "D'Andre Swift",
+            "pos": "RB",
+            "our_rank": 11,
+            "ecr_rank": 13,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ]
+      }
+    },
+    {
+      "partner": "Burrow-Chase combo",
+      "shape": "2-for-1",
+      "partner_profile": {
+        "needs": [
+          {
+            "pos": "WR",
+            "gap": 4.9
+          },
+          {
+            "pos": "TE",
+            "gap": 1.8
+          }
+        ],
+        "spare": []
+      },
+      "give": [
+        {
+          "name": "Christian Watson",
+          "pos": "WR",
+          "ros_pg": 12.26
+        },
+        {
+          "name": "Travis Kelce",
+          "pos": "TE",
+          "ros_pg": 8.41
+        }
+      ],
+      "get": [
+        {
+          "name": "Javonte Williams",
+          "pos": "RB",
+          "ros_pg": 16.56
+        }
+      ],
+      "tags": [
+        "LINEUP"
+      ],
+      "all_tags": [
+        "LINEUP"
+      ],
+      "thesis": "Javonte Williams starts for you over Christian Watson: +4.16 pts/wk to your lineup for the rest of the season.",
+      "kill": "Wrong if Javonte Williams's projection falls below Christian Watson's (16.6 vs 12.3 now).",
+      "second": null,
+      "us": {
+        "d_week": 2.77,
+        "d_ros": 4.16,
+        "d_title": 0.019,
+        "se_title": 0.0038,
+        "title_noise": false,
+        "p_title": 0.0827,
+        "p_playoffs": 0.588
+      },
+      "them": {
+        "d_week": -2.77,
+        "d_ros": -3.8,
+        "d_title": -0.0007,
+        "se_title": 0.0004,
+        "title_noise": true,
+        "p_playoffs_now": 0.0083
+      },
+      "i_would_start": [
+        "Javonte Williams"
+      ],
+      "i_would_bench": [],
+      "netted_free_swap": true,
+      "they_would_start": [
+        "Christian Watson",
+        "Travis Kelce"
+      ],
+      "they_would_bench": [
+        "Colston Loveland"
+      ],
+      "fa_add": null,
+      "pitch": "They start Javonte Williams at RB (16.6/g) and sit at 1% playoff odds.",
+      "p_accept": 0.243,
+      "flag": "NEEDS_PITCH",
+      "exp_title": 0.00462,
+      "exp_ros": 1.01,
+      "fairness": 1.3,
+      "sits_for_them": [],
+      "ranks": {
+        "give": [
+          {
+            "name": "Christian Watson",
+            "pos": "WR",
+            "our_rank": 12,
+            "ecr_rank": 14,
+            "driver": "efficiency",
+            "view": "consensus view"
+          },
+          {
+            "name": "Travis Kelce",
+            "pos": "TE",
+            "our_rank": 11,
+            "ecr_rank": 8,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ],
+        "get": [
+          {
+            "name": "Javonte Williams",
+            "pos": "RB",
+            "our_rank": 10,
+            "ecr_rank": 9,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ]
+      }
+    },
+    {
+      "partner": "Allen Moore connection",
+      "shape": "2-for-1",
+      "partner_profile": {
+        "needs": [
+          {
+            "pos": "WR",
+            "gap": 9.8
+          }
+        ],
+        "spare": []
+      },
+      "give": [
+        {
+          "name": "Jayden Daniels",
+          "pos": "QB",
+          "ros_pg": 17.61
+        },
+        {
+          "name": "Malik Nabers",
+          "pos": "WR",
+          "ros_pg": 12.68
+        }
+      ],
+      "get": [
+        {
+          "name": "Josh Allen",
+          "pos": "QB",
+          "ros_pg": 24.51
+        }
+      ],
+      "tags": [
+        "CONSOLIDATION",
+        "LINEUP"
+      ],
+      "all_tags": [
+        "CONSOLIDATION",
+        "LINEUP",
+        "PORTFOLIO"
+      ],
+      "thesis": "Two for one: -2.1 this week, but +3.18 pts/wk for the rest of the season \u2014 already net of picking up Justin Herbert, which you could do anyway.",
+      "kill": "Wrong if Josh Allen misses time: this puts Jayden Daniels and Malik Nabers's points on one player.",
+      "second": {
+        "tag": "LINEUP",
+        "thesis": "Josh Allen starts for you over Bryce Young: +3.18 pts/wk to your lineup for the rest of the season."
+      },
+      "us": {
+        "d_week": -2.08,
+        "d_ros": 3.18,
+        "d_title": 0.0165,
+        "se_title": 0.004,
+        "title_noise": false,
+        "p_title": 0.0802,
+        "p_playoffs": 0.5703
+      },
+      "them": {
+        "d_week": 4.6,
+        "d_ros": -3.56,
+        "d_title": -0.0002,
+        "se_title": 0.0007,
+        "title_noise": true,
+        "p_playoffs_now": 0.0293
+      },
+      "i_would_start": [
+        "Josh Allen",
+        "Josh Downs"
+      ],
+      "i_would_bench": [
+        "Bryce Young"
+      ],
+      "netted_free_swap": true,
+      "they_would_start": [
+        "Jayden Daniels",
+        "Malik Nabers"
+      ],
+      "they_would_bench": [
+        "DJ Moore"
+      ],
+      "fa_add": "Justin Herbert",
+      "pitch": "They start Josh Allen at QB (24.5/g) and sit at 3% playoff odds.",
+      "p_accept": 0.279,
+      "flag": "NEEDS_PITCH",
+      "exp_title": 0.0046,
+      "exp_ros": 0.885,
+      "fairness": 1.19,
       "sits_for_them": [],
       "ranks": {
         "give": [
@@ -196,6 +1317,239 @@
             "pos": "QB",
             "our_rank": 14,
             "ecr_rank": 15,
+            "driver": "efficiency",
+            "view": "consensus view"
+          },
+          {
+            "name": "Malik Nabers",
+            "pos": "WR",
+            "our_rank": 9,
+            "ecr_rank": 12,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ],
+        "get": [
+          {
+            "name": "Josh Allen",
+            "pos": "QB",
+            "our_rank": 1,
+            "ecr_rank": 1,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ]
+      }
+    },
+    {
+      "partner": "Heartbreak Drake",
+      "shape": "2-for-1",
+      "partner_profile": {
+        "needs": [
+          {
+            "pos": "WR",
+            "gap": 5.3
+          }
+        ],
+        "spare": []
+      },
+      "give": [
+        {
+          "name": "Malik Nabers",
+          "pos": "WR",
+          "ros_pg": 12.68
+        },
+        {
+          "name": "Breece Hall",
+          "pos": "RB",
+          "ros_pg": 12.14
+        }
+      ],
+      "get": [
+        {
+          "name": "Jonathan Taylor",
+          "pos": "RB",
+          "ros_pg": 18.77
+        }
+      ],
+      "tags": [
+        "LINEUP",
+        "PORTFOLIO"
+      ],
+      "all_tags": [
+        "LINEUP",
+        "PORTFOLIO"
+      ],
+      "thesis": "Jonathan Taylor starts for you over Breece Hall: +3.17 pts/wk to your lineup for the rest of the season.",
+      "kill": "Wrong if Jonathan Taylor's projection falls below Breece Hall's (18.8 vs 12.1 now).",
+      "second": {
+        "tag": "PORTFOLIO",
+        "thesis": "Spreads your byes: 3 starters off in week 8 today, 2 at most after."
+      },
+      "us": {
+        "d_week": 4.03,
+        "d_ros": 3.17,
+        "d_title": 0.0245,
+        "se_title": 0.0043,
+        "title_noise": false,
+        "p_title": 0.0882,
+        "p_playoffs": 0.609
+      },
+      "them": {
+        "d_week": -3.41,
+        "d_ros": -2.79,
+        "d_title": -0.0358,
+        "se_title": 0.005,
+        "title_noise": false,
+        "p_playoffs_now": 0.736
+      },
+      "i_would_start": [
+        "Jonathan Taylor",
+        "Josh Downs"
+      ],
+      "i_would_bench": [],
+      "netted_free_swap": true,
+      "they_would_start": [
+        "Breece Hall",
+        "Malik Nabers"
+      ],
+      "they_would_bench": [
+        "Ollie Gordon II"
+      ],
+      "fa_add": null,
+      "pitch": "They start Jonathan Taylor at RB (18.8/g) and sit at 74% playoff odds.",
+      "p_accept": 0.155,
+      "flag": "NEEDS_PITCH",
+      "exp_title": 0.00379,
+      "exp_ros": 0.491,
+      "fairness": 1.09,
+      "sits_for_them": [],
+      "ranks": {
+        "give": [
+          {
+            "name": "Malik Nabers",
+            "pos": "WR",
+            "our_rank": 9,
+            "ecr_rank": 12,
+            "driver": "efficiency",
+            "view": "consensus view"
+          },
+          {
+            "name": "Breece Hall",
+            "pos": "RB",
+            "our_rank": 23,
+            "ecr_rank": 20,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ],
+        "get": [
+          {
+            "name": "Jonathan Taylor",
+            "pos": "RB",
+            "our_rank": 2,
+            "ecr_rank": 4,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ]
+      }
+    },
+    {
+      "partner": "Revenge of the Smith",
+      "shape": "2-for-1",
+      "partner_profile": {
+        "needs": [
+          {
+            "pos": "RB",
+            "gap": 6.9
+          },
+          {
+            "pos": "TE",
+            "gap": 1.9
+          }
+        ],
+        "spare": []
+      },
+      "give": [
+        {
+          "name": "Josh Downs",
+          "pos": "WR",
+          "ros_pg": 9.3
+        },
+        {
+          "name": "Bryce Young",
+          "pos": "QB",
+          "ros_pg": 17.9
+        }
+      ],
+      "get": [
+        {
+          "name": "Dak Prescott",
+          "pos": "QB",
+          "ros_pg": 20.03
+        }
+      ],
+      "tags": [
+        "LINEUP"
+      ],
+      "all_tags": [
+        "LINEUP"
+      ],
+      "thesis": "Dak Prescott starts for you over Bryce Young: +2.05 pts/wk to your lineup for the rest of the season.",
+      "kill": "Wrong if Dak Prescott's projection falls below Bryce Young's (20.0 vs 17.9 now).",
+      "second": null,
+      "us": {
+        "d_week": 0.35,
+        "d_ros": 2.05,
+        "d_title": 0.0077,
+        "se_title": 0.0037,
+        "title_noise": false,
+        "p_title": 0.0713,
+        "p_playoffs": 0.539
+      },
+      "them": {
+        "d_week": -0.66,
+        "d_ros": -2.02,
+        "d_title": -0.0065,
+        "se_title": 0.0034,
+        "title_noise": true,
+        "p_playoffs_now": 0.5312
+      },
+      "i_would_start": [
+        "Dak Prescott"
+      ],
+      "i_would_bench": [],
+      "netted_free_swap": true,
+      "they_would_start": [
+        "Bryce Young"
+      ],
+      "they_would_bench": [],
+      "fa_add": null,
+      "pitch": "They start Dak Prescott at QB (20.0/g) and sit at 53% playoff odds.",
+      "p_accept": 0.444,
+      "flag": "EXPLOIT",
+      "exp_title": 0.00341,
+      "exp_ros": 0.91,
+      "fairness": 1.24,
+      "sits_for_them": [
+        "Josh Downs wouldn't start for them (they start Parker Washington & Matthew Golden & Jaylen Waddle) \u2014 he counts at 50% of his market value to them"
+      ],
+      "ranks": {
+        "give": [
+          {
+            "name": "Josh Downs",
+            "pos": "WR",
+            "our_rank": 42,
+            "ecr_rank": 31,
+            "driver": "efficiency",
+            "view": "consensus view"
+          },
+          {
+            "name": "Bryce Young",
+            "pos": "QB",
+            "our_rank": 17,
+            "ecr_rank": 14,
             "driver": "efficiency",
             "view": "consensus view"
           }
@@ -219,218 +1573,7 @@
         "needs": [
           {
             "pos": "WR",
-            "gap": 12.9
-          }
-        ],
-        "spare": []
-      },
-      "give": [
-        {
-          "name": "George Kittle",
-          "pos": "TE",
-          "ros_pg": 10.84
-        },
-        {
-          "name": "Malik Nabers",
-          "pos": "WR",
-          "ros_pg": 12.0
-        }
-      ],
-      "get": [
-        {
-          "name": "Brock Bowers",
-          "pos": "TE",
-          "ros_pg": 14.99
-        }
-      ],
-      "tags": [
-        "CONSOLIDATION",
-        "LINEUP"
-      ],
-      "all_tags": [
-        "CONSOLIDATION",
-        "LINEUP",
-        "PORTFOLIO"
-      ],
-      "thesis": "Two for one: -1.1 this week, but +1.29 pts/wk for the rest of the season \u2014 already net of picking up Justin Herbert, which you could do anyway.",
-      "kill": "Wrong if Brock Bowers misses time: this puts George Kittle and Malik Nabers's points on one player.",
-      "second": {
-        "tag": "LINEUP",
-        "thesis": "Brock Bowers starts for you over Malik Nabers: +1.29 pts/wk to your lineup for the rest of the season."
-      },
-      "us": {
-        "d_week": -1.07,
-        "d_ros": 1.29,
-        "d_title": 0.0133,
-        "se_title": 0.004,
-        "title_noise": false,
-        "p_title": 0.0712,
-        "p_playoffs": 0.599
-      },
-      "them": {
-        "d_week": 1.53,
-        "d_ros": -0.29,
-        "d_title": -0.006,
-        "se_title": 0.0046,
-        "title_noise": true,
-        "p_playoffs_now": 0.5882
-      },
-      "i_would_start": [
-        "Brock Bowers",
-        "Denzel Boston"
-      ],
-      "i_would_bench": [],
-      "netted_free_swap": true,
-      "they_would_start": [
-        "Malik Nabers",
-        "George Kittle"
-      ],
-      "they_would_bench": [
-        "Romeo Doubs"
-      ],
-      "fa_add": "Justin Herbert",
-      "pitch": "They start Romeo Doubs at WR (8.1/g) and sit at 59% playoff odds.",
-      "p_accept": 0.534,
-      "flag": "LIKELY",
-      "exp_title": 0.00712,
-      "exp_ros": 0.691,
-      "fairness": 1.25,
-      "sits_for_them": [],
-      "ranks": {
-        "give": [
-          {
-            "name": "George Kittle",
-            "pos": "TE",
-            "our_rank": 3,
-            "ecr_rank": 4,
-            "driver": "efficiency",
-            "view": "consensus view"
-          },
-          {
-            "name": "Malik Nabers",
-            "pos": "WR",
-            "our_rank": 17,
-            "ecr_rank": 12,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Brock Bowers",
-            "pos": "TE",
-            "our_rank": 2,
-            "ecr_rank": 1,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
-      "partner": "Allen Moore connection",
-      "shape": "1-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "WR",
-            "gap": 10.3
-          }
-        ],
-        "spare": []
-      },
-      "give": [
-        {
-          "name": "Emeka Egbuka",
-          "pos": "WR",
-          "ros_pg": 9.61
-        }
-      ],
-      "get": [
-        {
-          "name": "Cam Skattebo",
-          "pos": "RB",
-          "ros_pg": 12.47
-        }
-      ],
-      "tags": [
-        "LINEUP"
-      ],
-      "all_tags": [
-        "LINEUP"
-      ],
-      "thesis": "Cam Skattebo starts for you over Emeka Egbuka: +2.86 pts/wk to your lineup for the rest of the season.",
-      "kill": "Wrong if Cam Skattebo's projection falls below Emeka Egbuka's (12.5 vs 9.6 now).",
-      "second": null,
-      "us": {
-        "d_week": 4.49,
-        "d_ros": 2.86,
-        "d_title": 0.0223,
-        "se_title": 0.0035,
-        "title_noise": false,
-        "p_title": 0.0802,
-        "p_playoffs": 0.6328
-      },
-      "them": {
-        "d_week": -2.21,
-        "d_ros": -2.86,
-        "d_title": -0.0023,
-        "se_title": 0.0009,
-        "title_noise": false,
-        "p_playoffs_now": 0.0472
-      },
-      "i_would_start": [
-        "Cam Skattebo"
-      ],
-      "i_would_bench": [],
-      "netted_free_swap": false,
-      "they_would_start": [
-        "Emeka Egbuka"
-      ],
-      "they_would_bench": [],
-      "fa_add": null,
-      "pitch": "They start Cam Skattebo at RB (12.5/g) and sit at 5% playoff odds.",
-      "p_accept": 0.292,
-      "flag": "NEEDS_PITCH",
-      "exp_title": 0.00652,
-      "exp_ros": 0.835,
-      "fairness": 1.03,
-      "sits_for_them": [],
-      "ranks": {
-        "give": [
-          {
-            "name": "Emeka Egbuka",
-            "pos": "WR",
-            "our_rank": 23,
-            "ecr_rank": 33,
-            "driver": "usage",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Cam Skattebo",
-            "pos": "RB",
-            "our_rank": 17,
-            "ecr_rank": 19,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
-      "partner": "Burrow-Chase combo",
-      "shape": "2-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "WR",
-            "gap": 5.2
-          },
-          {
-            "pos": "TE",
-            "gap": 1.8
+            "gap": 13.4
           }
         ],
         "spare": []
@@ -439,316 +1582,98 @@
         {
           "name": "Christian Watson",
           "pos": "WR",
-          "ros_pg": 12.21
+          "ros_pg": 12.26
         },
         {
-          "name": "Emeka Egbuka",
+          "name": "Malik Nabers",
           "pos": "WR",
-          "ros_pg": 9.61
+          "ros_pg": 12.68
         }
       ],
       "get": [
         {
-          "name": "Javonte Williams",
+          "name": "Bijan Robinson",
           "pos": "RB",
-          "ros_pg": 16.06
+          "ros_pg": 18.91
         }
       ],
       "tags": [
-        "LINEUP"
+        "LINEUP",
+        "PORTFOLIO"
       ],
       "all_tags": [
-        "LINEUP"
+        "LINEUP",
+        "PORTFOLIO"
       ],
-      "thesis": "Javonte Williams starts for you over Christian Watson: +3.38 pts/wk to your lineup for the rest of the season.",
-      "kill": "Wrong if Javonte Williams's projection falls below Christian Watson's (16.1 vs 12.2 now).",
-      "second": null,
+      "thesis": "Bijan Robinson starts for you over Malik Nabers: +3.19 pts/wk to your lineup for the rest of the season.",
+      "kill": "Wrong if Bijan Robinson's projection falls below Malik Nabers's (18.9 vs 12.7 now).",
+      "second": {
+        "tag": "PORTFOLIO",
+        "thesis": "Spreads your byes: 3 starters off in week 8 today, 2 at most after."
+      },
       "us": {
-        "d_week": 2.28,
-        "d_ros": 3.38,
-        "d_title": 0.0197,
-        "se_title": 0.0037,
+        "d_week": 4.59,
+        "d_ros": 3.19,
+        "d_title": 0.0298,
+        "se_title": 0.0042,
         "title_noise": false,
-        "p_title": 0.0775,
-        "p_playoffs": 0.6277
+        "p_title": 0.0935,
+        "p_playoffs": 0.6007
       },
       "them": {
-        "d_week": 3.96,
-        "d_ros": -3.01,
-        "d_title": -0.001,
-        "se_title": 0.0005,
-        "title_noise": true,
-        "p_playoffs_now": 0.0108
+        "d_week": -2.0,
+        "d_ros": -2.03,
+        "d_title": -0.0167,
+        "se_title": 0.0045,
+        "title_noise": false,
+        "p_playoffs_now": 0.6483
       },
       "i_would_start": [
-        "Javonte Williams",
-        "Denzel Boston"
+        "Bijan Robinson",
+        "Josh Downs"
       ],
       "i_would_bench": [],
       "netted_free_swap": true,
       "they_would_start": [
-        "Christian Watson",
-        "Emeka Egbuka"
+        "Malik Nabers",
+        "Christian Watson"
       ],
       "they_would_bench": [
-        "DK Metcalf"
+        "Malik Washington"
       ],
       "fa_add": null,
-      "pitch": "They start Javonte Williams at RB (16.1/g) and sit at 1% playoff odds.",
-      "p_accept": 0.312,
-      "flag": "EXPLOIT",
-      "exp_title": 0.00614,
-      "exp_ros": 1.057,
-      "fairness": 1.27,
+      "pitch": "They start Bijan Robinson at RB (18.9/g) and sit at 65% playoff odds.",
+      "p_accept": 0.099,
+      "flag": "LONGSHOT",
+      "exp_title": 0.00296,
+      "exp_ros": 0.316,
+      "fairness": 1.03,
       "sits_for_them": [],
       "ranks": {
         "give": [
           {
             "name": "Christian Watson",
             "pos": "WR",
-            "our_rank": 11,
+            "our_rank": 12,
             "ecr_rank": 14,
             "driver": "efficiency",
             "view": "consensus view"
           },
           {
-            "name": "Emeka Egbuka",
+            "name": "Malik Nabers",
             "pos": "WR",
-            "our_rank": 23,
-            "ecr_rank": 33,
-            "driver": "usage",
+            "our_rank": 9,
+            "ecr_rank": 12,
+            "driver": "efficiency",
             "view": "consensus view"
           }
         ],
         "get": [
           {
-            "name": "Javonte Williams",
+            "name": "Bijan Robinson",
             "pos": "RB",
-            "our_rank": 8,
-            "ecr_rank": 9,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
-      "partner": "Heartbreak Drake",
-      "shape": "2-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "WR",
-            "gap": 4.6
-          }
-        ],
-        "spare": []
-      },
-      "give": [
-        {
-          "name": "Emeka Egbuka",
-          "pos": "WR",
-          "ros_pg": 9.61
-        },
-        {
-          "name": "Bryce Young",
-          "pos": "QB",
-          "ros_pg": 17.67
-        }
-      ],
-      "get": [
-        {
-          "name": "Drake Maye",
-          "pos": "QB",
-          "ros_pg": 20.54
-        }
-      ],
-      "tags": [
-        "LINEUP"
-      ],
-      "all_tags": [
-        "LINEUP"
-      ],
-      "thesis": "Drake Maye starts for you over Jayden Daniels: +2.33 pts/wk to your lineup for the rest of the season.",
-      "kill": "Wrong if Drake Maye's projection falls below Jayden Daniels's (20.5 vs 17.8 now).",
-      "second": null,
-      "us": {
-        "d_week": 0.89,
-        "d_ros": 2.33,
-        "d_title": 0.0115,
-        "se_title": 0.0037,
-        "title_noise": false,
-        "p_title": 0.0693,
-        "p_playoffs": 0.5848
-      },
-      "them": {
-        "d_week": -0.39,
-        "d_ros": -2.46,
-        "d_title": -0.0212,
-        "se_title": 0.0048,
-        "title_noise": false,
-        "p_playoffs_now": 0.6958
-      },
-      "i_would_start": [
-        "Drake Maye",
-        "Denzel Boston"
-      ],
-      "i_would_bench": [
-        "Jayden Daniels"
-      ],
-      "netted_free_swap": true,
-      "they_would_start": [
-        "Bryce Young",
-        "Emeka Egbuka"
-      ],
-      "they_would_bench": [
-        "Ollie Gordon II"
-      ],
-      "fa_add": null,
-      "pitch": "They start Drake Maye at QB (20.5/g) and sit at 70% playoff odds.",
-      "p_accept": 0.493,
-      "flag": "EXPLOIT",
-      "exp_title": 0.00567,
-      "exp_ros": 1.149,
-      "fairness": 1.27,
-      "sits_for_them": [],
-      "ranks": {
-        "give": [
-          {
-            "name": "Emeka Egbuka",
-            "pos": "WR",
-            "our_rank": 23,
-            "ecr_rank": 33,
-            "driver": "usage",
-            "view": "consensus view"
-          },
-          {
-            "name": "Bryce Young",
-            "pos": "QB",
-            "our_rank": 18,
-            "ecr_rank": 14,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Drake Maye",
-            "pos": "QB",
-            "our_rank": 4,
-            "ecr_rank": 4,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
-      "partner": "Allen Moore connection",
-      "shape": "2-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "WR",
-            "gap": 10.3
-          }
-        ],
-        "spare": []
-      },
-      "give": [
-        {
-          "name": "Josh Downs",
-          "pos": "WR",
-          "ros_pg": 8.83
-        },
-        {
-          "name": "Emeka Egbuka",
-          "pos": "WR",
-          "ros_pg": 9.61
-        }
-      ],
-      "get": [
-        {
-          "name": "Omarion Hampton",
-          "pos": "RB",
-          "ros_pg": 11.37
-        }
-      ],
-      "tags": [
-        "CONSOLIDATION",
-        "LINEUP"
-      ],
-      "all_tags": [
-        "CONSOLIDATION",
-        "LINEUP"
-      ],
-      "thesis": "Two for one: -1.1 this week, but +1.73 pts/wk for the rest of the season \u2014 already net of picking up Justin Herbert, which you could do anyway.",
-      "kill": "Wrong if Omarion Hampton misses time: this puts Josh Downs and Emeka Egbuka's points on one player.",
-      "second": {
-        "tag": "LINEUP",
-        "thesis": "Omarion Hampton starts for you over Emeka Egbuka: +1.73 pts/wk to your lineup for the rest of the season."
-      },
-      "us": {
-        "d_week": -1.11,
-        "d_ros": 1.73,
-        "d_title": 0.0077,
-        "se_title": 0.0035,
-        "title_noise": false,
-        "p_title": 0.0655,
-        "p_playoffs": 0.577
-      },
-      "them": {
-        "d_week": 4.16,
-        "d_ros": -1.66,
-        "d_title": -0.0005,
-        "se_title": 0.0011,
-        "title_noise": true,
-        "p_playoffs_now": 0.0472
-      },
-      "i_would_start": [
-        "Omarion Hampton"
-      ],
-      "i_would_bench": [],
-      "netted_free_swap": true,
-      "they_would_start": [
-        "Emeka Egbuka"
-      ],
-      "they_would_bench": [],
-      "fa_add": "Justin Herbert",
-      "pitch": "They start Omarion Hampton at RB (11.4/g) and sit at 5% playoff odds.",
-      "p_accept": 0.526,
-      "flag": "LIKELY",
-      "exp_title": 0.00403,
-      "exp_ros": 0.908,
-      "fairness": 1.3,
-      "sits_for_them": [
-        "Josh Downs wouldn't start for them (they start A.J. Brown & Emeka Egbuka & DJ Moore) \u2014 he counts at 50% of his market value to them"
-      ],
-      "ranks": {
-        "give": [
-          {
-            "name": "Josh Downs",
-            "pos": "WR",
-            "our_rank": 46,
-            "ecr_rank": 31,
-            "driver": "usage",
-            "view": "consensus view"
-          },
-          {
-            "name": "Emeka Egbuka",
-            "pos": "WR",
-            "our_rank": 23,
-            "ecr_rank": 33,
-            "driver": "usage",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Omarion Hampton",
-            "pos": "RB",
-            "our_rank": 24,
-            "ecr_rank": 24,
+            "our_rank": 5,
+            "ecr_rank": 2,
             "driver": "efficiency",
             "view": "consensus view"
           }
@@ -762,7 +1687,7 @@
         "needs": [
           {
             "pos": "WR",
-            "gap": 12.9
+            "gap": 13.4
           }
         ],
         "spare": []
@@ -771,89 +1696,84 @@
         {
           "name": "Christian Watson",
           "pos": "WR",
-          "ros_pg": 12.21
+          "ros_pg": 12.26
         },
         {
-          "name": "Breece Hall",
-          "pos": "RB",
-          "ros_pg": 11.91
+          "name": "Emeka Egbuka",
+          "pos": "WR",
+          "ros_pg": 10.05
         }
       ],
       "get": [
         {
           "name": "Kyren Williams",
           "pos": "RB",
-          "ros_pg": 16.89
+          "ros_pg": 16.91
         }
       ],
       "tags": [
-        "TRAJECTORY",
         "LINEUP"
       ],
       "all_tags": [
-        "TRAJECTORY",
         "LINEUP"
       ],
-      "thesis": "Kyren Williams's role is growing \u2014 share up from 16% to 18%, top fifth at RB \u2014 and we rank him RB7 to consensus RB8.",
-      "kill": "Wrong if his share of his team's expected points falls below 15% (now 20%, minus one sd).",
-      "second": {
-        "tag": "LINEUP",
-        "thesis": "Kyren Williams starts for you over Breece Hall: +4.08 pts/wk to your lineup for the rest of the season."
-      },
+      "thesis": "Kyren Williams starts for you over Christian Watson: +3.82 pts/wk to your lineup for the rest of the season.",
+      "kill": "Wrong if Kyren Williams's projection falls below Christian Watson's (16.9 vs 12.3 now).",
+      "second": null,
       "us": {
-        "d_week": 6.05,
-        "d_ros": 4.08,
-        "d_title": 0.0153,
-        "se_title": 0.004,
+        "d_week": 3.39,
+        "d_ros": 3.82,
+        "d_title": 0.0207,
+        "se_title": 0.0041,
         "title_noise": false,
-        "p_title": 0.0732,
-        "p_playoffs": 0.6402
+        "p_title": 0.0843,
+        "p_playoffs": 0.6098
       },
       "them": {
-        "d_week": -2.96,
-        "d_ros": -3.08,
-        "d_title": 0.0015,
+        "d_week": -0.8,
+        "d_ros": -2.66,
+        "d_title": -0.0082,
         "se_title": 0.0045,
         "title_noise": true,
-        "p_playoffs_now": 0.5882
+        "p_playoffs_now": 0.6483
       },
       "i_would_start": [
         "Kyren Williams",
-        "Denzel Boston"
+        "Josh Downs"
       ],
       "i_would_bench": [],
       "netted_free_swap": true,
       "they_would_start": [
-        "Breece Hall",
-        "Christian Watson"
+        "Christian Watson",
+        "Emeka Egbuka"
       ],
       "they_would_bench": [
-        "Romeo Doubs"
+        "Malik Washington"
       ],
       "fa_add": null,
-      "pitch": "They start Kyren Williams at RB (16.9/g) and sit at 59% playoff odds.",
-      "p_accept": 0.262,
-      "flag": "NEEDS_PITCH",
-      "exp_title": 0.00401,
-      "exp_ros": 1.068,
-      "fairness": 1.3,
+      "pitch": "They start Kyren Williams at RB (16.9/g) and sit at 65% playoff odds.",
+      "p_accept": 0.122,
+      "flag": "LONGSHOT",
+      "exp_title": 0.00253,
+      "exp_ros": 0.467,
+      "fairness": 1.12,
       "sits_for_them": [],
       "ranks": {
         "give": [
           {
             "name": "Christian Watson",
             "pos": "WR",
-            "our_rank": 11,
+            "our_rank": 12,
             "ecr_rank": 14,
             "driver": "efficiency",
             "view": "consensus view"
           },
           {
-            "name": "Breece Hall",
-            "pos": "RB",
-            "our_rank": 22,
-            "ecr_rank": 20,
-            "driver": "efficiency",
+            "name": "Emeka Egbuka",
+            "pos": "WR",
+            "our_rank": 19,
+            "ecr_rank": 33,
+            "driver": "usage",
             "view": "consensus view"
           }
         ],
@@ -870,836 +1790,20 @@
       }
     },
     {
-      "partner": "Don R.I.C.O",
-      "shape": "2-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "QB",
-            "gap": 2.1
-          },
-          {
-            "pos": "WR",
-            "gap": 1.8
-          }
-        ],
-        "spare": []
-      },
-      "give": [
-        {
-          "name": "Christian Watson",
-          "pos": "WR",
-          "ros_pg": 12.21
-        },
-        {
-          "name": "Malik Nabers",
-          "pos": "WR",
-          "ros_pg": 12.0
-        }
-      ],
-      "get": [
-        {
-          "name": "Jaxon Smith-Njigba",
-          "pos": "WR",
-          "ros_pg": 19.97
-        }
-      ],
-      "tags": [
-        "CONSOLIDATION",
-        "LINEUP"
-      ],
-      "all_tags": [
-        "CONSOLIDATION",
-        "LINEUP",
-        "PORTFOLIO"
-      ],
-      "thesis": "Two for one: -0.2 this week, but +4.90 pts/wk for the rest of the season \u2014 already net of picking up Justin Herbert, which you could do anyway.",
-      "kill": "Wrong if Jaxon Smith-Njigba misses time: this puts Christian Watson and Malik Nabers's points on one player.",
-      "second": {
-        "tag": "LINEUP",
-        "thesis": "Jaxon Smith-Njigba starts for you over Christian Watson: +4.90 pts/wk to your lineup for the rest of the season."
-      },
-      "us": {
-        "d_week": -0.23,
-        "d_ros": 4.9,
-        "d_title": 0.0345,
-        "se_title": 0.0042,
-        "title_noise": false,
-        "p_title": 0.0923,
-        "p_playoffs": 0.6943
-      },
-      "them": {
-        "d_week": 0.69,
-        "d_ros": -4.13,
-        "d_title": -0.0387,
-        "se_title": 0.0043,
-        "title_noise": false,
-        "p_playoffs_now": 0.6735
-      },
-      "i_would_start": [
-        "Jaxon Smith-Njigba",
-        "Denzel Boston"
-      ],
-      "i_would_bench": [],
-      "netted_free_swap": true,
-      "they_would_start": [
-        "Christian Watson",
-        "Malik Nabers"
-      ],
-      "they_would_bench": [
-        "Ladd McConkey"
-      ],
-      "fa_add": "Justin Herbert",
-      "pitch": "They start Jaxon Smith-Njigba at WR (20.0/g) and sit at 67% playoff odds.",
-      "p_accept": 0.112,
-      "flag": "LONGSHOT",
-      "exp_title": 0.00386,
-      "exp_ros": 0.548,
-      "fairness": 1.05,
-      "sits_for_them": [],
-      "ranks": {
-        "give": [
-          {
-            "name": "Christian Watson",
-            "pos": "WR",
-            "our_rank": 11,
-            "ecr_rank": 14,
-            "driver": "efficiency",
-            "view": "consensus view"
-          },
-          {
-            "name": "Malik Nabers",
-            "pos": "WR",
-            "our_rank": 17,
-            "ecr_rank": 12,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Jaxon Smith-Njigba",
-            "pos": "WR",
-            "our_rank": 2,
-            "ecr_rank": 1,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
-      "partner": "deez nuts",
-      "shape": "2-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "TE",
-            "gap": 1.5
-          }
-        ],
-        "spare": []
-      },
-      "give": [
-        {
-          "name": "Christian McCaffrey",
-          "pos": "RB",
-          "ros_pg": 17.62
-        },
-        {
-          "name": "Christian Watson",
-          "pos": "WR",
-          "ros_pg": 12.21
-        }
-      ],
-      "get": [
-        {
-          "name": "Jahmyr Gibbs",
-          "pos": "RB",
-          "ros_pg": 23.7
-        }
-      ],
-      "tags": [
-        "CONSOLIDATION",
-        "LINEUP"
-      ],
-      "all_tags": [
-        "CONSOLIDATION",
-        "LINEUP",
-        "PORTFOLIO"
-      ],
-      "thesis": "Two for one: -21.8 this week, but +3.01 pts/wk for the rest of the season \u2014 already net of picking up Justin Herbert, which you could do anyway.",
-      "kill": "Wrong if Jahmyr Gibbs misses time: this puts Christian McCaffrey and Christian Watson's points on one player.",
-      "second": {
-        "tag": "LINEUP",
-        "thesis": "Jahmyr Gibbs starts for you over Christian McCaffrey: +3.01 pts/wk to your lineup for the rest of the season."
-      },
-      "us": {
-        "d_week": -21.75,
-        "d_ros": 3.01,
-        "d_title": 0.0267,
-        "se_title": 0.0042,
-        "title_noise": false,
-        "p_title": 0.0845,
-        "p_playoffs": 0.584
-      },
-      "them": {
-        "d_week": 15.18,
-        "d_ros": -3.59,
-        "d_title": -0.0542,
-        "se_title": 0.0056,
-        "title_noise": false,
-        "p_playoffs_now": 0.8393
-      },
-      "i_would_start": [
-        "Jahmyr Gibbs",
-        "Denzel Boston"
-      ],
-      "i_would_bench": [],
-      "netted_free_swap": true,
-      "they_would_start": [
-        "Christian McCaffrey",
-        "Christian Watson"
-      ],
-      "they_would_bench": [
-        "Luther Burden III"
-      ],
-      "fa_add": "Justin Herbert",
-      "pitch": "They start Jahmyr Gibbs at RB (23.7/g) and sit at 84% playoff odds.",
-      "p_accept": 0.142,
-      "flag": "LONGSHOT",
-      "exp_title": 0.00378,
-      "exp_ros": 0.427,
-      "fairness": 1.21,
-      "sits_for_them": [],
-      "ranks": {
-        "give": [
-          {
-            "name": "Christian McCaffrey",
-            "pos": "RB",
-            "our_rank": 6,
-            "ecr_rank": 5,
-            "driver": "efficiency",
-            "view": "consensus view"
-          },
-          {
-            "name": "Christian Watson",
-            "pos": "WR",
-            "our_rank": 11,
-            "ecr_rank": 14,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Jahmyr Gibbs",
-            "pos": "RB",
-            "our_rank": 1,
-            "ecr_rank": 1,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
-      "partner": "L'Omar",
-      "shape": "2-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "QB",
-            "gap": 3.7
-          },
-          {
-            "pos": "TE",
-            "gap": 2.5
-          }
-        ],
-        "spare": []
-      },
-      "give": [
-        {
-          "name": "Travis Kelce",
-          "pos": "TE",
-          "ros_pg": 8.39
-        },
-        {
-          "name": "Breece Hall",
-          "pos": "RB",
-          "ros_pg": 11.91
-        }
-      ],
-      "get": [
-        {
-          "name": "Jaylen Warren",
-          "pos": "RB",
-          "ros_pg": 14.59
-        }
-      ],
-      "tags": [
-        "LINEUP"
-      ],
-      "all_tags": [
-        "LINEUP"
-      ],
-      "thesis": "Jaylen Warren starts for you over Breece Hall: +4.71 pts/wk to your lineup for the rest of the season.",
-      "kill": "Wrong if Jaylen Warren's projection falls below Breece Hall's (14.6 vs 9.7 now).",
-      "second": null,
-      "us": {
-        "d_week": 7.2,
-        "d_ros": 4.71,
-        "d_title": 0.0098,
-        "se_title": 0.0037,
-        "title_noise": false,
-        "p_title": 0.0677,
-        "p_playoffs": 0.6193
-      },
-      "them": {
-        "d_week": -4.7,
-        "d_ros": -3.64,
-        "d_title": 0.0043,
-        "se_title": 0.004,
-        "title_noise": true,
-        "p_playoffs_now": 0.5907
-      },
-      "i_would_start": [
-        "Jaylen Warren"
-      ],
-      "i_would_bench": [],
-      "netted_free_swap": true,
-      "they_would_start": [
-        "Travis Kelce",
-        "Breece Hall"
-      ],
-      "they_would_bench": [
-        "Dalton Schultz"
-      ],
-      "fa_add": null,
-      "pitch": "They start Jaylen Warren at RB (14.6/g) and sit at 59% playoff odds.",
-      "p_accept": 0.362,
-      "flag": "NEEDS_PITCH",
-      "exp_title": 0.00356,
-      "exp_ros": 1.705,
-      "fairness": 1.25,
-      "sits_for_them": [],
-      "ranks": {
-        "give": [
-          {
-            "name": "Travis Kelce",
-            "pos": "TE",
-            "our_rank": 12,
-            "ecr_rank": 8,
-            "driver": "efficiency",
-            "view": "consensus view"
-          },
-          {
-            "name": "Breece Hall",
-            "pos": "RB",
-            "our_rank": 22,
-            "ecr_rank": 20,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Jaylen Warren",
-            "pos": "RB",
-            "our_rank": 12,
-            "ecr_rank": 10,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
-      "partner": "Don R.I.C.O",
-      "shape": "2-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "QB",
-            "gap": 2.1
-          },
-          {
-            "pos": "WR",
-            "gap": 1.8
-          }
-        ],
-        "spare": []
-      },
-      "give": [
-        {
-          "name": "Christian Watson",
-          "pos": "WR",
-          "ros_pg": 12.21
-        },
-        {
-          "name": "Breece Hall",
-          "pos": "RB",
-          "ros_pg": 11.91
-        }
-      ],
-      "get": [
-        {
-          "name": "Derrick Henry",
-          "pos": "RB",
-          "ros_pg": 17.72
-        }
-      ],
-      "tags": [
-        "LINEUP"
-      ],
-      "all_tags": [
-        "LINEUP"
-      ],
-      "thesis": "Derrick Henry starts for you over Breece Hall: +4.91 pts/wk to your lineup for the rest of the season.",
-      "kill": "Wrong if Derrick Henry's projection falls below Breece Hall's (17.7 vs 9.7 now).",
-      "second": null,
-      "us": {
-        "d_week": 4.75,
-        "d_ros": 4.91,
-        "d_title": 0.0158,
-        "se_title": 0.0039,
-        "title_noise": false,
-        "p_title": 0.0737,
-        "p_playoffs": 0.6542
-      },
-      "them": {
-        "d_week": -2.47,
-        "d_ros": -4.14,
-        "d_title": -0.021,
-        "se_title": 0.0045,
-        "title_noise": false,
-        "p_playoffs_now": 0.6735
-      },
-      "i_would_start": [
-        "Derrick Henry",
-        "Denzel Boston"
-      ],
-      "i_would_bench": [],
-      "netted_free_swap": true,
-      "they_would_start": [
-        "Breece Hall",
-        "Christian Watson"
-      ],
-      "they_would_bench": [
-        "Ladd McConkey"
-      ],
-      "fa_add": null,
-      "pitch": "They start Derrick Henry at RB (17.7/g) and sit at 67% playoff odds.",
-      "p_accept": 0.219,
-      "flag": "NEEDS_PITCH",
-      "exp_title": 0.00347,
-      "exp_ros": 1.076,
-      "fairness": 1.17,
-      "sits_for_them": [],
-      "ranks": {
-        "give": [
-          {
-            "name": "Christian Watson",
-            "pos": "WR",
-            "our_rank": 11,
-            "ecr_rank": 14,
-            "driver": "efficiency",
-            "view": "consensus view"
-          },
-          {
-            "name": "Breece Hall",
-            "pos": "RB",
-            "our_rank": 22,
-            "ecr_rank": 20,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Derrick Henry",
-            "pos": "RB",
-            "our_rank": 4,
-            "ecr_rank": 7,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
-      "partner": "Heartbreak Drake",
-      "shape": "2-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "WR",
-            "gap": 4.6
-          }
-        ],
-        "spare": []
-      },
-      "give": [
-        {
-          "name": "Malik Nabers",
-          "pos": "WR",
-          "ros_pg": 12.0
-        },
-        {
-          "name": "Travis Kelce",
-          "pos": "TE",
-          "ros_pg": 8.39
-        }
-      ],
-      "get": [
-        {
-          "name": "Ashton Jeanty",
-          "pos": "RB",
-          "ros_pg": 13.96
-        }
-      ],
-      "tags": [
-        "BUY_LOW",
-        "LINEUP"
-      ],
-      "all_tags": [
-        "BUY_LOW",
-        "LINEUP",
-        "PORTFOLIO"
-      ],
-      "thesis": "Buy Ashton Jeanty low: -6.5 pts/g under what his usage earns, and his usage ranks RB9 against consensus RB14.",
-      "kill": "Wrong if his share of his team's expected points falls below 9% (now 17%, minus one sd).",
-      "second": {
-        "tag": "LINEUP",
-        "thesis": "Ashton Jeanty starts for you over Malik Nabers: +1.83 pts/wk to your lineup for the rest of the season."
-      },
-      "us": {
-        "d_week": 4.2,
-        "d_ros": 1.83,
-        "d_title": 0.0092,
-        "se_title": 0.0036,
-        "title_noise": false,
-        "p_title": 0.067,
-        "p_playoffs": 0.5838
-      },
-      "them": {
-        "d_week": -8.36,
-        "d_ros": -1.82,
-        "d_title": -0.0373,
-        "se_title": 0.0046,
-        "title_noise": false,
-        "p_playoffs_now": 0.6958
-      },
-      "i_would_start": [
-        "Ashton Jeanty"
-      ],
-      "i_would_bench": [],
-      "netted_free_swap": true,
-      "they_would_start": [
-        "Malik Nabers"
-      ],
-      "they_would_bench": [],
-      "fa_add": null,
-      "pitch": "They start Ashton Jeanty at RB (14.0/g) and sit at 70% playoff odds.",
-      "p_accept": 0.347,
-      "flag": "EXPLOIT",
-      "exp_title": 0.00318,
-      "exp_ros": 0.633,
-      "fairness": 1.27,
-      "sits_for_them": [
-        "Travis Kelce wouldn't start for them (they start Sam LaPorta) \u2014 he counts at 50% of his market value to them"
-      ],
-      "ranks": {
-        "give": [
-          {
-            "name": "Malik Nabers",
-            "pos": "WR",
-            "our_rank": 17,
-            "ecr_rank": 12,
-            "driver": "efficiency",
-            "view": "consensus view"
-          },
-          {
-            "name": "Travis Kelce",
-            "pos": "TE",
-            "our_rank": 12,
-            "ecr_rank": 8,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Ashton Jeanty",
-            "pos": "RB",
-            "our_rank": 13,
-            "ecr_rank": 14,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
-      "partner": "Crabcakes and Football",
-      "shape": "2-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "RB",
-            "gap": 8.1
-          }
-        ],
-        "spare": [
-          {
-            "name": "Trevor Lawrence",
-            "pos": "QB",
-            "ppg": 19.9
-          },
-          {
-            "name": "Kyle Monangai",
-            "pos": "RB",
-            "ppg": 10.3
-          }
-        ]
-      },
-      "give": [
-        {
-          "name": "Jayden Daniels",
-          "pos": "QB",
-          "ros_pg": 17.75
-        },
-        {
-          "name": "Breece Hall",
-          "pos": "RB",
-          "ros_pg": 11.91
-        }
-      ],
-      "get": [
-        {
-          "name": "Chase Brown",
-          "pos": "RB",
-          "ros_pg": 14.2
-        }
-      ],
-      "tags": [
-        "CONSOLIDATION",
-        "LINEUP"
-      ],
-      "all_tags": [
-        "CONSOLIDATION",
-        "LINEUP"
-      ],
-      "thesis": "Two for one: -3.9 this week, but +4.28 pts/wk for the rest of the season \u2014 already net of picking up Justin Herbert, which you could do anyway.",
-      "kill": "Wrong if Chase Brown misses time: this puts Jayden Daniels and Breece Hall's points on one player.",
-      "second": {
-        "tag": "LINEUP",
-        "thesis": "Chase Brown starts for you over Jayden Daniels: +4.28 pts/wk to your lineup for the rest of the season."
-      },
-      "us": {
-        "d_week": -3.88,
-        "d_ros": 4.28,
-        "d_title": 0.0193,
-        "se_title": 0.0039,
-        "title_noise": false,
-        "p_title": 0.0772,
-        "p_playoffs": 0.662
-      },
-      "them": {
-        "d_week": -6.52,
-        "d_ros": -4.46,
-        "d_title": -0.0492,
-        "se_title": 0.0055,
-        "title_noise": false,
-        "p_playoffs_now": 0.9027
-      },
-      "i_would_start": [
-        "Bryce Young",
-        "Chase Brown"
-      ],
-      "i_would_bench": [],
-      "netted_free_swap": true,
-      "they_would_start": [
-        "Breece Hall"
-      ],
-      "they_would_bench": [],
-      "fa_add": "Justin Herbert",
-      "pitch": "They start Chase Brown at RB (14.2/g) and sit at 90% playoff odds.",
-      "p_accept": 0.047,
-      "flag": "LONGSHOT",
-      "exp_title": 0.00092,
-      "exp_ros": 0.203,
-      "fairness": 1.12,
-      "sits_for_them": [
-        "Jayden Daniels wouldn't start for them (they start Patrick Mahomes) \u2014 he counts at 50% of his market value to them"
-      ],
-      "ranks": {
-        "give": [
-          {
-            "name": "Jayden Daniels",
-            "pos": "QB",
-            "our_rank": 14,
-            "ecr_rank": 15,
-            "driver": "efficiency",
-            "view": "consensus view"
-          },
-          {
-            "name": "Breece Hall",
-            "pos": "RB",
-            "our_rank": 22,
-            "ecr_rank": 20,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Chase Brown",
-            "pos": "RB",
-            "our_rank": 14,
-            "ecr_rank": 11,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
       "partner": "Saquon Hater",
       "shape": "2-for-1",
       "partner_profile": {
         "needs": [
           {
             "pos": "RB",
-            "gap": 12.9
+            "gap": 11.4
           },
           {
             "pos": "TE",
-            "gap": 3.7
+            "gap": 3.4
           },
           {
             "pos": "QB",
-            "gap": 2.2
-          }
-        ],
-        "spare": []
-      },
-      "give": [
-        {
-          "name": "George Kittle",
-          "pos": "TE",
-          "ros_pg": 10.84
-        },
-        {
-          "name": "Malik Nabers",
-          "pos": "WR",
-          "ros_pg": 12.0
-        }
-      ],
-      "get": [
-        {
-          "name": "Amon-Ra St. Brown",
-          "pos": "WR",
-          "ros_pg": 16.9
-        }
-      ],
-      "tags": [
-        "BUY_LOW",
-        "CONSOLIDATION"
-      ],
-      "all_tags": [
-        "BUY_LOW",
-        "CONSOLIDATION",
-        "LINEUP",
-        "PORTFOLIO"
-      ],
-      "thesis": "Buy Amon-Ra St. Brown low: -6.0 pts/g under what his usage earns, and his usage ranks WR2 against consensus WR3.",
-      "kill": "Wrong if his share of his team's expected points falls below 12% (now 16%, minus one sd).",
-      "second": {
-        "tag": "CONSOLIDATION",
-        "thesis": "Two for one: -8.5 this week, but +2.32 pts/wk for the rest of the season \u2014 already net of picking up Justin Herbert, which you could do anyway."
-      },
-      "us": {
-        "d_week": -8.48,
-        "d_ros": 2.32,
-        "d_title": 0.0073,
-        "se_title": 0.0037,
-        "title_noise": true,
-        "p_title": 0.0652,
-        "p_playoffs": 0.5905
-      },
-      "them": {
-        "d_week": 15.48,
-        "d_ros": -0.11,
-        "d_title": 0.0003,
-        "se_title": 0.0014,
-        "title_noise": true,
-        "p_playoffs_now": 0.1138
-      },
-      "i_would_start": [
-        "Amon-Ra St. Brown",
-        "Travis Kelce"
-      ],
-      "i_would_bench": [],
-      "netted_free_swap": true,
-      "they_would_start": [
-        "Malik Nabers",
-        "George Kittle"
-      ],
-      "they_would_bench": [
-        "Pat Freiermuth"
-      ],
-      "fa_add": "Justin Herbert",
-      "pitch": "They start Amon-Ra St. Brown at WR (16.9/g) and sit at 11% playoff odds.",
-      "p_accept": 0.64,
-      "flag": "LIKELY",
-      "exp_title": 0.0,
-      "exp_ros": 1.482,
-      "fairness": 1.03,
-      "sits_for_them": [],
-      "ranks": {
-        "give": [
-          {
-            "name": "George Kittle",
-            "pos": "TE",
-            "our_rank": 3,
-            "ecr_rank": 4,
-            "driver": "efficiency",
-            "view": "consensus view"
-          },
-          {
-            "name": "Malik Nabers",
-            "pos": "WR",
-            "our_rank": 17,
-            "ecr_rank": 12,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Amon-Ra St. Brown",
-            "pos": "WR",
-            "our_rank": 3,
-            "ecr_rank": 3,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
-      "partner": "Burrow-Chase combo",
-      "shape": "2-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "WR",
-            "gap": 5.2
-          },
-          {
-            "pos": "TE",
             "gap": 1.8
           }
         ],
@@ -1709,268 +1813,19 @@
         {
           "name": "Denzel Boston",
           "pos": "WR",
-          "ros_pg": 9.24
+          "ros_pg": 9.1
         },
         {
           "name": "Travis Kelce",
           "pos": "TE",
-          "ros_pg": 8.39
+          "ros_pg": 8.41
         }
       ],
       "get": [
         {
-          "name": "Joe Burrow",
-          "pos": "QB",
-          "ros_pg": 19.84
-        }
-      ],
-      "tags": [
-        "CONSOLIDATION",
-        "LINEUP"
-      ],
-      "all_tags": [
-        "CONSOLIDATION",
-        "LINEUP"
-      ],
-      "thesis": "Two for one: -0.1 this week, but +1.87 pts/wk for the rest of the season \u2014 already net of picking up Justin Herbert, which you could do anyway.",
-      "kill": "Wrong if Joe Burrow misses time: this puts Denzel Boston and Travis Kelce's points on one player.",
-      "second": {
-        "tag": "LINEUP",
-        "thesis": "Joe Burrow starts for you over Jayden Daniels: +1.87 pts/wk to your lineup for the rest of the season."
-      },
-      "us": {
-        "d_week": -0.12,
-        "d_ros": 1.87,
-        "d_title": -0.0048,
-        "se_title": 0.0035,
-        "title_noise": true,
-        "p_title": 0.053,
-        "p_playoffs": 0.5293
-      },
-      "them": {
-        "d_week": 4.13,
-        "d_ros": 0.53,
-        "d_title": -0.001,
-        "se_title": 0.0004,
-        "title_noise": false,
-        "p_playoffs_now": 0.0108
-      },
-      "i_would_start": [
-        "Joe Burrow"
-      ],
-      "i_would_bench": [
-        "Jayden Daniels"
-      ],
-      "netted_free_swap": true,
-      "they_would_start": [
-        "Matthew Stafford",
-        "Denzel Boston",
-        "Travis Kelce"
-      ],
-      "they_would_bench": [
-        "DK Metcalf",
-        "Colston Loveland"
-      ],
-      "fa_add": "Justin Herbert",
-      "pitch": "They start Joe Burrow at QB (19.8/g) and sit at 1% playoff odds.",
-      "p_accept": 0.527,
-      "flag": "LIKELY",
-      "exp_title": 0.0,
-      "exp_ros": 0.984,
-      "fairness": 1.14,
-      "sits_for_them": [],
-      "ranks": {
-        "give": [
-          {
-            "name": "Denzel Boston",
-            "pos": "WR",
-            "our_rank": 28,
-            "ecr_rank": 35,
-            "driver": "efficiency",
-            "view": "consensus view"
-          },
-          {
-            "name": "Travis Kelce",
-            "pos": "TE",
-            "our_rank": 12,
-            "ecr_rank": 8,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Joe Burrow",
-            "pos": "QB",
-            "our_rank": 10,
-            "ecr_rank": 7,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
-      "partner": "BillsMafia",
-      "shape": "2-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "TE",
-            "gap": 1.5
-          }
-        ],
-        "spare": [
-          {
-            "name": "Michael Wilson",
-            "pos": "WR",
-            "ppg": 11.6
-          }
-        ]
-      },
-      "give": [
-        {
-          "name": "Malik Nabers",
+          "name": "Rashee Rice",
           "pos": "WR",
-          "ros_pg": 12.0
-        },
-        {
-          "name": "Travis Kelce",
-          "pos": "TE",
-          "ros_pg": 8.39
-        }
-      ],
-      "get": [
-        {
-          "name": "Chris Olave",
-          "pos": "WR",
-          "ros_pg": 13.99
-        }
-      ],
-      "tags": [
-        "CONSOLIDATION",
-        "LINEUP"
-      ],
-      "all_tags": [
-        "CONSOLIDATION",
-        "LINEUP"
-      ],
-      "thesis": "Two for one: -3.0 this week, but +1.86 pts/wk for the rest of the season \u2014 already net of picking up Justin Herbert, which you could do anyway.",
-      "kill": "Wrong if Chris Olave misses time: this puts Malik Nabers and Travis Kelce's points on one player.",
-      "second": {
-        "tag": "LINEUP",
-        "thesis": "Chris Olave starts for you over Malik Nabers: +1.86 pts/wk to your lineup for the rest of the season."
-      },
-      "us": {
-        "d_week": -2.98,
-        "d_ros": 1.86,
-        "d_title": 0.003,
-        "se_title": 0.0036,
-        "title_noise": true,
-        "p_title": 0.0608,
-        "p_playoffs": 0.5725
-      },
-      "them": {
-        "d_week": 2.62,
-        "d_ros": -1.84,
-        "d_title": -0.0042,
-        "se_title": 0.0037,
-        "title_noise": true,
-        "p_playoffs_now": 0.5295
-      },
-      "i_would_start": [
-        "Chris Olave"
-      ],
-      "i_would_bench": [],
-      "netted_free_swap": true,
-      "they_would_start": [
-        "Malik Nabers",
-        "Travis Kelce"
-      ],
-      "they_would_bench": [
-        "Harold Fannin Jr."
-      ],
-      "fa_add": "Justin Herbert",
-      "pitch": "They start Chris Olave at WR (14.0/g) and sit at 53% playoff odds.",
-      "p_accept": 0.476,
-      "flag": "EXPLOIT",
-      "exp_title": 0.0,
-      "exp_ros": 0.884,
-      "fairness": 1.19,
-      "sits_for_them": [
-        "They already have Dallas Goedert & Harold Fannin Jr. at TE, so Travis Kelce is a luxury \u2014 he counts at 50% of his market value to them"
-      ],
-      "ranks": {
-        "give": [
-          {
-            "name": "Malik Nabers",
-            "pos": "WR",
-            "our_rank": 17,
-            "ecr_rank": 12,
-            "driver": "efficiency",
-            "view": "consensus view"
-          },
-          {
-            "name": "Travis Kelce",
-            "pos": "TE",
-            "our_rank": 12,
-            "ecr_rank": 8,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Chris Olave",
-            "pos": "WR",
-            "our_rank": 6,
-            "ecr_rank": 6,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
-      "partner": "Crabcakes and Football",
-      "shape": "2-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "RB",
-            "gap": 8.1
-          }
-        ],
-        "spare": [
-          {
-            "name": "Trevor Lawrence",
-            "pos": "QB",
-            "ppg": 19.9
-          },
-          {
-            "name": "Kyle Monangai",
-            "pos": "RB",
-            "ppg": 10.3
-          }
-        ]
-      },
-      "give": [
-        {
-          "name": "Jayden Daniels",
-          "pos": "QB",
-          "ros_pg": 17.75
-        },
-        {
-          "name": "Emeka Egbuka",
-          "pos": "WR",
-          "ros_pg": 9.61
-        }
-      ],
-      "get": [
-        {
-          "name": "Mike Evans",
-          "pos": "WR",
-          "ros_pg": 11.36
+          "ros_pg": 10.6
         }
       ],
       "tags": [
@@ -1982,75 +1837,77 @@
         "CONSOLIDATION",
         "LINEUP"
       ],
-      "thesis": "Mike Evans's role is growing \u2014 share up from 13% to 26%, top fifth at WR \u2014 and we rank him WR16 to consensus WR20.",
-      "kill": "Wrong if his share of his team's expected points falls below 12% (now 19%, minus one sd).",
+      "thesis": "Rashee Rice's role is growing \u2014 share up from 3% to 18%, top fifth at WR \u2014 and we rank him WR24 to consensus WR25.",
+      "kill": "Wrong if his share of his team's expected points falls below 2% (now 9%, minus one sd).",
       "second": {
         "tag": "CONSOLIDATION",
-        "thesis": "Two for one: -4.4 this week, but +1.57 pts/wk for the rest of the season \u2014 already net of picking up Justin Herbert, which you could do anyway."
+        "thesis": "Two for one: -0.2 this week, but +0.53 pts/wk for the rest of the season \u2014 already net of picking up Justin Herbert, which you could do anyway."
       },
       "us": {
-        "d_week": -4.37,
-        "d_ros": 1.57,
-        "d_title": 0.0057,
-        "se_title": 0.0036,
+        "d_week": -0.25,
+        "d_ros": 0.53,
+        "d_title": -0.0043,
+        "se_title": 0.0033,
         "title_noise": true,
-        "p_title": 0.0635,
-        "p_playoffs": 0.582
+        "p_title": 0.0593,
+        "p_playoffs": 0.5085
       },
       "them": {
-        "d_week": -6.02,
-        "d_ros": -1.75,
-        "d_title": -0.0138,
-        "se_title": 0.0051,
-        "title_noise": false,
-        "p_playoffs_now": 0.9027
+        "d_week": 2.46,
+        "d_ros": 0.47,
+        "d_title": 0.0025,
+        "se_title": 0.0014,
+        "title_noise": true,
+        "p_playoffs_now": 0.1387
       },
       "i_would_start": [
-        "Bryce Young",
-        "Mike Evans"
+        "Rashee Rice"
       ],
-      "i_would_bench": [],
-      "netted_free_swap": true,
-      "they_would_start": [
+      "i_would_bench": [
         "Emeka Egbuka"
       ],
-      "they_would_bench": [],
-      "fa_add": "Justin Herbert",
-      "pitch": "They start Mike Evans at FLEX (11.4/g) and sit at 90% playoff odds.",
-      "p_accept": 0.247,
-      "flag": "NEEDS_PITCH",
-      "exp_title": 0.0,
-      "exp_ros": 0.387,
-      "fairness": 1.18,
-      "sits_for_them": [
-        "Jayden Daniels wouldn't start for them (they start Patrick Mahomes) \u2014 he counts at 50% of his market value to them"
+      "netted_free_swap": true,
+      "they_would_start": [
+        "Travis Kelce",
+        "Denzel Boston"
       ],
+      "they_would_bench": [
+        "Pat Freiermuth"
+      ],
+      "fa_add": "Justin Herbert",
+      "pitch": "They start Pat Freiermuth at TE (6.4/g) and sit at 14% playoff odds.",
+      "p_accept": 0.819,
+      "flag": "LIKELY",
+      "exp_title": 0.0,
+      "exp_ros": 0.433,
+      "fairness": 1.18,
+      "sits_for_them": [],
       "ranks": {
         "give": [
           {
-            "name": "Jayden Daniels",
-            "pos": "QB",
-            "our_rank": 14,
-            "ecr_rank": 15,
+            "name": "Denzel Boston",
+            "pos": "WR",
+            "our_rank": 32,
+            "ecr_rank": 35,
             "driver": "efficiency",
             "view": "consensus view"
           },
           {
-            "name": "Emeka Egbuka",
-            "pos": "WR",
-            "our_rank": 23,
-            "ecr_rank": 33,
-            "driver": "usage",
+            "name": "Travis Kelce",
+            "pos": "TE",
+            "our_rank": 11,
+            "ecr_rank": 8,
+            "driver": "efficiency",
             "view": "consensus view"
           }
         ],
         "get": [
           {
-            "name": "Mike Evans",
+            "name": "Rashee Rice",
             "pos": "WR",
-            "our_rank": 16,
-            "ecr_rank": 20,
-            "driver": "usage",
+            "our_rank": 24,
+            "ecr_rank": 25,
+            "driver": "efficiency",
             "view": "consensus view"
           }
         ]
@@ -2059,11 +1916,11 @@
   ],
   "deadline": "2026-11-28",
   "meta": {
-    "evaluated": 2991,
-    "simulated": 23,
-    "shown": 18,
-    "p_playoffs": 0.5736666666666667,
-    "p_title": 0.057833333333333334,
+    "evaluated": 2728,
+    "simulated": 24,
+    "shown": 17,
+    "p_playoffs": 0.5333333333333333,
+    "p_title": 0.06366666666666666,
     "posture": "balanced",
     "seasons": 6000,
     "priors": "estimated",
