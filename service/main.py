@@ -289,46 +289,33 @@ class TradeTeamRequest(BaseModel):
     odds: bool = True
 
 
-class OfferIn(BaseModel):
-    action: str = PydField(pattern="^(sent|accepted|declined|withdrawn)$")
-    id: str | None = None                 # the offer an outcome answers
-    partner: str | None = None
-    give: list[str] = PydField(default_factory=list, max_length=4)
-    get: list[str] = PydField(default_factory=list, max_length=4)
-    p_accept: float | None = None         # the model's estimate when it was sent
-    d_me: float | None = None
-    d_them: float | None = None
-    source: str | None = PydField(default=None, max_length=20)   # "card", "window", ...
-
-
 def _github(fn, *a):
-    """Run a log read or write; a GitHub refusal becomes a message the page can show (an
-    uncaught one is a bare 500 without CORS headers, which the browser reports as unreachable)."""
+    """Run a refresh-request read or write; a GitHub refusal becomes a message the page can show
+    (an uncaught one is a bare 500 without CORS headers, which the browser reports as unreachable)."""
     import urllib.error
     try:
         return fn(*a)
     except urllib.error.HTTPError as e:
         hint = {401: " — the token is wrong or expired", 403: " — the token can't write to that repo",
                 404: " — the repo name is wrong, or the token can't see it"}.get(e.code, "")
-        raise HTTPException(status_code=502, detail=f"GitHub refused the offer log ({e.code}){hint}.")
+        raise HTTPException(status_code=502, detail=f"GitHub refused the refresh request ({e.code}){hint}.")
     except OSError as e:
         raise HTTPException(status_code=502, detail=f"Couldn't reach GitHub: {e}.")
 
 
-def _offer_gate(passcode: str | None):
-    from service import offer_log as OL
-    if not OL.configured():
-        raise HTTPException(status_code=503, detail="The offer log isn't set up on the server yet.")
-    if not OL.passcode_ok(passcode):
+def _passcode_gate(passcode: str | None):
+    from service import refresh_request as RR
+    if not RR.configured():
+        raise HTTPException(status_code=503, detail="The refresh button isn't set up on the server yet.")
+    if not RR.passcode_ok(passcode):
         raise HTTPException(status_code=401, detail="Wrong passcode.")
-    return OL
 
 
 @app.get("/refresh")
 def refresh_status(x_offer_passcode: str | None = Header(default=None)):
     """Where the site's "Refresh league" request stands (service/refresh_request.py)."""
     from service import refresh_request as RR
-    _offer_gate(x_offer_passcode)
+    _passcode_gate(x_offer_passcode)
     state, _ = _github(RR.read)
     return state
 
@@ -337,34 +324,8 @@ def refresh_status(x_offer_passcode: str | None = Header(default=None)):
 def refresh_queue(x_offer_passcode: str | None = Header(default=None)):
     """Ask the Mac for a refresh; it picks the request up within a minute while awake."""
     from service import refresh_request as RR
-    _offer_gate(x_offer_passcode)
+    _passcode_gate(x_offer_passcode)
     return _github(RR.request, int(time.time()))
-
-
-@app.get("/offers")
-def offers_list(x_offer_passcode: str | None = Header(default=None)):
-    OL = _offer_gate(x_offer_passcode)
-    rows, _ = _github(OL.read)
-    return {"offers": OL.offers(rows)}
-
-
-@app.post("/offers")
-def offers_add(req: OfferIn, x_offer_passcode: str | None = Header(default=None)):
-    OL = _offer_gate(x_offer_passcode)
-    if req.action == "sent":
-        if not (req.partner and req.give and req.get):
-            raise HTTPException(status_code=400, detail="A sent offer needs the partner and both sides.")
-        entry = OL.new_sent(req.partner, req.give, req.get, req.p_accept, req.d_me, req.d_them, req.source)
-    else:
-        if not req.id:
-            raise HTTPException(status_code=400, detail="An outcome needs the id of the offer it answers.")
-        entry = {"ts": int(time.time()), "id": req.id, "action": req.action}
-    try:
-        _github(OL.append, entry)
-    except KeyError:
-        raise HTTPException(status_code=404, detail="No sent offer with that id.")
-    rows, _ = _github(OL.read)
-    return {"entry": entry, "offers": OL.offers(rows)}
 
 
 @app.get("/health")

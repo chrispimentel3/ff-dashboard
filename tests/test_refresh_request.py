@@ -42,3 +42,16 @@ def test_queues_once_and_respects_a_running_or_recent_refresh(monkeypatch):
     assert out["status"] == "queued" and repo.writes == 1
     out, repo = run(monkeypatch, {"status": "running", "requested_at": 0}, RR.STALE + 1)   # died mid-run
     assert out["status"] == "queued" and repo.writes == 1
+
+
+def test_the_passcode_gate(monkeypatch):
+    monkeypatch.setenv("OFFER_PASSCODE", "hunter2")
+    assert RR.passcode_ok("hunter2") and not RR.passcode_ok("hunter3") and not RR.passcode_ok(None)
+    monkeypatch.delenv("OFFER_PASSCODE")
+    assert not RR.passcode_ok("")                        # unset never opens the gate
+
+
+def test_the_repo_url_has_no_trailing_slash(monkeypatch):
+    monkeypatch.setenv("OFFER_LOG_REPO", " chrispimentel3/mega-bowl-private ")
+    assert RR._url("") == "https://api.github.com/repos/chrispimentel3/mega-bowl-private"
+    assert RR._url("git/refs").endswith("/mega-bowl-private/git/refs")
