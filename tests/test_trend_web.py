@@ -54,3 +54,16 @@ def test_movers_can_be_limited_to_players_who_matter():
     assert [r["player"] for r in T.movers(df, "value", set(), only=None)["up"]] == ["Z", "A"]
     # but your own players are always eligible
     assert [r["player"] for r in T.movers(df, "value", {"z"}, only={"a"})["up"]] == ["Z", "A"]
+
+
+def test_trade_value_charts_as_rank_at_position(tmp_path):
+    import pandas as pd
+    from mega import trend_web as TW
+    rows = [("a", "A", "WR", 6, 900.0), ("b", "B", "WR", 6, 800.0), ("c", "C", "RB", 6, 700.0),
+            ("a", "A", "WR", 7, 700.0), ("b", "B", "WR", 7, 850.0), ("c", "C", "RB", 7, 710.0)]
+    f = tmp_path / "tv.csv"
+    pd.DataFrame(rows, columns=["norm", "player", "pos", "week", "value"]).to_csv(f, index=False)
+    s = TW._series(f, "value", {"a"}, rank=True)
+    assert s["rank"] and {(r["player"], r["week"]): r["value"] for r in s["rows"]}[("B", 7)] == 1
+    assert [(m["player"], m["prev"], m["last"], m["delta"]) for m in s["movers"]["up"]] == [("B", 2.0, 1.0, 1.0)]
+    assert [m["player"] for m in s["movers"]["down"]] == ["A"]          # WR1 -> WR2; C stays RB1
