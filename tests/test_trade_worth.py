@@ -1,0 +1,101 @@
+"""mega/trade_worth.py — the chance another manager says yes, on a league frozen 2026-10-22.
+
+The calibration test is the agreement in docs/trade_logic_v2.md: Chris labelled ten offers
+yes / maybe / no from the other manager's side, and the model has to match at least nine.
+"""
+from __future__ import annotations
+
+import json
+import pathlib
+from unittest import mock
+
+import pytest
+
+from mega import trade_engine as te
+from mega import trade_league as tl
+from mega import trade_worth as W
+
+FX = json.loads((pathlib.Path(__file__).parent / "fixtures" / "trade_worth_calibration.json").read_text())
+BAND = {"Y": (0.5, 1.01), "M": (0.2, 0.5), "N": (0.0, 0.2)}
+
+
+@pytest.fixture(scope="module")
+def world():
+    ctx = te.build_context(FX["league"], tl.engine_config())
+    tid = {t["name"]: t["id"] for t in ctx.teams.values()}
+    with mock.patch.object(W, "track_record", lambda season: (frozenset(FX["established"]), frozenset(FX["stars"]))):
+        board = W.Board(ctx, FX["season"], {tid[n]: b for n, b in FX["bias"].items()})
+    by_name = {p["name"]: pid for pid, p in ctx.players.items()}
+    return ctx, board, tid, by_name
+
+
+def score(world, n: str) -> dict:
+    ctx, board, tid, by_name = world
+    o = next(o for o in FX["offers"] if o["n"] == n)
+    give, get = [by_name[x] for x in o["give"]], [by_name[x] for x in o["get"]]
+    c = te.evaluate_core(ctx, tid[FX["my_team"]], tid[o["partner"]], give, get)
+    return W.score(board, tid[o["partner"]], give, get, c["dMe"], c["dThem"],
+                   FX["p_playoffs"][o["partner"]], FX["habit"][o["partner"]])
+
+
+def test_calibration_matches_chris_on_nine_of_ten(world):
+    offers = [o for o in FX["offers"] if o["n"] != "7"]          # 7 is an our-side check
+    got = {o["n"]: score(world, o["n"])["p"] for o in offers}
+    hits = [o["n"] for o in offers if BAND[o["label"]][0] <= got[o["n"]] < BAND[o["label"]][1]]
+    assert len(hits) >= 9, {o["n"]: (o["label"], round(got[o["n"]], 2)) for o in offers}
+
+
+def test_elite_tiers_end_at_the_first_big_drop(world):
+    ctx, board, _, _ = world
+    assert {ctx.players[i]["name"] for i in board.elite} == {"Brock Bowers", "Trey McBride", "Josh Allen"}
+
+
+def test_a_throw_in_they_must_cut_for_lowers_the_odds(world):
+    plain, padded = score(world, "5a"), score(world, "5b")         # + Jayden Daniels to Don R.I.C.O
+    assert padded["clog"] == 1 and padded["p"] < plain["p"]
+    assert any("throw-in" in w for w in padded["why"])
+
+
+def test_a_fan_holds_their_own_teams_players(world):
+    _, board, tid, by_name = world
+    brown, colin = by_name["Chase Brown"], tid["Crabcakes and Football"]     # CIN; Colin roots for CIN
+    fan, notes = board.name_value(brown, colin)
+    assert "fan" in notes
+    board.fan[colin] = None
+    try:
+        neutral, _ = board.name_value(brown, colin)
+    finally:
+        board.fan[colin] = "CIN"
+    assert fan == pytest.approx(neutral * W.FAN_MULT)
+
+
+def test_a_rookie_is_weak_currency(world):
+    _, board, tid, by_name = world
+    boston, team = by_name["Denzel Boston"], tid["deez nuts"]
+    v, notes = board.name_value(boston, team)
+    assert "unproven" in notes
+    est = board.est
+    board.est = est | {boston}
+    try:
+        proven, _ = board.name_value(boston, team)
+    finally:
+        board.est = est
+    assert v == pytest.approx(proven * W.PERCEIVED_FLOOR)
+
+
+def test_out_of_race_teams_play_for_wins_now(world):
+    s = score(world, "8")                                           # Allen Moore connection, 1%
+    assert s["out_of_race"] and "playing for wins now" in s["why"][0]
+
+
+def test_urgency_peaks_on_the_bubble():
+    assert W.urgency(0.35) == 1.0
+    assert W.urgency(0.15) == W.urgency(0.60) == 0.5
+    assert W.urgency(0.90) == W.urgency(0.02) == 0.0
+
+
+def test_flags_come_from_the_odds():
+    assert W.flag(0.6, 0.0) == "LIKELY"
+    assert W.flag(0.35, -0.01) == "EXPLOIT"
+    assert W.flag(0.35, 0.01) == "NEEDS_PITCH"
+    assert W.flag(0.05, 0.0) == "LONGSHOT"

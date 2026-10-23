@@ -407,17 +407,16 @@ TEAM_SHOW = 60              # offers shown for a team search; its targets are ra
 
 def _deal_inputs(eng):
     """What the acceptance model needs about every other manager, built once per engine:
-    standings and title sensitivity (season sim), positional bias, and
-    each roster's needs (mega/trade_league.py deal_odds)."""
+    standings (season sim) and the trade_worth Board (positional bias, each roster's needs,
+    track records, fandom) — mega/trade_league.py deal_odds."""
     def build():
         from mega.league_memory import bias
-        from mega.trade_theses import load_priors
+        from mega.trade_worth import Board
         season = _current_season()
         ctx = eng.ctx
         id_of = {t["name"]: tid for tid, t in ctx.teams.items()}
         return (TL.accept_context(ctx, _season_model(season, data.current_week(season, 1))),
-                {id_of[n]: b for n, b in bias().items() if n in id_of},
-                TL.team_profiles(ctx), load_priors())
+                Board(ctx, season, {id_of[n]: b for n, b in bias().items() if n in id_of}, TL.team_profiles(ctx)))
     return _cached(f"deal_inputs:{id(eng)}", ENGINE_TTL, build)
 
 
@@ -497,7 +496,10 @@ def _package(season, next_week, eng, me, req, out, results, swap_ids, clock, lap
             # chance they say yes (mega/trade_league.py deal_odds); absent if it couldn't build
             "p_accept": round(r["p_accept"], 3) if r.get("p_accept") is not None else None,
             "need_fit": bool(r.get("need_fit")),
-            # what I send that would sit on their bench, counted at half value to them
+            # the reasons behind p_accept, written about the other manager (mega/trade_worth.py)
+            "why": r.get("why") or [],
+            "too_small": bool(r.get("too_small")),
+            # what I send that would sit on their bench
             "sits_for_them": r.get("sits_for_them") or [],
             "fa_add": r.get("fa_add") or [],
             # players in this offer who are on injured reserve, with the share of the

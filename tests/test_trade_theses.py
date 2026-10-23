@@ -44,31 +44,6 @@ def test_a_two_for_one_is_credited_only_net_of_the_free_swap():
     assert raw["dMe"] - net == pytest.approx(fa_alone, abs=1e-9)
 
 
-def test_urgency_peaks_on_the_bubble():
-    assert TT.urgency(0.35) == 1.0
-    assert TT.urgency(0.15) == TT.urgency(0.60) == 0.5
-    assert TT.urgency(0.90) == TT.urgency(0.02) == 0.0
-
-
-def test_acceptance_moves_the_right_way():
-    pri = TT.load_priors()
-    base = TT.p_accept(pri, 0.0, 1.0, 0.0, 0.0, 0.0)
-    assert TT.p_accept(pri, 0.03, 1.0, 0.0, 0.0, 0.0) > base        # helps their title odds
-    assert TT.p_accept(pri, 0.0, 0.8, 0.0, 0.0, 0.0) < base         # worse on FantasyCalc
-    assert TT.p_accept(pri, 0.0, 1.0, 1.0, 0.0, 0.0) > base         # fills their lineup
-    assert TT.p_accept(pri, 0.0, 1.0, 0.0, 0.15, 0.0) > base        # their positional bias
-    assert TT.p_accept(pri, 0.0, 1.0, 0.0, 0.0, 1.0) > base         # on the bubble
-    assert TT.p_accept(pri, 0.0, 1.0, 0.0, 0.0, 0.0, -2.0) < base - 0.15  # costs his lineup 2 pts/wk
-
-
-def test_flags_come_from_p_accept():
-    pri = TT.load_priors()
-    assert TT.flag(pri, 0.6, 0.0) == "LIKELY"
-    assert TT.flag(pri, 0.35, -0.01) == "EXPLOIT"
-    assert TT.flag(pri, 0.35, 0.01) == "NEEDS_PITCH"
-    assert TT.flag(pri, 0.05, 0.0) == "LONGSHOT"
-
-
 def _card(**kw):
     c = {"giveIds": ["w1"], "getIds": ["or1"], "dMe": 2.0, "d_week_me": 1.0, "consolidation": False,
          "me_starters_in": [], "me_starters_out": [], "portfolio": None, "fa_add": None}

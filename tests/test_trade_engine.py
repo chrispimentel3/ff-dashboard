@@ -294,13 +294,12 @@ def test_a_piece_that_would_sit_behind_their_starter_is_a_backup_to_them(eng):
     sits = tl.sits_for_them(ctx, 3, ["m_te2"], ["b_wr6"])          # B starts b_te1 (12)
     assert list(sits) == ["m_te2"] and sits["m_te2"] == ("sits", [ctx.players["b_te1"]["name"]])
     assert tl.sits_for_them(ctx, 2, ["m_te1"], ["a_wr5"]) == {}    # 10 beats A's 9: he starts
-    assert tl.to_them({"m_te2": 40.0, "m_wr1": 60.0}, sits) == pytest.approx(40 * tl.BENCH_CREDIT + 60)
     assert "wouldn't start for them (they start" in tl.sits_text(ctx, sits)[0]
 
 
 def test_a_third_tight_end_is_a_luxury_even_if_he_starts():
     """Mega Bowl's flex is RB/WR, so a TE only ever replaces their one TE: a team already
-    holding two counts a third at BENCH_CREDIT (Kittle offered to Kraft-and-Likely)."""
+    holding two counts a third as a luxury (Kittle offered to Kraft-and-Likely)."""
     from mega import trade_league as tl
     ctx = create_engine(LEAGUE, {"flexEligible": ["RB", "WR"]}).ctx
     sits = tl.sits_for_them(ctx, 2, ["m_te1"], ["a_wr5"])          # 10 starts over a_te1 (9); A also has a_te2

@@ -125,6 +125,11 @@ fitted from it; the calibration set replaces it.
 
 ## Build order (one commit each)
 
+Status: steps 1–2 done 2026-10-22. The rules live in `mega/trade_worth.py`; its (J) constants
+were picked by a grid search for the setting that matches all ten labels with the widest
+margin and stays at 9+ when any one constant moves a step. `tests/test_trade_worth.py` holds the
+bar on a league frozen that day (`tests/fixtures/trade_worth_calibration.json`).
+
 1. Remove the offer log.
 2. The shared "worth to them" function, its percentage and "why", and the calibration test.
 3. Weekly horizon and record-based week weights; rank every candidate on them.
