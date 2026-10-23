@@ -420,7 +420,8 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
     # the same weights from the file written here
     tm = T.build(season, now, yahoo_rosters, league=lg)
     base = tm.odds() if tm is not None else {}
-    weights = T.write_week_weights(tm, season, now)["teams"] if tm is not None else {}
+    ww_payload = T.week_weights_payload(tm, season, now) if tm is not None else None
+    weights = ww_payload["teams"] if ww_payload else {}
     cfg = tl.trade_config(season, weights)
     cfg["market"] = {"bias": {str(id_of[n]): b for n, b in bias_by_name.items() if n in id_of}}
     ctx = te.build_context(lg, cfg)
@@ -634,6 +635,7 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
     mine = base.get(my_name, {})
     return {
         "available": True, "cards": kept, "deadline": TRADE_DEADLINE,
+        "_week_weights": ww_payload,          # tools/export_web.py writes it; not part of the page
         "meta": {"evaluated": evaluated, "simulated": len(top), "shown": len(kept),
                  "p_playoffs": mine.get("p_playoffs"), "p_title": mine.get("p_title"),
                  "posture": T.posture(mine.get("p_playoffs", 0.0)) if mine else None,

@@ -362,15 +362,19 @@ def weights_path(season: int):
     return DATA / f"week_weights_{season}.json"
 
 
-def write_week_weights(model: "Model", season: int, now: int) -> dict:
-    """Save `model.week_weights()` for the live service, which prices trades on the same
-    weights as the offer cards (mega/trade_league.py trade_config)."""
+def week_weights_payload(model: "Model", season: int, now: int) -> dict:
+    """`model.week_weights()` as the file the live service reads, which prices trades on the
+    same weights as the offer cards (mega/trade_league.py trade_config)."""
+    return {"_doc": "How much winning each week moves each team's title odds (mega/title_odds.py "
+                    "week_weights). The trade surfaces value a week's points by these.",
+            "season": season, "week": int(now), "seasons": model.n, "teams": model.week_weights()}
+
+
+def write_week_weights(payload: dict) -> None:
+    """Written by the export only (tools/export_web.py), never as a side effect of building
+    cards: a test building week-3 cards once overwrote the live file."""
     import json
-    out = {"_doc": "How much winning each week moves each team's title odds (mega/title_odds.py "
-                   "week_weights). The trade surfaces value a week's points by these.",
-           "season": season, "week": int(now), "seasons": model.n, "teams": model.week_weights()}
-    weights_path(season).write_text(json.dumps(out, indent=1))
-    return out
+    weights_path(int(payload["season"])).write_text(json.dumps(payload, indent=1))
 
 
 def load_week_weights(season: int) -> dict:

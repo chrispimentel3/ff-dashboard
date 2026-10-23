@@ -209,6 +209,10 @@ def intel_bundle(season: int) -> dict:
         waivers = I.waiver_board(season, rostered, top=20)
     try:
         theses = TT.run(season, wk, yahoo_rosters=ros)
+        ww = theses.pop("_week_weights", None)
+        if ww:                     # the live service prices trades on the same week weights
+            from mega import title_odds as _T
+            _T.write_week_weights(ww)
     except Exception as e:
         theses = {"available": False, "cards": [], "meta": {"error": f"{type(e).__name__}: {e}"}}
     return {"draft": draft, "waivers": waivers, "trades": I.trade_finder(season, yahoo_rosters=ros),
