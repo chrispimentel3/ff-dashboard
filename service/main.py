@@ -423,6 +423,15 @@ def _deal_inputs(eng):
     return _cached(f"deal_inputs:{id(eng)}", ENGINE_TTL, build)
 
 
+def _flag_inputs(eng, season: int, now: int):
+    """Player facts and the league's typical starter per slot, for the our-side flags
+    (mega/trade_theses.py our_flags), built once per engine."""
+    def build():
+        from mega import trade_theses as TT
+        return TT.player_facts(season, now), TT.slot_typical(eng.ctx)
+    return _cached(f"flag_inputs:{id(eng)}", ENGINE_TTL, build)
+
+
 def _rank(eng, results, order):
     """Stamp every offer with its chance of a yes, then order: "accept" by that chance
     (mega/trade_league.py by_deal_odds), "gain" by what it does for me."""
@@ -627,12 +636,21 @@ def trade_evaluate(req: TradeEvalRequest):
         raise HTTPException(status_code=400, detail="Everyone you get has to come from the same other team.")
     their = owners.pop()
 
-    row = te.with_detail(ctx, me, te.evaluate_core(ctx, me, their, give, get))
+    core = te.evaluate_core(ctx, me, their, give, get)
+    row = te.with_detail(ctx, me, core)
     results, swap_ids = TL.net_free_swap(eng, me, [row], min_delta_me=-math.inf)
     results = _rank(eng, results, "gain")
     lap("evaluate")
+    try:                # what to check before sending it: role, rebound, injuries, my thin spot
+        from mega import trade_theses as TT
+        facts, typical = _flag_inputs(eng, season, next_week)
+        ref = swap_ids if results[0].get("netted") and swap_ids else ctx.base[me].ids
+        flags = TT.our_flags(ctx, give, get, ref, core["_after"]["me"].ids, facts, next_week, typical)
+    except Exception:
+        flags = []
+    lap("flags")
     return _package(season, next_week, eng, me, req, {"evaluated": 1, "padded": 0, "matched": 1},
-                    results, swap_ids, clock, lap, extra={"verdict": TL.verdict(results[0])})
+                    results, swap_ids, clock, lap, extra={"verdict": TL.verdict(results[0]), "flags": flags})
 
 
 @app.post("/trade-team")

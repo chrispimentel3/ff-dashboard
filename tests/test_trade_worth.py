@@ -130,3 +130,39 @@ def test_week_weights_follow_the_title_odds():
     assert w["A"][7] == pytest.approx(0.5, abs=0.03)             # P(title | won 7) - P(title | lost 7)
     assert w["A"][16] == pytest.approx(0.5, abs=0.03)            # plays every season, P(title | won 16)
     assert w["B"] == {7: 1.0, 8: 1.0}                           # out of the race: the next weeks, evenly
+
+
+# ---- our-side flags (mega/trade_theses.py our_flags), on the same frozen league
+def _flags(world, give, get, facts):
+    from mega import trade_theses as TT
+    ctx, _, tid, by_name = world
+    me = tid[FX["my_team"]]
+    g, t = [by_name[n] for n in give], [by_name[n] for n in get]
+    partner = next(o["partner"] for o in FX["offers"] if o["get"] == get)
+    after = te.evaluate_core(ctx, me, tid[partner], g, t)["_after"]["me"].ids
+    return TT.our_flags(ctx, g, t, ctx.base[me].ids, after, {by_name[k]: v for k, v in facts.items()}, 7,
+                        TT.slot_typical(ctx))
+
+
+def test_a_shrinking_role_and_a_rebound_bet_are_flagged(world):
+    facts = {"Chase Brown": {"share_early": 0.27, "share": 0.18, "ros_pg": 14.8, "pts_pg": 10.6, "games": 5,
+                             "team": "CIN"}}
+    kinds = {f["kind"]: f["text"] for f in _flags(world, ["Christian Watson"], ["Chase Brown"], facts)}
+    assert "from 27% to 18%" in kinds["role_risk"] and "14.8/g from here" in kinds["rebound"]
+    steady = {"Chase Brown": {"share_early": 0.20, "share": 0.19, "ros_pg": 11.0, "pts_pg": 10.6, "games": 5}}
+    assert not {"role_risk", "rebound"} & {f["kind"] for f in _flags(world, ["Christian Watson"], ["Chase Brown"], steady)}
+
+
+def test_an_injured_player_is_flagged_for_his_return_not_his_role(world):
+    facts = {"Davante Adams": {"share_early": 0.16, "share": 0.08, "games": 6}}       # hurt mid-game
+    flags = _flags(world, ["Rachaad White", "Emeka Egbuka"], ["Davante Adams"], facts)
+    assert "Davante Adams is out until week 12, back for the playoffs." in [f["text"] for f in flags]
+    assert "role_risk" not in {f["kind"] for f in flags}
+
+
+def test_the_thinnest_spot_skips_what_waivers_already_fix(world):
+    from mega import trade_theses as TT
+    ctx, _, tid, by_name = world
+    me = ctx.base[tid[FX["my_team"]]].ids
+    assert by_name["Patrick Mahomes"] in ctx.fa                   # beats Bryce Young, so QB is a pickup
+    assert TT.thinnest(ctx, me, TT.slot_typical(ctx))["slot"] != "QB"

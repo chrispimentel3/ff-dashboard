@@ -79,6 +79,8 @@ def player_facts(season: int, now: int) -> dict:
             s = x["share"].to_numpy(float)
             slope = float(np.polyfit(np.arange(len(s)), s, 1)[0]) if len(s) >= 2 else 0.0
             rows.append({"gsis_id": gid, "pos": x["pos"].iloc[-1], "share": float(s[-min(3, len(s)):].mean()),
+                         # the games before the last three (two at least), for the role-risk flag
+                         "share_early": float(s[:-3].mean()) if len(s) >= 5 else float("nan"),
                          "share_sd": float(s.std(ddof=1)) if len(s) >= 2 else float("nan"),
                          "slope": slope, "share_first": float(s[0]), "share_last": float(s[-1])})
         share = pd.DataFrame(rows)
@@ -94,6 +96,112 @@ def player_facts(season: int, now: int) -> dict:
                   "usage_rank": p.get("usage_rank"), "ros_pg": p.get("ros_pg"),
                   "disagreement": p.get("disagreement") or {}, "proj_team": p.get("team"),
                   "byes": [int(w) for w, v in (p.get("weeks") or {}).items() if v.get("bye")]})
+    return out
+
+
+# ======================================================================== our-side flags
+ROLE_DROP = 0.25        # (J) last 3 games' share of the offense this far below the earlier games'
+ROLE_MIN_SHARE = 0.03   #     ...and at least this many points of share: the role is shrinking
+REBOUND_GAP = 3.0       # (J) pts/g the projection sits above what he has scored so far...
+REBOUND_REL = 0.25      #     ...and at least this share of it: the value is a bet on a rebound
+REBOUND_MIN_GAMES = 3
+
+
+def slot_typical(ctx) -> dict:
+    """Median per-game projection of each starting slot (QB, RB1, RB2, ..., FLEX) across the
+    league's lineups as they stand — what "thin" is measured against."""
+    from statistics import median
+    by = {}
+    for t in ctx.teams.values():
+        for slot, pid in _slots(ctx, ctx.base[t["id"]].ids):
+            by.setdefault(slot, []).append(float(ctx.players[pid].get("ppg") or 0.0))
+    return {k: median(v) for k, v in by.items()}
+
+
+def _slots(ctx, ids) -> list:
+    """[(slot label, pid)] for a roster's starters: RB1/RB2 and WR1/WR2 by order, then FLEX."""
+    out, seen = [], {}
+    for pid, pos, _v, slot in te.lineup(ids, ctx, None).starters:
+        if slot == "FLEX":
+            out.append(("FLEX", pid))
+            continue
+        seen[pos] = seen.get(pos, 0) + 1
+        out.append((f"{pos}{seen[pos]}" if ctx.cfg["slots"].get(pos, 1) > 1 else pos, pid))
+    return out
+
+
+def thinnest(ctx, ids, typical: dict) -> dict | None:
+    """The starter furthest below the league's typical player in that slot, as a share of it.
+    A slot a free agent already beats is a waiver pickup, not a trade need, and is skipped
+    (Mahomes on waivers over Bryce Young)."""
+    best_fa = {}
+    for i in ctx.fa:
+        pos = ctx.players[i]["pos"]
+        best_fa[pos] = max(best_fa.get(pos, 0.0), te.value_at(ctx.players[i], None))
+    worst = None
+    for slot, pid in _slots(ctx, ids):
+        p = ctx.players[pid]
+        ppg, typ = float(p.get("ppg") or 0.0), typical.get(slot)
+        if not typ or best_fa.get(p["pos"], 0.0) >= ppg:
+            continue
+        gap = ppg / typ - 1.0
+        if worst is None or gap < worst["gap"]:
+            worst = {"slot": slot, "id": pid, "name": p["name"], "ppg": round(ppg, 1),
+                     "typical": round(typ, 1), "gap": round(gap, 3)}
+    return worst
+
+
+def back_week(p: dict, now: int):
+    """("out", week back | None for the season) for a player not playing now, else None."""
+    if p.get("out"):
+        return "out", p["out"].get("back")
+    wk = p.get("weekly") or {}
+    if wk and float(wk.get(now, wk.get(str(now), 1.0)) or 0.0) == 0.0 and p.get("bye") != now:
+        nxt = sorted(int(w) for w, v in wk.items() if int(w) > now and float(v or 0) > 0)
+        return "out", (nxt[0] if nxt else None)
+    return None
+
+
+def our_flags(ctx, give_ids, get_ids, ref_ids, after_ids, facts: dict, now: int, typical: dict) -> list[dict]:
+    """What a card should warn me about before I send it (docs/trade_logic_v2.md step 4):
+    a player I'd get whose role is shrinking, or whose value is a bet on a rebound; injured
+    players and whether they're back for weeks 15–17; and my thinnest starting spot before
+    and after the trade."""
+    out = []
+    name = lambda pid: ctx.players[pid]["name"]
+    for pid in get_ids:
+        f, p = facts.get(pid) or {}, ctx.players[pid]
+        early, recent = f.get("share_early"), f.get("share")
+        if (p.get("pos") in ("RB", "WR", "TE") and not back_week(p, now)   # hurt, not demoted
+                and early == early and early is not None and recent is not None
+                and early - recent >= max(ROLE_MIN_SHARE, ROLE_DROP * early)):
+            out.append({"kind": "role_risk", "text": f"Role risk: {name(pid)}'s share of the {f.get('team') or p.get('nfl')} "
+                        f"offense fell from {early:.0%} to {recent:.0%} over the last three games."})
+        ros, pts, games = f.get("ros_pg"), f.get("pts_pg"), f.get("games") or 0
+        if ros and pts is not None and games >= REBOUND_MIN_GAMES and ros - pts >= max(REBOUND_GAP, REBOUND_REL * pts):
+            out.append({"kind": "rebound", "text": f"Rebound bet: projected at {ros:.1f}/g from here, against "
+                        f"{pts:.1f}/g so far."})
+    for side, ids in (("get", get_ids), ("give", give_ids)):
+        for pid in ids:
+            b = back_week(ctx.players[pid], now)
+            if not b:
+                continue
+            wk = b[1]
+            when = ("out for the season" if wk is None else f"out until week {wk}, back for the playoffs" if wk <= 14
+                    else f"out until week {wk}, back for only part of the playoffs" if wk <= 17 else "out for the season")
+            out.append({"kind": "injury", "text": (f"{name(pid)} is {when}." if side == "get"
+                                                   else f"You'd give up {name(pid)}, {when}.")})
+    before, after = thinnest(ctx, ref_ids, typical), thinnest(ctx, after_ids, typical)
+    if before and after:
+        line = lambda t: f"{t['slot']} ({t['name']}, {t['ppg']:.1f}/g vs a typical {t['slot']}'s {t['typical']:.1f})"
+        if after["id"] == before["id"] and after["slot"] == before["slot"]:
+            text = f"Your weakest starter stays {line(before)}."
+        elif after["gap"] > before["gap"]:
+            text = (f"Fixes your weakest starter, {line(before)}; "
+                    + ("every starter is at or above typical after." if after["gap"] >= 0 else f"weakest after: {line(after)}."))
+        else:
+            text = f"Your weakest starter goes from {line(before)} to {line(after)}."
+        out.append({"kind": "need", "text": text})
     return out
 
 
@@ -317,6 +425,7 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
     cfg["market"] = {"bias": {str(id_of[n]): b for n, b in bias_by_name.items() if n in id_of}}
     ctx = te.build_context(lg, cfg)
     profiles = tl.team_profiles(ctx)       # who needs what, shown on each card
+    typical = slot_typical(ctx)            # the league's typical starter per slot (need view)
 
     # ---- §6.1 candidates from the engine, not from FantasyCalc
     me = ctx.teams[my_id]
@@ -501,6 +610,7 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
             "pitch": pitch, "p_accept": round(pa, 3), "flag": TW.flag(pa, d_them), "why": w["why"],
             "exp_title": round(pa * (0.0 if us.get("noise", True) else d_us), 5),
             "exp_ros": round(pa * c["dMe"], 3),
+            "flags": our_flags(ctx, c["giveIds"], c["getIds"], c["ref_me"], c["after_me"], facts, now, typical),
             "fairness": round(fair, 2), "sits_for_them": w["sits"], "ranks": {"give": ranks(c["giveIds"]), "get": ranks(c["getIds"])},
         })
     cards.sort(key=lambda k: (-k["exp_title"], -k["exp_ros"]))
