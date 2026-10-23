@@ -125,10 +125,22 @@ fitted from it; the calibration set replaces it.
 
 ## Build order (one commit each)
 
-Status: steps 1–2 done 2026-10-22. The rules live in `mega/trade_worth.py`; its (J) constants
+Status: steps 1–3 done 2026-10-22. The rules live in `mega/trade_worth.py`; its (J) constants
 were picked by a grid search for the setting that matches all ten labels with the widest
 margin and stays at 9+ when any one constant moves a step. `tests/test_trade_worth.py` holds the
 bar on a league frozen that day (`tests/fixtures/trade_worth_calibration.json`).
+
+Step 3 as built: `title_odds.Model.week_weights()` reads each week's weight off the title sim
+(regular season: title odds after a win minus after a loss; playoffs: P(plays) × title odds when
+it wins; under 10% playoff odds: the next 4 weeks evenly). The export writes them to
+`data/week_weights_<season>.json` for the live service. **One deviation from the plan:** rather
+than re-optimising a lineup every week (10× slower, ~20 s a search on Render), each player is
+valued at their week-weighted expected points in a single lineup (`trade_engine` `weekWeights`),
+mine with my weights and theirs with theirs. Byes, Vegas totals and injury return weeks are in
+those weekly values; what it gives up is a bench player filling a bye, which the depth bonus
+still stands in for — so step 6 should keep the bye part of the bench bonus. On 2026-10-22 it
+put ~60% of a contender's weight on weeks 15–17; the calibration set still matched 10/10 with
+weights on, and offer 7 came out −0.78 pts/wk for us once the free pickup (Mahomes) is netted.
 
 1. Remove the offer log.
 2. The shared "worth to them" function, its percentage and "why", and the calibration test.

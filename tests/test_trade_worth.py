@@ -99,3 +99,34 @@ def test_flags_come_from_the_odds():
     assert W.flag(0.35, -0.01) == "EXPLOIT"
     assert W.flag(0.35, 0.01) == "NEEDS_PITCH"
     assert W.flag(0.05, 0.0) == "LONGSHOT"
+
+
+def test_offer_7_is_a_loss_for_us_once_the_free_pickup_is_netted(world):
+    """Chris wouldn't send Rachaad White + Egbuka for Davante Adams (out until week 12). Its
+    raw gain is the free agent the open spot picks up, which needs no trade."""
+    from mega import trade_theses as TT
+    ctx, _, tid, by_name = world
+    me = tid[FX["my_team"]]
+    core = te.evaluate_core(ctx, me, tid["BillsMafia"], [by_name["Rachaad White"], by_name["Emeka Egbuka"]],
+                            [by_name["Davante Adams"]])
+    _, swap_val = TT.free_swap(ctx, ctx.base[me].ids)
+    assert core["dMe"] > 0 and core["_after"]["me"].value - swap_val <= 0
+
+
+def test_week_weights_follow_the_title_odds():
+    import numpy as np
+    from mega import title_odds as T
+    n = 4000
+    rng = np.random.default_rng(1)
+    won7 = rng.random(n) < 0.5
+    won16 = rng.random(n) < 0.5
+    title = won7 & won16                                         # A wins it all by winning both
+    m = T.Model.__new__(T.Model)
+    m._base_run = {"teams": ["A", "B"], "made": np.array([np.ones(n, bool), np.zeros(n, bool)]),
+                   "title": np.array([title, np.zeros(n, bool)]),
+                   "won": {(0, 7): won7, (1, 7): ~won7, (0, 8): won7, (1, 8): ~won7},
+                   "games": [(16, np.zeros(n, int), np.ones(n, int), np.where(won16, 0, 1))]}
+    w = m.week_weights()
+    assert w["A"][7] == pytest.approx(0.5, abs=0.03)             # P(title | won 7) - P(title | lost 7)
+    assert w["A"][16] == pytest.approx(0.5, abs=0.03)            # plays every season, P(title | won 16)
+    assert w["B"] == {7: 1.0, 8: 1.0}                           # out of the race: the next weeks, evenly

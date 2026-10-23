@@ -127,10 +127,16 @@ def track_record(season: int) -> tuple[frozenset, frozenset]:
 class Board:
     """What every manager sees about every player, built once per engine context."""
 
-    def __init__(self, ctx, season: int, bias_by_id: dict | None = None, profiles: dict | None = None):
+    def __init__(self, ctx, season: int, bias_by_id: dict | None = None, profiles: dict | None = None,
+                 weights: dict | None = None):
+        """`weights` is {team name: {week: weight}} (mega/title_odds.py week_weights); absent,
+        each manager judges their lineup on one per-game number."""
         from . import trade_engine as te
         from . import trade_league as tl
         self.ctx, self.te = ctx, te
+        self.weights = {tid: (weights or {}).get(t.get("name")) or {} for tid, t in ctx.teams.items()}
+        self._before: dict = {}
+        self._values: dict = {}
         self.est, self.stars = track_record(season)
         self.bias = bias_by_id or {}
         prof = profiles if profiles is not None else tl.team_profiles(ctx)
@@ -146,6 +152,20 @@ class Board:
                 v = [te.value_at(ctx.players[i], None) for i in ids[:5]]
                 cut = next((n + 1 for n in range(min(4, len(v) - 1)) if v[n] - v[n + 1] >= ELITE_GAP), 0)
                 self.elite.update(ids[:cut])
+
+    def values(self, team_id) -> dict | None:
+        """pid -> value under `team_id`'s week weights (cached), or None without weights."""
+        ww = self.weights.get(team_id)
+        if not ww:
+            return None
+        hit = self._values.get(team_id)
+        if hit is None:
+            te, tot = self.te, sum(ww.values())
+            hit = self._values[team_id] = {
+                pid: (sum(x * te.value_at(p, w) for w, x in ww.items()) / tot if p.get("weekly")
+                      else te.value_at(p, None))
+                for pid, p in self.ctx.players.items()}
+        return hit
 
     def name_value(self, pid: str, team_id) -> tuple[float, list[str]]:
         """What `team_id`'s manager thinks `pid` is worth, on the market curve, and which
@@ -189,6 +209,23 @@ def notes_for(ctx, pid: str, codes: list[str], gets: bool) -> list[str]:
     return [NOTE[c][0 if gets else 1].format(n=p["name"], pos=p.get("pos"), nfl=p.get("nfl")) for c in codes]
 
 
+def their_gain(board: Board, their_id, give_ids: list, get_ids: list) -> float | None:
+    """Their lineup's change, pts/wk, over the weeks that matter to THEM: every player valued
+    at the average of their weekly expected points under the team's own week weights, the way the
+    engine values mine under mine (trade_engine weekWeights). None without weights for them."""
+    vals = board.values(their_id)
+    if vals is None:
+        return None
+    te, ctx = board.te, board.ctx
+    out = set(get_ids)
+    after = te.settle([i for i in ctx.teams[their_id]["roster"] if i not in out] + list(give_ids),
+                      ctx, set(give_ids)).ids
+    b = board._before.get(their_id)
+    if b is None:
+        b = board._before[their_id] = te.lineup(ctx.base[their_id].ids, ctx, None, vals).total
+    return te.lineup(after, ctx, None, vals).total - b
+
+
 def package(vals: list[float]) -> float:
     return sum(max(v, 0.0) ** K for v in vals) ** (1 / K)
 
@@ -203,6 +240,9 @@ def score(board: Board, their_id, give_ids: list, get_ids: list, d_me: float, d_
     from . import trade_league as tl
     ctx = board.ctx
     why: list[str] = []
+    weighted = their_gain(board, their_id, give_ids, get_ids)
+    if weighted is not None:
+        d_them = weighted
     sits = tl.sits_for_them(ctx, their_id, give_ids, get_ids)
     rec = sorted(((pid, *board.name_value(pid, their_id)) for pid in give_ids), key=lambda x: -x[1])
     sent = [(pid, *board.name_value(pid, their_id)) for pid in get_ids]
@@ -238,7 +278,8 @@ def score(board: Board, their_id, give_ids: list, get_ids: list, d_me: float, d_
         p *= 0.3
         why.insert(0, "Too small a change for either side to bother")
     lead = (f"Their lineup {'gains' if d_them >= 0 else 'loses'} {abs(d_them):.1f} pts/wk"
-            + (" — and out of the race, they're playing for wins now" if out else ""))
+            + (" over the weeks that matter to them" if weighted is not None and not out else "")
+            + (" over the next few weeks — out of the race, they're playing for wins now" if out else ""))
     name_line = (f"By name they get {ratio:.0%} of what they give" if abs(ratio - 1) >= 0.05
                  else "By name it's about even")
     why = [lead, name_line] + ([need] if need else []) + why
@@ -250,4 +291,5 @@ def score(board: Board, their_id, give_ids: list, get_ids: list, d_me: float, d_
             seen.add(w)
             uniq.append(w[:1].upper() + w[1:])
     return {"p": p, "why": uniq, "ratio": ratio, "clog": clog, "small": small, "need": need is not None,
+            "d_them": d_them,
             "sits": sits, "out_of_race": out}

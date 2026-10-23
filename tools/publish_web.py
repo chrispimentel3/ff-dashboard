@@ -84,7 +84,7 @@ def main() -> int:
         for p in problems:
             print(f"[web] CHECK FAILED: {p}")
         return 3
-    print("STAGE data/web/ data/proj_ros_%d.json %s" % (season, " ".join(EXTRA)))
+    print("STAGE data/web/ data/proj_ros_%d.json data/week_weights_%d.json %s" % (season, season, " ".join(EXTRA)))
     return 0
 
 

@@ -47,6 +47,7 @@ ROOT_MIN_SEASONS = 30     # a game one side wins in fewer simulated seasons than
 TW_CACHE_MAX = 400        # trade-variant team-week arrays kept before they are flushed
                           # (the current rosters' own are kept for the life of the model)
 POSTURE = ((0.70, "protect"), (0.35, "balanced"), (0.0, "swing"))   # handoff §5, on P(playoffs)
+NEAR_WEEKS = 4            # a team out of the race plays for its next few weeks, evenly
 
 
 def posture(p_playoffs: float) -> str:
@@ -138,6 +139,7 @@ class Model:
         idx = {t: i for i, t in enumerate(teams)}
         wins = np.array([[float(s.wins.get(t, 0))] * self.n for t in teams])
         pf = np.array([[float(s.points_for.get(t, 0.0))] * self.n for t in teams])
+        won = {}                                                 # (team index, week) -> won that week
         for g in s.schedule:
             h, a, w = g["home"], g["away"], int(g["week"])
             if h not in idx or a not in idx or w > REG_LAST:
@@ -148,20 +150,23 @@ class Model:
             pf[idx[a]] += as_
             wins[idx[h]] += hs > as_
             wins[idx[a]] += as_ > hs
+            won[(idx[h], w)], won[(idx[a], w)] = hs > as_, as_ > hs
         order = np.argsort(-(wins + pf / 1e6), axis=0)          # order[k] = team at seed k+1
         made = np.zeros((len(teams), self.n), bool)
         for k in range(min(s.playoff_teams, len(teams))):
             made[order[k], np.arange(self.n)] = True
         seed = np.empty_like(order)
         seed[order, np.arange(self.n)] = np.arange(1, len(teams) + 1)[:, None]
-        champ = self._bracket(order, teams, rosters)
+        games: list = []
+        champ = self._bracket(order, teams, rosters, games)
         title = np.zeros((len(teams), self.n), bool)
         title[champ, np.arange(self.n)] = True
-        return {"teams": teams, "made": made, "title": title, "seed": seed}
+        return {"teams": teams, "made": made, "title": title, "seed": seed, "won": won, "games": games}
 
-    def _bracket(self, order: np.ndarray, teams: list, rosters: dict) -> np.ndarray:
+    def _bracket(self, order: np.ndarray, teams: list, rosters: dict, games: list | None = None) -> np.ndarray:
         """Mega Bowl: seeds 1–2 bye; week 15 3v6 and 4v5; week 16 the top seed meets the
-        lowest seed left; week 17 the final. Higher seed wins a tie."""
+        lowest seed left; week 17 the final. Higher seed wins a tie. Each game is appended to
+        `games` as (week, team index one, team index two, winner), one entry per season."""
         n = self.n
         cols = np.arange(n)
         score = {w: np.stack([self.team_week(t, rosters.get(t, []), w) for t in teams]) for w in PLAYOFF_WEEKS}
@@ -172,6 +177,8 @@ class Model:
             sc = score[w]
             a, b = sc[t1, cols], sc[t2, cols]
             win1 = a >= b
+            if games is not None:
+                games.append((w, t1, t2, np.where(win1, t1, t2)))
             return np.where(win1, t1, t2), np.where(win1, s1, s2)
 
         w3, ws3 = game(seed_of[3], np.full(n, 3), seed_of[6], np.full(n, 6), 15)
@@ -290,10 +297,67 @@ class Model:
         games.sort(key=lambda r: -r["d_playoffs"])
         return {"week": week, "mine": mine, "games": games}
 
+    def week_weights(self) -> dict:
+        """team -> {week: how much winning that week moves its title odds}, read off the base
+        run's seasons (docs/trade_logic_v2.md: weeks count by record).
+
+        Regular season: title odds in the seasons it won that week minus those it lost (the
+        same split as `rooting`). Playoffs: the chance it plays that week times its title odds
+        when it wins (a loss ends it), so a likely top-2 seed barely counts week 15, its bye.
+        A team under OUT_OF_RACE playoff odds is playing for this week, not a title: its next
+        NEAR_WEEKS weeks count evenly and nothing after."""
+        from .trade_worth import OUT_OF_RACE
+        r = self._base()
+        out = {}
+        for i, t in enumerate(r["teams"]):
+            title = r["title"][i]
+            mine = {w: v for (j, w), v in r["won"].items() if j == i}
+            if r["made"][i].mean() < OUT_OF_RACE:
+                out[t] = {w: 1.0 for w in sorted(mine)[:NEAR_WEEKS]}
+                continue
+            lev = {}
+            for w, won in sorted(mine.items()):
+                if min(int(won.sum()), int((~won).sum())) >= ROOT_MIN_SEASONS:
+                    lev[w] = max(0.0, float(title[won].mean() - title[~won].mean()))
+            for w, t1, t2, winner in r["games"]:
+                plays = (t1 == i) | (t2 == i)
+                won = plays & (winner == i)
+                if won.any():
+                    lev[w] = lev.get(w, 0.0) + float(plays.mean()) * float(title[won].mean())
+            out[t] = {w: round(v, 5) for w, v in lev.items()}
+        return out
+
     def _base(self):
         if not hasattr(self, "_base_run"):
             self._base_run = self.run(self.rosters)
         return self._base_run
+
+
+def weights_path(season: int):
+    from .config import DATA
+    return DATA / f"week_weights_{season}.json"
+
+
+def write_week_weights(model: "Model", season: int, now: int) -> dict:
+    """Save `model.week_weights()` for the live service, which prices trades on the same
+    weights as the offer cards (mega/trade_league.py trade_config)."""
+    import json
+    out = {"_doc": "How much winning each week moves each team's title odds (mega/title_odds.py "
+                   "week_weights). The trade surfaces value a week's points by these.",
+           "season": season, "week": int(now), "seasons": model.n, "teams": model.week_weights()}
+    weights_path(season).write_text(json.dumps(out, indent=1))
+    return out
+
+
+def load_week_weights(season: int) -> dict:
+    """{team: {week: weight}} as last written, or {} (the trade surfaces then fall back to
+    one per-game number)."""
+    import json
+    try:
+        d = json.loads(weights_path(season).read_text())
+        return {t: {int(w): float(v) for w, v in ws.items()} for t, ws in (d.get("teams") or {}).items()}
+    except Exception:
+        return {}
 
 
 # ======================================================================== from live data

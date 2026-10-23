@@ -321,3 +321,13 @@ def test_pos_order_is_config_order_not_set_order():
     # title-odds FLEX backup, so publishes drifted between processes.
     from mega.trade_engine import build_context
     assert build_context(LEAGUE).pos_order == ["QB", "RB", "WR", "TE"]
+
+
+def test_week_weights_value_a_player_by_the_weeks_that_count():
+    from mega import trade_engine as te
+    lg = copy.deepcopy(LEAGUE)
+    lg["players"]["m_qb1"]["weekly"] = {15: 30.0, 16: 0.0}       # a week-16 bye, say
+    ctx = te.build_context(lg, {"weekWeights": {15: 3, 16: 1}})
+    assert ctx.wv["m_qb1"] == pytest.approx(22.5)
+    assert ctx.wv["m_qb2"] == te.value_at(lg["players"]["m_qb2"], None)   # no weekly: the per-game number
+    assert te.build_context(LEAGUE).wv == {}                     # off unless asked for

@@ -213,8 +213,8 @@ def tags_for(c: dict, ctx, facts: dict, env: dict) -> list[dict]:
         fa = c.get("fa_add") or "the best free agent"
         got = " + ".join(_names(ctx, get))
         out.append({"tag": "CONSOLIDATION", "player": ", ".join(_names(ctx, give)),
-                    "thesis": f"Two for one: {c['d_week_me']:+.1f} this week, but {c['dMe']:+.2f} pts/wk for the "
-                              f"rest of the season — already net of picking up {fa}, which you could do anyway.",
+                    "thesis": f"Two for one: {c['d_week_me']:+.1f} this week, but {c['dMe']:+.2f} pts/wk over the "
+                              f"weeks that count most — already net of picking up {fa}, which you could do anyway.",
                     "kill": f"Wrong if {got} misses time: this puts {' and '.join(_names(ctx, give))}'s "
                             f"points on one player."})
     port = c.get("portfolio")
@@ -231,7 +231,7 @@ def tags_for(c: dict, ctx, facts: dict, env: dict) -> list[dict]:
                                            " (the free-agent pickup you'd otherwise make)")
         out.append({"tag": "LINEUP", "player": a["name"],
                     "thesis": f"{a['name']} starts for you" + over
-                              + f": {c['dMe']:+.2f} pts/wk to your lineup for the rest of the season.",
+                              + f": {c['dMe']:+.2f} pts/wk to your lineup over the weeks that count most.",
                     "kill": (f"Wrong if {a['name']}'s projection falls below {b['name']}'s "
                              f"({a['ppg']:.1f} vs {b['ppg']:.1f} now)." if b else
                              f"Wrong if {a['name']}'s projection drops below your weakest starter's.")})
@@ -307,7 +307,13 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
     name_of = {t["id"]: t["name"] for t in lg["teams"]}
     id_of = {v: k for k, v in name_of.items()}
     bias_by_name = LM.bias()
-    cfg = tl.engine_config()
+    # the title model first: its seasons say how much each week counts for each team
+    # (week_weights), which the engine then values players by — and the live service reads
+    # the same weights from the file written here
+    tm = T.build(season, now, yahoo_rosters, league=lg)
+    base = tm.odds() if tm is not None else {}
+    weights = T.write_week_weights(tm, season, now)["teams"] if tm is not None else {}
+    cfg = tl.trade_config(season, weights)
     cfg["market"] = {"bias": {str(id_of[n]): b for n, b in bias_by_name.items() if n in id_of}}
     ctx = te.build_context(lg, cfg)
     profiles = tl.team_profiles(ctx)       # who needs what, shown on each card
@@ -325,13 +331,12 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
                 seen.add(k)
                 cands.append(res)
     evaluated = len(cands)
-    # The engine's LONGSHOT fails both its lineup test for them and the market test on the
-    # rankings they can see — simulating those just fills the top 25 with Gibbs-for-a-bench-
-    # receiver offers nobody accepts. Then at most SIM_PER_PARTNER per manager, so the 25
-    # simulations cover the league rather than one roster.
-    tm = T.build(season, now, yahoo_rosters, league=lg)
-    base = tm.odds() if tm is not None else {}
-    board = TW.Board(ctx, season, {id_of[n]: b for n, b in bias_by_name.items() if n in id_of}, profiles)
+    # Every candidate is ranked on the chance they say yes times what it does for us
+    # (mega/trade_worth.py, on week-weighted values), then at most SIM_PER_PARTNER per
+    # manager go to the title simulation, so the 25 simulations cover the league rather
+    # than one roster.
+    board = TW.Board(ctx, season, {id_of[n]: b for n, b in bias_by_name.items() if n in id_of}, profiles,
+                     weights)
 
     def counterparty(c) -> dict:
         """The chance they say yes, and why (mega/trade_worth.py)."""
@@ -354,8 +359,8 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
         return cp[k]
 
     exp_pre = lambda r: cpty(r)["p"] * r["dMe"]
-    cands = sorted((r for r in cands if r["flag"] != "LONGSHOT" and cpty(r)["ratio"] <= FAIR_MAX
-                    and not cpty(r)["small"]), key=lambda r: -exp_pre(r))
+    cands = sorted((r for r in cands if cpty(r)["ratio"] <= FAIR_MAX and not cpty(r)["small"]),
+                   key=lambda r: -exp_pre(r))
     picked, per = [], {}
     for r in cands:
         n = per.get(r["partner"]["id"], 0)
@@ -394,7 +399,9 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
     def starters_diff(before, after):
         bs = {e[0]: e for e in te.lineup(before, ctx, None).starters}
         as_ = {e[0]: e for e in te.lineup(after, ctx, None).starters}
-        info = lambda e: {"id": e[0], "name": ctx.players[e[0]]["name"], "pos": e[1], "ppg": e[2], "slot": e[3]}
+        # the per-game projection for the text, not the week-weighted value the lineup was built on
+        info = lambda e: {"id": e[0], "name": ctx.players[e[0]]["name"], "pos": e[1],
+                          "ppg": float(ctx.players[e[0]].get("ppg") or 0.0), "slot": e[3]}
         return ([info(e) for k, e in as_.items() if k not in bs], [info(e) for k, e in bs.items() if k not in as_])
 
     # ---- per candidate: this week, ROS, consolidation, portfolio
@@ -481,7 +488,8 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
                    "d_title": round(d_us, 4), "se_title": round(us.get("se_title", 0.0), 4),
                    "title_noise": bool(us.get("noise", True)), "p_title": round(us.get("p_title", 0.0), 4),
                    "p_playoffs": round(us.get("p_playoffs", 0.0), 4)},
-            "them": {"d_week": round(c["d_week_them"], 2), "d_ros": round(c["dThem"], 2),
+            # their own week weights, as they'd judge it (mega/trade_worth.py their_gain)
+            "them": {"d_week": round(c["d_week_them"], 2), "d_ros": round(w["d_them"], 2),
                      "d_title": round(d_them, 4), "se_title": round(them.get("se_title", 0.0), 4),
                      "title_noise": bool(them.get("noise", True)), "p_playoffs_now": round(p_them_now, 4)},
             "i_would_start": [s["name"] for s in c["me_starters_in"]],

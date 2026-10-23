@@ -146,12 +146,13 @@ def _league(season: int) -> dict:
 def _trade_engine(season: int):
     def build():
         from mega.trade_engine import create_engine
-        from mega.trade_league import engine_config
+        from mega.trade_league import trade_config
 
         league = _league(season)
         if not league["teams"]:
             return None, league["report"]
-        return create_engine(league, engine_config()), league["report"]
+        # my week weights from the last export (mega/title_odds.py week_weights), as the cards
+        return create_engine(league, trade_config(season)), league["report"]
     return _cached(f"trade_engine:{season}", ENGINE_TTL, build)
 
 
@@ -411,12 +412,14 @@ def _deal_inputs(eng):
     track records, fandom) — mega/trade_league.py deal_odds."""
     def build():
         from mega.league_memory import bias
+        from mega.title_odds import load_week_weights
         from mega.trade_worth import Board
         season = _current_season()
         ctx = eng.ctx
         id_of = {t["name"]: tid for tid, t in ctx.teams.items()}
         return (TL.accept_context(ctx, _season_model(season, data.current_week(season, 1))),
-                Board(ctx, season, {id_of[n]: b for n, b in bias().items() if n in id_of}, TL.team_profiles(ctx)))
+                Board(ctx, season, {id_of[n]: b for n, b in bias().items() if n in id_of}, TL.team_profiles(ctx),
+                      load_week_weights(season)))
     return _cached(f"deal_inputs:{id(eng)}", ENGINE_TTL, build)
 
 

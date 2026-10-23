@@ -49,6 +49,19 @@ def engine_config() -> dict:
     }
 
 
+def trade_config(season: int, weights: dict | None = None) -> dict:
+    """engine_config() plus my week weights, for the trade surfaces only: a player is worth
+    the weeks that matter to me (mega/title_odds.py week_weights, docs/trade_logic_v2.md).
+    `weights` is {team: {week: weight}}; absent, the last file the export wrote."""
+    from .config import MY_TEAM
+    from . import title_odds as T
+    cfg = engine_config()
+    mine = (weights if weights is not None else T.load_week_weights(season)).get(MY_TEAM)
+    if mine:
+        cfg["weekWeights"] = mine
+    return cfg
+
+
 def build_league(season: int, yahoo_rosters: pd.DataFrame | None = None) -> dict:
     """{teams, players, freeAgents} plus a `report` of what couldn't be priced."""
     from .intel import current_rosters
@@ -524,6 +537,7 @@ def deal_odds(ctx, results: list, acc: dict, board) -> list:
                      float((acc.get(pid) or {}).get("p_playoffs", 0.0)),
                      LM.trade_offset(ctx.teams[pid].get("name")))
         r["p_accept"], r["why"], r["too_small"] = s["p"], s["why"], s["small"]
+        r["dThem"] = s["d_them"]          # their lineup over THEIR weeks, as they'd judge it
         r["need_fit"] = s["need"]
         r["flag"] = TW.flag(s["p"], float(r["dThem"]))   # the badge follows the odds, not the engine's market test
         r["sits_for_them"] = sits_text(ctx, s["sits"])

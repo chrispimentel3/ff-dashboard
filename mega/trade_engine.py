@@ -32,6 +32,12 @@ DEFAULTS: dict[str, Any] = {
     "irSlots": 1,
     "depthWeights": {"QB": [0.10], "RB": [0.15, 0.05], "WR": [0.15, 0.05], "TE": [0.10]},
     "horizon": None,
+    # {week: weight}: value each player at the weighted average of their weekly expected points
+    # instead of one per-game number, still in a single lineup — the trade surfaces weigh the
+    # weeks that matter to me (docs/trade_logic_v2.md; mega/title_odds.py week_weights). A real
+    # horizon re-optimises every week and is ~10x slower, too slow for the live search; what
+    # this gives up is a bench player filling a bye, which the depth weights stand in for.
+    "weekWeights": None,
     "themTolerance": 1.0,
     # `bias`: {teamId: {pos: multiplier}} from §17. Empty means every manager is priced
     # neutrally, which is the v1 behaviour the ported tests pin.
@@ -113,6 +119,7 @@ class Ctx:
     ir: dict = field(default_factory=dict)        # team id -> players in its IR slot(s)
     ir_owner: dict = field(default_factory=dict)  # IR player -> team id
     base_ir: dict = field(default_factory=dict)   # team id -> value counting its IR players
+    wv: dict = field(default_factory=dict)        # pid -> week-weighted value (cfg weekWeights)
 
 
 @dataclass
@@ -124,7 +131,7 @@ class Lineup:
     total: float
 
 
-def lineup(ids, ctx: Ctx, week: int | None = None) -> Lineup:
+def lineup(ids, ctx: Ctx, week: int | None = None, values: dict | None = None) -> Lineup:
     """Optimal lineup for a set of ids in one week.
 
     Greedy is exact for this slot structure: dedicated slots take the top N at each
@@ -137,7 +144,9 @@ def lineup(ids, ctx: Ctx, week: int | None = None) -> Lineup:
         p = players.get(pid)
         if not p or p["pos"] not in ctx.valued_pos:
             continue
-        by_pos.setdefault(p["pos"], []).append((pid, p["pos"], value_at(p, week)))
+        wv = values if values is not None else ctx.wv     # `values`: another team's week weights
+        v = wv[pid] if week is None and pid in wv else value_at(p, week)
+        by_pos.setdefault(p["pos"], []).append((pid, p["pos"], v))
     for lst in by_pos.values():
         lst.sort(key=lambda e: -e[2])
 
@@ -260,13 +269,18 @@ def build_context(league: dict, config: dict | None = None) -> Ctx:
     weeks = ([(w, (hz.get("weights") or {}).get(w, 1)) for w in hz["weeks"]]
              if hz and hz.get("weeks") else [(None, 1)])
 
+    ww = {int(w): float(x) for w, x in (cfg.get("weekWeights") or {}).items() if float(x) > 0}
+    tot = sum(ww.values())
+    wv = {pid: (sum(x * value_at(p, w) for w, x in ww.items()) / tot if p.get("weekly") else value_at(p, None))
+          for pid, p in players.items()} if tot > 0 else {}
+
     rank = max(1, int(cfg.get("replacementRank", 1)))
     repl: dict = {}
     for w in [None, *[w for w, _ in weeks if w is not None]]:
         by_pos: dict[str, list[float]] = {pos: [] for pos in valued_pos}
         for pid in fa:
             p = players[pid]
-            by_pos[p["pos"]].append(value_at(p, w))
+            by_pos[p["pos"]].append(wv[pid] if w is None and pid in wv else value_at(p, w))
         r = {}
         for pos, vals in by_pos.items():
             vals.sort(reverse=True)
@@ -279,7 +293,7 @@ def build_context(league: dict, config: dict | None = None) -> Ctx:
         same.sort(key=lambda pid: -(players[pid].get("ppg") or 0))
         fa_candidates.extend(same[: cfg["faCandidatesPerPos"]])
 
-    ctx = Ctx(cfg, players, teams, valued_pos, pos_order, fa, weeks, repl, fa_candidates)
+    ctx = Ctx(cfg, players, teams, valued_pos, pos_order, fa, weeks, repl, fa_candidates, wv=wv)
     for t in teams.values():
         ctx.base[t["id"]] = settle(t["roster"], ctx, set())
         ctx.ir[t["id"]] = [p for p in (t.get("ir") or []) if p in players]
