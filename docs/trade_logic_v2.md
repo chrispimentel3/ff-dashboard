@@ -125,7 +125,7 @@ fitted from it; the calibration set replaces it.
 
 ## Build order (one commit each)
 
-Status: steps 1–3 done 2026-10-22. The rules live in `mega/trade_worth.py`; its (J) constants
+Status: all six steps done 2026-10-22. The rules live in `mega/trade_worth.py`; its (J) constants
 were picked by a grid search for the setting that matches all ten labels with the widest
 margin and stays at 9+ when any one constant moves a step. `tests/test_trade_worth.py` holds the
 bar on a league frozen that day (`tests/fixtures/trade_worth_calibration.json`).
@@ -141,6 +141,26 @@ those weekly values; what it gives up is a bench player filling a bye, which the
 still stands in for — so step 6 should keep the bye part of the bench bonus. On 2026-10-22 it
 put ~60% of a contender's weight on weeks 15–17; the calibration set still matched 10/10 with
 weights on, and offer 7 came out −0.78 pts/wk for us once the free pickup (Mahomes) is netted.
+
+Step 4: `trade_theses.our_flags` — role risk (last 3 games' share of the offense 25%+ below the
+earlier games; skipped for a player who is out, whose share fell because he got hurt), rebound bet
+(projection 3+ pts/g and 25%+ above points so far, 3+ games), injuries on either side with the
+return week against weeks 15–17, and my weakest starter vs the league's typical one in that slot
+before and after (a slot a free agent already beats is a waiver pickup and is skipped). On cards
+and in the evaluator.
+
+Step 5: `title_odds.Model.matchups` — each remaining week, my points worst / base / best (10th /
+50th / 90th percentile of the simulated weeks) before and after, and in the regular season the
+opponent and my win chance before and after (a partner I face later plays with their after
+roster). On cards and every priced search / evaluator row, collapsed by default.
+
+Step 6, measured, no change: across 19,806 after-trade rosters, the single weighted lineup tracks
+an exact week-by-week re-optimisation (RMSE 0.40 pts/wk, top-50 overlap 48/50) and the bench bonus
+doesn't improve that (RMSE 0.404 with none, 0.422 at today's weights). Against the title sim's mean
+team score, which models a backup playing when a starter is out, every setting from none to 3×
+lands at RMSE 1.23 and the same 21/25 top overlap. Trimming it buys nothing and nothing argues for
+more, so `depthWeights` stay as they are. (The sim's deltas run ~0.75 pts/wk below the engine's
+across the board — the cards already rank finalists on the sim.)
 
 1. Remove the offer log.
 2. The shared "worth to them" function, its percentage and "why", and the calibration test.
