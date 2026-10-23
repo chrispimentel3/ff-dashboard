@@ -297,6 +297,30 @@ class Model:
         games.sort(key=lambda r: -r["d_playoffs"])
         return {"week": week, "mine": mine, "games": games}
 
+    def matchups(self, team: str, before_ids, after_ids, partner: str | None = None,
+                 partner_after=None) -> list[dict]:
+        """Week by week from now, on the model's own draws: `team`'s points before and after a
+        trade as worst / base / best (10th / 50th / 90th percentile of the simulated weeks) and,
+        in the regular season, the opponent and the chance to beat them before and after (a
+        trade partner faced later plays with their after roster). Playoff weeks have no
+        opponent yet. One season's worst case is not every week's worst at once."""
+        q = lambda x: [round(float(v), 1) for v in np.percentile(x, (10, 50, 90))]
+        rows = []
+        for g in sorted(self.season.schedule, key=lambda g: int(g["week"])):
+            w = int(g["week"])
+            if team not in (g["home"], g["away"]) or w > REG_LAST:
+                continue
+            opp = g["away"] if g["home"] == team else g["home"]
+            b, a = self.team_week(team, before_ids, w), self.team_week(team, after_ids, w)
+            o_b = self.team_week(opp, self.rosters.get(opp, []), w)
+            o_a = self.team_week(opp, partner_after, w) if opp == partner and partner_after is not None else o_b
+            rows.append({"week": w, "opp": opp, "win_before": round(float((b > o_b).mean()), 3),
+                         "win_after": round(float((a > o_a).mean()), 3), "before": q(b), "after": q(a)})
+        for w in PLAYOFF_WEEKS:
+            rows.append({"week": w, "opp": None, "before": q(self.team_week(team, before_ids, w)),
+                         "after": q(self.team_week(team, after_ids, w))})
+        return rows
+
     def week_weights(self) -> dict:
         """team -> {week: how much winning that week moves its title odds}, read off the base
         run's seasons (docs/trade_logic_v2.md: weeks count by record).

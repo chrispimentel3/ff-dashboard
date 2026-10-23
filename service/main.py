@@ -246,8 +246,10 @@ def _title_odds_rows(season: int, next_week: int, eng, my_id, results: list,
                  partner: list(core["_after"]["them"].ids)
                  + (moved["them"] if moved else ir(partner, r["partner"]["id"]))}
         if r.get("netted") and (r.get("swap_ids") or swap_ids):
-            d = tm.delta_vs({my_name: list(r.get("swap_ids") or swap_ids) + ir(my_name, my_id)}, after, (my_name, partner))
+            base_me = list(r.get("swap_ids") or swap_ids) + ir(my_name, my_id)
+            d = tm.delta_vs({my_name: base_me}, after, (my_name, partner))
         else:
+            base_me = tm.rosters.get(my_name, [])
             d = tm.delta(after, (my_name, partner))
         us, them = d.get(my_name, {}), d.get(partner, {})
         out[i] = {"d_playoffs": us.get("d_playoffs"), "their_d_playoffs": them.get("d_playoffs"),
@@ -255,7 +257,9 @@ def _title_odds_rows(season: int, next_week: int, eng, my_id, results: list,
                   "title_noise": bool(us.get("noise", True)),
                   "their_tag": SIM.partner_tag(them.get("p_playoffs", 0.0)),
                   "arms_rival": SIM.arms_rival(us.get("d_playoffs", 0.0), them.get("d_playoffs", 0.0),
-                                               us.get("p_playoffs", 0.0), them.get("p_playoffs", 0.0))}
+                                               us.get("p_playoffs", 0.0), them.get("p_playoffs", 0.0)),
+                  # week by week, worst / base / best (title_odds.Model.matchups)
+                  "matchups": tm.matchups(my_name, base_me, after[my_name], partner, after[partner])}
     return out
 
 
@@ -524,6 +528,7 @@ def _package(season, next_week, eng, me, req, out, results, swap_ids, clock, lap
             "title": o.get("d_title"),
             "their_title": o.get("their_d_title"),
             "title_noise": o.get("title_noise"),
+            "matchups": o.get("matchups") or [],
             "watch": "arms a rival" if o.get("arms_rival") else (o.get("their_tag") or None),
             "variants": r.get("variants") or [],
             "n_variants": r.get("n_variants") or 0,

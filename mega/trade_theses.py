@@ -557,6 +557,8 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
                          (my_name, partner)) if tm else {}
         us, them = dd.get(my_name, {}), dd.get(partner, {})
         d_us, d_them = us.get("d_title", 0.0), them.get("d_title", 0.0)
+        matchups = tm.matchups(my_name, c["ref_me"] + ir_me, c["after_me"] + ir_me, partner,
+                               c["after_them"] + ir_them) if tm else []
         if not (c["consolidation"] or (d_us > 0 and not us.get("noise", True))):
             continue                                        # §6.1 hard filter
         tags = tags_for(c, ctx, facts, env)
@@ -611,6 +613,7 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
             "exp_title": round(pa * (0.0 if us.get("noise", True) else d_us), 5),
             "exp_ros": round(pa * c["dMe"], 3),
             "flags": our_flags(ctx, c["giveIds"], c["getIds"], c["ref_me"], c["after_me"], facts, now, typical),
+            "matchups": matchups,
             "fairness": round(fair, 2), "sits_for_them": w["sits"], "ranks": {"give": ranks(c["giveIds"]), "get": ranks(c["getIds"])},
         })
     cards.sort(key=lambda k: (-k["exp_title"], -k["exp_ros"]))

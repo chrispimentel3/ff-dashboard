@@ -69,3 +69,20 @@ def test_an_upgrade_raises_title_odds_beyond_the_noise_band():
 @pytest.mark.parametrize("p,want", [(0.9, "protect"), (0.5, "balanced"), (0.2, "swing")])
 def test_posture(p, want):
     assert T.posture(p) == want
+
+
+def test_matchups_give_each_week_and_face_the_partner_after_the_trade():
+    import types
+    import numpy as np
+    from mega import title_odds as T
+    m = T.Model.__new__(T.Model)
+    m.season = types.SimpleNamespace(schedule=[{"week": 8, "home": "A", "away": "B"},
+                                               {"week": 9, "home": "C", "away": "A"}])
+    m.rosters = {"A": ["a"], "B": ["b"], "C": ["c"]}
+    pts = {"a": 100.0, "a2": 110.0, "b": 105.0, "b2": 95.0, "c": 120.0}
+    m.team_week = lambda team, ids, w: np.full(50, sum(pts[i] for i in ids))
+    rows = m.matchups("A", ["a"], ["a2"], partner="B", partner_after=["b2"])
+    assert rows[0] == {"week": 8, "opp": "B", "win_before": 0.0, "win_after": 1.0,
+                       "before": [100.0] * 3, "after": [110.0] * 3}       # B plays week 8 without b
+    assert rows[1]["opp"] == "C" and rows[1]["win_after"] == 0.0
+    assert [r["week"] for r in rows[2:]] == [15, 16, 17] and rows[2]["opp"] is None
