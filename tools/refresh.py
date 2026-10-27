@@ -91,8 +91,9 @@ def validate() -> list[str]:
         bad.append(f"faab: {0 if b is None else len(b)} rows, expected 12")
     elif "faab_left" in b.columns:
         v = pd.to_numeric(b["faab_left"], errors="coerce")
-        if v.isna().any() or not v.between(0, 100).all():
-            bad.append("faab: a balance is missing or outside $0-$100")
+        # FAAB can be traded, so one team can sit above $100; the league total can't pass 12 x $100.
+        if v.isna().any() or (v < 0).any() or v.sum() > 1200:
+            bad.append("faab: a balance is missing, negative, or the league total is over $1,200")
 
     return bad
 
