@@ -28,11 +28,11 @@
         "nfl_team": "WAS",
         "ppg": 6.66,
         "lane": "bid_now",
-        "fit_pts": 0.05,
-        "start": -0.007,
+        "fit_pts": 0.049,
+        "start": -0.008,
         "cover": 0.057,
         "insure": 0.0,
-        "next3": 2.297,
+        "next3": 2.294,
         "mechanism": "COVER",
         "handcuff": false,
         "insures": "",
@@ -51,7 +51,7 @@
         "max_bid": 0,
         "role": "TE1 receiving",
         "why": "+2.3 pts/wk over the next 3 weeks \u2014 covers a bye or injury",
-        "d_title": 0.0125,
+        "d_title": 0.0138,
         "se_title": 0.002,
         "title_noise": false,
         "out_status": "",
@@ -90,7 +90,7 @@
         "max_bid": 1,
         "role": "Backup TE",
         "why": "+2.4 pts/wk over the next 3 weeks \u2014 covers a bye or injury",
-        "d_title": 0.0093,
+        "d_title": 0.0102,
         "se_title": 0.0019,
         "title_noise": false,
         "out_status": "",
@@ -104,16 +104,55 @@
     "early_signal": [],
     "stash": [
       {
+        "player": "MarShawn Lloyd",
+        "pos": "RB",
+        "nfl_team": "GB",
+        "ppg": 7.73,
+        "lane": "stash",
+        "fit_pts": 0.503,
+        "start": -0.039,
+        "cover": 0.029,
+        "insure": 0.513,
+        "next3": -0.041,
+        "mechanism": "INSURE",
+        "handcuff": false,
+        "insures": "Josh Jacobs",
+        "drop": "Bam Knight",
+        "drop_cost": 0.012,
+        "drop_insure": 0.0,
+        "drop_flip": 0.0,
+        "signal": "",
+        "p_expand": null,
+        "gain_if_expands": 0.0,
+        "signal_score": 0.0,
+        "pct_ros": 49.0,
+        "market_on": true,
+        "flip": 0.0,
+        "bid": 1,
+        "max_bid": 4,
+        "role": "Committee back",
+        "why": "insurance on Josh Jacobs: +0.51 pts/wk in expectation",
+        "d_title": 0.0005,
+        "se_title": 0.0016,
+        "title_noise": true,
+        "out_status": "",
+        "out_back": null,
+        "rival_top": 0,
+        "rival_team": "",
+        "rivals_n": 0,
+        "bid_note": "no other team gains enough from him to bid"
+      },
+      {
         "player": "Dameon Pierce",
         "pos": "RB",
         "nfl_team": "PHI",
         "ppg": 9.51,
         "lane": "stash",
-        "fit_pts": 0.448,
-        "start": 0.117,
-        "cover": 0.33,
+        "fit_pts": 0.436,
+        "start": 0.115,
+        "cover": 0.32,
         "insure": 0.0,
-        "next3": 0.868,
+        "next3": 0.824,
         "mechanism": "COVER",
         "handcuff": false,
         "insures": "",
@@ -125,14 +164,14 @@
         "p_expand": null,
         "gain_if_expands": 0.0,
         "signal_score": 0.0,
-        "pct_ros": 51.0,
+        "pct_ros": 50.0,
         "market_on": true,
-        "flip": 363.0,
+        "flip": 287.0,
         "bid": 4,
         "max_bid": 4,
         "role": "Lead back",
-        "why": "bye and injury cover: +0.33 pts/wk across the season",
-        "d_title": 0.0027,
+        "why": "bye and injury cover: +0.32 pts/wk across the season",
+        "d_title": 0.0033,
         "se_title": 0.003,
         "title_noise": true,
         "out_status": "",
@@ -148,11 +187,11 @@
         "nfl_team": "BUF",
         "ppg": 8.08,
         "lane": "stash",
-        "fit_pts": 0.02,
+        "fit_pts": 0.023,
         "start": -0.041,
-        "cover": 0.061,
+        "cover": 0.064,
         "insure": 0.0,
-        "next3": -0.006,
+        "next3": -0.005,
         "mechanism": "COVER",
         "handcuff": false,
         "insures": "",
@@ -180,45 +219,6 @@
         "rival_team": "Don R.I.C.O",
         "rivals_n": 1,
         "bid_note": "the league pays more for players like him than he's worth to you; Don R.I.C.O the likeliest rival"
-      },
-      {
-        "player": "MarShawn Lloyd",
-        "pos": "RB",
-        "nfl_team": "GB",
-        "ppg": 7.73,
-        "lane": "stash",
-        "fit_pts": 0.502,
-        "start": -0.038,
-        "cover": 0.028,
-        "insure": 0.512,
-        "next3": -0.04,
-        "mechanism": "INSURE",
-        "handcuff": false,
-        "insures": "Josh Jacobs",
-        "drop": "Bam Knight",
-        "drop_cost": 0.012,
-        "drop_insure": 0.0,
-        "drop_flip": 0.0,
-        "signal": "",
-        "p_expand": null,
-        "gain_if_expands": 0.0,
-        "signal_score": 0.0,
-        "pct_ros": 49.0,
-        "market_on": true,
-        "flip": 0.0,
-        "bid": 1,
-        "max_bid": 4,
-        "role": "Committee back",
-        "why": "insurance on Josh Jacobs: +0.51 pts/wk in expectation",
-        "d_title": -0.0025,
-        "se_title": 0.001,
-        "title_noise": false,
-        "out_status": "",
-        "out_back": null,
-        "rival_top": 0,
-        "rival_team": "",
-        "rivals_n": 0,
-        "bid_note": "no other team gains enough from him to bid"
       }
     ]
   },
@@ -244,8 +244,8 @@
     "fit_min": 0.02,
     "budget_left": 103,
     "title": {
-      "p_playoffs": 0.859,
-      "p_title": 0.1085,
+      "p_playoffs": 0.8533333333333334,
+      "p_title": 0.10666666666666667,
       "posture": "protect",
       "seasons": 6000
     }
@@ -266,12 +266,12 @@
             {
               "week": 8,
               "opp": "DEN",
-              "proj": 5.0
+              "proj": 5.2
             },
             {
               "week": 9,
               "opp": "NYJ",
-              "proj": 6.5
+              "proj": 6.2
             },
             {
               "week": 10,
@@ -283,34 +283,34 @@
       ],
       "rows": [
         {
-          "player": "Jaguars",
-          "team": "JAX",
+          "player": "Packers",
+          "team": "GB",
           "pos": "DEF",
           "weeks": [
             {
               "week": 8,
-              "opp": "IND",
-              "proj": 7.6
+              "opp": "CAR",
+              "proj": 7.0
             },
             {
               "week": 9,
-              "opp": "BAL",
-              "proj": 4.2
+              "opp": "NE",
+              "proj": 6.9
             },
             {
               "week": 10,
-              "opp": "TEN",
+              "opp": "MIN",
               "proj": 6.4
             }
           ],
-          "gain_next": 2.6,
-          "gain_avg": 0.87,
+          "gain_next": 1.8,
+          "gain_avg": 0.85,
           "bid": 1,
           "max_bid": 2,
-          "rival_top": 3,
-          "rival_team": "L'Omar",
-          "rivals_n": 2,
-          "bid_note": "wins 85% of claims like this in this league; L'Omar the likeliest rival"
+          "rival_top": 4,
+          "rival_team": "Don R.I.C.O",
+          "rivals_n": 3,
+          "bid_note": "wins 85% of claims like this in this league; Don R.I.C.O the likeliest rival"
         },
         {
           "player": "Bears",
@@ -325,7 +325,7 @@
             {
               "week": 9,
               "opp": "TB",
-              "proj": 7.7
+              "proj": 7.5
             },
             {
               "week": 10,
@@ -333,38 +333,8 @@
               "proj": 0.0
             }
           ],
-          "gain_next": 1.4,
-          "gain_avg": 0.86,
-          "bid": 1,
-          "max_bid": 2,
-          "rival_top": 1,
-          "rival_team": "Allen Moore connection",
-          "rivals_n": 1,
-          "bid_note": "wins 85% of claims like this in this league; Allen Moore connection the likeliest rival"
-        },
-        {
-          "player": "Buccaneers",
-          "team": "TB",
-          "pos": "DEF",
-          "weeks": [
-            {
-              "week": 8,
-              "opp": "ATL",
-              "proj": 7.1
-            },
-            {
-              "week": 9,
-              "opp": "CHI",
-              "proj": 5.9
-            },
-            {
-              "week": 10,
-              "opp": null,
-              "proj": 0.0
-            }
-          ],
-          "gain_next": 2.1,
-          "gain_avg": 0.69,
+          "gain_next": 1.3,
+          "gain_avg": 0.84,
           "bid": 1,
           "max_bid": 2,
           "rival_top": 0,
@@ -373,34 +343,34 @@
           "bid_note": "no other team gains enough from him to bid"
         },
         {
-          "player": "Packers",
-          "team": "GB",
+          "player": "Jaguars",
+          "team": "JAX",
           "pos": "DEF",
           "weeks": [
             {
               "week": 8,
-              "opp": "CAR",
-              "proj": 6.9
+              "opp": "IND",
+              "proj": 7.5
             },
             {
               "week": 9,
-              "opp": "NE",
-              "proj": 6.7
+              "opp": "BAL",
+              "proj": 4.2
             },
             {
               "week": 10,
-              "opp": "MIN",
-              "proj": 6.3
+              "opp": "TEN",
+              "proj": 6.4
             }
           ],
-          "gain_next": 1.9,
-          "gain_avg": 0.69,
+          "gain_next": 2.3,
+          "gain_avg": 0.77,
           "bid": 1,
           "max_bid": 2,
-          "rival_top": 4,
-          "rival_team": "deez nuts",
-          "rivals_n": 3,
-          "bid_note": "wins 85% of claims like this in this league; deez nuts the likeliest rival"
+          "rival_top": 3,
+          "rival_team": "L'Omar",
+          "rivals_n": 2,
+          "bid_note": "wins 85% of claims like this in this league; L'Omar the likeliest rival"
         },
         {
           "player": "Lions",
@@ -410,12 +380,12 @@
             {
               "week": 8,
               "opp": "MIN",
-              "proj": 6.2
+              "proj": 6.3
             },
             {
               "week": 9,
               "opp": "MIA",
-              "proj": 7.1
+              "proj": 7.2
             },
             {
               "week": 10,
@@ -423,8 +393,8 @@
               "proj": 6.0
             }
           ],
-          "gain_next": 1.2,
-          "gain_avg": 0.61,
+          "gain_next": 1.1,
+          "gain_avg": 0.7,
           "bid": 1,
           "max_bid": 2,
           "rival_top": 0,
@@ -433,34 +403,64 @@
           "bid_note": "no other team gains enough from him to bid"
         },
         {
-          "player": "Ravens",
-          "team": "BAL",
+          "player": "Buccaneers",
+          "team": "TB",
           "pos": "DEF",
           "weeks": [
             {
               "week": 8,
-              "opp": "BUF",
-              "proj": 3.8
+              "opp": "ATL",
+              "proj": 7.2
             },
             {
               "week": 9,
-              "opp": "JAX",
-              "proj": 4.1
+              "opp": "CHI",
+              "proj": 5.8
             },
             {
               "week": 10,
-              "opp": "LAC",
-              "proj": 7.9
+              "opp": null,
+              "proj": 0.0
             }
           ],
-          "gain_next": -1.2,
-          "gain_avg": 0.46,
+          "gain_next": 2.0,
+          "gain_avg": 0.68,
+          "bid": 1,
+          "max_bid": 2,
+          "rival_top": 0,
+          "rival_team": "",
+          "rivals_n": 0,
+          "bid_note": "no other team gains enough from him to bid"
+        },
+        {
+          "player": "Saints",
+          "team": "NO",
+          "pos": "DEF",
+          "weeks": [
+            {
+              "week": 8,
+              "opp": null,
+              "proj": 0.0
+            },
+            {
+              "week": 9,
+              "opp": "CLE",
+              "proj": 7.6
+            },
+            {
+              "week": 10,
+              "opp": "CAR",
+              "proj": 6.2
+            }
+          ],
+          "gain_next": -5.2,
+          "gain_avg": 0.48,
           "bid": 1,
           "max_bid": 1,
-          "rival_top": 1,
-          "rival_team": "Heartbreak Drake",
-          "rivals_n": 2,
-          "bid_note": "wins 85% of claims like this in this league; Heartbreak Drake the likeliest rival"
+          "rival_top": 3,
+          "rival_team": "Burrow-Chase combo",
+          "rivals_n": 3,
+          "bid_note": "wins 85% of claims like this in this league; Burrow-Chase combo the likeliest rival"
         }
       ]
     },
@@ -477,12 +477,12 @@
             {
               "week": 9,
               "opp": "PHI",
-              "proj": 8.1
+              "proj": 7.9
             },
             {
               "week": 10,
               "opp": "WAS",
-              "proj": 8.9
+              "proj": 8.8
             }
           ]
         }
@@ -496,23 +496,23 @@
             {
               "week": 8,
               "opp": "BAL",
-              "proj": 12.1
+              "proj": 12.3
             },
             {
               "week": 9,
               "opp": "MIN",
-              "proj": 10.7
+              "proj": 10.9
             },
             {
               "week": 10,
               "opp": "NYJ",
-              "proj": 11.9
+              "proj": 12.1
             }
           ],
-          "gain_next": 12.1,
-          "gain_avg": 5.86,
+          "gain_next": 12.3,
+          "gain_avg": 6.16,
           "bid": 1,
-          "max_bid": 13,
+          "max_bid": 14,
           "rival_top": 8,
           "rival_team": "Don R.I.C.O",
           "rivals_n": 11,
@@ -526,7 +526,7 @@
             {
               "week": 8,
               "opp": "IND",
-              "proj": 11.3
+              "proj": 11.1
             },
             {
               "week": 9,
@@ -536,11 +536,11 @@
             {
               "week": 10,
               "opp": "TEN",
-              "proj": 10.3
+              "proj": 10.2
             }
           ],
-          "gain_next": 11.3,
-          "gain_avg": 4.6,
+          "gain_next": 11.1,
+          "gain_avg": 4.61,
           "bid": 1,
           "max_bid": 11,
           "rival_top": 0,
@@ -556,12 +556,12 @@
             {
               "week": 8,
               "opp": "ATL",
-              "proj": 11.0
+              "proj": 10.7
             },
             {
               "week": 9,
               "opp": "CHI",
-              "proj": 9.3
+              "proj": 9.6
             },
             {
               "week": 10,
@@ -569,10 +569,10 @@
               "proj": 0.0
             }
           ],
-          "gain_next": 11.0,
-          "gain_avg": 4.03,
+          "gain_next": 10.7,
+          "gain_avg": 4.13,
           "bid": 1,
-          "max_bid": 9,
+          "max_bid": 10,
           "rival_top": 0,
           "rival_team": "",
           "rivals_n": 0,
@@ -596,11 +596,11 @@
             {
               "week": 10,
               "opp": "ARI",
-              "proj": 9.8
+              "proj": 9.9
             }
           ],
           "gain_next": 8.9,
-          "gain_avg": 3.72,
+          "gain_avg": 3.84,
           "bid": 1,
           "max_bid": 9,
           "rival_top": 0,
@@ -621,7 +621,7 @@
             {
               "week": 9,
               "opp": "TB",
-              "proj": 10.5
+              "proj": 10.6
             },
             {
               "week": 10,
@@ -630,7 +630,7 @@
             }
           ],
           "gain_next": 8.5,
-          "gain_avg": 3.61,
+          "gain_avg": 3.71,
           "bid": 1,
           "max_bid": 9,
           "rival_top": 0,
@@ -646,12 +646,12 @@
             {
               "week": 8,
               "opp": "DAL",
-              "proj": 10.3
+              "proj": 10.2
             },
             {
               "week": 9,
               "opp": "SEA",
-              "proj": 7.3
+              "proj": 7.0
             },
             {
               "week": 10,
@@ -659,8 +659,8 @@
               "proj": 9.3
             }
           ],
-          "gain_next": 10.3,
-          "gain_avg": 3.55,
+          "gain_next": 10.2,
+          "gain_avg": 3.56,
           "bid": 1,
           "max_bid": 8,
           "rival_top": 0,
