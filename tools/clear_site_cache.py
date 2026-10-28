@@ -44,6 +44,9 @@ def main() -> int:
     if not passcode:
         print("[site] OFFER_PASSCODE isn't in .env, so the cache wasn't cleared; the site catches up within the hour.")
         return 0
+    # ponytail: wait_for_raw only watches action_board.json; if a push didn't change it, this can
+    # clear before GitHub serves the other files (then the site catches up within the hour, as
+    # before). Watch every changed data/web file if that ever bites.
     if not wait_for_raw():
         print("[site] GitHub was slow to serve the push; clearing the cache anyway.")
     status = 0
