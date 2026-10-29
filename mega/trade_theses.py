@@ -45,7 +45,10 @@ FRAGILE_AGE = 28              # (J) a starter this old counts as fragile for CON
 PLAYOFF_SOS = 1.10            # (J) weeks 15–17 opponents allow 10%+ above average
 STACK_TEAM = 3                # handoff §6.2: 3+ starters from one offense
 MAX_PER_PARTNER = 3           # (J) keep the list from being one manager's roster
+MAX_PER_GIVE = 3              # (J) ...or one of our players' showcase: weeks 3-7 of 2026 the board
+                              # offered Nabers in 12 of 25 ideas and his breakout sank half of it
 SIM_PER_PARTNER = 5           # (J) ...and the 25 simulations from being one manager's either
+SIM_PER_GIVE = 6              # (J) room for the title odds to re-rank before MAX_PER_GIVE cuts
 FAIR_MAX = 1.30               # (J) they get at most 130% of what they give, by name (trade_worth
                               # ratio). Ranking by expected gain rewards paying
                               # more (the yes gets likelier) and nothing charged us for the value
@@ -397,6 +400,22 @@ def free_swap(ctx, ids) -> tuple[list, float]:
 
 
 # ======================================================================== the whole list
+def keep(cards: list[dict]) -> list[dict]:
+    """Best first, with no manager in more than MAX_PER_PARTNER cards and no player of ours in
+    more than MAX_PER_GIVE, so one projection miss can't sink most of the page. A card turned
+    away for its player doesn't use up its manager's slots."""
+    per, used, kept = {}, {}, []
+    for k in cards:
+        give = [g["name"] for g in k["give"]]
+        if per.get(k["partner"], 0) >= MAX_PER_PARTNER or any(used.get(x, 0) >= MAX_PER_GIVE for x in give):
+            continue
+        per[k["partner"]] = per.get(k["partner"], 0) + 1
+        for x in give:
+            used[x] = used.get(x, 0) + 1
+        kept.append(k)
+    return kept
+
+
 def run(season: int, now: int, yahoo_rosters=None) -> dict:
     from . import season as S
     from . import title_odds as T
@@ -471,12 +490,17 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
     exp_pre = lambda r: cpty(r)["p"] * r["dMe"]
     cands = sorted((r for r in cands if cpty(r)["ratio"] <= FAIR_MAX and not cpty(r)["small"]),
                    key=lambda r: -exp_pre(r))
-    picked, per = [], {}
+    # ...and no player of ours in more than SIM_PER_GIVE of them, so the simulations aren't
+    # spent on offers the page's MAX_PER_GIVE would turn away
+    picked, per, used = [], {}, {}
     for r in cands:
         n = per.get(r["partner"]["id"], 0)
-        if n < SIM_PER_PARTNER:
-            per[r["partner"]["id"]] = n + 1
-            picked.append(r)
+        if n >= SIM_PER_PARTNER or any(used.get(g, 0) >= SIM_PER_GIVE for g in r["giveIds"]):
+            continue
+        per[r["partner"]["id"]] = n + 1
+        for g in r["giveIds"]:
+            used[g] = used.get(g, 0) + 1
+        picked.append(r)
     cands = picked
 
     # ---- the facts every card is written from
@@ -618,12 +642,7 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
             "fairness": round(fair, 2), "sits_for_them": w["sits"], "ranks": {"give": ranks(c["giveIds"]), "get": ranks(c["getIds"])},
         })
     cards.sort(key=lambda k: (-k["exp_title"], -k["exp_ros"]))
-    # keep any one manager from filling the page
-    per, kept = {}, []
-    for k in cards:
-        per[k["partner"]] = per.get(k["partner"], 0) + 1
-        if per[k["partner"]] <= MAX_PER_PARTNER:
-            kept.append(k)
+    kept = keep(cards)
 
     tx = 0
     try:

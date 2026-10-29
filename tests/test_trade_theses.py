@@ -130,3 +130,11 @@ def test_trades_close_after_the_deadline_day(monkeypatch):
     monkeypatch.setattr(config, "trades_open", lambda today=None: False)
     out = TT.run(2026, 13)
     assert out["closed"] and out["cards"] == [] and out["deadline"] == config.TRADE_DEADLINE
+
+
+def test_cards_keep_one_player_in_at_most_three_and_a_manager_in_at_most_three():
+    c = lambda partner, i, *give: {"partner": partner, "i": i, "give": [{"name": g} for g in give]}
+    cards = [c("A", 1, "Star"), c("B", 2, "Star"), c("C", 3, "Star", "X"), c("D", 4, "Star"), c("D", 5, "Y"),
+             c("E", 6, "Z"), c("E", 7, "Z"), c("E", 8, "Z"), c("E", 9, "W")]
+    # D's Star card is turned away (Star is in 3 already) without using D's slots; E stops at 3
+    assert [k["i"] for k in TT.keep(cards)] == [1, 2, 3, 5, 6, 7, 8]
