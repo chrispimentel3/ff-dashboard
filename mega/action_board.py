@@ -12,11 +12,19 @@ import json
 
 import pandas as pd
 
-ACOLS = ["player", "pos", "slot", "half_ppr_pg", "per_g", "tgt_pct", "tm_rank", "why"]
+ACOLS = ["player", "pos", "slot", "half_ppr_pg", "proj_pg", "per_g", "tgt_pct", "tm_rank", "why"]
+
+# Shop when our forward projection (data/proj_ros_<season>.json ros_pg) sits GAP+ pts/g below
+# his pace, hold when it sits GAP+ above. Backtest 2021-25, weeks 3-14, top 30 QB/TE and 60
+# RB/WR: a shop call was right (he scored below his pace from then on) 85% of the time, a hold
+# 71%, at about the flag count of the old points-vs-expected-points rule (+2.0 / -1.5), which
+# managed 76% and 62%. Five seasons, each 78-91% / 65-79%.
+GAP = 2.0
+MIN_GAMES = 2          # one game is not a pace
 
 
 def _why_sell(r: pd.Series) -> str:
-    bits = [f"scoring {r['per_g']:+.1f}/g more than his opportunity"]
+    bits = [f"scoring {r['half_ppr_pg']:.1f}/g, we project {r['proj_pg']:.1f}/g from here"]
     if pd.notna(r.get("tgt_pct")) and r["tgt_pct"] < 0.20:
         bits.append(f"only {r['tgt_pct']:.0%} of targets")
     if pd.notna(r.get("tm_rank")) and r["tm_rank"] >= 3:
@@ -25,7 +33,7 @@ def _why_sell(r: pd.Series) -> str:
 
 
 def _why_buy(r: pd.Series) -> str:
-    bits = [f"scoring {abs(r['per_g']):.1f}/g less than his opportunity"]
+    bits = [f"scoring {r['half_ppr_pg']:.1f}/g, we project {r['proj_pg']:.1f}/g from here"]
     if pd.notna(r.get("tgt_pct")) and r["tgt_pct"] >= 0.20:
         bits.append(f"{r['tgt_pct']:.0%} target share")
     if pd.notna(r.get("tm_rank")) and r["tm_rank"] <= 2:
@@ -53,19 +61,22 @@ def worth_claiming(wv: pd.DataFrame) -> pd.DataFrame:
     return wv[pd.to_numeric(wv.get("gain"), errors="coerce").fillna(0) > 0]
 
 
-def shop_hold(agg: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Sell-high / buy-low candidates on the user's own roster, ranked by points vs opportunity."""
+def shop_hold(agg: pd.DataFrame, proj: dict | None) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Sell-high / buy-low candidates on the user's own roster: his pace so far against our
+    forward projection. `proj` is gsis_id -> the projection file's player entry (ros_pg)."""
     mine = agg.copy() if agg is not None and not agg.empty else pd.DataFrame()
-    if mine.empty or "xfp_diff" not in mine.columns:
+    if mine.empty or not proj or "gsis_id" not in mine.columns:
         return pd.DataFrame(columns=ACOLS), pd.DataFrame(columns=ACOLS)
 
-    mine["per_g"] = mine["xfp_diff"] / mine["games"].clip(lower=1)
+    mine["proj_pg"] = pd.to_numeric(mine["gsis_id"].map(lambda g: (proj.get(g) or {}).get("ros_pg")), errors="coerce")
+    mine = mine[mine["proj_pg"].notna() & (mine["games"] >= MIN_GAMES)].copy()
+    mine["per_g"] = mine["proj_pg"] - mine["half_ppr_pg"]
 
-    sell = mine[mine["per_g"] >= 2.0].sort_values("per_g", ascending=False).head(5)
+    sell = mine[mine["per_g"] <= -GAP].sort_values("per_g").head(5)
     if not sell.empty:
         sell = sell.assign(why=sell.apply(_why_sell, axis=1))
 
-    buy = mine[mine["per_g"] <= -1.5].sort_values("per_g").head(5)
+    buy = mine[mine["per_g"] >= GAP].sort_values("per_g", ascending=False).head(5)
     if not buy.empty:
         buy = buy.assign(why=buy.apply(_why_buy, axis=1))
 
@@ -166,10 +177,22 @@ def _records(df: pd.DataFrame | None) -> list[dict]:
     return json.loads(df.to_json(orient="records"))
 
 
-def build(agg: pd.DataFrame, IB: dict | None, BASIS: dict, season: int) -> dict:
+def shortlist(cards: list[dict], n: int = 5) -> list[dict]:
+    """HANDOFF v1.3: the same engine-built offers as the Trades tab, best first, one per
+    manager — the home board is a shortlist, not three asks of one roster. The scorecard
+    grades this same list."""
+    seen, top = set(), []
+    for c in cards:
+        if c["partner"] not in seen and len(top) < n:
+            seen.add(c["partner"])
+            top.append(c)
+    return top
+
+
+def build(agg: pd.DataFrame, IB: dict | None, BASIS: dict, season: int, proj: dict | None = None) -> dict:
     """Full Action-board payload as JSON-safe plain Python — no Streamlit calls."""
     main, sub = headline(IB)
-    sell, buy = shop_hold(agg)
+    sell, buy = shop_hold(agg, proj)
     xfp_available = agg is not None and not agg.empty and "xfp_diff" in agg.columns
 
     payload: dict = {
@@ -205,13 +228,7 @@ def build(agg: pd.DataFrame, IB: dict | None, BASIS: dict, season: int) -> dict:
         tr = IB.get("trades")
         cards = (IB.get("theses") or {}).get("cards") or []
         if cards:
-            # HANDOFF v1.3: the same engine-built offers as the Trades tab, best first, one
-            # per manager — the home board is a shortlist, not three asks of one roster
-            seen, top = set(), []
-            for c in cards:
-                if c["partner"] not in seen and len(top) < 5:
-                    seen.add(c["partner"])
-                    top.append(c)
+            top = shortlist(cards)
             payload["trades"] = [{
                 "partner": c["partner"],
                 "give": " + ".join(f"{g['name']} ({g['pos']})" for g in c["give"]),

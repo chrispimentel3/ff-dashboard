@@ -13,6 +13,10 @@ rule) — the lineup you would have set from — and nothing published after kic
   * **Waiver starts**: every pickup the board said would START for us, with the player it said
     to drop — did the add outscore the drop from that week on? Insurance and bye-cover picks
     aren't graded on points; their payoff is the week something goes wrong.
+  * **Trade ideas**: each offer the home board showed, replayed on our roster every week since
+    — our best lineup with the deal against without it, on what was scored.
+  * **Win odds**: each league game's win chance from the season sim at kickoff against who won;
+    the weekly **playoff odds** against who made it, once the regular season is over.
 
 Kickers and defenses are left out: nflverse player stats don't score them.
 """
@@ -282,19 +286,117 @@ def grade_matchups(snaps: dict, act: pd.DataFrame) -> dict:
             for b, g in d.groupby("bucket")}
 
 
+def grade_trades(snaps: dict, rosters: dict, pts: dict) -> dict:
+    """Every trade idea the home board showed (best first, one per manager), from the week it
+    first appeared: our best lineup with the deal against our best lineup without it, each week
+    since, scored on what happened. Hindsight-best on both sides, so a bench piece only counts in
+    a week he'd have started. A week stops counting once a player we'd have given is gone from
+    our roster — the deal can't be replayed on a roster that no longer has him.
+
+    `snaps` week -> trades.json at that week's kickoff; `rosters` week -> [{player, pos}] from
+    that week's Start/Sit; `pts` week -> normalized name -> half-PPR scored."""
+    from .action_board import shortlist
+    from .intel import _norm
+    rows, seen = [], set()
+    for w in sorted(snaps):
+        for c in shortlist(snaps[w].get("cards") or []):
+            give, get = [p["name"] for p in c["give"]], [p["name"] for p in c["get"]]
+            key = (tuple(give), tuple(get))
+            if key in seen:
+                continue
+            seen.add(key)
+            gone = {_norm(n) for n in give}
+            diffs = []
+            for x in sorted(rosters):
+                if x < w or x not in pts or not gone <= {_norm(r["player"]) for r in rosters[x]}:
+                    continue
+                p = pts[x]
+                now = [{**r, "pts": p.get(_norm(r["player"]), 0.0)} for r in rosters[x]]
+                after = [r for r in now if _norm(r["player"]) not in gone] + \
+                        [{"player": g["name"], "pos": g["pos"], "pts": p.get(_norm(g["name"]), 0.0)} for g in c["get"]]
+                diffs.append(sum(r["pts"] for r in best_lineup(after)) - sum(r["pts"] for r in best_lineup(now)))
+            if not diffs:
+                continue
+            per = sum(diffs) / len(diffs)
+            rows.append({"week": w, "partner": c["partner"], "give": give, "get": get,
+                         "said": (c.get("us") or {}).get("d_ros"), "weeks": len(diffs), "per_week": round(per, 1),
+                         "right": None if abs(per) < 0.05 else per > 0})
+    graded = [r for r in rows if r["right"] is not None]
+    return {"n": len(rows), "helped": sum(r["right"] for r in graded), "hurt": sum(not r["right"] for r in graded),
+            "per_week": round(sum(r["per_week"] for r in rows) / len(rows), 1) if rows else None,
+            "rows": sorted(rows, key=lambda r: (-r["week"], -r["per_week"]))}
+
+
+def _calibration(d: pd.DataFrame, bins: list[float], labels: list[str]) -> list[dict]:
+    """Rows of (p, hit) bucketed by p: what we said against how often it happened."""
+    d = d.assign(bucket=pd.cut(d["p"], bins, labels=labels, include_lowest=True))
+    return [{"bucket": str(b), "n": len(g), "said": round(float(g["p"].mean()), 3),
+             "happened": round(float(g["hit"].mean()), 3)}
+            for b, g in d.groupby("bucket", observed=True) if len(g)]
+
+
+def grade_odds(snaps: dict, results: pd.DataFrame, my_team: str) -> dict:
+    """Each league game's win chance as the season sim had it at kickoff (the rooting guide on
+    the playoffs page, saved every publish since week 6), against who won. Ties don't count."""
+    rows = []
+    for w, ro in sorted(snaps.items()):
+        games = [(my_team, ro["mine"]["opp"], ro["mine"]["p_win"])] if ro.get("mine") else []
+        games += [(g["root_for"], g["against"], g["p_root_wins"]) for g in ro.get("games") or []]
+        for a, b, p in games:
+            r = results[(results["week"] == w) & (results["team"] == a) & (results["opponent"] == b)]
+            if r.empty or float(r["points"].iloc[0]) == float(r["opp_points"].iloc[0]):
+                continue
+            a_won = float(r["points"].iloc[0]) > float(r["opp_points"].iloc[0])
+            fav, dog, pf, won = (a, b, p, a_won) if p >= 0.5 else (b, a, 1 - p, not a_won)
+            rows.append({"week": int(w), "favorite": fav, "underdog": dog, "p": round(float(pf), 3), "won": bool(won)})
+    if not rows:
+        return {}
+    d = pd.DataFrame(rows)
+    return {"n": len(d), "favorites_won": int(d["won"].sum()), "said": round(float(d["p"].mean()), 3),
+            "buckets": _calibration(d.assign(hit=d["won"]), [0.5, 0.6, 0.75, 1.0], ["50–60%", "60–75%", "75%+"]),
+            "games": sorted(rows, key=lambda r: (-r["week"], -r["p"]))}
+
+
+def grade_playoff_odds(hist: pd.DataFrame, standings: pd.DataFrame, results: pd.DataFrame) -> dict:
+    """The weekly playoff odds (data/history/playoff_odds_weekly.csv, player-level sim only)
+    against who made it — which isn't known until the regular season is over."""
+    from .sim import PLAYOFF_TEAMS
+    from .title_odds import REG_LAST
+    played = int(results["week"].max()) if not results.empty else 0
+    if played < REG_LAST or standings.empty or hist.empty:
+        return {"available": False, "after_week": REG_LAST}
+    made = set(standings.loc[standings["rank"] <= PLAYOFF_TEAMS, "team"])
+    h = hist[hist["model"].astype(str).eq("player")]
+    d = pd.DataFrame({"p": h["p_playoffs"].astype(float), "hit": h["team"].isin(made)})
+    return {"available": True, "n": len(d), "weeks": sorted(int(x) for x in h["week"].unique()),
+            "buckets": _calibration(d, [0.0, 0.25, 0.75, 1.0], ["under 25%", "25–75%", "75%+"])}
+
+
 def build(season: int, now_week: int) -> dict:
     """Every finished week with a pre-kickoff snapshot, graded."""
     act = actuals(season)
     played = set(act["week"].unique())
     sched = schedule(season)
     weeks, proj_rows, wv_snaps, rk_snaps = [], [], {}, {}
+    tr_snaps, odds_snaps, rosters, pts_by_week = {}, {}, {}, {}
     for w in sorted(sched):
         if w >= now_week or w not in played:
             continue
         before = sched[w]["kick"]
         by_gsis, by_norm = _pts(act, w)
+        pts_by_week[w] = by_norm
         ss_txt = snapshot("data/web/start_sit.json", before)
         ss = json.loads(ss_txt) if ss_txt else {}
+        if int(ss.get("next_week") or 0) == w:
+            rosters[w] = [{"player": r["player"], "pos": r["pos"]}
+                          for r in (ss.get("starters") or []) + (ss.get("bench") or []) if r.get("pos") in SKILL]
+        tr_txt = snapshot("data/web/trades.json", before)
+        if tr_txt:
+            tr_snaps[w] = json.loads(tr_txt)
+        po_txt = snapshot("data/web/playoffs.json", before)
+        ro = (json.loads(po_txt).get("rooting") or {}) if po_txt else {}
+        if int(ro.get("week") or 0) == w:
+            odds_snaps[w] = ro
         lineup = (grade_lineup(ss, by_norm, sched[w]["teams"], _ours_by_name(season, w, before, ss))
                   if int(ss.get("next_week") or 0) == w else None)
         proj = grade_projections(season, w, before, by_gsis)
@@ -320,6 +422,10 @@ def build(season: int, now_week: int) -> dict:
     except Exception:
         pass
     movers = grade_movers({w: s for w, s in wv_snaps.items() if w <= through}, act) if through else []
+    from .config import MY_TEAM
+    results, standings, hist = (_csv(ROOT / "data" / f) for f in
+                                ("yahoo_scores.csv", "yahoo_standings.csv", "history/playoff_odds_weekly.csv"))
+    hist = hist[hist["season"] == season] if not hist.empty else hist
     return {
         "available": bool(weeks), "season": season, "through_week": through,
         "weeks": sorted(weeks, key=lambda x: -x["week"]),
@@ -336,4 +442,14 @@ def build(season: int, now_week: int) -> dict:
         "movers": movers,
         "live_blend": lb,
         "matchups": grade_matchups(rk_snaps, act),
+        "trades": grade_trades(tr_snaps, rosters, pts_by_week),
+        "odds": grade_odds(odds_snaps, results, MY_TEAM) if not results.empty else {},
+        "playoff_odds": grade_playoff_odds(hist, standings, results),
     }
+
+
+def _csv(path: Path) -> pd.DataFrame:
+    try:
+        return pd.read_csv(path)
+    except Exception:
+        return pd.DataFrame()

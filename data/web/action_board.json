@@ -1,5 +1,5 @@
 {
-  "headline": "2 free agents would start for you and 20 trades raise your title odds.",
+  "headline": "2 free agents would start for you and 17 trades raise your title odds.",
   "subhead": "Everything below is ranked by what it adds to your starting nine, not by name.",
   "basis": null,
   "xfp_available": true,
@@ -9,10 +9,41 @@
       "pos": "WR",
       "slot": "WR",
       "half_ppr_pg": 16.0714285714,
-      "per_g": 2.9692857143,
+      "proj_pg": 12.45,
+      "per_g": -3.6214285714,
       "tgt_pct": 0.2123893805,
       "tm_rank": 2.0,
-      "why": "scoring +3.0/g more than his opportunity",
+      "why": "scoring 16.1/g, we project 12.4/g from here",
+      "timing": {
+        "call": "hold",
+        "why": "no rush: his value isn't at its high and his schedule is flat"
+      }
+    },
+    {
+      "player": "Jayden Daniels",
+      "pos": "QB",
+      "slot": "QB",
+      "half_ppr_pg": 21.415,
+      "proj_pg": 18.0,
+      "per_g": -3.415,
+      "tgt_pct": null,
+      "tm_rank": null,
+      "why": "scoring 21.4/g, we project 18.0/g from here",
+      "timing": {
+        "call": "now",
+        "why": "sell now: his value is at its season high and his schedule doesn't change"
+      }
+    },
+    {
+      "player": "Bryce Young",
+      "pos": "QB",
+      "slot": "BN",
+      "half_ppr_pg": 19.98,
+      "proj_pg": 17.66,
+      "per_g": -2.32,
+      "tgt_pct": null,
+      "tm_rank": null,
+      "why": "scoring 20.0/g, we project 17.7/g from here",
       "timing": {
         "call": "hold",
         "why": "no rush: his value isn't at its high and his schedule is flat"
@@ -25,52 +56,25 @@
       "pos": "RB",
       "slot": "IR",
       "half_ppr_pg": 4.0,
-      "per_g": -4.2173333333,
+      "proj_pg": 7.71,
+      "per_g": 3.71,
       "tgt_pct": null,
       "tm_rank": null,
-      "why": "scoring 4.2/g less than his opportunity"
-    },
-    {
-      "player": "Emeka Egbuka",
-      "pos": "WR",
-      "slot": "W/R",
-      "half_ppr_pg": 9.5166666667,
-      "per_g": -2.6441666667,
-      "tgt_pct": 0.3246753247,
-      "tm_rank": 1.0,
-      "why": "scoring 2.6/g less than his opportunity; 32% target share; his team's #1 option"
-    },
-    {
-      "player": "Josh Downs",
-      "pos": "WR",
-      "slot": "BN",
-      "half_ppr_pg": 6.3428571429,
-      "per_g": -2.3641428571,
-      "tgt_pct": 0.1764705882,
-      "tm_rank": 2.0,
-      "why": "scoring 2.4/g less than his opportunity; his team's #2 option"
+      "why": "scoring 4.0/g, we project 7.7/g from here"
     },
     {
       "player": "Kaelon Black",
       "pos": "RB",
       "slot": "BN",
       "half_ppr_pg": 4.1714285714,
-      "per_g": -2.1104285714,
+      "proj_pg": 6.81,
+      "per_g": 2.6385714286,
       "tgt_pct": 0.0421052632,
       "tm_rank": 8.0,
-      "why": "scoring 2.1/g less than his opportunity"
+      "why": "scoring 4.2/g, we project 6.8/g from here"
     }
   ],
   "waivers": [
-    {
-      "player": "Chig Okonkwo",
-      "pos": "TE",
-      "gain": 0.038,
-      "bid": 0,
-      "max_bid": 0,
-      "drop": "Bam Knight",
-      "why": "+2.3 pts/wk over the next 3 weeks \u2014 covers a bye or injury"
-    },
     {
       "player": "Michael Mayer",
       "pos": "TE",
@@ -79,21 +83,30 @@
       "max_bid": 1,
       "drop": "Bam Knight",
       "why": "+2.4 pts/wk over the next 3 weeks \u2014 covers a bye or injury"
+    },
+    {
+      "player": "Chig Okonkwo",
+      "pos": "TE",
+      "gain": 0.038,
+      "bid": 0,
+      "max_bid": 0,
+      "drop": "Bam Knight",
+      "why": "+2.3 pts/wk over the next 3 weeks \u2014 covers a bye or injury"
     }
   ],
   "trades": [
     {
       "partner": "Crabcakes and Football",
-      "give": "Christian Watson (WR)",
-      "give_val": 12.4,
+      "give": "Breece Hall (RB)",
+      "give_val": 11.9,
       "get": "Chase Brown (RB)",
       "get_val": 14.8,
       "addresses": "lineup",
-      "fairness": 1.04,
-      "d_title": 0.0277,
-      "thesis": "Chase Brown starts for you over Christian Watson: +2.72 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 2.72,
-      "p_accept": 0.604,
+      "fairness": 1.16,
+      "d_title": 0.031,
+      "thesis": "Chase Brown starts for you over Breece Hall: +3.18 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 3.18,
+      "p_accept": 0.666,
       "flag": "LIKELY",
       "sits_for_them": []
     },
@@ -105,25 +118,10 @@
       "get_val": 14.2,
       "addresses": "buy low",
       "fairness": 1.21,
-      "d_title": 0.0192,
+      "d_title": 0.0173,
       "thesis": "Buy Ashton Jeanty low: -5.6 pts/g under what his usage earns, and his usage ranks RB12 against consensus RB14.",
-      "d_me": 1.48,
-      "p_accept": 0.75,
-      "flag": "LIKELY",
-      "sits_for_them": []
-    },
-    {
-      "partner": "Don R.I.C.O",
-      "give": "Breece Hall (RB) + Malik Nabers (WR)",
-      "give_val": 24.6,
-      "get": "Jaxon Smith-Njigba (WR)",
-      "get_val": 18.4,
-      "addresses": "lineup",
-      "fairness": 1.04,
-      "d_title": 0.0177,
-      "thesis": "Jaxon Smith-Njigba starts for you over Breece Hall: +2.59 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 2.59,
-      "p_accept": 0.679,
+      "d_me": 1.43,
+      "p_accept": 0.747,
       "flag": "LIKELY",
       "sits_for_them": []
     },
@@ -135,26 +133,41 @@
       "get_val": 23.6,
       "addresses": "lineup",
       "fairness": 1.16,
-      "d_title": 0.029,
-      "thesis": "Jahmyr Gibbs starts for you over Christian McCaffrey: +3.85 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 3.85,
-      "p_accept": 0.321,
+      "d_title": 0.0317,
+      "thesis": "Jahmyr Gibbs starts for you over Christian McCaffrey: +3.57 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 3.57,
+      "p_accept": 0.367,
       "flag": "EXPLOIT",
       "sits_for_them": []
     },
     {
-      "partner": "BillsMafia",
-      "give": "Breece Hall (RB)",
-      "give_val": 11.9,
-      "get": "D'Andre Swift (RB)",
-      "get_val": 15.6,
+      "partner": "Don R.I.C.O",
+      "give": "Emeka Egbuka (WR) + Malik Nabers (WR)",
+      "give_val": 22.6,
+      "get": "Jaxon Smith-Njigba (WR)",
+      "get_val": 18.4,
       "addresses": "lineup",
-      "fairness": 0.75,
-      "d_title": 0.038,
-      "thesis": "D'Andre Swift starts for you over Breece Hall: +3.77 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 3.77,
-      "p_accept": 0.224,
-      "flag": "NEEDS_PITCH",
+      "fairness": 0.73,
+      "d_title": 0.03,
+      "thesis": "Jaxon Smith-Njigba starts for you over Malik Nabers: +4.23 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 4.23,
+      "p_accept": 0.374,
+      "flag": "EXPLOIT",
+      "sits_for_them": []
+    },
+    {
+      "partner": "Undisputed",
+      "give": "Denzel Boston (WR) + Christian McCaffrey (RB)",
+      "give_val": 27.0,
+      "get": "Bijan Robinson (RB)",
+      "get_val": 18.6,
+      "addresses": "lineup",
+      "fairness": 0.94,
+      "d_title": 0.0195,
+      "thesis": "Bijan Robinson starts for you over Christian McCaffrey: +1.82 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 1.82,
+      "p_accept": 0.522,
+      "flag": "LIKELY",
       "sits_for_them": []
     }
   ],

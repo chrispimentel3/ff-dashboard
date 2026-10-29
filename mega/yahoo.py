@@ -387,7 +387,21 @@ def cached_fixtures() -> pd.DataFrame:
     df = pd.read_csv(FIXTURES_CSV).astype({"week": int})
     for c in ("home", "away"):        # older weeks carry the names teams had then
         df[c] = teams.canonical(df[c])
-    return df
+    return _complete_weeks(df)
+
+
+def _complete_weeks(df: pd.DataFrame) -> pd.DataFrame:
+    """A week scraped one matchup short (a page that didn't parse) still names its last game:
+    the two teams missing from it play each other. 2026 weeks 6 and 10 came in five games long,
+    refresh_fixtures never re-asks for a week it holds, and the season sim swaps in a made-up
+    schedule for any week without all six — so week 6's win odds were priced on invented games."""
+    every = set(df["home"]) | set(df["away"])
+    extra = []
+    for w, g in df.groupby("week"):
+        left = sorted(every - set(g["home"]) - set(g["away"]))
+        if len(left) == 2:
+            extra.append({"week": int(w), "home": left[0], "away": left[1]})
+    return pd.concat([df, pd.DataFrame(extra)], ignore_index=True) if extra else df
 
 
 def refresh_fixtures(through_week: int = 17, session: "LeagueSession | None" = None) -> pd.DataFrame:

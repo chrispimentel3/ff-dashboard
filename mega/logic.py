@@ -203,9 +203,11 @@ TOPICS = [
             "forecast that the opportunity continues. A receiver with a big target share and "
             "a large negative gap isn't being told \"expect this again\" — he's being told "
             "\"what he already got should have scored more than it did.\"\n"
-            "- That's the right input for a buy-low signal, and the wrong thing to use alone "
-            "as a projection — it's one input among several elsewhere in the dashboard, not "
-            "the whole projection."
+            "- That makes it one input to our projection (a player's share of his offense's "
+            "expected points), not the projection itself. The Shop/Hold calls compare that "
+            "projection with his pace rather than reading the xFP gap alone — on 2021–25 the "
+            "projection called the turn 85% (shop) and 71% (hold) of the time, the bare gap 76% "
+            "and 62%."
         ),
     },
     {

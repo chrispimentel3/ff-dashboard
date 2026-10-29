@@ -267,7 +267,9 @@ def my_roster_projected(c) -> pd.DataFrame:
 # ---- one function per file ----------------------------------------------------------------
 def action_board(c) -> dict:
     from mega.action_board import build
-    return {**build(c.agg, c.ib, c.basis, c.season), "season": c.season, "week": c.week,
+    from mega.proj_ros import cached
+    proj = (cached(c.season) or {}).get("players")
+    return {**build(c.agg, c.ib, c.basis, c.season, proj), "season": c.season, "week": c.week,
             "next_week": c.next_week}
 
 

@@ -100,3 +100,52 @@ def test_matchup_tags_are_graded_against_each_players_own_average():
     m = S.grade_matchups(snaps, act)
     assert m == {"good": {"n": 1, "vs_avg_pct": 50.0}, "tough": {"n": 1, "vs_avg_pct": -50.0},
                  "neutral": {"n": 1, "vs_avg_pct": 0.0}}
+
+
+def _card(partner, give, get, d=1.0):
+    return {"partner": partner, "give": [{"name": n, "pos": p} for n, p in give],
+            "get": [{"name": n, "pos": p} for n, p in get], "us": {"d_ros": d}}
+
+
+def test_trade_ideas_are_replayed_on_our_best_lineup_each_week_since():
+    roster = [{"player": n, "pos": p} for n, p in [("Quincy One", "QB"), ("Ray One", "RB"), ("Ray Two", "RB"),
+                                                   ("Wes One", "WR"), ("Wes Two", "WR"), ("Ty One", "TE")]]
+    snaps = {5: {"cards": [_card("A", [("Ray Two", "RB")], [("Ray New", "RB")], 2.0),
+                           _card("A", [("Wes Two", "WR")], [("Wes New", "WR")]),          # second for A: not on the board
+                           _card("B", [("Wes One", "WR")], [("Wes Bad", "WR")])]},
+             6: {"cards": [_card("A", [("Ray Two", "RB")], [("Ray New", "RB")])]}}      # shown again: graded once
+    pts = {5: {_norm("Ray Two"): 5, _norm("Ray New"): 12, _norm("Wes One"): 10, _norm("Wes Bad"): 4},
+           6: {_norm("Ray Two"): 9, _norm("Ray New"): 6, _norm("Wes One"): 10, _norm("Wes Bad"): 4}}
+    g = S.grade_trades(snaps, {5: roster, 6: roster}, pts)
+    by = {r["partner"]: r for r in g["rows"]}
+    assert g["n"] == 2 and set(by) == {"A", "B"}
+    assert by["A"]["weeks"] == 2 and by["A"]["per_week"] == 2.0 and by["A"]["right"] is True   # +7, -3
+    assert by["A"]["said"] == 2.0
+    assert by["B"]["per_week"] == -6.0 and by["B"]["right"] is False
+    assert g["helped"] == 1 and g["hurt"] == 1
+    # a week where the player we'd give is no longer ours isn't replayed
+    g2 = S.grade_trades({5: snaps[5]}, {5: roster, 6: [r for r in roster if r["player"] != "Ray Two"]}, pts)
+    assert {r["partner"]: r["weeks"] for r in g2["rows"]}["A"] == 1
+
+
+def test_win_odds_are_graded_from_the_favorites_side():
+    snaps = {6: {"mine": {"opp": "Them", "p_win": 0.3},
+                 "games": [{"root_for": "C", "against": "D", "p_root_wins": 0.8},
+                           {"root_for": "E", "against": "F", "p_root_wins": 0.55}]}}
+    res = pd.DataFrame([{"team": "Me", "week": 6, "points": 90, "opponent": "Them", "opp_points": 100},
+                        {"team": "C", "week": 6, "points": 80, "opponent": "D", "opp_points": 95},
+                        {"team": "E", "week": 6, "points": 70, "opponent": "F", "opp_points": 70}])     # tie: skipped
+    g = S.grade_odds(snaps, res, "Me")
+    assert g["n"] == 2 and g["favorites_won"] == 1
+    assert {(r["favorite"], r["p"], r["won"]) for r in g["games"]} == {("Them", 0.7, True), ("C", 0.8, False)}
+    assert {b["bucket"]: (b["n"], b["happened"]) for b in g["buckets"]} == {"60–75%": (1, 1.0), "75%+": (1, 0.0)}
+
+
+def test_playoff_odds_wait_for_the_regular_season_to_end():
+    hist = pd.DataFrame([{"season": 2026, "week": 6, "team": t, "p_playoffs": p, "model": "player"}
+                         for t, p in [("A", 0.9), ("B", 0.1), ("C", 0.5)]])
+    st = pd.DataFrame([{"rank": 1, "team": "A"}, {"rank": 7, "team": "B"}, {"rank": 2, "team": "C"}])
+    assert S.grade_playoff_odds(hist, st, pd.DataFrame({"week": [13]}))["available"] is False
+    g = S.grade_playoff_odds(hist, st, pd.DataFrame({"week": [14]}))
+    assert {b["bucket"]: (b["n"], b["happened"]) for b in g["buckets"]} == \
+        {"under 25%": (1, 0.0), "25–75%": (1, 1.0), "75%+": (1, 1.0)}
