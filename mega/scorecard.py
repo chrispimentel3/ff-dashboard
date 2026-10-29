@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import io
 import json
+import re
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -293,19 +294,22 @@ def grade_trades(snaps: dict, rosters: dict, pts: dict) -> dict:
     a week he'd have started. A week stops counting once a player we'd have given is gone from
     our roster — the deal can't be replayed on a roster that no longer has him.
 
-    `snaps` week -> trades.json at that week's kickoff; `rosters` week -> [{player, pos}] from
-    that week's Start/Sit; `pts` week -> normalized name -> half-PPR scored."""
-    from .action_board import shortlist
+    `snaps` week -> the home board's trades (action_board.json) at that week's kickoff, read as
+    published, so a later change to how the board picks can't rewrite what it showed;
+    `rosters` week -> [{player, pos}] from that week's Start/Sit; `pts` week -> normalized
+    name -> half-PPR scored."""
     from .intel import _norm
     rows, seen = [], set()
     for w in sorted(snaps):
-        for c in shortlist(snaps[w].get("cards") or []):
-            give, get = [p["name"] for p in c["give"]], [p["name"] for p in c["get"]]
-            key = (tuple(give), tuple(get))
+        for b in snaps[w]:
+            give, get = _pieces(b.get("give")), _pieces(b.get("get"))
+            if not give or not get:
+                continue
+            key = (tuple(n for n, _ in give), tuple(n for n, _ in get))
             if key in seen:
                 continue
             seen.add(key)
-            gone = {_norm(n) for n in give}
+            gone = {_norm(n) for n, _ in give}
             diffs = []
             for x in sorted(rosters):
                 if x < w or x not in pts or not gone <= {_norm(r["player"]) for r in rosters[x]}:
@@ -313,18 +317,28 @@ def grade_trades(snaps: dict, rosters: dict, pts: dict) -> dict:
                 p = pts[x]
                 now = [{**r, "pts": p.get(_norm(r["player"]), 0.0)} for r in rosters[x]]
                 after = [r for r in now if _norm(r["player"]) not in gone] + \
-                        [{"player": g["name"], "pos": g["pos"], "pts": p.get(_norm(g["name"]), 0.0)} for g in c["get"]]
+                        [{"player": n, "pos": pos, "pts": p.get(_norm(n), 0.0)} for n, pos in get]
                 diffs.append(sum(r["pts"] for r in best_lineup(after)) - sum(r["pts"] for r in best_lineup(now)))
             if not diffs:
                 continue
             per = sum(diffs) / len(diffs)
-            rows.append({"week": w, "partner": c["partner"], "give": give, "get": get,
-                         "said": (c.get("us") or {}).get("d_ros"), "weeks": len(diffs), "per_week": round(per, 1),
+            said = b.get("d_me")
+            if said is None:      # boards before d_me was published still state it in the thesis
+                m = re.search(r"([+-]\d+(?:\.\d+)?) pts/wk", b.get("thesis") or "")
+                said = float(m.group(1)) if m else None
+            rows.append({"week": w, "partner": b["partner"], "give": list(key[0]), "get": list(key[1]),
+                         "said": said, "weeks": len(diffs), "per_week": round(per, 1),
                          "right": None if abs(per) < 0.05 else per > 0})
     graded = [r for r in rows if r["right"] is not None]
     return {"n": len(rows), "helped": sum(r["right"] for r in graded), "hurt": sum(not r["right"] for r in graded),
             "per_week": round(sum(r["per_week"] for r in rows) / len(rows), 1) if rows else None,
             "rows": sorted(rows, key=lambda r: (-r["week"], -r["per_week"]))}
+
+
+def _pieces(s: str | None) -> list[tuple[str, str]]:
+    """'Malik Nabers (WR) + George Kittle (TE)' -> [(name, pos), ...], as the board prints them."""
+    return [(m.group(1), m.group(2)) for part in (s or "").split(" + ")
+            if (m := re.match(r"^(.+) \((\w+)\)$", part.strip()))]
 
 
 def _calibration(d: pd.DataFrame, bins: list[float], labels: list[str]) -> list[dict]:
@@ -390,9 +404,9 @@ def build(season: int, now_week: int) -> dict:
         if int(ss.get("next_week") or 0) == w:
             rosters[w] = [{"player": r["player"], "pos": r["pos"]}
                           for r in (ss.get("starters") or []) + (ss.get("bench") or []) if r.get("pos") in SKILL]
-        tr_txt = snapshot("data/web/trades.json", before)
-        if tr_txt:
-            tr_snaps[w] = json.loads(tr_txt)
+        ab_txt = snapshot("data/web/action_board.json", before)
+        if ab_txt:
+            tr_snaps[w] = json.loads(ab_txt).get("trades") or []
         po_txt = snapshot("data/web/playoffs.json", before)
         ro = (json.loads(po_txt).get("rooting") or {}) if po_txt else {}
         if int(ro.get("week") or 0) == w:

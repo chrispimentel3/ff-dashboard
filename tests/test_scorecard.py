@@ -102,30 +102,33 @@ def test_matchup_tags_are_graded_against_each_players_own_average():
                  "neutral": {"n": 1, "vs_avg_pct": 0.0}}
 
 
-def _card(partner, give, get, d=1.0):
-    return {"partner": partner, "give": [{"name": n, "pos": p} for n, p in give],
-            "get": [{"name": n, "pos": p} for n, p in get], "us": {"d_ros": d}}
+def _board(partner, give, get, d=None, thesis=""):
+    fmt = lambda xs: " + ".join(f"{n} ({p})" for n, p in xs)
+    return {"partner": partner, "give": fmt(give), "get": fmt(get), "d_me": d, "thesis": thesis}
 
 
 def test_trade_ideas_are_replayed_on_our_best_lineup_each_week_since():
     roster = [{"player": n, "pos": p} for n, p in [("Quincy One", "QB"), ("Ray One", "RB"), ("Ray Two", "RB"),
                                                    ("Wes One", "WR"), ("Wes Two", "WR"), ("Ty One", "TE")]]
-    snaps = {5: {"cards": [_card("A", [("Ray Two", "RB")], [("Ray New", "RB")], 2.0),
-                           _card("A", [("Wes Two", "WR")], [("Wes New", "WR")]),          # second for A: not on the board
-                           _card("B", [("Wes One", "WR")], [("Wes Bad", "WR")])]},
-             6: {"cards": [_card("A", [("Ray Two", "RB")], [("Ray New", "RB")])]}}      # shown again: graded once
+    snaps = {5: [_board("A", [("Ray Two", "RB")], [("Ray New", "RB")], 2.0),
+                 _board("B", [("Wes One", "WR")], [("Wes Bad", "WR")], thesis="Wes Bad starts: +1.5 pts/wk to your lineup")],
+             6: [_board("A", [("Ray Two", "RB")], [("Ray New", "RB")])]}          # shown again: graded once
     pts = {5: {_norm("Ray Two"): 5, _norm("Ray New"): 12, _norm("Wes One"): 10, _norm("Wes Bad"): 4},
            6: {_norm("Ray Two"): 9, _norm("Ray New"): 6, _norm("Wes One"): 10, _norm("Wes Bad"): 4}}
     g = S.grade_trades(snaps, {5: roster, 6: roster}, pts)
     by = {r["partner"]: r for r in g["rows"]}
     assert g["n"] == 2 and set(by) == {"A", "B"}
     assert by["A"]["weeks"] == 2 and by["A"]["per_week"] == 2.0 and by["A"]["right"] is True   # +7, -3
-    assert by["A"]["said"] == 2.0
+    assert by["A"]["said"] == 2.0 and by["B"]["said"] == 1.5              # older boards: read off the thesis
     assert by["B"]["per_week"] == -6.0 and by["B"]["right"] is False
     assert g["helped"] == 1 and g["hurt"] == 1
     # a week where the player we'd give is no longer ours isn't replayed
     g2 = S.grade_trades({5: snaps[5]}, {5: roster, 6: [r for r in roster if r["player"] != "Ray Two"]}, pts)
     assert {r["partner"]: r["weeks"] for r in g2["rows"]}["A"] == 1
+
+
+def test_board_pieces_parse_as_printed():
+    assert S._pieces("Kenneth Walker III (RB) + D'Andre Swift (RB)") == [("Kenneth Walker III", "RB"), ("D'Andre Swift", "RB")]
 
 
 def test_win_odds_are_graded_from_the_favorites_side():

@@ -27,6 +27,17 @@ def test_no_projection_means_no_calls():
     assert shop.empty and hold.empty
 
 
+def _c(partner, i, *give):
+    return {"partner": partner, "i": i, "give": [{"name": g} for g in give]}
+
+
 def test_shortlist_is_best_first_one_per_manager():
-    cards = [{"partner": "A", "i": 1}, {"partner": "A", "i": 2}, {"partner": "B", "i": 3}]
+    cards = [_c("A", 1, "X"), _c("A", 2, "Y"), _c("B", 3, "Y")]
     assert [c["i"] for c in AB.shortlist(cards)] == [1, 3]
+
+
+def test_shortlist_offers_one_player_at_most_twice():
+    cards = [_c("A", 1, "Star"), _c("B", 2, "Star", "X"), _c("C", 3, "Star"), _c("C", 4, "Y"),
+             _c("D", 5, "Z", "Star"), _c("E", 6, "Z")]
+    # C's best is capped out, so its next offer shows; D's has Star too; E fills the fifth spot
+    assert [c["i"] for c in AB.shortlist(cards)] == [1, 2, 4, 6]

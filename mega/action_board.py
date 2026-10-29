@@ -177,15 +177,25 @@ def _records(df: pd.DataFrame | None) -> list[dict]:
     return json.loads(df.to_json(orient="records"))
 
 
+MAX_SAME_GIVE = 2     # one of our players in at most this many board offers: weeks 3-7 of 2026
+                      # the board offered Nabers in 12 of its 25 ideas, so his breakout sank half
+                      # of it (scorecard: -6.4 pts/wk with him in the deal, +1.0 without)
+
+
 def shortlist(cards: list[dict], n: int = 5) -> list[dict]:
     """HANDOFF v1.3: the same engine-built offers as the Trades tab, best first, one per
-    manager — the home board is a shortlist, not three asks of one roster. The scorecard
-    grades this same list."""
-    seen, top = set(), []
+    manager — the home board is a shortlist, not three asks of one roster — and no player of
+    ours in more than MAX_SAME_GIVE of them, so one projection miss can't sink the whole list.
+    A manager whose best offer is capped out shows their next one instead."""
+    seen, used, top = set(), {}, []
     for c in cards:
-        if c["partner"] not in seen and len(top) < n:
-            seen.add(c["partner"])
-            top.append(c)
+        give = [g["name"] for g in c["give"]]
+        if len(top) >= n or c["partner"] in seen or any(used.get(x, 0) >= MAX_SAME_GIVE for x in give):
+            continue
+        seen.add(c["partner"])
+        for x in give:
+            used[x] = used.get(x, 0) + 1
+        top.append(c)
     return top
 
 
