@@ -28,6 +28,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
+# When the last Yahoo pull passed validation. The site warns when it's over a day old: an
+# expired sign-in otherwise fails quietly (Oct 28-30 2026 went three days unnoticed).
+PULLED = DATA / "yahoo_pulled.json"
 
 # Written by the scrape, and restored together — a half-updated set is worse than a stale one.
 FILES = ("yahoo_rosters.csv", "yahoo_free_agents.csv", "yahoo_standings.csv",
@@ -254,6 +257,8 @@ def main(argv=None) -> int:
             _restore(saved)
             return INVALID
         print("[validate] all checks passed")
+        from datetime import datetime, timezone
+        PULLED.write_text('{"at": "%s"}\n' % datetime.now(timezone.utc).isoformat(timespec="seconds"))
 
         for w in warnings_():
             print("[warn] " + w)

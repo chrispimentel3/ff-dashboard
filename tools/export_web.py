@@ -269,7 +269,11 @@ def action_board(c) -> dict:
     from mega.action_board import build
     from mega.proj_ros import cached
     proj = (cached(c.season) or {}).get("players")
-    return {**build(c.agg, c.ib, c.basis, c.season, proj), "season": c.season, "week": c.week,
+    try:        # every page's masthead reads this to warn when the Yahoo pull has stopped
+        pulled = json.loads((ROOT / "data" / "yahoo_pulled.json").read_text())["at"]
+    except FileNotFoundError:
+        pulled = None
+    return {**build(c.agg, c.ib, c.basis, c.season, proj), "yahoo_pulled_at": pulled, "season": c.season, "week": c.week,
             "next_week": c.next_week}
 
 

@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 # what the export writes and the site (or the Streamlit app) reads, beyond data/web/
-EXTRA = ["data/build/", "data/yahoo_fixtures.csv", "data/history/"]
+EXTRA = ["data/build/", "data/yahoo_fixtures.csv", "data/history/", "data/yahoo_pulled.json"]
 
 
 def main() -> int:
