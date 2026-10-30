@@ -59,13 +59,18 @@ def login() -> None:
             raise RuntimeError("Could not launch a browser for login")
         ctx = browser.new_context()
         page = ctx.new_page()
-        page.goto("https://login.yahoo.com/")
-        print("\n>>> Sign in to Yahoo in the browser window.")
-        print(">>> When you can see your Fantasy league, come back here and press Enter.")
+        # Sign-in hands off to the league page (.done), and the session saves the moment it
+        # loads. It used to wait for Enter in the terminal, and an Enter pressed in the browser
+        # (or a terminal that never got the key) left it waiting with nothing saved.
+        page.goto(f"https://login.yahoo.com/?.done={BASE}")
+        print("\n>>> Sign in to Yahoo in the browser window. This saves and closes by itself")
+        print(">>> once your league page opens (up to 15 minutes).")
         try:
-            input()
-        except EOFError:
-            page.wait_for_timeout(90_000)
+            page.wait_for_url(lambda u: "fantasysports.yahoo.com" in u, timeout=900_000)
+        except Exception:
+            browser.close()
+            raise SystemExit("Your league page never opened, so nothing was saved. Run this again.")
+        page.wait_for_timeout(3000)          # let the sign-in cookies land
         ctx.storage_state(path=str(STATE))
         browser.close()
     print(f"saved session -> {STATE}")
