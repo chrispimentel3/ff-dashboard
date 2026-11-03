@@ -1,24 +1,9 @@
 {
-  "headline": "20 trades raise your title odds.",
+  "headline": "1 free agent would start for you and 14 trades raise your title odds.",
   "subhead": "Everything below is ranked by what it adds to your starting nine, not by name.",
   "basis": null,
   "xfp_available": true,
   "shop": [
-    {
-      "player": "Jayden Daniels",
-      "pos": "QB",
-      "slot": "QB",
-      "half_ppr_pg": 21.415,
-      "proj_pg": 18.0,
-      "per_g": -3.415,
-      "tgt_pct": null,
-      "tm_rank": null,
-      "why": "scoring 21.4/g, we project 18.0/g from here",
-      "timing": {
-        "call": "now",
-        "why": "sell now: his value is at its season high and his schedule doesn't change"
-      }
-    },
     {
       "player": "Christian Watson",
       "pos": "WR",
@@ -33,13 +18,28 @@
         "call": "hold",
         "why": "no rush: his value isn't at its high and his schedule is flat"
       }
+    },
+    {
+      "player": "Jayden Daniels",
+      "pos": "QB",
+      "slot": "QB",
+      "half_ppr_pg": 20.128,
+      "proj_pg": 18.0,
+      "per_g": -2.128,
+      "tgt_pct": null,
+      "tm_rank": null,
+      "why": "scoring 20.1/g, we project 18.0/g from here",
+      "timing": {
+        "call": "now",
+        "why": "sell now: his value is at its season high and his schedule doesn't change"
+      }
     }
   ],
   "hold": [
     {
       "player": "Jadarian Price",
       "pos": "RB",
-      "slot": "IR",
+      "slot": "RB",
       "half_ppr_pg": 4.0,
       "proj_pg": 7.82,
       "per_g": 3.82,
@@ -57,49 +57,80 @@
       "tgt_pct": 0.0588235294,
       "tm_rank": 8.0,
       "why": "scoring 4.2/g, we project 7.3/g from here"
-    },
-    {
-      "player": "Josh Downs",
-      "pos": "WR",
-      "slot": "BN",
-      "half_ppr_pg": 6.3428571429,
-      "proj_pg": 8.45,
-      "per_g": 2.1071428571,
-      "tgt_pct": 0.2033898305,
-      "tm_rank": 2.0,
-      "why": "scoring 6.3/g, we project 8.4/g from here; 20% target share; his team's #2 option"
     }
   ],
-  "waivers": [],
+  "waivers": [
+    {
+      "player": "Emanuel Wilson",
+      "pos": "RB",
+      "gain": 0.056,
+      "bid": 3,
+      "max_bid": 3,
+      "drop": "Jadarian Price",
+      "why": "+1.4 pts/wk over the next 3 weeks \u2014 covers a bye or injury"
+    }
+  ],
   "trades": [
     {
-      "partner": "Don R.I.C.O",
-      "give": "Christian Watson (WR) + Malik Nabers (WR)",
-      "give_val": 25.3,
-      "get": "Jaxon Smith-Njigba (WR)",
-      "get_val": 18.9,
+      "partner": "Heartbreak Drake",
+      "give": "Christian Watson (WR)",
+      "give_val": 12.4,
+      "get": "Ashton Jeanty (RB)",
+      "get_val": 15.2,
       "addresses": "lineup",
-      "fairness": 0.97,
-      "d_title": 0.0333,
-      "thesis": "Jaxon Smith-Njigba starts for you over Malik Nabers: +2.32 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 2.32,
-      "p_accept": 0.668,
+      "fairness": 1.03,
+      "d_title": 0.043,
+      "thesis": "Ashton Jeanty starts for you over Christian Watson: +3.04 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 3.04,
+      "p_accept": 0.585,
       "flag": "LIKELY",
       "sits_for_them": []
     },
     {
-      "partner": "Heartbreak Drake",
-      "give": "Malik Nabers (WR)",
-      "give_val": 12.9,
-      "get": "Ashton Jeanty (RB)",
-      "get_val": 15.2,
+      "partner": "Crabcakes and Football",
+      "give": "Breece Hall (RB)",
+      "give_val": 12.0,
+      "get": "Chase Brown (RB)",
+      "get_val": 14.4,
       "addresses": "lineup",
-      "fairness": 1.12,
-      "d_title": 0.0278,
-      "thesis": "Ashton Jeanty starts for you over Malik Nabers: +2.28 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 2.28,
-      "p_accept": 0.672,
+      "fairness": 1.15,
+      "d_title": 0.0318,
+      "thesis": "Chase Brown starts for you over Breece Hall: +3.09 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 3.09,
+      "p_accept": 0.657,
       "flag": "LIKELY",
+      "sits_for_them": []
+    },
+    {
+      "partner": "Don R.I.C.O",
+      "give": "Rachaad White (RB)",
+      "give_val": 8.6,
+      "get": "Jeremiyah Love (RB)",
+      "get_val": 11.7,
+      "addresses": "lineup",
+      "fairness": 1.3,
+      "d_title": 0.0333,
+      "thesis": "Jeremiyah Love starts for you over Denzel Boston: +2.36 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 2.36,
+      "p_accept": 0.564,
+      "flag": "LIKELY",
+      "sits_for_them": [
+        "Rachaad White wouldn't start for them (they start Derrick Henry & Chuba Hubbard & Rico Dowdle)"
+      ]
+    },
+    {
+      "partner": "Revenge of the Smith",
+      "give": "Rachaad White (RB) + Malik Nabers (WR)",
+      "give_val": 21.4,
+      "get": "James Cook III (RB)",
+      "get_val": 17.7,
+      "addresses": "lineup",
+      "fairness": 0.7,
+      "d_title": 0.0383,
+      "thesis": "James Cook III starts for you over Malik Nabers: +3.96 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 3.96,
+      "p_accept": 0.39,
+      "flag": "EXPLOIT",
       "sits_for_them": []
     },
     {
@@ -109,47 +140,17 @@
       "get": "Caleb Williams (QB)",
       "get_val": 19.9,
       "addresses": "lineup",
-      "fairness": 1.09,
-      "d_title": 0.0242,
-      "thesis": "Caleb Williams starts for you over Jayden Daniels: +1.54 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 1.54,
-      "p_accept": 0.59,
-      "flag": "LIKELY",
-      "sits_for_them": []
-    },
-    {
-      "partner": "Allen Moore connection",
-      "give": "Denzel Boston (WR) + Emeka Egbuka (WR)",
-      "give_val": 19.0,
-      "get": "Cam Skattebo (RB)",
-      "get_val": 11.9,
-      "addresses": "consolidation",
-      "fairness": 1.0,
-      "d_title": 0.0218,
-      "thesis": "Two for one: -12.0 this week, but +1.65 pts/wk over the weeks that count most \u2014 already net of picking up Jalen Hurts, which you could do anyway.",
-      "d_me": 1.65,
-      "p_accept": 0.565,
-      "flag": "LIKELY",
-      "sits_for_them": []
-    },
-    {
-      "partner": "Crabcakes and Football",
-      "give": "Christian Watson (WR)",
-      "give_val": 12.4,
-      "get": "Chase Brown (RB)",
-      "get_val": 14.4,
-      "addresses": "lineup",
-      "fairness": 1.19,
-      "d_title": 0.0298,
-      "thesis": "Chase Brown starts for you over Christian Watson: +2.46 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 2.46,
-      "p_accept": 0.413,
+      "fairness": 0.79,
+      "d_title": 0.0182,
+      "thesis": "Caleb Williams starts for you over Jayden Daniels: +1.08 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 1.08,
+      "p_accept": 0.344,
       "flag": "EXPLOIT",
       "sits_for_them": []
     }
   ],
   "roster_src": "scraped Yahoo rosters",
-  "yahoo_pulled_at": "2026-10-30T16:37:42+00:00",
+  "yahoo_pulled_at": "2026-11-03T01:57:56+00:00",
   "season": 2026,
   "week": 8,
   "next_week": 8

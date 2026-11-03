@@ -24,13 +24,13 @@
   "out_reason": null,
   "seasons": {
     "2026": {
-      "games": 1,
-      "pts_pg": 3.7,
-      "xfp_pg": 8.932,
-      "vs_exp_pg": -5.232,
+      "games": 2,
+      "pts_pg": 1.85,
+      "xfp_pg": 4.466,
+      "vs_exp_pg": -2.616,
       "usage_label": "Target share",
-      "usage_value": 0.25,
-      "usage_fmt": "25.0%",
+      "usage_value": 0.13636363636363635,
+      "usage_fmt": "13.6%",
       "ranks": {
         "pts_pg": null,
         "xfp_pg": null,
@@ -39,61 +39,61 @@
       "card": [
         {
           "stat": "Pts/game",
-          "value_fmt": "3.7",
+          "value_fmt": "1.9",
           "pos_rank": "\u2014",
           "means": "Half-PPR fantasy points per game."
         },
         {
           "stat": "Expected pts/g",
-          "value_fmt": "8.9",
+          "value_fmt": "4.5",
           "pos_rank": "\u2014",
           "means": "What his targets should score."
         },
         {
           "stat": "Snap share",
-          "value_fmt": "87%",
+          "value_fmt": "45%",
           "pos_rank": "\u2014",
           "means": "Share of his offense's plays he was on the field for."
         },
         {
           "stat": "Routes/game (est.)",
-          "value_fmt": "38.3",
+          "value_fmt": "19.7",
           "pos_rank": "\u2014",
           "means": "Pass routes run per game. Estimated from snap share \u00d7 team dropbacks \u2014 nflverse has no charted route count. Under ~25 is a part-time role."
         },
         {
           "stat": "Targets/game",
-          "value_fmt": "9.0",
+          "value_fmt": "4.5",
           "pos_rank": "\u2014",
           "means": "Raw target volume \u2014 the input everything else starts from."
         },
         {
           "stat": "Target share",
-          "value_fmt": "25.0%",
+          "value_fmt": "13.6%",
           "pos_rank": "\u2014",
           "means": "25%+ is a No. 1 receiver's role."
         },
         {
           "stat": "Targets per route (est.)",
-          "value_fmt": "23.5%",
+          "value_fmt": "22.9%",
           "pos_rank": "\u2014",
           "means": "How often he's thrown to when he's actually in a route. Around 20%+ is a featured receiver. This is what separates a real role from empty snaps."
         },
         {
           "stat": "1st downs per route (est.)",
-          "value_fmt": "5.2%",
+          "value_fmt": "5.1%",
           "pos_rank": "\u2014",
           "means": "The single best read on a receiver. 12%+ is the league-winner line for a WR. Tight ends read lower \u2014 the route estimate counts their blocking snaps, so judge a TE against TEs."
         },
         {
           "stat": "Air-yards share",
-          "value_fmt": "34.8%",
+          "value_fmt": "19.3%",
           "pos_rank": "\u2014",
           "means": "Share of the team's downfield targets."
         },
         {
           "stat": "WOPR",
-          "value_fmt": "0.62",
+          "value_fmt": "0.34",
           "pos_rank": "\u2014",
           "means": "1.5 \u00d7 target share + 0.7 \u00d7 air-yards share. About 0.5+ is a starter's role."
         },
@@ -117,13 +117,13 @@
         },
         {
           "stat": "Yds per route (est.)",
-          "value_fmt": "0.84",
+          "value_fmt": "0.81",
           "pos_rank": "\u2014",
           "means": "Receiving yards per route run. About 2.0+ is a WR1's efficiency; on the same route estimate."
         },
         {
           "stat": "Rec yds/g",
-          "value_fmt": "32.0",
+          "value_fmt": "16.0",
           "pos_rank": "\u2014",
           "means": ""
         },
@@ -157,101 +157,118 @@
           "half_ppr": 3.7,
           "xfp": 8.932,
           "vs_exp": -5.232
+        },
+        {
+          "week": 8,
+          "game": "@ LA",
+          "snap_pct": 0.03,
+          "routes": 1.0,
+          "targets": 0,
+          "tgt_pct": 0.0,
+          "receptions": 0,
+          "receiving_first_downs": 0,
+          "receiving_yards": 0,
+          "receiving_tds": 0,
+          "receiving_air_yards": 0,
+          "receiving_yards_after_catch": 0,
+          "half_ppr": 0.0,
+          "xfp": null,
+          "vs_exp": null
         }
       ],
       "role": {
-        "headline": "Depth WR",
-        "from_usage": false,
-        "games": 1,
+        "headline": "WR2",
+        "from_usage": true,
+        "games": 2,
         "rows": [
           {
             "metric": "target share",
-            "him": 0.12828757225433526,
-            "role_avg": 0.055260115606936416,
-            "vs_role": 232.15219665271965,
-            "nfl_avg": 0.11829666552079753,
-            "vs_nfl": 108.44563681448929,
+            "him": 0.1584779267706097,
+            "role_avg": 0.18280364621828035,
+            "vs_role": 86.69297907842383,
+            "nfl_avg": 0.11760974371986806,
+            "vs_nfl": 134.74897721746987,
             "fmt": "{:.1%}"
           },
           {
             "metric": "air-yards share",
-            "him": 0.15559935518531448,
-            "role_avg": 0.07921669983869903,
-            "vs_role": 196.42241535199742,
-            "nfl_avg": 0.16079589730629093,
-            "vs_nfl": 96.76823712045473,
+            "him": 0.22310246954070004,
+            "role_avg": 0.24350522291459706,
+            "vs_role": 91.62122556153436,
+            "nfl_avg": 0.16038997680202302,
+            "vs_nfl": 139.10000736273315,
             "fmt": "{:.1%}"
           },
           {
             "metric": "1D per target",
-            "him": 0.3194936165647463,
-            "role_avg": 0.3486750348675035,
-            "vs_role": 91.63076923076923,
-            "nfl_avg": 0.37450054486015255,
-            "vs_nfl": 85.31192302645456,
+            "him": 0.35814499965443364,
+            "role_avg": 0.39892183288409705,
+            "vs_role": 89.77823977823977,
+            "nfl_avg": 0.3732470334412082,
+            "vs_nfl": 95.95387707504624,
             "fmt": "{:.3f}"
           },
           {
             "metric": "TPRR (est.)",
-            "him": 0.1793783580430175,
-            "role_avg": 0.15804439350188462,
-            "vs_role": 113.4987164482228,
-            "nfl_avg": 0.20732654193938052,
-            "vs_nfl": 86.5197269799953,
+            "him": 0.21720948320508932,
+            "role_avg": 0.21270313579461247,
+            "vs_role": 102.11860882710643,
+            "nfl_avg": 0.20590741792394088,
+            "vs_nfl": 105.48890632260915,
             "fmt": "{:.3f}"
           },
           {
             "metric": "1D/RR (est.)",
-            "him": 0.05441455730216053,
-            "role_avg": 0.055106134414883066,
-            "vs_role": 98.74500884508466,
-            "nfl_avg": 0.07764390292026928,
-            "vs_nfl": 70.08220253693013,
+            "him": 0.07644472248347023,
+            "role_avg": 0.0848519247913818,
+            "vs_role": 90.09191326115271,
+            "nfl_avg": 0.07685433290364999,
+            "vs_nfl": 99.46703015340297,
             "fmt": "{:.3f}"
           },
           {
             "metric": "aDOT",
-            "him": 10.77899367020706,
-            "role_avg": 11.712691771269178,
-            "vs_role": 92.02832176159158,
-            "nfl_avg": 11.09298946603705,
-            "vs_nfl": 97.16942131071757,
+            "him": 10.15509019282604,
+            "role_avg": 10.901617250673855,
+            "vs_role": 93.15214393716062,
+            "nfl_avg": 11.038475368572456,
+            "vs_nfl": 91.99721749380812,
             "fmt": "{:.1f}"
           },
           {
             "metric": "YAC over exp",
-            "him": 0.04534916772171614,
-            "role_avg": 0.2106082377220557,
-            "vs_role": 21.532475753187025,
-            "nfl_avg": 0.4473123635915708,
-            "vs_nfl": 10.138143143998425,
+            "him": 0.34101296168149475,
+            "role_avg": 0.56540479047379,
+            "vs_role": 60.313065511124776,
+            "nfl_avg": 0.39150797004729604,
+            "vs_nfl": 87.10243156487944,
             "fmt": "{:+.2f}"
           },
           {
             "metric": "separation",
-            "him": 1.4303764851391467,
-            "role_avg": 0.9493079904313254,
-            "vs_role": 150.67570267571898,
-            "nfl_avg": 1.9996356127726471,
-            "vs_nfl": 71.53185690445974,
+            "him": 2.464407435404339,
+            "role_avg": 2.355590082791987,
+            "vs_role": 104.61953687983672,
+            "nfl_avg": 2.034627445704871,
+            "vs_nfl": 121.12327692260024,
             "fmt": "{:.2f}"
           },
           {
             "metric": "snap %",
-            "him": 0.6008503373586174,
-            "role_avg": 0.2984807196983837,
-            "vs_role": 201.30289754252124,
-            "nfl_avg": 0.4844177831657714,
-            "vs_nfl": 124.0355656293076,
+            "him": 0.5530287331853911,
+            "role_avg": 0.7253738428673154,
+            "vs_role": 76.24051220255409,
+            "nfl_avg": 0.4832407936637544,
+            "vs_nfl": 114.44164905709432,
             "fmt": "{:.1%}"
           },
           {
             "metric": "xFP share",
-            "him": 0.13545144019030436,
-            "role_avg": 0.03437410032286268,
-            "vs_role": 394.0508665479567,
-            "nfl_avg": 0.0736884976013006,
-            "vs_nfl": 183.81625979563145,
+            "him": 0.07254263179223008,
+            "role_avg": 0.11325363188452339,
+            "vs_role": 64.0532498473838,
+            "nfl_avg": 0.07325529093130853,
+            "vs_nfl": 99.02715676913124,
             "fmt": "{:.1%}"
           }
         ]
@@ -262,17 +279,17 @@
         "home": false,
         "ease_rank": 27,
         "out_reason": null,
-        "projection": 1.4,
+        "projection": 2.1,
         "proj_source": "ffanalytics",
-        "matchup_mult": 0.999,
-        "matchup_pct": -0.1,
-        "matchup_basis": "defense+vegas",
-        "matchup_def_rank": 10,
-        "matchup_def_pct": 6.0,
-        "matchup_vegas_pct": -2.2,
-        "matchup_baseline": 2.8,
-        "expected_pts": 2.8,
-        "delta_pts": -0.0
+        "matchup_mult": null,
+        "matchup_pct": null,
+        "matchup_basis": null,
+        "matchup_def_rank": null,
+        "matchup_def_pct": null,
+        "matchup_vegas_pct": null,
+        "matchup_baseline": null,
+        "expected_pts": null,
+        "delta_pts": null
       }
     },
     "2025": {
