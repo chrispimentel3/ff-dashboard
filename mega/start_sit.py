@@ -117,10 +117,15 @@ def add_kdef(payload: dict, rows: list[dict]) -> dict:
         return payload
     out = dict(payload)
     old = float((out.get("kpis") or {}).get("proj_total") or 0.0)
+    # When build() fails, the export keeps last run's file, which already holds K/DEF.
+    # Take those out first so they are never counted twice.
+    def skill(xs):
+        return [x for x in xs if x.get("pos") not in ("K", "DEF")]
+    base = old - sum(float(s["proj_adj"]) for s in out["starters"] if s.get("pos") in ("K", "DEF"))
     starts = [{k: v for k, v in r.items() if k != "start"} for r in rows if r["start"]]
-    out["starters"] = list(out["starters"]) + starts
-    out["bench"] = list(out["bench"]) + [{k: v for k, v in r.items() if k != "start"} for r in rows if not r["start"]]
-    new = round(old + sum(float(r["proj_adj"]) for r in starts), 1)
+    out["starters"] = skill(out["starters"]) + starts
+    out["bench"] = skill(out["bench"]) + [{k: v for k, v in r.items() if k != "start"} for r in rows if not r["start"]]
+    new = round(base + sum(float(r["proj_adj"]) for r in starts), 1)
     out["kpis"] = {**out["kpis"], "proj_total": new, "starters_n": len(out["starters"])}
     # ponytail: the headline's number is swapped in place; build() owns its wording
     out["headline"] = out["headline"].replace(f"{old:.0f} points", f"{new:.0f} points", 1)

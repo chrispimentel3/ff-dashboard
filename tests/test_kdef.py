@@ -36,6 +36,11 @@ def test_kicker_and_defense_join_the_start_sit_total():
     assert out["kpis"]["proj_total"] == pytest.approx(102.9)
     assert out["kpis"]["starters_n"] == 9 and len(out["bench"]) == 1
     assert "103 points" in out["headline"]
+    # a rebuild that kept this file (start/sit build failed) folds again: no double count
+    again = start_sit.add_kdef(out, rows)
+    assert again["kpis"]["proj_total"] == pytest.approx(102.9)
+    assert again["kpis"]["starters_n"] == 9 and len(again["bench"]) == 1
+    assert "103 points" in again["headline"]
 
 
 def test_current_kicker_is_the_active_one_on_the_roster_not_the_last_to_kick():
