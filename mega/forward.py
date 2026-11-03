@@ -19,12 +19,16 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-# §13 defaults (J)
-GAMMA = 0.60                       # volume moves less than points do
-BETA = {"rush": 0.05, "rec": -0.03, "pass": -0.03}
+# §13 (tools/fit_week8_calibration.py)
+GAMMA = 0.60                       # (J) volume moves less than points do. Pooled 2021-26 fit
+                                   # 0.70 made the 2026 holdout worse, so kept
+# fitted 2026-11-03 on 2021-2026 team-weeks with a posted line (log team xFP on log implied
+# ratio + spread/7); rush ~0 once the implied total is in, favourites already score more
+BETA = {"rush": 0.005, "rec": -0.042, "pass": -0.025}
 SPREAD_SCALE = 7.0                 # a touchdown's worth of spread is the unit
-# §14 defaults (J)
-LAMBDA = 0.04
+# §14 — fitted 2026-11-03 on 2026 weeks 1-8: next-3-week share change on earn z came out
+# -0.043 ± 0.019, so the adjustment is off (floor of the 0-0.10 range) until it earns its way back
+LAMBDA = 0.0
 Z_CLAMP = 1.5
 OPP_SCORE_SD = 15.0                # Opportunity Score = 100 + 15 z
 

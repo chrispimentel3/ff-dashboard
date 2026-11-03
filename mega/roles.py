@@ -33,13 +33,15 @@ WINDOW_METRICS = 4        # games played, for measuring how he is used
 MIN_GAMES = 2             # fewer than this and the depth chart decides the role
 ROLE_FLAG_IDX = 120.0     # role index at or above this is "running above his role"
 
-# Shrinkage constants, in the metric's own denominator units (§12.4). Judgment defaults —
-# §19.4 calibrates them from 2026 split-half reliability after week 8.
+# Shrinkage constants, in the metric's own denominator units (§12.4). Fitted 2026-11-03 on
+# 2026 weeks 1-8 odd/even split-half reliability, K = n(1-r)/r (tools/fit_week8_calibration.py).
+# Still judgment (J): yacoe, ryoe, separation (under 40 NGS qualifiers, or r < 0.1) and wopr
+# (unused — WOPR is composed after shrinkage).
 K = {
-    "target_share": 60.0, "air_share": 500.0, "fd_per_target": 30.0, "fd_per_touch": 40.0,
-    "tprr": 100.0, "fd_rr": 120.0, "carry_share": 40.0, "inside10_share": 6.0,
-    "yacoe": 25.0, "ryoe": 60.0, "separation": 25.0, "snap_pct": 60.0, "xfp_share": 2.0,
-    "adot": 30.0, "wopr": 60.0,
+    "target_share": 22.6, "air_share": 206.8, "fd_per_target": 38.7, "fd_per_touch": 118.5,
+    "tprr": 60.6, "fd_rr": 36.1, "carry_share": 10.6, "inside10_share": 11.6,
+    "yacoe": 25.0, "ryoe": 60.0, "separation": 25.0, "snap_pct": 21.1, "xfp_share": 77.4,
+    "adot": 48.0, "wopr": 60.0,
 }
 
 POS_ALL = ("QB", "RB", "WR", "TE")

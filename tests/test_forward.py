@@ -119,7 +119,8 @@ def test_game_script_tilts_run_and_pass_in_opposite_directions():
 # ---------------------------------------------------------------- §19.3 #21
 @pytest.mark.parametrize("z,expect", [(3.0, 1.06), (-3.0, 0.94), (1.5, 1.06),
                                       (0.0, 1.00), (0.5, 1.02)])
-def test_earned_adjustment_clamps_at_six_percent(z, expect):
+def test_earned_adjustment_clamps_at_six_percent(z, expect, monkeypatch):
+    monkeypatch.setattr(fw, "LAMBDA", 0.04)     # the clamp is under test, not the fitted weight
     tab = pd.DataFrame([{"gsis_id": "A", "pos": "WR", "tprr_z": z, "fd_rr_z": z,
                          "wopr_z": z, "separation_z": z}])
     assert fw.earned(tab)["earn_adj"].iloc[0] == pytest.approx(expect, abs=1e-9)

@@ -34,8 +34,9 @@ def test_baseline_is_summed_over_summed_not_an_average_of_ratios():
 
 
 # ---------------------------------------------------------------- §19.3 #14
-def test_shrinkage_pulls_toward_the_role_baseline():
+def test_shrinkage_pulls_toward_the_role_baseline(monkeypatch):
     """12 targets of 30 team targets, μ_role 0.20, k 60 → (12 + 12) ÷ 90 = 0.2667."""
+    monkeypatch.setitem(roles.K, "target_share", 60.0)   # the formula is under test, not the fitted K
     tot = pd.DataFrame([{"gsis_id": "A", "pos": "WR", "team": "LA", "role": "WR1",
                          "role_src": "usage", "games": 1,
                          "targets": 12.0, "team_targets": 30.0}])
