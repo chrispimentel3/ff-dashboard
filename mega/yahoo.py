@@ -510,6 +510,9 @@ def pull(manual: bool = False, fa_pages: int = 4) -> dict[str, pd.DataFrame]:
             out["faab"] = _faab.parse_budgets(s.get_text(BASE))
             out["faab_bids"] = _faab.parse_bids(s.get_text(BASE + "?transactionsfilter=faab"))
 
+    if "faab_bids" in out:
+        from .faab import merge_bids
+        out["faab_bids"] = merge_bids(out["faab_bids"], _nfl_season())
     for name, df in out.items():
         path = DATA / f"yahoo_{name}.csv"
         df.to_csv(path, index=False)

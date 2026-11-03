@@ -12,13 +12,13 @@
     "teams": 12
   },
   "market": {
-    "claims": 5,
-    "median": 6.0,
-    "max": 10.0,
-    "contested": 5,
-    "listed_spend": 28.0,
+    "claims": 23,
+    "median": 7.0,
+    "max": 26.0,
+    "contested": 23,
+    "listed_spend": 204.0,
     "league_spend": 476.0,
-    "unlisted_spend": 448.0
+    "unlisted_spend": 272.0
   },
   "lanes": {
     "bid_now": [
@@ -30,7 +30,7 @@
         "lane": "bid_now",
         "fit_pts": 0.366,
         "start": 0.127,
-        "cover": 0.238,
+        "cover": 0.239,
         "insure": 0.0,
         "next3": 1.41,
         "mechanism": "COVER",
@@ -51,15 +51,15 @@
         "max_bid": 3,
         "role": "Lead back",
         "why": "+1.4 pts/wk over the next 3 weeks \u2014 covers a bye or injury",
-        "d_title": 0.0068,
+        "d_title": 0.006,
         "se_title": 0.0027,
         "title_noise": false,
         "out_status": "",
         "out_back": null,
-        "rival_top": 2,
-        "rival_team": "Saquon Hater",
+        "rival_top": 3,
+        "rival_team": "Heartbreak Drake",
         "rivals_n": 5,
-        "bid_note": "45% to win at your $3 ceiling \u2014 the league pays more for players like him; Saquon Hater the likeliest rival"
+        "bid_note": "45% to win at your $3 ceiling \u2014 the league pays more for players like him; Heartbreak Drake the likeliest rival"
       }
     ],
     "early_signal": [
@@ -92,9 +92,9 @@
         "max_bid": 1,
         "role": "Backup TE",
         "why": "playing up: 24% chance his role grows within 3 weeks, worth +0.1 pts/wk if it does",
-        "d_title": 0.0045,
-        "se_title": 0.0022,
-        "title_noise": false,
+        "d_title": 0.0035,
+        "se_title": 0.0023,
+        "title_noise": true,
         "out_status": "",
         "out_back": null,
         "rival_top": 0,
@@ -133,7 +133,7 @@
         "max_bid": 1,
         "role": "WR1",
         "why": "bye and injury cover: +0.13 pts/wk across the season",
-        "d_title": 0.001,
+        "d_title": 0.0012,
         "se_title": 0.0021,
         "title_noise": true,
         "out_status": "",
@@ -167,8 +167,8 @@
     "fit_min": 0.02,
     "budget_left": 100,
     "title": {
-      "p_playoffs": 0.8736666666666667,
-      "p_title": 0.11666666666666667,
+      "p_playoffs": 0.8725,
+      "p_title": 0.11883333333333333,
       "posture": "protect",
       "seasons": 6000
     }
@@ -206,36 +206,6 @@
       ],
       "rows": [
         {
-          "player": "Texans",
-          "team": "HOU",
-          "pos": "DEF",
-          "weeks": [
-            {
-              "week": 8,
-              "opp": null,
-              "proj": 0.0
-            },
-            {
-              "week": 9,
-              "opp": "LAC",
-              "proj": 8.8
-            },
-            {
-              "week": 10,
-              "opp": "CLE",
-              "proj": 9.1
-            }
-          ],
-          "gain_next": -4.2,
-          "gain_avg": 1.93,
-          "bid": 1,
-          "max_bid": 5,
-          "rival_top": 4,
-          "rival_team": "Don R.I.C.O",
-          "rivals_n": 11,
-          "bid_note": "wins 85% of claims like this in this league; Don R.I.C.O the likeliest rival"
-        },
-        {
           "player": "Packers",
           "team": "GB",
           "pos": "DEF",
@@ -257,13 +227,43 @@
             }
           ],
           "gain_next": 3.8,
-          "gain_avg": 1.92,
+          "gain_avg": 1.93,
           "bid": 1,
           "max_bid": 5,
           "rival_top": 0,
           "rival_team": "",
           "rivals_n": 0,
           "bid_note": "no other team gains enough from him to bid"
+        },
+        {
+          "player": "Texans",
+          "team": "HOU",
+          "pos": "DEF",
+          "weeks": [
+            {
+              "week": 8,
+              "opp": null,
+              "proj": 0.0
+            },
+            {
+              "week": 9,
+              "opp": "LAC",
+              "proj": 8.8
+            },
+            {
+              "week": 10,
+              "opp": "CLE",
+              "proj": 9.0
+            }
+          ],
+          "gain_next": -4.2,
+          "gain_avg": 1.92,
+          "bid": 1,
+          "max_bid": 5,
+          "rival_top": 4,
+          "rival_team": "Don R.I.C.O",
+          "rivals_n": 11,
+          "bid_note": "wins 85% of claims like this in this league; Don R.I.C.O the likeliest rival"
         },
         {
           "player": "Bears",
@@ -313,7 +313,7 @@
             {
               "week": 10,
               "opp": "NE",
-              "proj": 5.7
+              "proj": 5.8
             }
           ],
           "gain_next": 2.1,
@@ -377,7 +377,7 @@
             }
           ],
           "gain_next": -4.2,
-          "gain_avg": 0.84,
+          "gain_avg": 0.85,
           "bid": 1,
           "max_bid": 2,
           "rival_top": 0,
@@ -433,12 +433,12 @@
             }
           ],
           "gain_next": -2.1,
-          "gain_avg": 3.99,
+          "gain_avg": 3.98,
           "bid": 1,
           "max_bid": 9,
           "rival_top": 4,
           "rival_team": "L'Omar",
-          "rivals_n": 6,
+          "rivals_n": 7,
           "bid_note": "wins 85% of claims like this in this league; L'Omar the likeliest rival"
         },
         {
@@ -489,11 +489,11 @@
             {
               "week": 10,
               "opp": "CLE",
-              "proj": 10.1
+              "proj": 10.0
             }
           ],
           "gain_next": -10.2,
-          "gain_avg": 3.58,
+          "gain_avg": 3.57,
           "bid": 1,
           "max_bid": 8,
           "rival_top": 0,
@@ -583,7 +583,7 @@
             }
           ],
           "gain_next": -1.7,
-          "gain_avg": 3.06,
+          "gain_avg": 3.05,
           "bid": 1,
           "max_bid": 7,
           "rival_top": 0,

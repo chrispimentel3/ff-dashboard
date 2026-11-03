@@ -72,3 +72,25 @@ def test_market_summary_reconciles_against_budgets():
     assert m["listed_spend"] == 10.0
     assert m["league_spend"] == 32.0          # 7 + 0 + 10 + 15
     assert m["unlisted_spend"] == 22.0
+
+
+def test_merge_bids_keeps_claims_that_fell_off_the_feed(tmp_path):
+    import pandas as pd
+
+    path = tmp_path / "bids.csv"
+    cols = ["player", "winning_bid", "winner", "date", "n_bidders", "runner_up", "losers"]
+    old = pd.DataFrame([
+        ["Ollie Gordon II Mia - RB", 25, "Heartbreak Drake", "Sep 30,4:20 am", 5, 22, "x"],
+        ["Keenan Allen Ind - WR Q", 13, "Saquon Enjoyer", "Sep 30,4:20 am", 3, 3, "x"],
+        ["Vikings Min - DEF", 26, "Saquon Enjoyer", "Sep 30,4:20 am", 4, 15, "x"],
+    ], columns=cols).assign(season=2026)
+    pd.concat([old, old.head(1).assign(season=2025)]).to_csv(path, index=False)
+    # the same two claims re-scraped with a new tag, a renamed team and a city for a nickname
+    new = pd.DataFrame([
+        ["Keenan Allen Ind - WR O", 13, "Saquon Hater", "Sep 30,4:20 am", 3, 3, "x"],
+        ["Minnesota Min - DEF", 26, "Saquon Hater", "Sep 30,4:20 am", 4, 15, "x"],
+    ], columns=cols)
+    out = faab.merge_bids(new, 2026, path)
+    assert list(out["player"]) == ["Keenan Allen Ind - WR O", "Minnesota Min - DEF", "Ollie Gordon II Mia - RB"]
+    assert set(out["season"]) == {2026}
+    assert len(faab.merge_bids(new.iloc[0:0], 2026, path)) == 3     # an empty scrape loses nothing

@@ -25,6 +25,7 @@ public, so budgets are read from the league home page, which does not.
 from __future__ import annotations
 
 import math
+from pathlib import Path
 import re
 
 import pandas as pd
@@ -138,14 +139,31 @@ def parse_bids(page_text: str) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def refresh_bids() -> pd.DataFrame:
-    from .yahoo import BASE, LeagueSession
+_CLAIM = re.compile(r"^(?P<name>.*?)\s*\b(?P<tm>\w{2,3}) - (?P<pos>QB|RB|WR|TE|K|DEF)\b")
 
-    with LeagueSession() as s:
-        df = parse_bids(s.get_text(BASE + "?transactionsfilter=faab"))
-    if not df.empty:
-        df.to_csv(BIDS_CSV, index=False)
-    return df
+
+def _claim_key(player, date, bid) -> tuple:
+    """One settled claim, however Yahoo wrote it that day: the injury tag after the
+    position comes and goes, and a defense is a city one scrape and a nickname the next."""
+    m = _CLAIM.match(str(player))
+    who = str(player) if not m else f"{m['tm']} {m['pos']}" + ("" if m["pos"] == "DEF" else f" {m['name']}")
+    return who, str(date), int(bid)
+
+
+def merge_bids(new: pd.DataFrame, season: int, path: Path = BIDS_CSV) -> pd.DataFrame:
+    """Yahoo's offers feed shows only the latest claims, so keep every claim seen this
+    season: the new scrape first (current team names), then older claims it no longer
+    lists. Another season's rows are dropped."""
+    new = new.assign(season=season) if not new.empty else new
+    if not path.is_file():
+        return new
+    old = pd.read_csv(path)
+    old = old[old["season"] == season]
+    if new.empty:
+        return old
+    seen = {_claim_key(*k) for k in zip(new["player"], new["date"], new["winning_bid"])}
+    gone = [_claim_key(*k) not in seen for k in zip(old["player"], old["date"], old["winning_bid"])]
+    return pd.concat([new, old[gone]], ignore_index=True)
 
 
 def cached_bids() -> pd.DataFrame:
