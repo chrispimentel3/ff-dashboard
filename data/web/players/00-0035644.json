@@ -15,10 +15,10 @@
     "headshot_url": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/xajxem9ad7btdgu9d9yk"
   },
   "ownership": {
-    "kind": "waivers",
+    "kind": "free_agent",
     "team": null,
     "slot": null,
-    "waiver_until": "Nov 4"
+    "waiver_until": null
   },
   "nfl_status": "Active",
   "out_reason": null,
@@ -112,7 +112,7 @@
         {
           "stat": "YAC/rec",
           "value_fmt": "4.3",
-          "pos_rank": "#54 of 83",
+          "pos_rank": "#55 of 83",
           "means": "Yards after catch per reception."
         },
         {
@@ -136,7 +136,7 @@
         {
           "stat": "EPA/target",
           "value_fmt": "-0.27",
-          "pos_rank": "#74 of 83",
+          "pos_rank": "#73 of 83",
           "means": "Points added per target."
         }
       ],
@@ -251,80 +251,95 @@
         "rows": [
           {
             "metric": "target share",
-            "him": 0.05876566013491808,
+            "him": 0.059745143645691744,
             "role_avg": 0.05471677909840454,
-            "vs_role": 107.39970645792562,
-            "nfl_avg": 0.08703441068896021,
-            "vs_nfl": 67.52002991659498,
+            "vs_role": 109.18980362174464,
+            "nfl_avg": 0.08707320709706277,
+            "vs_nfl": 68.61484219720111,
             "fmt": "{:.1%}"
           },
           {
             "metric": "air-yards share",
-            "him": 0.030298822577080876,
+            "him": 0.027694285548735747,
             "role_avg": 0.03932231750679774,
-            "vs_role": 77.05248443671472,
-            "nfl_avg": 0.06688744165452097,
-            "vs_nfl": 45.29822314564928,
+            "vs_role": 70.42892511090724,
+            "nfl_avg": 0.06663535219569702,
+            "vs_nfl": 41.56095021063625,
             "fmt": "{:.1%}"
           },
           {
             "metric": "1D per target",
-            "him": 0.343083736739108,
+            "him": 0.34770802515955196,
             "role_avg": 0.3679060665362035,
-            "vs_role": 93.25307950727883,
-            "nfl_avg": 0.35506003430531735,
-            "vs_nfl": 96.62696546806761,
+            "vs_role": 94.51000045560163,
+            "nfl_avg": 0.3544520547945205,
+            "vs_nfl": 98.09733656675283,
             "fmt": "{:.3f}"
           },
           {
             "metric": "TPRR (est.)",
-            "him": 0.11699701244188675,
+            "him": 0.11303972790442625,
             "role_avg": 0.1311679077563614,
-            "vs_role": 89.19637009016225,
-            "nfl_avg": 0.15761016490943497,
-            "vs_nfl": 74.23189520112163,
+            "vs_role": 86.17940915425179,
+            "nfl_avg": 0.1575820863706336,
+            "vs_nfl": 71.7338693171992,
             "fmt": "{:.3f}"
           },
           {
             "metric": "1D/RR (est.)",
-            "him": 0.038859276172433434,
+            "him": 0.032096188616889926,
             "role_avg": 0.0482574689984265,
-            "vs_role": 80.5248948586601,
-            "nfl_avg": 0.05596107055961071,
-            "vs_nfl": 69.43983698639191,
+            "vs_role": 66.51030251490492,
+            "nfl_avg": 0.05585529431287869,
+            "vs_nfl": 57.46310893484887,
             "fmt": "{:.3f}"
           },
           {
             "metric": "aDOT",
-            "him": 5.173550314141518,
+            "him": 5.402711769639362,
             "role_avg": 5.886497064579256,
-            "vs_role": 87.88843784994401,
-            "nfl_avg": 6.218696397941681,
-            "vs_nfl": 83.19348595075175,
+            "vs_role": 91.78143996960486,
+            "nfl_avg": 6.194349315068493,
+            "vs_nfl": 87.2200047952837,
             "fmt": "{:.1f}"
           },
           {
             "metric": "snap %",
-            "him": 0.5237306575518541,
+            "him": 0.5480998883499311,
             "role_avg": 0.35515070876618393,
-            "vs_role": 147.46715820202854,
-            "nfl_avg": 0.46966605819821755,
-            "vs_nfl": 111.511285180165,
+            "vs_role": 154.32881726579254,
+            "nfl_avg": 0.4694652387263154,
+            "vs_nfl": 116.74983430870319,
             "fmt": "{:.1%}"
           },
           {
             "metric": "xFP share",
-            "him": 0.03676439629234063,
+            "him": 0.036151979423584286,
             "role_avg": 0.03368834169638038,
-            "vs_role": 109.1309172285282,
-            "nfl_avg": 0.051653173688518336,
-            "vs_nfl": 71.17548384159163,
+            "vs_role": 107.31302760286539,
+            "nfl_avg": 0.05158936650687374,
+            "vs_nfl": 70.07641665607082,
             "fmt": "{:.1%}"
           }
         ]
       },
       "this_week": {
-        "bye": true
+        "bye": false,
+        "opponent": "CLE",
+        "home": true,
+        "ease_rank": 10,
+        "out_reason": null,
+        "projection": 3.5,
+        "proj_source": "nflverse-est",
+        "matchup_mult": 1.03,
+        "matchup_pct": 3.0,
+        "matchup_basis": "defense+vegas",
+        "matchup_def_rank": 10,
+        "matchup_def_pct": 7.6,
+        "matchup_vegas_pct": 1.0,
+        "matchup_baseline": 3.5,
+        "expected_pts": 3.7,
+        "delta_pts": 0.1
       }
     },
     "2025": {
