@@ -10,7 +10,7 @@ the request the button left in the private repo (service/refresh_request.py) thr
     commit + push                       only the refreshed paths, by name
 
 then waits until raw.githubusercontent.com serves the new files (the site reads them from
-there) and marks the request done, so the page can expire its cache. Whatever the request
+there), clears the site's cache (tools/clear_site_cache.py) and marks the request done. Whatever the request
 file says, this only ever runs that fixed sequence.
 
     PYTHONPATH=. .venv/bin/python tools/refresh_watch.py      # one check, then exit
@@ -153,6 +153,9 @@ def refresh(state: dict, sha: str | None) -> None:
         step("Waiting for GitHub to serve the new data")
         if not wait_for_raw():
             note = (note + " " if note else "") + "GitHub was slow to serve the new data; the site may lag a few minutes."
+        # The button's page clears the cache too, but only if its tab is still open when this
+        # finishes; otherwise every page served its old copy (and stale banner) once (2026-11-04).
+        run(sys.executable, "tools/clear_site_cache.py")
     state.update(status="done", step=None, finished_at=int(time.time()), commit=commit, yahoo=yahoo_ok,
                  message=note if note else (None if commit else "Already up to date."))
     write_state(state, sha)
