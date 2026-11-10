@@ -262,7 +262,10 @@ def _backup_qbs(players: dict, cuffs: pd.DataFrame) -> None:
         for w, v in me["weeks"].items():
             if v.get("bye"):
                 continue
-            p_start = float(v["p_active"]) * (1.0 - float((st["weeks"].get(w) or {}).get("p_active", 1.0)))
+            sw = st["weeks"].get(w) or {}
+            p_start = float(v["p_active"]) * (1.0 - float(sw.get("p_active", 1.0)))
+            if "p_active_raw" in v:          # the scorecard grades availability on this one
+                v["p_active_raw"] = round(float(v["p_active_raw"]) * (1.0 - float(sw.get("p_active_raw", 1.0))), 3)
             v["p_active"] = round(p_start, 3)
             v["expected"] = round(float(v["mean_if_active"]) * p_start, 2)
             ps.append(p_start)
@@ -330,6 +333,20 @@ def build(season: int, now: int, write: bool = True) -> dict:
         curve = {}
     missed_now = recent_misses(season, now, sched) if curve else {}
 
+    # the weekly calibration (mega/live_calib.py): each week entry carries its opponent's defense
+    # rating and the raw P(plays) either way; a knob only changes the numbers once it's earned it
+    from . import live_calib as LC
+    from .matchup_model import defense_ratings
+    try:
+        drt = {(t, p): float(x) for t, p, x in defense_ratings(season, now)[["defense", "pos", "rating"]].values}
+    except Exception:
+        drt = {}
+    opp = {}
+    for wk_, h, a in zip(sched["week"], sched["home_team"], sched["away_team"]):
+        opp[(h, int(wk_))], opp[(a, int(wk_))] = a, h
+    calib = LC.load(season)
+    def_knob, avail_knob = calib.get("defense") or {}, calib.get("availability") or {}
+
     players = {}
     for r in m.itertuples():
         if pd.isna(r.ros_pg) or r.pos not in POS:
@@ -359,9 +376,21 @@ def build(season: int, now: int, write: bool = True) -> dict:
                 pa = 1.0 - cg.miss_hazard(r.pos, ages.get(r.gsis_id), w - now)
             base = float(r.ros_pg) * ratio.get((team, w), 1.0) ** fw.GAMMA
             base *= return_factor(curve, r.pos, missed, back_k.get(w, 0))
+            # defense part only: ratio^GAMMA above already prices Vegas, so the full matchup
+            # tag would count it twice
+            rating = drt.get((opp.get((team, w)), r.pos))
+            k = def_knob.get(r.pos) or {}
+            dm = rating ** float(k["beta"]) if k.get("active") and rating else 1.0
+            base *= dm
+            # availability was fitted on kickoff-week P(plays) only; later weeks' injury
+            # hazard (contingency) was never graded, so it's left alone
+            pa_raw = pa
+            if w == now:
+                pa = LC.apply_availability(pa, avail_knob)
             wk[w] = {"median": round(base * q[1], 2), "p10": round(base * q[0], 2), "p90": round(base * q[2], 2),
                      "p_active": round(pa, 3), "expected": round(base * pa, 2),
-                     "mean_if_active": round(base, 2)}
+                     "mean_if_active": round(base, 2), "def_rating": rating,
+                     "def_mult": round(dm, 4), "p_active_raw": round(pa_raw, 3)}
         drivers, driver, gap = [], None, None
         if pd.notna(r.pts_pg):
             drivers.append(f"usage: {r.xfp_proj:.1f} expected pts/g from his share of {team}'s volume")

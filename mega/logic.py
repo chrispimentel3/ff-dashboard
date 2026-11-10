@@ -312,7 +312,47 @@ TOPICS = [
             "rather than guessing at a line.\n\n"
             "**Treat anything inside about ±3% as within the noise floor** — the fitted "
             "model sorts reliably at the extremes (a bottom-5 matchup, a big Vegas total) "
-            "and not reliably in the middle."
+            "and not reliably in the middle.\n\n"
+            "**Which part reaches your lineup.** Our weekly projection already prices the "
+            "Vegas line, so only the *defense* part can be added to it, and only for a "
+            "position where it has proven itself this season — see \"What the model learns "
+            "each week\"."
+        ),
+    },
+    {
+        "key": "live_calib",
+        "title": "What the model learns each week",
+        "headline": (
+            "Every Tuesday the scorecard grades last week's numbers, and three settings are "
+            "refit on this season's results: how much a defense matchup moves a player, how "
+            "often a player we expected to play actually did, and how sure the win odds should "
+            "be. A setting only switches on after it has beaten leaving it alone, week after "
+            "week, and each one is anchored to ten seasons of history so a few odd weeks can't "
+            "swing it."
+        ),
+        "detail": (
+            "- **Defense matchup, by position.** `expected × rating^β`, where `rating` is the "
+            "opponent's opponent-adjusted defense rating (1.00 = average) and β is fitted on "
+            "this season's graded weeks, then shrunk toward the 2016-25 value as if that were "
+            "300 more player-weeks. On once it has been tested on 4+ weeks (each week scored "
+            "with the β from the weeks before it) and improves both the fit and the average "
+            "miss. Through week 9: on for QBs (β 0.38), off for RB, WR and TE.\n"
+            "- **Chance he plays.** The P(plays) this week is regrouped into four bands and "
+            "rescaled by how often players in that band really played, shrunk toward the "
+            "published number as if that were 200 player-weeks. Through week 9, players we "
+            "had at 100% played 95% of the time, so a healthy player counts as 96%. It moves "
+            "every healthy player by the same factor, so it never reorders two healthy players; "
+            "it only changes how a healthy player compares with a questionable one. Later weeks "
+            "keep their own injury risk.\n"
+            "- **Win odds.** The weekly spread of a team's score is right, so overconfident "
+            "odds mean the gaps between teams' expected scores are too wide. The fix pulls each "
+            "team's expected score toward the league average by `1 − λ` of its gap, which also "
+            "shrinks how much a trade moves your title odds. It needs 30 graded games and a "
+            "better walk-forward log-loss before it switches on.\n"
+            "- **One place.** The player settings are applied inside the projection, so "
+            "Start/Sit, waivers, trades and the season simulation all see the same number. "
+            "The matchup tag on a player's page is unchanged: it is a description, not a "
+            "second adjustment."
         ),
     },
     {

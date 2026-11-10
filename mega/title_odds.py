@@ -74,6 +74,9 @@ class Model:
     _tw_base: dict = field(default_factory=dict)  # ... and for the rosters as they stand
     _z0: dict = field(default_factory=dict)       # each player's season-long draw: one array
                                                   # per player (~4 MB), read every week
+    lam: float = 1.0               # team-mean gap shrink (mega/live_calib.py odds knob); 1 = none
+    _raw_base: dict = field(default_factory=dict) # base-roster team-weeks before the shrink
+    _lmean: dict = field(default_factory=dict)    # week -> league mean of those
 
     # ------------------------------------------------------------ dice
     def _dice(self, key: str) -> tuple[np.ndarray, np.ndarray]:
@@ -110,6 +113,27 @@ class Model:
         hit = store.get(key)
         if hit is not None:
             return hit
+        total = self._raw_week(team, ids, w, is_base)
+        if self.lam != 1.0:
+            # graded win odds ran overconfident while the weekly spread was right, so the gaps
+            # between team means are too wide: pull each toward the league mean, spread kept
+            from .live_calib import shrink_team_week
+            total = shrink_team_week(total, self._league_mean(w), self.lam)
+        if not is_base and len(self._tw) > TW_CACHE_MAX:
+            self._tw.clear()            # every new roster adds 15 weeks of arrays; a live
+                                        # service would otherwise grow without bound
+        store[key] = total
+        return total
+
+    def _league_mean(self, w: int) -> float:
+        """Mean over the league of each team's base-roster weekly mean, before any shrink."""
+        if w not in self._lmean:
+            self._lmean[w] = float(np.mean([self._raw_week(t, ids, w, True).mean() for t, ids in self.rosters.items()]))
+        return self._lmean[w]
+
+    def _raw_week(self, team: str, ids, w: int, is_base: bool) -> np.ndarray:
+        if is_base and (team, w) in self._raw_base:
+            return self._raw_base[(team, w)]
         lu = te.lineup(list(ids), self.ctx, w)
         flex_ok = set(self.ctx.cfg["flexEligible"])
         bench = [e for e in lu.bench]
@@ -124,10 +148,8 @@ class Model:
                 total += np.where(on, x, 0.0)
         z, _ = self._dice(f"{team}|kdef|{w}")
         total += self.kdef.get((team, w), KDEF_MEAN) + KDEF_SD * z
-        if not is_base and len(self._tw) > TW_CACHE_MAX:
-            self._tw.clear()            # every new roster adds 15 weeks of arrays; a live
-                                        # service would otherwise grow without bound
-        store[key] = total
+        if is_base and self.lam != 1.0:
+            self._raw_base[(team, w)] = total
         return total
 
     # ------------------------------------------------------------ a season
@@ -447,7 +469,10 @@ def build(season: int, now: int, yahoo_rosters=None, n: int = N_SEASONS, league:
                         yahoo_rosters if yahoo_rosters is not None else cached_rosters())
     except Exception:
         kd = {}                        # every team falls back to the league-wide KDEF_MEAN
-    return Model(season_obj, ctx, dist, proj_sd, rosters, n=n, kdef=kd)
+    from .live_calib import load as _calib
+    odds = _calib(season).get("odds") or {}
+    lam = float(odds["lam"]) if odds.get("active") else 1.0     # off until 30+ graded games win
+    return Model(season_obj, ctx, dist, proj_sd, rosters, n=n, kdef=kd, lam=lam)
 
 
 def kdef_means(season: int, weeks, yahoo_rosters) -> dict:

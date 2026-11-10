@@ -55,7 +55,8 @@ def snapshot(path: str, before: datetime) -> str | None:
 
 
 def schedule(season: int) -> dict[int, dict]:
-    """Week -> {"kick": its first Sunday kickoff (Eastern), "teams": every team with a game}."""
+    """Week -> {"kick": its first Sunday kickoff (Eastern), "teams": every team with a game,
+    "opp": team -> its opponent}."""
     import nflreadpy as nfl
     s = nfl.load_schedules(seasons=[season]).to_pandas()
     s = s[s["game_type"] == "REG"]
@@ -65,8 +66,19 @@ def schedule(season: int) -> dict[int, dict]:
         if sun.empty:
             continue
         t = min(datetime.strptime(f"{d} {h}", "%Y-%m-%d %H:%M") for d, h in zip(sun["gameday"], sun["gametime"]))
-        out[int(w)] = {"kick": t.replace(tzinfo=ET), "teams": set(g["home_team"]) | set(g["away_team"])}
+        out[int(w)] = {"kick": t.replace(tzinfo=ET), "teams": set(g["home_team"]) | set(g["away_team"]),
+                       "opp": {**dict(zip(g["home_team"], g["away_team"])), **dict(zip(g["away_team"], g["home_team"]))}}
     return out
+
+
+def def_backfill(season: int) -> dict:
+    """(week, defense, pos) -> the defense rating as it stood before that week, for projection
+    snapshots older than proj_ros writing `def_rating` (rebuilt with no look-ahead)."""
+    p = ROOT / "data" / f"def_rating_backfill_{season}.csv"
+    if not p.is_file():
+        return {}
+    d = pd.read_csv(p)
+    return {(int(w), t, pos): float(r) for w, t, pos, r in zip(d["week"], d["defense"], d["pos"], d["rating"])}
 
 
 def actuals(season: int) -> pd.DataFrame:
@@ -158,7 +170,12 @@ def _consensus(text: str) -> pd.DataFrame:
     return ffa.from_frame(pd.read_csv(io.StringIO(text)))
 
 
-def grade_projections(season: int, week: int, before: datetime, by_gsis: dict) -> dict | None:
+def grade_projections(season: int, week: int, before: datetime, by_gsis: dict,
+                      opp: dict | None = None, backfill: dict | None = None) -> dict | None:
+    """Each fantasy-relevant player-week: ours, the consensus and Vegas against what he scored.
+    Rows also carry what mega/live_calib.py learns from: `played`, `p_active` (as published,
+    before calibration), `rating` (his opponent's defense rating; `backfill` for snapshots
+    from before proj_ros wrote it) and `ours_raw` (ours without the defense knob)."""
     ours_txt = snapshot(f"data/proj_ros_{season}.json", before)
     cons_txt = snapshot(f"data/build/proj_{season}_wk{week:02d}.csv", before)
     if not ours_txt or not cons_txt:
@@ -166,15 +183,23 @@ def grade_projections(season: int, week: int, before: datetime, by_gsis: dict) -
     ours_j = json.loads(ours_txt)
     if int((ours_j.get("meta") or {}).get("week") or 0) != week:
         return None                     # the snapshot was built for another week
-    ours = {g: (p.get("weeks") or {}).get(str(week), {}).get("expected") for g, p in ours_j["players"].items()}
+    wk = {g: (p.get("weeks") or {}).get(str(week)) or {} for g, p in ours_j["players"].items()}
     cons = _consensus(cons_txt)
     vegas_txt = snapshot(f"data/build/vegas_{season}_wk{week:02d}.csv", before)
     vegas = dict(pd.read_csv(io.StringIO(vegas_txt))[["gsis_id", "vegas"]].dropna().values) if vegas_txt else {}
     rows = []
     for g, c, pos in zip(cons["gsis_id"], cons["proj"], cons["pos"]):
-        if pos in SKILL and c is not None and float(c) >= MIN_PROJ and ours.get(g) is not None:
-            rows.append({"gsis_id": g, "pos": pos, "ours": float(ours[g]), "consensus": float(c),
-                         "vegas": vegas.get(g), "actual": float(by_gsis.get(g, 0.0))})
+        w = wk.get(g) or {}
+        if pos in SKILL and c is not None and float(c) >= MIN_PROJ and w.get("expected") is not None:
+            team = ours_j["players"][g].get("team")
+            o = (opp or {}).get(team)
+            rating = w.get("def_rating")
+            if rating is None:
+                rating = (backfill or {}).get((week, o, pos))
+            rows.append({"gsis_id": g, "pos": pos, "team": team, "opp": o, "ours": float(w["expected"]),
+                         "consensus": float(c), "vegas": vegas.get(g), "actual": float(by_gsis.get(g, 0.0)),
+                         "played": g in by_gsis, "p_active": float(w.get("p_active_raw", w.get("p_active", 1.0))),
+                         "rating": rating, "ours_raw": float(w["expected"]) / float(w.get("def_mult") or 1.0)})
     return {"rows": rows} if rows else None
 
 
@@ -296,27 +321,30 @@ def grade_close(rows: list[dict], weeks: set[int]) -> dict:
 MATCHUP_EDGE = 5.0      # matchup tags at +5% or better / -5% or worse are the ones the page calls out
 
 
-def grade_matchups(snaps: dict, act: pd.DataFrame) -> dict:
-    """The published matchup % for every ranked player, against what he then scored relative
-    to his own average before that week: did good matchups beat it and tough ones fall short?"""
-    rows = []
-    for week, rk in snaps.items():
-        for r in rk.get("rows") or []:
-            pct, g = r.get("matchup_pct"), r.get("gsis_id")
-            if pct is None or not g:
-                continue
-            mine = act[act["gsis_id"] == g]
-            before = mine.loc[mine["week"] < week, "half_ppr"]
-            now = mine.loc[mine["week"] == week, "half_ppr"]
-            if len(before) < 2 or not len(now) or before.mean() < MIN_PROJ:
-                continue
-            rows.append({"bucket": "good" if pct >= MATCHUP_EDGE else "tough" if pct <= -MATCHUP_EDGE else "neutral",
-                         "pts": float(now.iloc[0]), "avg": float(before.mean())})
-    if not rows:
+def matchup_tags(snaps: dict) -> dict:
+    """(week, gsis_id) -> the matchup % the rankings page published before kickoff."""
+    return {(int(w), r["gsis_id"]): float(r["matchup_pct"]) for w, rk in snaps.items()
+            for r in rk.get("rows") or [] if r.get("matchup_pct") is not None and r.get("gsis_id")}
+
+
+def grade_matchups(rows: list[dict]) -> dict:
+    """Each tagged player who played, against OUR expected points at kickoff: does a good tag
+    land above neutral and a tough one below? Rows are grade_projections rows with `tag`.
+
+    Until 2026-11 this graded against each player's raw average before the week, which put
+    every bucket low (good -1.3, neutral -4.6, tough -21.3 through week 9): the players worth
+    ranking are the ones running hot, so their average overstates the next game. That was the
+    yardstick, not the tags (handoff live_calib Pass 0)."""
+    d = pd.DataFrame([r for r in rows if r.get("played") and r.get("tag") is not None])
+    if d.empty:
         return {}
-    d = pd.DataFrame(rows)
-    return {b: {"n": len(g), "vs_avg_pct": round(float(100 * (g["pts"].sum() / g["avg"].sum() - 1)), 1)}
-            for b, g in d.groupby("bucket")}
+    d["bucket"] = ["good" if t >= MATCHUP_EDGE else "tough" if t <= -MATCHUP_EDGE else "neutral" for t in d["tag"]]
+    out = {b: {"n": len(g), "tag_pct": round(float(g["tag"].mean()), 1),
+               "vs_ours_pct": round(float(100 * (g["actual"].sum() / g["ours"].sum() - 1)), 1)}
+           for b, g in d.groupby("bucket")}
+    if "good" in out and "tough" in out:
+        out["spread"] = round(out["good"]["vs_ours_pct"] - out["tough"]["vs_ours_pct"], 1)
+    return out
 
 
 def grade_trades(snaps: dict, rosters: dict, pts: dict) -> dict:
@@ -423,6 +451,7 @@ def build(season: int, now_week: int) -> dict:
     act = actuals(season)
     played = set(act["week"].unique())
     sched = schedule(season)
+    backfill = def_backfill(season)
     weeks, proj_rows, wv_snaps, rk_snaps = [], [], {}, {}
     tr_snaps, odds_snaps, rosters, pts_by_week = {}, {}, {}, {}
     for w in sorted(sched):
@@ -445,10 +474,13 @@ def build(season: int, now_week: int) -> dict:
             odds_snaps[w] = ro
         lineup = (grade_lineup(ss, by_norm, sched[w]["teams"], _ours_by_name(season, w, before, ss))
                   if int(ss.get("next_week") or 0) == w else None)
-        proj = grade_projections(season, w, before, by_gsis)
+        proj = grade_projections(season, w, before, by_gsis, sched[w]["opp"], backfill)
         rk_txt = snapshot("data/web/rankings.json", before)
         if rk_txt and int(json.loads(rk_txt).get("next_week") or 0) == w:
             rk_snaps[w] = json.loads(rk_txt)
+            if proj:
+                tags = matchup_tags({w: rk_snaps[w]})
+                proj["rows"] = [{**r, "tag": tags.get((w, r["gsis_id"]))} for r in proj["rows"]]
         wv_txt = snapshot("data/web/waivers.json", before)
         if wv_txt:
             wv_snaps[w] = json.loads(wv_txt)
@@ -478,6 +510,18 @@ def build(season: int, now_week: int) -> dict:
     results, standings, hist = (_csv(ROOT / "data" / f) for f in
                                 ("yahoo_scores.csv", "yahoo_standings.csv", "history/playoff_odds_weekly.csv"))
     hist = hist[hist["season"] == season] if not hist.empty else hist
+    odds = grade_odds(odds_snaps, results, MY_TEAM) if not results.empty else {}
+    # the weekly learning loop: fit on ours WITHOUT the defense knob, or it learns from itself
+    from . import live_calib as LC
+    calib = {"season": season, "through_week": through,
+             **LC.build([{**r, "ours": r["ours_raw"]} for r in proj_rows] if proj_rows else [],
+                        [{"week": g["week"], "p": g["p"], "won": g["won"]} for g in odds.get("games") or []],
+                        LC.b_hist())} if proj_rows else {}
+    try:
+        if calib:
+            LC.CALIB.write_text(json.dumps(calib, indent=1))
+    except Exception:
+        pass
     return {
         "available": bool(weeks), "season": season, "through_week": through,
         "weeks": sorted(weeks, key=lambda x: -x["week"]),
@@ -494,9 +538,10 @@ def build(season: int, now_week: int) -> dict:
         "movers": movers,
         "live_blend": lb,
         "close_calls": close,
-        "matchups": grade_matchups(rk_snaps, act),
+        "live_calib": calib,
+        "matchups": grade_matchups(proj_rows),
         "trades": grade_trades(tr_snaps, rosters, pts_by_week),
-        "odds": grade_odds(odds_snaps, results, MY_TEAM) if not results.empty else {},
+        "odds": odds,
         "playoff_odds": grade_playoff_odds(hist, standings, results),
     }
 

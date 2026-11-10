@@ -1,0 +1,63 @@
+{
+ "season": 2026,
+ "through_week": 9,
+ "defense": {
+  "QB": {
+   "beta": 0.377,
+   "tested": 5,
+   "dev_gain_pct": 1.55,
+   "mae_gain": 0.043,
+   "active": true
+  },
+  "RB": {
+   "beta": 0.507,
+   "tested": 5,
+   "dev_gain_pct": -0.67,
+   "mae_gain": -0.04,
+   "active": false
+  },
+  "WR": {
+   "beta": 0.329,
+   "tested": 5,
+   "dev_gain_pct": 0.39,
+   "mae_gain": -0.009,
+   "active": false
+  },
+  "TE": {
+   "beta": 0.287,
+   "tested": 5,
+   "dev_gain_pct": -0.22,
+   "mae_gain": -0.032,
+   "active": false
+  }
+ },
+ "availability": {
+  "buckets": {
+   "0": {
+    "said": 0.208,
+    "n": 84,
+    "p": 0.238
+   },
+   "1": {
+    "said": 0.682,
+    "n": 16,
+    "p": 0.692
+   },
+   "3": {
+    "said": 1.0,
+    "n": 930,
+    "p": 0.96
+   }
+  },
+  "tested": 5,
+  "brier_gain": 0.00141,
+  "active": true
+ },
+ "odds": {
+  "s": 1.177,
+  "lam": 0.85,
+  "n": 18,
+  "logloss_gain": 0.0077,
+  "active": false
+ }
+}

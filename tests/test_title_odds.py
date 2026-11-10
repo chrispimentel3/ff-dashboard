@@ -86,3 +86,22 @@ def test_matchups_give_each_week_and_face_the_partner_after_the_trade():
                        "before": [100.0] * 3, "after": [110.0] * 3}       # B plays week 8 without b
     assert rows[1]["opp"] == "C" and rows[1]["win_after"] == 0.0
     assert [r["week"] for r in rows[2:]] == [15, 16, 17] and rows[2]["opp"] is None
+
+
+# ---------------------------------------------------------------- live_calib odds knob (Pass 4)
+def test_odds_knob_off_is_byte_identical_and_on_shrinks_the_gaps():
+    import numpy as np
+    strength = {t: 1.0 + 0.1 * i for i, t in enumerate(TEAMS)}
+    off, on = _model(strength), _model(strength)
+    on.lam = 0.5
+    for w in (3, 9):
+        for t in ("T0", "T7"):
+            a = off.team_week(t, off.rosters[t], w)
+            assert np.array_equal(a, _model(strength).team_week(t, off.rosters[t], w))   # lam 1: unchanged
+            b = on.team_week(t, on.rosters[t], w)
+            assert np.allclose(b - b.mean(), a - a.mean(), atol=1e-3)                    # spread kept
+            assert abs(b.mean() - on._league_mean(w)) == pytest.approx(0.5 * abs(a.mean() - on._league_mean(w)), rel=1e-4)
+    d = on.delta({"T0": list(on.rosters["T0"])}, ("T0",))["T0"]
+    assert d["d_title"] == 0.0 and d["d_playoffs"] == 0.0                                # CRN intact
+    weak, strong = off.odds()["T0"]["p_title"], off.odds()["T7"]["p_title"]
+    assert on.odds()["T7"]["p_title"] < strong and on.odds()["T0"]["p_title"] > weak    # less certain
