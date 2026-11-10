@@ -65,7 +65,7 @@ def test_daily_run_once_a_day_from_7am_with_projections_on_tuesday(monkeypatch, 
     assert w.daily_due(tue.replace(hour=6, minute=59)) is False
     assert w.daily_due(tue) is True
     seen = []
-    monkeypatch.setattr(w, "pipeline", lambda step, what, projections=False: seen.append(projections) or {"note": None})
+    monkeypatch.setattr(w, "pipeline", lambda step, what, projections=False: seen.append(projections) or {"note": None, "commit": None})
     w.daily(tue)
     assert w.daily_due(tue.replace(hour=22)) is False                  # already ran today
     wed = tue + dt.timedelta(days=1, hours=3)

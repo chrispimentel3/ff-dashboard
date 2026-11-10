@@ -194,6 +194,7 @@ def daily(now) -> None:
     r = pipeline(log, "Daily refresh", projections=now.weekday() == 1)
     if r["note"]:
         log("  " + r["note"])
+    log(f"daily refresh done: {r['commit'] or 'nothing new to push'}")
 
 
 def main() -> int:
