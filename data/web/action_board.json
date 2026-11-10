@@ -16,7 +16,7 @@
       "why": "scoring 16.9/g, we project 13.3/g from here",
       "timing": {
         "call": "now",
-        "why": "sell now: his offense projects 22.1 pts over the next 3 games, 24.0 after, and his value is at its high"
+        "why": "sell now: his offense projects 22.5 pts over the next 3 games, 24.1 after, and his value is at its high"
       }
     }
   ],
@@ -54,9 +54,9 @@
       "get_val": 11.5,
       "addresses": "lineup",
       "fairness": 0.83,
-      "d_title": 0.0323,
-      "thesis": "Cam Skattebo starts for you over Michael Wilson (the free-agent pickup you'd otherwise make): +1.03 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 1.03,
+      "d_title": 0.0363,
+      "thesis": "Cam Skattebo starts for you over Michael Wilson (the free-agent pickup you'd otherwise make): +1.05 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 1.05,
       "p_accept": 0.485,
       "flag": "NEEDS_PITCH",
       "sits_for_them": []
@@ -69,41 +69,11 @@
       "get_val": 13.9,
       "addresses": "lineup",
       "fairness": 1.15,
-      "d_title": 0.0113,
-      "thesis": "Chase Brown starts for you over Breece Hall: +2.36 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 2.36,
+      "d_title": 0.0125,
+      "thesis": "Chase Brown starts for you over Breece Hall: +2.33 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 2.33,
       "p_accept": 0.702,
       "flag": "LIKELY",
-      "sits_for_them": []
-    },
-    {
-      "partner": "L'Omar",
-      "give": "Rachaad White (RB)",
-      "give_val": 9.0,
-      "get": "Carnell Tate (WR)",
-      "get_val": 10.5,
-      "addresses": "lineup",
-      "fairness": 1.04,
-      "d_title": 0.0128,
-      "thesis": "Carnell Tate starts for you over Denzel Boston: +1.58 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 1.58,
-      "p_accept": 0.618,
-      "flag": "LIKELY",
-      "sits_for_them": []
-    },
-    {
-      "partner": "Don R.I.C.O",
-      "give": "Christian Watson (WR) + Breece Hall (RB)",
-      "give_val": 25.7,
-      "get": "Jaxon Smith-Njigba (WR)",
-      "get_val": 19.8,
-      "addresses": "lineup",
-      "fairness": 0.87,
-      "d_title": 0.0173,
-      "thesis": "Jaxon Smith-Njigba starts for you over Breece Hall: +2.90 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 2.9,
-      "p_accept": 0.449,
-      "flag": "EXPLOIT",
       "sits_for_them": []
     },
     {
@@ -114,12 +84,44 @@
       "get_val": 22.1,
       "addresses": "lineup",
       "fairness": 0.9,
-      "d_title": 0.0337,
+      "d_title": 0.0355,
       "thesis": "Jahmyr Gibbs starts for you over Christian McCaffrey: +3.79 pts/wk to your lineup over the weeks that count most.",
       "d_me": 3.79,
       "p_accept": 0.231,
       "flag": "NEEDS_PITCH",
       "sits_for_them": []
+    },
+    {
+      "partner": "Don R.I.C.O",
+      "give": "Christian Watson (WR) + Breece Hall (RB)",
+      "give_val": 25.7,
+      "get": "Jaxon Smith-Njigba (WR)",
+      "get_val": 19.8,
+      "addresses": "lineup",
+      "fairness": 0.87,
+      "d_title": 0.0168,
+      "thesis": "Jaxon Smith-Njigba starts for you over Breece Hall: +2.85 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 2.85,
+      "p_accept": 0.451,
+      "flag": "EXPLOIT",
+      "sits_for_them": []
+    },
+    {
+      "partner": "Heartbreak Drake",
+      "give": "Emeka Egbuka (WR)",
+      "give_val": 9.4,
+      "get": "Tyler Shough (QB)",
+      "get_val": 17.8,
+      "addresses": "lineup",
+      "fairness": 0.68,
+      "d_title": 0.034,
+      "thesis": "Tyler Shough starts for you over Jayden Daniels: +1.31 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 1.31,
+      "p_accept": 0.217,
+      "flag": "NEEDS_PITCH",
+      "sits_for_them": [
+        "Emeka Egbuka wouldn't start for them (they start Nico Collins & Tetairoa McMillan)"
+      ]
     }
   ],
   "roster_src": "scraped Yahoo rosters",
