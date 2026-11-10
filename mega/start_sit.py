@@ -92,6 +92,56 @@ def build(lu: pd.DataFrame | None, ts: pd.DataFrame, next_week: int) -> dict:
     }
 
 
+def _num(v) -> float | None:
+    try:
+        x = float(v)
+    except (TypeError, ValueError):
+        return None
+    return None if x != x else x
+
+
+def close_calls(lu: pd.DataFrame, weeks: dict, applied: dict, tiebreak: bool = False) -> list[dict]:
+    """Each "≈ <starter>" flag as a call: the chance the starter outscores the bench player,
+    and the factors that open the gap in points (mega/live_calib.call). `weeks` is gsis_id ->
+    his proj_ros entry for the week; `applied` the positions whose defense knob is on, so a
+    matchup tag that isn't in the number reads as context. Clear calls first."""
+    from .live_calib import call
+    rows = lu.to_dict("records")
+    starters = {r["player"]: r for r in rows if r.get("start")}
+
+    def side(r):
+        w = weeks.get(r.get("gsis_id")) or {}
+        if w.get("bye") or not w.get("mean_if_active") or w.get("role_pg") is None:
+            return None
+        proj, pa = float(r["proj_adj"]), float(w.get("p_active") or 0.0)
+        return {"player": r["player"], "pos": r["pos"], "proj": proj, "p_active": pa,
+                "consensus": _num(r.get("consensus")), "matchup_pct": _num(r.get("pct_fitted")),
+                **{k: float(w[k]) for k in ("median", "p10", "p90", "mean_if_active")},
+                # their product is proj: role x vegas x defense = mean_if_active, x P(plays), x the
+                # pull of whatever blend set the published number
+                "f": {"role": float(w["role_pg"]), "vegas": float(w["vegas_mult"]) * float(w["return_mult"]),
+                      "defense": float(w.get("def_mult") or 1.0), "avail": pa,
+                      "blend": proj / (float(w["mean_if_active"]) * pa) if pa > 0 and proj > 0 else 1.0}}
+
+    out = []
+    for r in rows:
+        cc = str(r.get("close_call") or "")
+        s = starters.get(cc[2:]) if cc.startswith("≈ ") and not r.get("start") else None
+        a, b = (side(s), side(r)) if s else (None, None)
+        if not a or not b:
+            continue
+        c = call(a, b, applied)
+        va, vb = _num(s.get("vegas")), _num(r.get("vegas"))
+        if tiebreak and va is not None and vb is not None:
+            if a["proj"] < b["proj"]:
+                c["context"].append(f"Sunday lines broke the tie: {a['player']} {va:.1f} vs {b['player']} {vb:.1f}")
+            elif c["verdict"] == "coin flip":
+                hi, lo = ((a["player"], va), vb) if va >= vb else ((b["player"], vb), va)
+                c["context"].append(f"Sunday lines lean {hi[0]} ({hi[1]:.1f} vs {lo:.1f})")
+        out.append(c)
+    return sorted(out, key=lambda c: -c["p"])
+
+
 def _differs(lu: pd.DataFrame) -> list[str]:
     """Our starters the consensus projection would bench: where the lineup parts with it.
     A player zeroed out (ruled out, on bye) is zero on both sides."""

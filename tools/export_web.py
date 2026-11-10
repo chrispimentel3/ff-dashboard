@@ -279,6 +279,7 @@ def action_board(c) -> dict:
 
 def start_sit(c) -> dict:
     from mega.start_sit import build
+    tb_on = False
     try:
         from mega.lineup import optimize_lineup
         from mega.status import out_for_week
@@ -292,13 +293,25 @@ def start_sit(c) -> dict:
             tb = json.loads(VEGAS_TIEBREAK.read_text())
             if tb.get("active") and int(tb.get("season") or 0) == c.season and "vegas" in lu.columns:
                 from mega.lineup import vegas_tiebreak
-                lu = vegas_tiebreak(lu)
+                lu, tb_on = vegas_tiebreak(lu), True
         except (OSError, ValueError):
             pass
     except Exception as e:
         _warn("projections", e)
         lu = None
-    return build(lu, target_share(c.season, c.week, c.roll), c.next_week)
+    payload = build(lu, target_share(c.season, c.week, c.roll), c.next_week)
+    if lu is not None:
+        try:        # each close call as a chance and its reasons (handoff v2 Pass 3)
+            from mega import live_calib as LC
+            from mega.proj_ros import cached
+            from mega.start_sit import close_calls
+            wk = str(c.next_week)
+            weeks = {g: (p.get("weeks") or {}).get(wk) for g, p in ((cached(c.season) or {}).get("players") or {}).items()}
+            applied = {p: True for p, k in (LC.load(c.season).get("defense") or {}).items() if k.get("active")}
+            payload["calls"] = close_calls(lu, weeks, applied, tiebreak=tb_on)
+        except Exception as e:
+            _warn("close calls", e)
+    return payload
 
 
 def waivers(c) -> dict:

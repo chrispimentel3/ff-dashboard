@@ -374,8 +374,10 @@ def build(season: int, now: int, write: bool = True) -> dict:
                     pa = 1.0
             else:
                 pa = 1.0 - cg.miss_hazard(r.pos, ages.get(r.gsis_id), w - now)
-            base = float(r.ros_pg) * ratio.get((team, w), 1.0) ** fw.GAMMA
-            base *= return_factor(curve, r.pos, missed, back_k.get(w, 0))
+            vm = ratio.get((team, w), 1.0) ** fw.GAMMA
+            rm = return_factor(curve, r.pos, missed, back_k.get(w, 0))
+            base = float(r.ros_pg) * vm
+            base *= rm
             # defense part only: ratio^GAMMA above already prices Vegas, so the full matchup
             # tag would count it twice
             rating = drt.get((opp.get((team, w)), r.pos))
@@ -390,7 +392,9 @@ def build(season: int, now: int, write: bool = True) -> dict:
             wk[w] = {"median": round(base * q[1], 2), "p10": round(base * q[0], 2), "p90": round(base * q[2], 2),
                      "p_active": round(pa, 3), "expected": round(base * pa, 2),
                      "mean_if_active": round(base, 2), "def_rating": rating,
-                     "def_mult": round(dm, 4), "p_active_raw": round(pa_raw, 3)}
+                     "def_mult": round(dm, 4), "p_active_raw": round(pa_raw, 3),
+                     # the factors mean_if_active is the product of, for the Start/Sit "why"
+                     "role_pg": round(float(r.ros_pg), 3), "vegas_mult": round(vm, 4), "return_mult": round(rm, 4)}
         drivers, driver, gap = [], None, None
         if pd.notna(r.pts_pg):
             drivers.append(f"usage: {r.xfp_proj:.1f} expected pts/g from his share of {team}'s volume")

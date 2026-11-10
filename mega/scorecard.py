@@ -22,6 +22,7 @@ Kickers and defenses are left out: nflverse player stats don't score them.
 """
 from __future__ import annotations
 
+import functools
 import io
 import json
 import re
@@ -48,8 +49,10 @@ def _git(*args: str) -> str:
     return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True).stdout
 
 
+@functools.lru_cache(maxsize=128)
 def snapshot(path: str, before: datetime) -> str | None:
-    """A tracked file as it stood at `before`, or None if it didn't exist yet."""
+    """A tracked file as it stood at `before`, or None if it didn't exist yet. Cached: the
+    projection file is read by three graders per week, and a past commit never changes."""
     sha = _git("log", "-1", f"--before={before.isoformat()}", "--format=%H", "--", path).strip()
     return _git("show", f"{sha}:{path}") if sha else None
 
@@ -66,8 +69,79 @@ def schedule(season: int) -> dict[int, dict]:
         if sun.empty:
             continue
         t = min(datetime.strptime(f"{d} {h}", "%Y-%m-%d %H:%M") for d, h in zip(sun["gameday"], sun["gametime"]))
+        kick = {}
+        for d, h, home, away in zip(g["gameday"], g["gametime"], g["home_team"], g["away_team"]):
+            kick[home] = kick[away] = datetime.strptime(f"{d} {h}", "%Y-%m-%d %H:%M").replace(tzinfo=ET)
         out[int(w)] = {"kick": t.replace(tzinfo=ET), "teams": set(g["home_team"]) | set(g["away_team"]),
-                       "opp": {**dict(zip(g["home_team"], g["away_team"])), **dict(zip(g["away_team"], g["home_team"]))}}
+                       "opp": {**dict(zip(g["home_team"], g["away_team"])), **dict(zip(g["away_team"], g["home_team"]))},
+                       "kicks": kick}
+    return out
+
+
+def lineup_at_kickoffs(week: int, first: dict, kicks: dict) -> dict:
+    """The Start/Sit each player was graded from: his row from the last snapshot before HIS
+    game's kickoff (the Sunday 3:00 run can swap a 4 PM player; grading everyone from the
+    first kickoff never credited it). Falls back to `first` if mixing snapshots would field a
+    different number of starters."""
+    rows = (first.get("starters") or []) + (first.get("bench") or [])
+    snaps = {}
+    for k in sorted({kicks[r["nfl_team"]] for r in rows if r.get("nfl_team") in kicks}):
+        txt = snapshot("data/web/start_sit.json", k)
+        s = json.loads(txt) if txt else {}
+        if int(s.get("next_week") or 0) == week:
+            snaps[k] = s
+    by_kick = {k: {r["player"]: r for r in (s.get("starters") or []) + (s.get("bench") or [])} for k, s in snaps.items()}
+    mixed = [by_kick.get(kicks.get(r.get("nfl_team")), {}).get(r["player"], r) for r in rows]
+    starters = [r for r in mixed if r.get("lineup") != "BENCH"]
+    if len(starters) != len(first.get("starters") or []):
+        return {**first, "_snaps": snaps}
+    return {**first, "starters": starters, "bench": [r for r in mixed if r.get("lineup") == "BENCH"], "_snaps": snaps}
+
+
+def week_calls(season: int, week: int, before: datetime, ss: dict, by_norm: dict, kicks: dict) -> list[dict]:
+    """Every close call that week: its chance and whether the starter outscored the man he
+    was picked over (ties dropped). Published calls (Start/Sit `calls`, from week 10) are
+    graded from the last snapshot before the EARLIER of the two kickoffs, when the swap
+    locked. Weeks before that are rebuilt with the same chance (live_calib.p_outscores) from
+    the projection file as it stood at kickoff, and marked "rebuilt"."""
+    from .intel import _norm
+    from .live_calib import p_outscores
+    pts = lambda n: float(by_norm.get(_norm(n), 0.0))
+    rows = {r["player"]: r for r in (ss.get("starters") or []) + (ss.get("bench") or [])}
+    snaps = ss.get("_snaps") or {}
+    out, seen = [], set()
+    if any("calls" in s for s in snaps.values()):
+        for k in sorted(snaps):
+            for c in snaps[k].get("calls") or []:
+                lock = min(kicks.get((rows.get(n) or {}).get("nfl_team")) or k for n in (c["start"], c["sit"]))
+                pair = frozenset((c["start"], c["sit"]))
+                if lock == k and pair not in seen and pts(c["start"]) != pts(c["sit"]):
+                    seen.add(pair)
+                    out.append({"week": week, "start": c["start"], "sit": c["sit"], "p": float(c["p"]),
+                                "won": pts(c["start"]) > pts(c["sit"]), "source": "published"})
+        return out
+    txt = snapshot(f"data/proj_ros_{season}.json", before)
+    pj = json.loads(txt) if txt else {}
+    if int((pj.get("meta") or {}).get("week") or 0) != week or not rows:
+        return out
+    from . import ids
+    res, _ = ids.resolve(pd.DataFrame({"player": list(rows)}), name_col="player")
+    gid = dict(zip(res["player"], res["gsis_id"]))
+
+    def side(r):
+        w = (((pj["players"].get(gid.get(r["player"])) or {}).get("weeks") or {}).get(str(week))) or {}
+        if w.get("bye") or not w.get("mean_if_active"):
+            return None
+        return {"proj": float(r.get("proj_adj") or 0.0), "p_active": float(w.get("p_active") or 0.0),
+                **{k: float(w[k]) for k in ("median", "p10", "p90", "mean_if_active")}}
+
+    for r in rows.values():
+        cc = str(r.get("close_call") or "")
+        s = rows.get(cc[2:]) if cc.startswith("≈ ") and r.get("lineup") == "BENCH" else None
+        a, b = (side(s), side(r)) if s else (None, None)
+        if a and b and pts(s["player"]) != pts(r["player"]):
+            out.append({"week": week, "start": s["player"], "sit": r["player"], "p": p_outscores(a, b),
+                        "won": pts(s["player"]) > pts(r["player"]), "source": "rebuilt"})
     return out
 
 
@@ -117,6 +191,7 @@ def grade_lineup(ss: dict, by_norm: dict, playing: set | None = None, ours_exp: 
     rows = [{"player": r["player"], "pos": r["pos"], "slot": r["lineup"], "proj": r.get("proj_adj"),
              "consensus": r.get("consensus"), "source": r.get("proj_source"),
              "bye": bool(playing) and r.get("nfl_team") not in playing,
+             "played": _norm(r["player"]) in by_norm,
              "close": r.get("close_call") or "", "pts": float(by_norm.get(_norm(r["player"]), 0.0))}
             for r in (ss.get("starters") or []) + (ss.get("bench") or []) if r.get("pos") in SKILL]
     if not rows:
@@ -144,8 +219,12 @@ def grade_lineup(ss: dict, by_norm: dict, playing: set | None = None, ours_exp: 
                        else float(ours_map.get(r["player"], r["proj"] or 0.0))),
         "consensus": shadow(lambda r: float(r["consensus"] if r["consensus"] is not None else r["proj"] or 0.0)),
     }
+    # a starter whose team played and who has no stat line: the game-day check exists to make this 0
+    dead = [r for r in ours if not r["played"] and not r["bye"]]
     return {"ours": round(sum(r["pts"] for r in ours), 1), "best": round(sum(r["pts"] for r in best), 1),
             "shadow": shadows,
+            "dead_starts": {"n": len(dead), "proj": round(sum(float(r["proj"] or 0) for r in dead), 1),
+                            "players": [r["player"] for r in dead]},
             "left": round(sum(r["pts"] for r in best) - sum(r["pts"] for r in ours), 1),
             "should_have_started": [r["player"] for r in best if r["slot"] == "BENCH"],
             "calls": calls, "bye_calls": byes}
@@ -452,7 +531,7 @@ def build(season: int, now_week: int) -> dict:
     played = set(act["week"].unique())
     sched = schedule(season)
     backfill = def_backfill(season)
-    weeks, proj_rows, wv_snaps, rk_snaps = [], [], {}, {}
+    weeks, proj_rows, wv_snaps, rk_snaps, call_rows = [], [], {}, {}, []
     tr_snaps, odds_snaps, rosters, pts_by_week = {}, {}, {}, {}
     for w in sorted(sched):
         if w >= now_week or w not in played:
@@ -472,8 +551,11 @@ def build(season: int, now_week: int) -> dict:
         ro = (json.loads(po_txt).get("rooting") or {}) if po_txt else {}
         if int(ro.get("week") or 0) == w:
             odds_snaps[w] = ro
-        lineup = (grade_lineup(ss, by_norm, sched[w]["teams"], _ours_by_name(season, w, before, ss))
-                  if int(ss.get("next_week") or 0) == w else None)
+        lineup = None
+        if int(ss.get("next_week") or 0) == w:
+            ss_k = lineup_at_kickoffs(w, ss, sched[w]["kicks"])     # each player at his own kickoff
+            lineup = grade_lineup(ss_k, by_norm, sched[w]["teams"], _ours_by_name(season, w, before, ss))
+            call_rows += week_calls(season, w, before, ss_k, by_norm, sched[w]["kicks"])
         proj = grade_projections(season, w, before, by_gsis, sched[w]["opp"], backfill)
         rk_txt = snapshot("data/web/rankings.json", before)
         if rk_txt and int(json.loads(rk_txt).get("next_week") or 0) == w:
@@ -531,6 +613,8 @@ def build(season: int, now_week: int) -> dict:
             "perfect_weeks": sum(1 for g in graded if g["left"] <= 0.05),
             "shadow": {k: round(sum(g["shadow"][k] for g in graded), 1) for k in ("ours", "consensus")},
             "calls": len(calls), "calls_right": sum(c["right"] for c in calls),
+            "dead_starts": {"n": sum(g["dead_starts"]["n"] for g in graded),
+                            "proj": round(sum(g["dead_starts"]["proj"] for g in graded), 1)},
             "projections": summarize_projections(proj_rows),
             "waivers": len(waivers), "waivers_right": sum(w["right"] for w in waivers),
         },
@@ -539,6 +623,10 @@ def build(season: int, now_week: int) -> dict:
         "live_blend": lb,
         "close_calls": close,
         "live_calib": calib,
+        # said vs happened for the close-call chances: the headline on the page
+        "call_grades": {**LC.grade_calls(call_rows),
+                        "rebuilt_weeks": sorted({c["week"] for c in call_rows if c["source"] == "rebuilt"}),
+                        "rows": sorted(call_rows, key=lambda c: (-c["week"], -c["p"]))},
         "matchups": grade_matchups(proj_rows),
         "trades": grade_trades(tr_snaps, rosters, pts_by_week),
         "odds": odds,

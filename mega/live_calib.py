@@ -222,6 +222,83 @@ def shrink_team_week(total: np.ndarray, league_mean: float, lam: float) -> np.nd
     return total + (1.0 - lam) * (league_mean - float(total.mean()))
 
 
+# ------------------------------------------------------------------ 4. the call: odds + why
+# What turns "≈ Denzel Boston" into a decision you can trust: the chance the starter outscores
+# the man on the bench, drawn from the same p10/median/p90 the title-odds sim uses (2026 wks
+# 3-9: calls we'd have put at 54/63/70/76% happened 56/64/72/77%), and the few factors that
+# open the gap, in points.
+FACTORS = [   # (key, label) — multiplicative parts of the published Start/Sit number
+    ("role", "season role (usage + efficiency)"),
+    ("vegas", "game environment (Vegas team total)"),
+    ("defense", "opposing defense"),
+    ("avail", "chance he plays"),
+    ("blend", "consensus pull"),
+]
+
+
+def p_outscores(a: dict, b: dict, n: int = 20_000, seed: int = 2026) -> float:
+    """P(a scores more than b). Each side: proj (the published number) plus p10/median/p90 and
+    p_active from proj_ros, rescaled so the draw's mean-if-active matches proj / p_active —
+    the odds then agree with the order the lineup was set in. Fixed seed: same inputs, same %."""
+    rng = np.random.default_rng(seed)
+
+    def draw(p):
+        pa = float(p.get("p_active") or 1.0)
+        scale = (float(p["proj"]) / pa) / float(p["mean_if_active"]) if p.get("mean_if_active") else 1.0
+        med, p10, p90 = (float(p[k]) * scale for k in ("median", "p10", "p90"))
+        z, u = rng.standard_normal(n), rng.random(n)
+        pts = med + np.where(z < 0, (med - p10) / 1.2816 * z, (p90 - med) / 1.2816 * z)
+        return np.where(u < pa, np.maximum(pts, -2.0), 0.0)
+
+    return round(float((draw(a) > draw(b)).mean()), 3)
+
+
+def explain(a: dict, b: dict, top: int = 3) -> list[dict]:
+    """The point gap proj_a - proj_b split across FACTORS, biggest first. Exact: the parts add
+    up to the gap (log-mean split of ln(a/b) = sum of ln(factor_a/factor_b))."""
+    A, B = float(a["proj"]), float(b["proj"])
+    if A <= 0 or B <= 0:
+        return [{"factor": "avail", "label": "ruled out / bye", "pts": round(A - B, 1)}]
+    L = A if abs(A - B) < 1e-9 else (A - B) / math.log(A / B)
+    parts = [{"factor": k, "label": lab,
+              "pts": round(L * math.log(float(a["f"].get(k, 1.0)) / float(b["f"].get(k, 1.0))), 1)}
+             for k, lab in FACTORS]
+    return sorted([p for p in parts if abs(p["pts"]) >= 0.1], key=lambda p: -abs(p["pts"]))[:top]
+
+
+def call(a: dict, b: dict, applied: dict) -> dict:
+    """One close call, ready for the page. `applied` says which defense knobs are on, so a
+    tag that isn't in the number reads as context, not as a reason."""
+    p = p_outscores(a, b)
+    out = {"start": a["player"], "sit": b["player"], "p": p,
+           "gap": round(float(a["proj"]) - float(b["proj"]), 1), "why": explain(a, b),
+           "verdict": "coin flip" if p < 0.55 else "lean" if p < 0.65 else "clear"}
+    ctx = []
+    for x in (a, b):
+        t = x.get("matchup_pct")
+        if t is not None and abs(t) >= 5 and not applied.get(x["pos"]):
+            ctx.append(f"{x['player']}: matchup {t:+.0f}% (shown, not in the number: the {x['pos']} "
+                       f"defense adjustment hasn't beaten no-change yet)")
+    if a.get("consensus") is not None and b.get("consensus") is not None:
+        c = float(a["consensus"]) - float(b["consensus"])
+        if (c < 0) != (out["gap"] < 0) and abs(c) >= 0.5:
+            ctx.append(f"Consensus disagrees: it has {b['player']} ahead by {abs(c):.1f}")
+    out["context"] = ctx
+    return out
+
+
+def grade_calls(calls: list[dict]) -> dict:
+    """Published calls (p, won) bucketed: what we said against what happened — the number that
+    tells you whether a '62%' on the page means 62%."""
+    if not calls:
+        return {"n": 0, "buckets": []}
+    d = pd.DataFrame(calls)
+    d["b"] = pd.cut(d["p"], [0, 0.55, 0.65, 1.0], labels=["coin flip (<55%)", "lean (55-65%)", "clear (65%+)"])
+    return {"n": len(d), "right": int(d["won"].sum()), "brier": round(float(((d["p"] - d["won"]) ** 2).mean()), 4),
+            "buckets": [{"bucket": str(b), "n": len(g), "said": round(float(g["p"].mean()), 3),
+                         "happened": round(float(g["won"].mean()), 3)} for b, g in d.groupby("b", observed=True)]}
+
+
 # ------------------------------------------------------------------ the weekly run
 def build(rows: list[dict], games: list[dict], b_hist: dict) -> dict:
     return {"defense": fit_defense(rows, b_hist), "availability": fit_availability(rows), "odds": fit_odds(games)}
@@ -259,6 +336,15 @@ def demo() -> None:
     assert fit_odds(games[:18])["active"] is False                     # too few games to switch on
     t = shrink_team_week(np.array([100.0, 120.0]), 100.0, 0.5)
     assert np.allclose(t, [95.0, 115.0])                                # mean 110 -> 105, spread kept
+    # the call: equal players are a coin flip; a big edge is clear; reasons add up to the gap
+    me = {"player": "A", "pos": "WR", "proj": 10.0, "median": 9.0, "p10": 3.0, "p90": 18.0, "mean_if_active": 10.0,
+          "p_active": 1.0, "f": {"role": 10.0, "vegas": 1.0}}
+    assert abs(p_outscores(me, {**me, "player": "B"}) - 0.5) < 0.02
+    big = {**me, "player": "C", "proj": 16.0, "median": 14.4, "p10": 4.8, "p90": 28.8, "mean_if_active": 16.0,
+           "f": {"role": 12.0, "vegas": 1.333}}
+    c = call(big, me, applied={})
+    assert c["p"] > 0.65 and c["verdict"] == "clear", c
+    assert abs(sum(x["pts"] for x in explain(big, me, top=9)) - 6.0) < 0.15, explain(big, me, top=9)
     print("live_calib demo: ok")
 
 
