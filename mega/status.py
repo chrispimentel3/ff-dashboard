@@ -16,6 +16,8 @@ at all. Tyreek Hill kept surfacing as a WOPR waiver add off his 2025 volume.
 """
 from __future__ import annotations
 
+import json
+
 import pandas as pd
 
 from .config import DATA
@@ -39,10 +41,19 @@ def overrides() -> pd.DataFrame:
 
 
 def out_for_week(week: int) -> dict[str, str]:
-    """norm -> label for everyone ruled out of `week`."""
+    """norm -> label for everyone ruled out of `week`: this file, plus the game-day check's
+    Sleeper Out tags for that week (mega/gameday.py)."""
     o = overrides()
     o = o[(o["status"] == "OUT") & (o["through_week"].isna() | (o["through_week"] >= week))]
-    return {r.norm: _label(r) for r in o.itertuples()}
+    out = {r.norm: _label(r) for r in o.itertuples()}
+    try:
+        from .gameday import GAMEDAY
+        g = json.loads(GAMEDAY.read_text())
+        if int(g.get("week") or 0) == int(week):
+            out = {**(g.get("out") or {}), **out}
+    except (OSError, ValueError):
+        pass
+    return out
 
 
 def out_for_season() -> dict[str, str]:

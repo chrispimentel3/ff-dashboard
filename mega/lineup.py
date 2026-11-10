@@ -156,6 +156,25 @@ def optimize_lineup(roster: pd.DataFrame, season: int, week: int) -> pd.DataFram
     return df
 
 
+def vegas_tiebreak(df: pd.DataFrame) -> pd.DataFrame:
+    """Close calls decided by the Sunday lines, once mega/scorecard.py has seen them win:
+    a benched player flagged "≈ <starter>" takes that starter's slot when Vegas has him
+    higher. The flag only names a starter in a slot he can fill, so every swap is legal."""
+    df = df.copy()
+    flagged = df[~df["start"] & df["close_call"].astype(str).str.startswith("≈ ")]
+    for i in flagged.sort_values("vegas", ascending=False).index:
+        j = df.index[df["start"] & (df["player"] == df.at[i, "close_call"][2:])]
+        if not len(j):
+            continue                                   # that starter was already swapped out
+        j = j[0]
+        vb, vs = pd.to_numeric(df.at[i, "vegas"], errors="coerce"), pd.to_numeric(df.at[j, "vegas"], errors="coerce")
+        if pd.notna(vb) and pd.notna(vs) and vb > vs:
+            df.at[i, "lineup"], df.at[j, "lineup"] = df.at[j, "lineup"], "BENCH"
+            df.at[i, "start"], df.at[j, "start"] = True, False
+            df.at[i, "close_call"], df.at[j, "close_call"] = "", f"≈ {df.at[i, 'player']}"
+    return df
+
+
 if __name__ == "__main__":
     import sys
 

@@ -287,6 +287,14 @@ def start_sit(c) -> dict:
         rp["report_status"] = rp["player"].map(lambda n: out.get(player_ids.norm(n)))
         rp.loc[rp["report_status"].notna(), "proj"] = 0.0
         lu = optimize_lineup(rp, c.season, c.next_week)
+        try:        # Sunday lines break close calls only once the scorecard has seen them win
+            from mega.scorecard import VEGAS_TIEBREAK
+            tb = json.loads(VEGAS_TIEBREAK.read_text())
+            if tb.get("active") and int(tb.get("season") or 0) == c.season and "vegas" in lu.columns:
+                from mega.lineup import vegas_tiebreak
+                lu = vegas_tiebreak(lu)
+        except (OSError, ValueError):
+            pass
     except Exception as e:
         _warn("projections", e)
         lu = None

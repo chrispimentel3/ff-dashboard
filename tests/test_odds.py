@@ -131,20 +131,56 @@ def test_the_ledger_reads_the_accounts_own_numbers(monkeypatch, tmp_path):
     assert json.loads((tmp_path / "b.json").read_text())["used"] == 112
 
 
-def test_a_missing_week_file_forces_a_sweep_regardless_of_the_clock(monkeypatch, tmp_path):
+SUN_1140 = dt.datetime(2026, 11, 15, 11, 40, tzinfo=O.ET)     # a Sunday, after the 1 PM inactives
+TUE = dt.datetime(2026, 11, 10, 9, 0, tzinfo=O.ET)
+
+
+def test_sunday_morning_sweeps_once_per_week(monkeypatch, tmp_path):
+    monkeypatch.setattr(O, "LEDGER", tmp_path / "b.json")
+    f = tmp_path / "p.csv"
+    f.write_text("gsis_id\n")                    # a midweek file doesn't stop the Sunday sweep
+    monkeypatch.setattr(O, "props_csv", lambda s, w: f)
+    O._save_ledger({"remaining": 300})
+    assert O.due(2026, 10, SUN_1140) is True
+    O._save_ledger({"remaining": 300, "sunday_sweeps": {"2026": [10]}})
+    assert O.due(2026, 10, SUN_1140) is False
+    assert O.due(2026, 10, SUN_1140.replace(hour=7)) is False       # the 7 AM run waits
+
+
+def test_midweek_sweeps_only_when_every_sunday_left_is_paid_for(monkeypatch, tmp_path):
     monkeypatch.setattr(O, "LEDGER", tmp_path / "b.json")
     monkeypatch.setattr(O, "props_csv", lambda s, w: tmp_path / "nope.csv")
-    O._save_ledger({"swept": dt.datetime.now(dt.timezone.utc).isoformat()})
-    assert O.due(150, 2026, 7) is True          # just swept, but not this week
-
-
-def test_a_recent_sweep_of_this_week_is_left_alone(monkeypatch, tmp_path):
-    monkeypatch.setattr(O, "LEDGER", tmp_path / "b.json")
+    # Nov 10: Sundays 15, 22, 29 still to pay = 300, plus the 40 reserve
+    O._save_ledger({"remaining": 408})
+    assert O.due(2026, 10, TUE) is False         # 408 - 40 - 300 = 68: not a whole sweep
+    O._save_ledger({"remaining": 450})
+    assert O.due(2026, 10, TUE) is True          # 110 spare
     f = tmp_path / "p.csv"
     f.write_text("gsis_id\n")
     monkeypatch.setattr(O, "props_csv", lambda s, w: f)
-    O._save_ledger({"swept": dt.datetime.now(dt.timezone.utc).isoformat()})
-    assert O.due(150, 2026, 7) is False
+    assert O.due(2026, 10, TUE) is False         # this week already has a file
+
+
+def test_sunday_sweep_skips_games_under_way_and_keeps_their_old_rows(monkeypatch, tmp_path):
+    monkeypatch.setattr(O, "LEDGER", tmp_path / "b.json")
+    path = tmp_path / "p.csv"
+    monkeypatch.setattr(O, "props_csv", lambda s, w: path)
+    pd.DataFrame([{"player": "Thursday Guy", "event_id": "thu", "gsis_id": "x"}]).to_csv(path, index=False)
+    O._save_ledger({"remaining": 500})
+    monkeypatch.setattr(O, "key", lambda: "fake")
+    ev = pd.DataFrame([{"event_id": "thu", "commence": "2026-11-13T01:15:00Z"},
+                       {"event_id": "lon", "commence": "2026-11-15T14:30:00Z"},
+                       {"event_id": "one", "commence": "2026-11-15T18:00:00Z"}])
+    monkeypatch.setattr(O, "events", lambda: ev)
+    monkeypatch.setattr(O, "_week_events", lambda e, s, w: e)
+    swept = []
+    monkeypatch.setattr(O, "event_props", lambda eid, *a, **k: swept.append(eid) or pd.DataFrame(
+        [{"player": "Sunday Guy", "event_id": eid}]))
+    monkeypatch.setattr(O, "_attach_ids", lambda d: d.assign(gsis_id="y"))
+    out, _ = O.refresh(2026, 10, now=SUN_1140)
+    assert swept == ["one"]                       # Thursday's and London's games have started
+    assert set(out["event_id"]) == {"one", "thu"}
+    assert O.sunday_weeks(2026) == [10]
 
 
 # ---------------------------------------------------------------- id attachment

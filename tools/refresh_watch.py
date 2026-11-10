@@ -10,7 +10,11 @@ the request the button left in the private repo (service/refresh_request.py) thr
     commit + push                       only the refreshed paths, by name
 
 then waits until raw.githubusercontent.com serves the new files (the site reads them from
-there), clears the site's cache (tools/clear_site_cache.py) and marks the request done. Whatever the request
+there), clears the site's cache (tools/clear_site_cache.py) and marks the request done.
+
+On Sundays it also runs that sequence by itself at 11:40 AM and 3:00 PM ET, after the
+inactives post: Sleeper's Out tags first (mega/gameday.py outs), so the rebuild benches
+anyone ruled out, then an email if your Yahoo lineup no longer matches Start/Sit. Whatever the request
 file says, this only ever runs that fixed sequence.
 
     PYTHONPATH=. .venv/bin/python tools/refresh_watch.py      # one check, then exit
@@ -18,6 +22,7 @@ file says, this only ever runs that fixed sequence.
 from __future__ import annotations
 
 import base64
+import datetime as dt
 import fcntl
 import json
 import os
@@ -26,6 +31,7 @@ import sys
 import time
 import urllib.request
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent.parent
 REPO = "chrispimentel3/mega-bowl-private"
@@ -96,7 +102,7 @@ def publish(stage: list[str], what: str) -> str | None:
     git("add", "--", *stage)
     if git("diff", "--cached", "--quiet", "--", *stage).returncode == 0:
         return None
-    msg = f"{what} from the site's Refresh button {time.strftime('%Y-%m-%d %H:%M')}"
+    msg = f"{what} {time.strftime('%Y-%m-%d %H:%M')}"
     if git("commit", "-q", "-m", msg, "--", *stage).returncode != 0:
         raise RuntimeError("git commit failed")
     if git("fetch", "-q", "origin").returncode != 0 or git("rebase", "-q", "--autostash", "origin/main").returncode != 0:
@@ -123,12 +129,9 @@ def wait_for_raw() -> bool:
     return False
 
 
-def refresh(state: dict, sha: str | None) -> None:
-    def step(name: str) -> None:
-        nonlocal sha
-        state.update(status="running", step=name)
-        sha = write_state(state, sha)
-
+def pipeline(step, what: str) -> dict:
+    """Yahoo pull, rebuild, xWins, commit + push, wait for GitHub, clear the site cache —
+    the sequence both the button and the Sunday kickoff runs use. `step(name)` reports progress."""
     step("Pulling your league from Yahoo")
     y = run(sys.executable, "tools/refresh.py", "--no-projections")
     yahoo_ok = y.returncode == 0
@@ -143,12 +146,10 @@ def refresh(state: dict, sha: str | None) -> None:
     if p.returncode != 0:
         note = (note + " " if note else "") + f"The site rebuild failed its checks (exit {p.returncode}), so the site wasn't updated."
     if not paths:
-        state.update(status="failed", step=None, finished_at=int(time.time()), message=note)
-        write_state(state, sha)
-        return
+        return {"failed": True, "commit": None, "note": note, "yahoo": yahoo_ok}
 
     step("Publishing")
-    commit = publish(paths, "League refresh" if yahoo_ok else "Site rebuild")
+    commit = publish(paths, what if yahoo_ok else "Site rebuild")
     if commit:
         step("Waiting for GitHub to serve the new data")
         if not wait_for_raw():
@@ -156,9 +157,59 @@ def refresh(state: dict, sha: str | None) -> None:
         # The button's page clears the cache too, but only if its tab is still open when this
         # finishes; otherwise every page served its old copy (and stale banner) once (2026-11-04).
         run(sys.executable, "tools/clear_site_cache.py")
-    state.update(status="done", step=None, finished_at=int(time.time()), commit=commit, yahoo=yahoo_ok,
-                 message=note if note else (None if commit else "Already up to date."))
+    return {"failed": False, "commit": commit, "note": note, "yahoo": yahoo_ok}
+
+
+def refresh(state: dict, sha: str | None) -> None:
+    def step(name: str) -> None:
+        nonlocal sha
+        state.update(status="running", step=name)
+        sha = write_state(state, sha)
+
+    r = pipeline(step, "League refresh from the site's Refresh button")
+    if r["failed"]:
+        state.update(status="failed", step=None, finished_at=int(time.time()), message=r["note"])
+    else:
+        state.update(status="done", step=None, finished_at=int(time.time()), commit=r["commit"], yahoo=r["yahoo"],
+                     message=r["note"] if r["note"] else (None if r["commit"] else "Already up to date."))
     write_state(state, sha)
+
+
+# Sundays, ET: after the inactives post (90 minutes before kickoff) for the 1 PM games and for
+# the 4:05/4:25 games. The 11:40 run also lands in the props module's Sunday sweep window.
+ET = ZoneInfo("America/New_York")
+KICKOFF_RUNS = ((11, 40), (15, 0))
+KICKOFF_LATE = 20 * 60          # Mac asleep past this: skip the slot rather than run into kickoff
+KICKOFF_DONE = Path.home() / "Library" / "Caches" / "mega-bowl-kickoff.json"
+
+
+def kickoff_due(now) -> str | None:
+    """The Sunday slot to run now, if one is open and hasn't run."""
+    if now.weekday() != 6:
+        return None
+    try:
+        done = json.loads(KICKOFF_DONE.read_text())
+    except (OSError, ValueError):
+        done = []
+    for h, m in KICKOFF_RUNS:
+        slot = now.replace(hour=h, minute=m, second=0, microsecond=0)
+        if 0 <= (now - slot).total_seconds() < KICKOFF_LATE and slot.isoformat() not in done:
+            return slot.isoformat()
+    return None
+
+
+def kickoff(slot: str) -> None:
+    try:
+        done = json.loads(KICKOFF_DONE.read_text())
+    except (OSError, ValueError):
+        done = []
+    KICKOFF_DONE.write_text(json.dumps((done + [slot])[-20:]))   # marked first: a crash mustn't loop
+    log(f"pre-kickoff run {slot}")
+    run(sys.executable, "-m", "mega.gameday", "outs", timeout=300)
+    r = pipeline(log, "Pre-kickoff refresh")
+    if r["note"]:
+        log("  " + r["note"])
+    run(sys.executable, "-m", "mega.gameday", "alert", timeout=300)
 
 
 def main() -> int:
@@ -170,6 +221,13 @@ def main() -> int:
             return 0                       # the previous minute's run is still refreshing
         # ponytail: the 7 AM scheduled task doesn't take this lock; a button press at 7 AM could
         # overlap it. Have that task run this script if it ever bites.
+        slot = kickoff_due(dt.datetime.now(ET))
+        if slot:
+            try:
+                kickoff(slot)
+            except Exception as e:
+                log(f"pre-kickoff run failed: {type(e).__name__}: {e}")
+            return 0
         state, sha = read_state()
         if state.get("status") != "queued":
             return 0

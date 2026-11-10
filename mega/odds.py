@@ -7,20 +7,23 @@ week** — about four sweeps a month. So this cannot run on the daily refresh th
 Yahoo scrape does, and pretending otherwise would blow the month's allowance by Tuesday
 and leave the rest of the season with nothing.
 
-What it does instead: one sweep per week by default, refusing to start a sweep it cannot
-finish, and never spending below `RESERVE` so a mistake here can't strand the account at
-zero. Every response carries `x-requests-remaining`, so the ledger is the account's own
-number rather than this module's guess about what it spent.
+What it does instead: one sweep per week, on **Sunday morning after the 1 PM inactives**
+(the 11:40 AM run in tools/refresh_watch.py). Closing lines price Friday's designations,
+Saturday's downgrades and the inactives; a Tuesday line knows none of it, and close
+start/sit calls swing on exactly that (2026 weeks 3-8: midweek props were a coin flip on
+calls within two points). A midweek sweep still runs when a week has no file yet and the
+month can pay for every Sunday left. It refuses to start a sweep it cannot finish and
+never spends below `RESERVE`. Every response carries `x-requests-remaining`, so the ledger
+is the account's own number rather than this module's guess about what it spent.
 
-Upgrading to the $30 tier (20,000 credits) makes a daily sweep comfortable — that is the
-only thing standing between this and hourly props, and it is the user's call, not a code
-change: set ODDS_REFRESH_HOURS.
+A paid tier only changes `remaining`: the midweek check then passes on its own.
 """
 from __future__ import annotations
 
 import datetime as dt
 import json
 import os
+from zoneinfo import ZoneInfo
 
 import httpx
 import pandas as pd
@@ -51,7 +54,9 @@ MARKETS = ("player_pass_yds", "player_pass_tds", "player_pass_interceptions",
            "player_anytime_td")
 REGIONS = "us"
 RESERVE = 40                       # credits never spent, so a bad week can still be priced
-DEFAULT_REFRESH_HOURS = float(os.environ.get("ODDS_REFRESH_HOURS", "150"))  # ~weekly
+ET = ZoneInfo("America/New_York")
+SUNDAY_WINDOW = (11, 13)           # ET hours of the Sunday sweep: after 11:30 inactives, before 1 PM
+SWEEP_COST = 100                   # one Sunday-and-Monday slate, 13-14 games x 7 markets (~92 seen)
 
 
 def key() -> str:
@@ -196,37 +201,57 @@ def _week_events(ev: pd.DataFrame, season: int, week: int) -> pd.DataFrame:
     return ev[keep]
 
 
-def due(hours: float = DEFAULT_REFRESH_HOURS, season: int | None = None,
-        week: int | None = None) -> bool:
-    """Has enough time passed — and is there a file for this week at all?"""
-    if season is not None and week is not None and not props_csv(season, week).exists():
-        return True
-    ts = ledger().get("swept")
-    if not ts:
-        return True
-    try:
-        last = dt.datetime.fromisoformat(ts)
-    except ValueError:
-        return True
-    if last.tzinfo is None:
-        last = last.replace(tzinfo=dt.timezone.utc)
-    return (dt.datetime.now(dt.timezone.utc) - last).total_seconds() >= hours * 3600.0
+def in_sunday_window(now: dt.datetime | None = None) -> bool:
+    now = (now or dt.datetime.now(ET)).astimezone(ET)
+    return now.weekday() == 6 and SUNDAY_WINDOW[0] <= now.hour < SUNDAY_WINDOW[1]
+
+
+def sunday_weeks(season: int) -> list[int]:
+    """Weeks whose props were swept in the Sunday window (mega/scorecard.py grades these)."""
+    return [int(w) for w in (ledger().get("sunday_sweeps") or {}).get(str(season), [])]
+
+
+def _sundays_left(now: dt.datetime) -> int:
+    """Sunday sweeps still to pay for this month (the quota resets on the 1st), counting
+    today's only while its window hasn't passed."""
+    d, n = now.date(), 0
+    while d.month == now.month:
+        n += d.weekday() == 6
+        d += dt.timedelta(days=1)
+    return n - (now.weekday() == 6 and now.hour >= SUNDAY_WINDOW[1])
+
+
+def due(season: int, week: int, now: dt.datetime | None = None) -> bool:
+    """Sunday morning: once per week. Midweek: only for a week with no file yet, and only
+    when the month can still pay for every Sunday left."""
+    now = (now or dt.datetime.now(ET)).astimezone(ET)
+    if in_sunday_window(now):
+        return int(week) not in sunday_weeks(season)
+    if props_csv(season, week).exists():
+        return False
+    have = remaining()
+    return have is None or have - RESERVE - _sundays_left(now) * SWEEP_COST >= SWEEP_COST
 
 
 def refresh(season: int, week: int, markets=MARKETS, force: bool = False,
-            hours: float = DEFAULT_REFRESH_HOURS) -> tuple[pd.DataFrame, str]:
+            now: dt.datetime | None = None) -> tuple[pd.DataFrame, str]:
     """Sweep one week's props and write them. Returns (frame, human-readable status).
 
     Refuses to start a sweep it cannot pay for in full. A half-swept week is worse than no
     sweep: the games that got priced would quietly outrank the ones that did not, and every
-    comparison in the app runs across players from different games.
+    comparison in the app runs across players from different games. Games already under way
+    are skipped (their lines are in-play, not pregame); their rows from an earlier sweep stay.
     """
+    now = (now or dt.datetime.now(ET)).astimezone(ET)
     if not available():
         return pd.DataFrame(), "no ODDS_API_KEY set — Vegas projections are off"
-    if not force and not due(hours, season, week):
-        return cached(season, week), f"props are current (swept within {hours:.0f}h)"
+    if not force and not due(season, week, now):
+        return cached(season, week), "props are current (next sweep: Sunday after the 1 PM inactives)"
 
     ev = _week_events(events(), season, week)
+    if "commence" in ev.columns:
+        start = pd.to_datetime(ev["commence"], utc=True, errors="coerce")
+        ev = ev[start.isna() | (start > now.astimezone(dt.timezone.utc))]
     if ev.empty:
         return cached(season, week), f"no priced games found for week {week}"
 
@@ -251,11 +276,18 @@ def refresh(season: int, week: int, markets=MARKETS, force: bool = False,
     out = pd.concat(frames, ignore_index=True)
     out = _attach_ids(out)
     out["season"], out["week"] = int(season), int(week)
+    old = cached(season, week)
+    if not old.empty and "event_id" in old.columns:      # Thursday's game, priced midweek
+        out = pd.concat([out, old[~old["event_id"].isin(out["event_id"])]], ignore_index=True)
     out.to_csv(props_csv(season, week), index=False)
 
     d = ledger()
     d["swept"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
     d["swept_week"] = int(week)
+    if in_sunday_window(now):
+        sw = d.setdefault("sunday_sweeps", {}).setdefault(str(season), [])
+        if int(week) not in sw:
+            sw.append(int(week))
     _save_ledger(d)
 
     msg = (f"{len(out):,} prop lines for {len(frames)}/{len(ev)} games, "

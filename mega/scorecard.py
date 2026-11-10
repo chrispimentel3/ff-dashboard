@@ -261,6 +261,38 @@ def live_blend(rows: list[dict]) -> dict:
             "active": tested >= MIN_TESTED and gain > 0}
 
 
+CLOSE = 2.0             # a close call, as Start/Sit flags one (mega/lineup.py)
+TIEBREAK_WEEKS = 3      # weeks of Sunday-morning lines graded before they may break a close call
+# ponytail: a flat 54% bar, not a test — pairs share players and weeks, so the naive standard
+# error (~1.5pp at 3 weeks) is too small by ~3x; 54% clears that. Bootstrap by week if it matters.
+TIEBREAK_EDGE = 0.54
+VEGAS_TIEBREAK = ROOT / "data" / "build" / "vegas_tiebreak.json"
+
+
+def grade_close(rows: list[dict], weeks: set[int]) -> dict:
+    """Close calls between players you'd choose between (same position, or RB vs WR for the
+    flex; our projections within CLOSE), in weeks priced by a Sunday-morning sweep: where our
+    order and the Vegas order disagree, how often was Vegas right? Midweek lines were a coin
+    flip here in 2026 weeks 3-8 (51%), which is why they never broke ties."""
+    d = [r for r in rows if r["week"] in weeks and r.get("vegas") is not None and not pd.isna(r["vegas"])]
+    n = won = 0
+    for w in {r["week"] for r in d}:
+        g = [r for r in d if r["week"] == w]
+        for i, a in enumerate(g):
+            for b in g[i + 1:]:
+                if not (a["pos"] == b["pos"] or {a["pos"], b["pos"]} == {"RB", "WR"}):
+                    continue
+                o, v = a["ours"] - b["ours"], a["vegas"] - b["vegas"]
+                if abs(o) > CLOSE or o == 0 or v == 0 or (o > 0) == (v > 0) or a["actual"] == b["actual"]:
+                    continue
+                n += 1
+                won += (v > 0) == (a["actual"] > b["actual"])
+    k = len({r["week"] for r in d})
+    rate = won / n if n else None
+    return {"weeks": k, "disagreements": n, "vegas_right": round(rate, 3) if rate is not None else None,
+            "active": k >= TIEBREAK_WEEKS and rate is not None and rate >= TIEBREAK_EDGE}
+
+
 MATCHUP_EDGE = 5.0      # matchup tags at +5% or better / -5% or worse are the ones the page calls out
 
 
@@ -436,6 +468,12 @@ def build(season: int, now_week: int) -> dict:
     except Exception:
         pass
     movers = grade_movers({w: s for w, s in wv_snaps.items() if w <= through}, act) if through else []
+    from .odds import sunday_weeks
+    close = grade_close(proj_rows, set(sunday_weeks(season)))
+    try:
+        VEGAS_TIEBREAK.write_text(json.dumps({"season": season, "through_week": through, **close}, indent=1))
+    except Exception:
+        pass
     from .config import MY_TEAM
     results, standings, hist = (_csv(ROOT / "data" / f) for f in
                                 ("yahoo_scores.csv", "yahoo_standings.csv", "history/playoff_odds_weekly.csv"))
@@ -455,6 +493,7 @@ def build(season: int, now_week: int) -> dict:
         "waivers": waivers,
         "movers": movers,
         "live_blend": lb,
+        "close_calls": close,
         "matchups": grade_matchups(rk_snaps, act),
         "trades": grade_trades(tr_snaps, rosters, pts_by_week),
         "odds": grade_odds(odds_snaps, results, MY_TEAM) if not results.empty else {},
