@@ -138,3 +138,15 @@ def test_cards_keep_one_player_in_at_most_three_and_a_manager_in_at_most_three()
              c("E", 6, "Z"), c("E", 7, "Z"), c("E", 8, "Z"), c("E", 9, "W")]
     # D's Star card is turned away (Star is in 3 already) without using D's slots; E stops at 3
     assert [k["i"] for k in TT.keep(cards)] == [1, 2, 3, 5, 6, 7, 8]
+
+
+@pytest.mark.slow
+def test_depth_offers_pay_only_from_the_bench_and_bring_back_a_starter(live):
+    pile = set(live["meta"]["depth_pile"])
+    key = lambda c: (c["partner"], tuple(g["name"] for g in c["give"]), tuple(g["name"] for g in c["get"]))
+    main = {key(c) for c in live["cards"]}
+    assert len(live["depth"]) <= TT.DEPTH_SHOW
+    for c in live["depth"]:
+        assert c["shape"] == "2-for-1" and {g["name"] for g in c["give"]} <= pile
+        assert c["get"][0]["name"] in c["i_would_start"]
+        assert key(c) not in main                                  # never shown twice

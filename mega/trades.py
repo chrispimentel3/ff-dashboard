@@ -82,7 +82,7 @@ def build(trades: pd.DataFrame | None, roster_src: str | None, season: int | Non
         return {"available": False, "closed": True, "deadline": theses.get("deadline"), "groups": [],
                 "roster_src": roster_src}
     if theses and theses.get("available"):
-        return {"available": True, "version": 3, "cards": theses.get("cards") or [],
+        return {"available": True, "version": 3, "cards": theses.get("cards") or [], "depth": theses.get("depth") or [],
                 "deadline": theses.get("deadline"),
                 "meta": theses.get("meta") or {}, "groups": [], "roster_src": roster_src,
                 "impact_available": True}

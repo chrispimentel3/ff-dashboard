@@ -45,6 +45,9 @@ FRAGILE_AGE = 28              # (J) a starter this old counts as fragile for CON
 PLAYOFF_SOS = 1.10            # (J) weeks 15–17 opponents allow 10%+ above average
 STACK_TEAM = 3                # handoff §6.2: 3+ starters from one offense
 MAX_PER_PARTNER = 3           # (J) keep the list from being one manager's roster
+DEPTH_SIM = 20                # (J) depth-for-a-starter 2-for-1s given their own simulations...
+DEPTH_PER_PARTNER = 3         #     ...no more than this many per manager...
+DEPTH_SHOW = 5                #     ...and shown in their own list (Chris 2026-11-10)
 MAX_PER_GIVE = 3              # (J) ...or one of our players' showcase: weeks 3-7 of 2026 the board
                               # offered Nabers in 12 of 25 ideas and his breakout sank half of it
 SIM_PER_PARTNER = 5           # (J) ...and the 25 simulations from being one manager's either
@@ -490,6 +493,21 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
     exp_pre = lambda r: cpty(r)["p"] * r["dMe"]
     cands = sorted((r for r in cands if cpty(r)["ratio"] <= FAIR_MAX and not cpty(r)["small"]),
                    key=lambda r: -exp_pre(r))
+    # ---- depth for a starter (Chris 2026-11-10): 2-for-1s paid only from the flex spot and
+    # the bench, so the flex stops being a weekly coin flip among look-alike players. They lose
+    # the main board's race to bigger deals, so they get their own simulations and list.
+    locked = {e[0] for e in te.lineup(me["roster"], ctx, None).starters if e[3] != "FLEX"}
+    pile = {p for p in tradeable if ctx.players[p]["pos"] in ctx.cfg["flexEligible"] and p not in locked}
+    depth_checked = sum(1 for r in cands if r["shape"] == "2-for-1" and set(r["giveIds"]) <= pile)
+    depth, per_d = [], {}
+    for r in cands:
+        pid = r["partner"]["id"]
+        if r["shape"] == "2-for-1" and set(r["giveIds"]) <= pile and per_d.get(pid, 0) < DEPTH_PER_PARTNER:
+            per_d[pid] = per_d.get(pid, 0) + 1
+            depth.append(r)
+            if len(depth) >= DEPTH_SIM:
+                break
+    depth_keys = {id(r) for r in depth}
     # ...and no player of ours in more than SIM_PER_GIVE of them, so the simulations aren't
     # spent on offers the page's MAX_PER_GIVE would turn away
     picked, per, used = [], {}, {}
@@ -501,7 +519,8 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
         for g in r["giveIds"]:
             used[g] = used.get(g, 0) + 1
         picked.append(r)
-    cands = picked
+    picked_keys = {id(r) for r in picked}
+    cands = picked + [r for r in depth if id(r) not in picked_keys]
 
     # ---- the facts every card is written from
     facts = player_facts(season, now)
@@ -555,7 +574,11 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
         fa_add = ", ".join(_names(ctx, a_me.added)) or None
         consolidation = two and dwk_me < 0 < d_me
         s_in, s_out = starters_diff(ref_ids, a_me.ids)
+        is_depth = id(res) in depth_keys and any(s["id"] in res["getIds"] for s in s_in)
+        if id(res) not in picked_keys and not is_depth:
+            continue                                   # a depth deal whose player wouldn't start for us
         rows.append({**res, "dMe": d_me, "d_week_me": dwk_me, "d_week_them": dwk_them,
+                     "depth": is_depth,
                      "consolidation": consolidation, "fa_add": fa_add, "two_for_one_netted": two,
                      "ref_me": list(ref_ids), "after_me": list(a_me.ids), "after_them": list(a_them.ids),
                      "me_starters_in": s_in, "me_starters_out": s_out,
@@ -567,13 +590,13 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
     # one card per (partner, what we receive): the best version of each ask, not three
     best, seen_ask = [], set()
     for c in rows:
-        k = (c["partner"]["id"], tuple(sorted(c["getIds"])))
+        k = (c["partner"]["id"], tuple(sorted(c["getIds"])), c["depth"])
         if k not in seen_ask:
             seen_ask.add(k)
             best.append(c)
-    top = best[:TOP_SIM]
+    top = [c for c in best if not c["depth"]][:TOP_SIM]
     cards = []
-    for c in top:
+    for c in top + [c for c in best if c["depth"]]:
         partner = c["partner"]["name"]
         ir_me = [i for i in (tm.rosters.get(my_name, []) if tm else []) if i not in ctx.teams[my_id]["roster"]]
         ir_them = [i for i in (tm.rosters.get(partner, []) if tm else []) if i not in ctx.teams[c["partner"]["id"]]["roster"]]
@@ -584,8 +607,9 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
         d_us, d_them = us.get("d_title", 0.0), them.get("d_title", 0.0)
         matchups = tm.matchups(my_name, c["ref_me"] + ir_me, c["after_me"] + ir_me, partner,
                                c["after_them"] + ir_them) if tm else []
-        if not (c["consolidation"] or (d_us > 0 and not us.get("noise", True))):
-            continue                                        # §6.1 hard filter
+        # §6.1 hard filter — depth deals are judged on the lineup, their title odds shown as they come
+        if not (c["depth"] or c["consolidation"] or (d_us > 0 and not us.get("noise", True))):
+            continue
         tags = tags_for(c, ctx, facts, env)
         if not tags:
             continue
@@ -633,7 +657,7 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
             "netted_free_swap": c["two_for_one_netted"],
             "they_would_start": [s["name"] for s in c["them"]["startersIn"]],
             "they_would_bench": [s["name"] for s in c["them"]["startersOut"] if s["id"] not in c["getIds"]],
-            "fa_add": c["fa_add"] if c["consolidation"] else None,
+            "fa_add": c["fa_add"] if c["consolidation"] or c["depth"] else None, "depth": c["depth"],
             "pitch": pitch, "p_accept": round(pa, 3), "flag": TW.flag(pa, d_them), "why": w["why"],
             "exp_title": round(pa * (0.0 if us.get("noise", True) else d_us), 5),
             "exp_ros": round(pa * c["dMe"], 3),
@@ -642,7 +666,14 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
             "fairness": round(fair, 2), "sits_for_them": w["sits"], "ranks": {"give": ranks(c["giveIds"]), "get": ranks(c["getIds"])},
         })
     cards.sort(key=lambda k: (-k["exp_title"], -k["exp_ros"]))
-    kept = keep(cards)
+    kept = keep([k for k in cards if not k["depth"]])
+    # depth deals by what they're worth to send: the chance of a yes times the lineup gain. No
+    # MAX_PER_GIVE here: the bench IS the currency, and wk 10 every deal that cleared used White.
+    depth_cards, per_d = [], {}
+    for k in sorted((k for k in cards if k["depth"]), key=lambda k: -k["exp_ros"]):
+        if per_d.get(k["partner"], 0) < DEPTH_PER_PARTNER and len(depth_cards) < DEPTH_SHOW:
+            per_d[k["partner"]] = per_d.get(k["partner"], 0) + 1
+            depth_cards.append(k)
 
     tx = 0
     try:
@@ -653,9 +684,11 @@ def run(season: int, now: int, yahoo_rosters=None) -> dict:
         pass
     mine = base.get(my_name, {})
     return {
-        "available": True, "cards": kept, "deadline": TRADE_DEADLINE,
+        "available": True, "cards": kept, "depth": depth_cards, "deadline": TRADE_DEADLINE,
         "_week_weights": ww_payload,          # tools/export_web.py writes it; not part of the page
         "meta": {"evaluated": evaluated, "simulated": len(top), "shown": len(kept),
+                 "depth_pile": sorted(ctx.players[p]["name"] for p in pile),
+                 "depth_checked": depth_checked,
                  "p_playoffs": mine.get("p_playoffs"), "p_title": mine.get("p_title"),
                  "posture": T.posture(mine.get("p_playoffs", 0.0)) if mine else None,
                  "seasons": tm.n if tm else 0, "priors": "estimated",
