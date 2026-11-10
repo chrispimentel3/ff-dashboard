@@ -77,6 +77,10 @@ def _proj_detail() -> str:
         "actually scatter around a projection; out of sample they caught "
         + ", ".join(f"{pos} {v:.0%}" for pos, v in (p.get("coverage_2024_25") or {}).items())
         + " of 2024–25 weeks (target ~80%)."
+        "\n- **This week's injury report.** A projection is his points if he plays times the "
+        "chance he plays. Questionable: 69% if he played his team's last game, 57% if he "
+        "missed it (2021–25, 1,210 and 638 cases); Doubtful and Out: about 0. A first game "
+        "back also runs 80–94% of his usual output."
     )
 
 

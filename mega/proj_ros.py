@@ -367,7 +367,7 @@ def build(season: int, now: int, write: bool = True) -> dict:
                 pa = 0.0
             elif w == now:
                 if status_now.get(r.gsis_id):
-                    pa = cg.status_p_active(status_now[r.gsis_id])
+                    pa = cg.status_p_active(status_now[r.gsis_id], missed=missed_now.get(r.gsis_id, 0) > 0)
                 elif "did not participate" in str(practice_now.get(r.gsis_id, "")).lower():
                     pa = DNP_P_ACTIVE
                 else:

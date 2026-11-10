@@ -167,3 +167,13 @@ def test_a_starter_back_from_injury_keeps_his_job():
     assert cg.next_man_up(pw, tab)["cuff_of"].iloc[0] == "M"                    # season totals
     out = cg.next_man_up(pw, tab, out_weeks={"D": {3, 4}})
     assert out["cuff_of"].iloc[0] == "D" and out["gsis_id"].iloc[0] == "M"
+
+
+def test_questionable_after_a_missed_game_plays_less_often(monkeypatch):
+    fit = {"status": {"Questionable": {"p_active": 0.69, "n": 1210, "missed": {"p_active": 0.57, "n": 638}},
+                      "Note": {"p_active": 1.0, "n": 2}}}
+    monkeypatch.setattr(cg, "_fitted_hazard", lambda: fit)
+    assert cg.status_p_active("Questionable") == 0.69
+    assert cg.status_p_active("Q", missed=True) == 0.57
+    assert cg.status_p_active("Note", missed=True) == 1.0          # no split fitted: the plain number
+    assert cg.status_p_active("Questionable", missed=False) > cg.status_p_active("Questionable", missed=True)

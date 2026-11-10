@@ -178,10 +178,22 @@ def fit_status(seasons) -> dict:
     # Only players who played the week before: a backup listed Questionable wasn't going
     # to take a snap healthy either, and counting him drags the rate down for everyone.
     inj["was_active"] = [(p, s, w - 1) in played for p, s, w in zip(inj["pfr_id"], inj["season"], inj["week"])]
-    inj = inj[inj["was_active"]]
+    # "missed": he sat out his team's last game (byes skipped) after playing earlier that
+    # season — Questionable coming back from a missed game plays far less often (2026-11-10:
+    # Breece Hall, started twice at the 0.69 everyone got, sat both times).
+    games = sc.groupby(["team", "season"])["week"].apply(lambda s: sorted(set(s))).to_dict()
+    first = sc.groupby(["pfr_player_id", "season"])["week"].min().to_dict()
+    def prev_game(t, s, w):
+        return next((x for x in reversed(games.get((t, s), [])) if x < w), None)
+    pg = [prev_game(t, s, w) for t, s, w in zip(inj["team"], inj["season"], inj["week"])]
+    inj["missed"] = [g is not None and (p, s, g) not in played and first.get((p, s), 99) < g
+                     for p, s, g in zip(inj["pfr_id"], inj["season"], pg)]
     out = {}
-    for st, g in inj.groupby("report_status"):
+    for st, g in inj[inj["was_active"]].groupby("report_status"):
         out[str(st)] = {"p_active": round(float(g["played"].mean()), 4), "n": int(len(g))}
+    for st, g in inj[inj["missed"]].groupby("report_status"):
+        if str(st) in out:
+            out[str(st)]["missed"] = {"p_active": round(float(g["played"].mean()), 4), "n": int(len(g))}
     return out
 
 
@@ -189,7 +201,14 @@ def main(argv=None) -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--seasons", nargs="+", type=int, default=DEFAULT_SEASONS)
     ap.add_argument("--qb-inherit-seasons", nargs="+", type=int, default=QB_INHERIT_SEASONS)
+    ap.add_argument("--status-only", action="store_true",
+                    help="refit only the injury-report block, keeping the rest of the file")
     a = ap.parse_args(argv)
+    if a.status_only:
+        cur = json.loads(OUT.read_text())
+        OUT.write_text(json.dumps({**cur, "status": fit_status(a.seasons)}, indent=1))
+        print(f"wrote {OUT} (status only)")
+        return
     sc, games = load(a.seasons)
     out = fit(sc, games)
     out = {
@@ -204,7 +223,7 @@ def main(argv=None) -> None:
                         "(regression-to-the-mean control). See fit_inherit().",
         "inherit": {**fit_inherit(a.seasons),
                     "QB": {**fit_inherit(a.qb_inherit_seasons)["QB"], "seasons": a.qb_inherit_seasons}},
-        "_doc_status": "P(takes an offensive snap | final injury-report status). See fit_status().",
+        "_doc_status": "P(takes an offensive snap | final injury-report status), and under `missed` the same for players who sat out their team's last game. See fit_status().",
         "status": fit_status(a.seasons),
     }
     OUT.write_text(json.dumps(out, indent=1))

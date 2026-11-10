@@ -108,15 +108,17 @@ def inherit_fraction(pos: str) -> float:
     return float(v) if v is not None else CUFF_HAIRCUT
 
 
-def status_p_active(status: object) -> float:
+def status_p_active(status: object, missed: bool = False) -> float:
     """P(he plays | this week's final injury-report status), fitted 2021–2025 on players
-    who played the week before (Questionable ~0.69, Doubtful ~0.01, Out ~0). Falls back to
+    who played the week before (Questionable ~0.69, Doubtful ~0.01, Out ~0) — or, when he
+    `missed` his team's last game, on players who did (Questionable ~0.57). Falls back to
     the AVAIL_NOW judgment table."""
     s = str(status or "").strip()
     fit = (_fitted_hazard().get("status") or {})
     full = {"Q": "Questionable", "D": "Doubtful", "O": "Out"}.get(s.upper(), s.title())
     if full in fit:
-        return float(fit[full]["p_active"])
+        f = fit[full].get("missed") if missed else None
+        return float((f or fit[full])["p_active"])
     return AVAIL_NOW.get(s.upper(), 1.0)
 
 
