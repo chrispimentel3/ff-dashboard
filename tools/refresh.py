@@ -2,8 +2,8 @@
 
     PYTHONPATH=. .venv/bin/python tools/refresh.py [--season 2026] [--no-scores]
 
-The data half of both scheduled tasks — the daily refresh and the Tuesday waiver run —
-so the two cannot drift apart. It never commits; the caller does that, and only when this
+The data half of the daily refresh and the site's Refresh button (both in
+tools/refresh_watch.py), so the two cannot drift apart. It never commits; the caller does that, and only when this
 exits 0.
 
 Safety: every file is copied aside before the scrape and copied back if anything fails.

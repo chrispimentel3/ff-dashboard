@@ -1,21 +1,20 @@
-"""Run a league refresh when the site's "Refresh league" button asks for one.
+"""The league refresh: once a day by itself, and whenever the site's "Refresh league" button
+asks for one. This is the only scheduled job.
 
-Started every minute by a LaunchAgent on Chris's Mac (com.megabowl.refresh-watch). It reads
-the request the button left in the private repo (service/refresh_request.py) through the
-`gh` sign-in, and when one is queued it runs the same steps as the 7 AM refresh:
+Started every minute by a LaunchAgent on Chris's Mac (com.megabowl.refresh-watch). The first
+check at or after 7 AM ET each day runs the refresh by itself (Tuesdays with the ffanalytics
+projections too, ahead of that night's waivers); a Mac asleep at 7 runs it when it wakes.
+Otherwise it reads the request the button left in the private repo (service/refresh_request.py)
+through the `gh` sign-in, and when one is queued runs the same steps:
 
-    tools/refresh.py --no-projections   scrape Yahoo, validate, restore on failure
+    tools/refresh.py --no-projections   scrape Yahoo, validate, restore on failure (odds when due)
     tools/publish_web.py                rebuild data/web/ and check it
     tools/update_xwins.py               the xWins workbook (never blocks)
     commit + push                       only the refreshed paths, by name
 
 then waits until raw.githubusercontent.com serves the new files (the site reads them from
 there), clears the site's cache (tools/clear_site_cache.py) and marks the request done.
-
-On Sundays it also runs that sequence by itself at 11:40 AM and 3:00 PM ET, after the
-inactives post: Sleeper's Out tags first (mega/gameday.py outs), so the rebuild benches
-anyone ruled out, then an email if your Yahoo lineup no longer matches Start/Sit. Whatever the request
-file says, this only ever runs that fixed sequence.
+Whatever the request file says, this only ever runs that fixed sequence.
 
     PYTHONPATH=. .venv/bin/python tools/refresh_watch.py      # one check, then exit
 """
@@ -129,11 +128,11 @@ def wait_for_raw() -> bool:
     return False
 
 
-def pipeline(step, what: str) -> dict:
+def pipeline(step, what: str, projections: bool = False) -> dict:
     """Yahoo pull, rebuild, xWins, commit + push, wait for GitHub, clear the site cache —
-    the sequence both the button and the Sunday kickoff runs use. `step(name)` reports progress."""
+    the sequence both the button and the daily run use. `step(name)` reports progress."""
     step("Pulling your league from Yahoo")
-    y = run(sys.executable, "tools/refresh.py", "--no-projections")
+    y = run(sys.executable, "tools/refresh.py", *([] if projections else ["--no-projections"]))
     yahoo_ok = y.returncode == 0
 
     step("Rebuilding the site")
@@ -175,41 +174,26 @@ def refresh(state: dict, sha: str | None) -> None:
     write_state(state, sha)
 
 
-# Sundays, ET: after the inactives post (90 minutes before kickoff) for the 1 PM games and for
-# the 4:05/4:25 games. The 11:40 run also lands in the props module's Sunday sweep window.
 ET = ZoneInfo("America/New_York")
-KICKOFF_RUNS = ((11, 40), (15, 0))
-KICKOFF_LATE = 20 * 60          # Mac asleep past this: skip the slot rather than run into kickoff
-KICKOFF_DONE = Path.home() / "Library" / "Caches" / "mega-bowl-kickoff.json"
+DAILY_AT = 7                    # ET hour; on Sundays this run also takes the week's odds sweep
+DAILY_DONE = Path.home() / "Library" / "Caches" / "mega-bowl-daily.txt"
 
 
-def kickoff_due(now) -> str | None:
-    """The Sunday slot to run now, if one is open and hasn't run."""
-    if now.weekday() != 6:
-        return None
+def daily_due(now) -> bool:
+    """True on the first check at or after 7 AM ET each day."""
     try:
-        done = json.loads(KICKOFF_DONE.read_text())
-    except (OSError, ValueError):
-        done = []
-    for h, m in KICKOFF_RUNS:
-        slot = now.replace(hour=h, minute=m, second=0, microsecond=0)
-        if 0 <= (now - slot).total_seconds() < KICKOFF_LATE and slot.isoformat() not in done:
-            return slot.isoformat()
-    return None
+        last = DAILY_DONE.read_text().strip()
+    except OSError:
+        last = ""
+    return now.hour >= DAILY_AT and last != now.date().isoformat()
 
 
-def kickoff(slot: str) -> None:
-    try:
-        done = json.loads(KICKOFF_DONE.read_text())
-    except (OSError, ValueError):
-        done = []
-    KICKOFF_DONE.write_text(json.dumps((done + [slot])[-20:]))   # marked first: a crash mustn't loop
-    log(f"pre-kickoff run {slot}")
-    run(sys.executable, "-m", "mega.gameday", "outs", timeout=300)
-    r = pipeline(log, "Pre-kickoff refresh")
+def daily(now) -> None:
+    DAILY_DONE.write_text(now.date().isoformat())       # marked first: a failing run mustn't retry every minute
+    log("daily refresh")
+    r = pipeline(log, "Daily refresh", projections=now.weekday() == 1)
     if r["note"]:
         log("  " + r["note"])
-    run(sys.executable, "-m", "mega.gameday", "alert", timeout=300)
 
 
 def main() -> int:
@@ -219,14 +203,12 @@ def main() -> int:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             return 0                       # the previous minute's run is still refreshing
-        # ponytail: the 7 AM scheduled task doesn't take this lock; a button press at 7 AM could
-        # overlap it. Have that task run this script if it ever bites.
-        slot = kickoff_due(dt.datetime.now(ET))
-        if slot:
+        now = dt.datetime.now(ET)
+        if daily_due(now):
             try:
-                kickoff(slot)
+                daily(now)
             except Exception as e:
-                log(f"pre-kickoff run failed: {type(e).__name__}: {e}")
+                log(f"daily refresh failed: {type(e).__name__}: {e}")
             return 0
         state, sha = read_state()
         if state.get("status") != "queued":

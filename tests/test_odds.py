@@ -142,9 +142,10 @@ def test_sunday_morning_sweeps_once_per_week(monkeypatch, tmp_path):
     monkeypatch.setattr(O, "props_csv", lambda s, w: f)
     O._save_ledger({"remaining": 300})
     assert O.due(2026, 10, SUN_1140) is True
+    assert O.due(2026, 10, SUN_1140.replace(hour=7)) is True        # the 7 AM daily run sweeps
+    assert O.due(2026, 10, SUN_1140.replace(hour=6)) is False       # before it, the midweek file holds
     O._save_ledger({"remaining": 300, "sunday_sweeps": {"2026": [10]}})
     assert O.due(2026, 10, SUN_1140) is False
-    assert O.due(2026, 10, SUN_1140.replace(hour=7)) is False       # the 7 AM run waits
 
 
 def test_midweek_sweeps_only_when_every_sunday_left_is_paid_for(monkeypatch, tmp_path):

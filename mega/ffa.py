@@ -9,8 +9,8 @@ It only runs in R, so this module shells out to R/projections.R and reads the CS
 writes. Two consequences worth stating plainly:
 
   * **Streamlit Cloud has no R.** The hosted dashboard therefore reads whatever the last
-    committed build produced; it cannot refresh projections itself. The scheduled task on
-    Chris's Mac is what keeps them current.
+    committed build produced; it cannot refresh projections itself. The Tuesday daily run on
+    Chris's Mac (tools/refresh_watch.py) is what keeps them current.
   * **Scrapers break.** A source that fails is skipped, not fatal. `fresh()` says how old
     the numbers are so a stale file is visible rather than silently believed.
 

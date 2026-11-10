@@ -8,7 +8,7 @@ the week's trend snapshot (data/history/) if it hasn't been taken yet.
 
     PYTHONPATH=. .venv/bin/python tools/publish_web.py
 
-Exit codes (the scheduled tasks read these):
+Exit codes (tools/refresh_watch.py reads these):
   0  rebuilt and checked — stage the paths printed on the STAGE line
   3  a check failed — nothing should be committed from data/web/ this run
   4  the export itself crashed

@@ -1,8 +1,8 @@
 """Game-day check: who was ruled out after our numbers were set, and whether your Yahoo
 lineup still matches Start/Sit for the games that haven't kicked off.
 
-Run by tools/refresh_watch.py on Sundays at 11:40 AM and 3:00 PM ET, after the inactives
-for the 1 PM and the 4:05/4:25 games:
+Run by hand on a Sunday after the inactives post (11:30 AM ET for the 1 PM games). Nothing
+schedules it since 2026-11-10, when the jobs were cut to one daily refresh:
 
     python -m mega.gameday outs     Sleeper's Out/IR tags -> data/build/gameday_out.json,
                                     which mega/status.out_for_week reads, so the rebuild

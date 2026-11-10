@@ -1,4 +1,4 @@
-"""mega/gameday.py, the Sunday kickoff slots in tools/refresh_watch.py, and the status merge."""
+"""mega/gameday.py, the daily run in tools/refresh_watch.py, and the status merge."""
 from __future__ import annotations
 
 import datetime as dt
@@ -58,17 +58,20 @@ def _watch():
     return m
 
 
-def test_kickoff_slots_run_once_each_sunday_and_not_late(monkeypatch, tmp_path):
+def test_daily_run_once_a_day_from_7am_with_projections_on_tuesday(monkeypatch, tmp_path):
     w = _watch()
-    monkeypatch.setattr(w, "KICKOFF_DONE", tmp_path / "done.json")
-    at = NOON.replace(minute=41)
-    slot = w.kickoff_due(at)
-    assert slot == NOON.replace(minute=40).isoformat()
-    (tmp_path / "done.json").write_text(json.dumps([slot]))
-    assert w.kickoff_due(at) is None                                   # already ran
-    assert w.kickoff_due(NOON.replace(hour=12, minute=5)) is None      # Mac woke too late
-    assert w.kickoff_due(NOON.replace(hour=15, minute=3)) == NOON.replace(hour=15, minute=0).isoformat()
-    assert w.kickoff_due(at - dt.timedelta(days=1)) is None            # Saturday
+    monkeypatch.setattr(w, "DAILY_DONE", tmp_path / "done.txt")
+    tue = dt.datetime(2026, 11, 10, 7, 0, tzinfo=w.ET)
+    assert w.daily_due(tue.replace(hour=6, minute=59)) is False
+    assert w.daily_due(tue) is True
+    seen = []
+    monkeypatch.setattr(w, "pipeline", lambda step, what, projections=False: seen.append(projections) or {"note": None})
+    w.daily(tue)
+    assert w.daily_due(tue.replace(hour=22)) is False                  # already ran today
+    wed = tue + dt.timedelta(days=1, hours=3)
+    assert w.daily_due(wed) is True                                    # Mac asleep at 7: runs when it wakes
+    w.daily(wed)
+    assert seen == [True, False]                                       # projections on Tuesdays only
 
 
 # ---------------------------------------------------------------- Sunday lines on close calls

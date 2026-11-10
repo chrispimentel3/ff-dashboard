@@ -7,9 +7,10 @@ week** — about four sweeps a month. So this cannot run on the daily refresh th
 Yahoo scrape does, and pretending otherwise would blow the month's allowance by Tuesday
 and leave the rest of the season with nothing.
 
-What it does instead: one sweep per week, on **Sunday morning after the 1 PM inactives**
-(the 11:40 AM run in tools/refresh_watch.py). Closing lines price Friday's designations,
-Saturday's downgrades and the inactives; a Tuesday line knows none of it, and close
+What it does instead: one sweep per week, on **Sunday morning** (the daily 7 AM run in
+tools/refresh_watch.py). Sunday lines price Friday's designations and Saturday's
+downgrades (not the 11:30 inactives: one daily run was chosen over a pre-kickoff one,
+2026-11-10); a Tuesday line knows none of it, and close
 start/sit calls swing on exactly that (2026 weeks 3-8: midweek props were a coin flip on
 calls within two points). A midweek sweep still runs when a week has no file yet and the
 month can pay for every Sunday left. It refuses to start a sweep it cannot finish and
@@ -55,7 +56,7 @@ MARKETS = ("player_pass_yds", "player_pass_tds", "player_pass_interceptions",
 REGIONS = "us"
 RESERVE = 40                       # credits never spent, so a bad week can still be priced
 ET = ZoneInfo("America/New_York")
-SUNDAY_WINDOW = (11, 13)           # ET hours of the Sunday sweep: after 11:30 inactives, before 1 PM
+SUNDAY_WINDOW = (7, 13)            # ET hours of the Sunday sweep: the 7 AM daily run, before 1 PM
 SWEEP_COST = 100                   # one Sunday-and-Monday slate, 13-14 games x 7 markets (~92 seen)
 
 
@@ -246,7 +247,7 @@ def refresh(season: int, week: int, markets=MARKETS, force: bool = False,
     if not available():
         return pd.DataFrame(), "no ODDS_API_KEY set — Vegas projections are off"
     if not force and not due(season, week, now):
-        return cached(season, week), "props are current (next sweep: Sunday after the 1 PM inactives)"
+        return cached(season, week), "props are current (next sweep: Sunday morning)"
 
     ev = _week_events(events(), season, week)
     if "commence" in ev.columns:
