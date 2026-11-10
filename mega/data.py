@@ -223,15 +223,15 @@ def map_roster(roster: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     return player_ids.resolve(roster, name_col="name")
 
 
-def my_roster() -> tuple[pd.DataFrame, str]:
-    """My roster, live scrape first. `roster.csv` is hand-maintained and drifts the
-    moment a waiver clears — it is the fallback, not the source of truth."""
+def my_roster(team: str | None = None) -> tuple[pd.DataFrame, str]:
+    """My roster (or `team`'s), live scrape first. `roster.csv` is hand-maintained and drifts
+    the moment a waiver clears — it is the fallback, and only for my own team."""
     try:
         from mega.config import MY_TEAM
         from mega.yahoo import cached_rosters
 
         r = cached_rosters()
-        r = r[r["team"] == MY_TEAM] if not r.empty else r
+        r = r[r["team"] == (team or MY_TEAM)] if not r.empty else r
         if not r.empty:
             # Carry yahoo_id through — it is the exact key, and dropping it forced
             # every one of these rows down the name-matching path.
@@ -248,6 +248,8 @@ def my_roster() -> tuple[pd.DataFrame, str]:
             return out.fillna(""), "live Yahoo scrape"
     except Exception:
         pass
+    if team:
+        return pd.DataFrame(columns=["name", "slot", "pos", "nfl_team", "gsis_id"]), "not in the Yahoo scrape"
     return pd.read_csv(ROSTER_CSV, dtype=str).fillna(""), "roster.csv (stale — run the scrape)"
 
 

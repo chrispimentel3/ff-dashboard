@@ -219,16 +219,17 @@ def intel_bundle(season: int) -> dict:
             "theses": theses, "roster_src": roster_src}
 
 
-def my_roster_projected(c) -> pd.DataFrame:
-    """My skill roster joined to this week's projections: ours (mega/proj_ros.py), with the
-    consensus kept beside it, and the Vegas props."""
+def my_roster_projected(c, skill: pd.DataFrame | None = None) -> pd.DataFrame:
+    """My skill roster (or `skill`, another team's from team_skill) joined to this week's
+    projections: ours (mega/proj_ros.py), with the consensus kept beside it, and the Vegas props."""
     season, week = c.season, c.next_week
     proj = blended_proj(season, week).copy()
     for col in ("proj", "proj_source", "ecr", "start_sit", "norm", "nfl_est"):
         if col not in proj.columns:
             proj[col] = pd.NA
     cols = ["proj", "proj_source", "ecr", "start_sit", "nfl_est"]
-    r = c.skill.rename(columns={"name": "player"})[["player", "slot", "pos", "nfl_team", "gsis_id"]].copy()
+    r = (c.skill if skill is None else skill).rename(columns={"name": "player"})[
+        ["player", "slot", "pos", "nfl_team", "gsis_id"]].copy()
     r = r.merge(proj[["gsis_id"] + cols].dropna(subset=["gsis_id"]), on="gsis_id", how="left")
     if r["proj"].isna().any():      # fallback join on normalized name
         from mega.intel import _norm
@@ -277,25 +278,62 @@ def action_board(c) -> dict:
             "next_week": c.next_week}
 
 
+def _lineup(c, skill: pd.DataFrame | None = None) -> tuple[pd.DataFrame, bool]:
+    """Start/Sit's lineup for my roster, or for `skill`: projections, outs, optimizer, and the
+    Sunday-lines tiebreak once it's on. Returns (lineup frame, tiebreak used)."""
+    from mega.lineup import optimize_lineup
+    from mega.status import out_for_week
+    rp = my_roster_projected(c, skill)
+    out = out_for_week(c.next_week)
+    rp["report_status"] = rp["player"].map(lambda n: out.get(player_ids.norm(n)))
+    rp.loc[rp["report_status"].notna(), "proj"] = 0.0
+    lu = optimize_lineup(rp, c.season, c.next_week)
+    try:        # Sunday lines break close calls only once the scorecard has seen them win
+        from mega.scorecard import VEGAS_TIEBREAK
+        tb = json.loads(VEGAS_TIEBREAK.read_text())
+        if tb.get("active") and int(tb.get("season") or 0) == c.season and "vegas" in lu.columns:
+            from mega.lineup import vegas_tiebreak
+            return vegas_tiebreak(lu), True
+    except (OSError, ValueError):
+        pass
+    return lu, False
+
+
+def team_skill(team: str) -> pd.DataFrame:
+    """Any fantasy team's skill players, resolved to nflverse ids the way context() resolves mine."""
+    mapped, _ = data.map_roster(data.my_roster(team)[0])
+    s = mapped[~mapped["pos"].isin(["K", "DEF"]) & ~mapped["slot"].isin(["K", "DEF"])]
+    return s[s["resolved"]].copy()
+
+
+def opponent(week: int) -> str | None:
+    """My fantasy opponent in `week`, from the Yahoo fixtures."""
+    from mega.config import MY_TEAM
+    from mega.yahoo import cached_fixtures
+    fx = cached_fixtures()
+    g = fx[(fx["week"] == week) & ((fx["home"] == MY_TEAM) | (fx["away"] == MY_TEAM))]
+    if g.empty:
+        return None
+    return g.iloc[0]["away"] if g.iloc[0]["home"] == MY_TEAM else g.iloc[0]["home"]
+
+
+def matchup(c) -> dict:
+    """This week's opponent run through Start/Sit — the same projections, matchup reads and
+    optimizer as my lineup, so the Matchup page compares the two like for like. Their K/DEF
+    join in main(), as mine do; the win chance is the season sim's (playoffs.json rooting)."""
+    from mega.start_sit import build
+    opp = opponent(c.next_week)
+    if not opp:
+        return {"available": False, "opp": None, "next_week": c.next_week}
+    lu, _ = _lineup(c, team_skill(opp))
+    return {**build(lu, target_share(c.season, c.week, c.roll), c.next_week), "opp": opp}
+
+
 def start_sit(c) -> dict:
     from mega.start_sit import build
     tb_on = False
     try:
-        from mega.lineup import optimize_lineup
-        from mega.status import out_for_week
-        rp = my_roster_projected(c)
-        out = out_for_week(c.next_week)
-        rp["report_status"] = rp["player"].map(lambda n: out.get(player_ids.norm(n)))
-        rp.loc[rp["report_status"].notna(), "proj"] = 0.0
-        lu = optimize_lineup(rp, c.season, c.next_week)
-        try:        # Sunday lines break close calls only once the scorecard has seen them win
-            from mega.scorecard import VEGAS_TIEBREAK
-            tb = json.loads(VEGAS_TIEBREAK.read_text())
-            if tb.get("active") and int(tb.get("season") or 0) == c.season and "vegas" in lu.columns:
-                from mega.lineup import vegas_tiebreak
-                lu, tb_on = vegas_tiebreak(lu), True
-        except (OSError, ValueError):
-            pass
+        lu, tb_on = _lineup(c)
     except Exception as e:
         _warn("projections", e)
         lu = None
@@ -500,7 +538,7 @@ def players(c) -> dict:
 
 
 EXPORTS = {
-    "action_board.json": action_board, "start_sit.json": start_sit,
+    "action_board.json": action_board, "start_sit.json": start_sit, "matchup.json": matchup,
     "waivers.json": waivers, "trades.json": trades, "archetypes.json": archetypes,
     "roster.json": roster, "league.json": league, "glossary.json": glossary, "news.json": news,
 }
@@ -605,6 +643,11 @@ def main() -> None:
         _ss_path.write_text(json.dumps(_start_sit.add_kdef(
             json.loads(_ss_path.read_text()), _kdef.lineup_rows(_season, _next_week, _kros, _MY_TEAM)),
             indent=2, default=str))
+        _mu_path = OUT_DIR / "matchup.json"
+        _mu = json.loads(_mu_path.read_text()) if _mu_path.is_file() else {}
+        if _mu.get("opp"):
+            _mu_path.write_text(json.dumps(_start_sit.add_kdef(
+                _mu, _kdef.lineup_rows(_season, _next_week, _kros, _mu["opp"])), indent=2, default=str))
         _bud = _fb.cached_budgets()
         _left = dict(zip(_bud["team"], _bud["faab_left"])) if not _bud.empty else {}
         _wv_path = OUT_DIR / "waivers.json"
