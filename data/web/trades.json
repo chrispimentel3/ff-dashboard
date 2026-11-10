@@ -3,29 +3,38 @@
   "version": 3,
   "cards": [
     {
-      "partner": "Crabcakes and Football",
-      "shape": "1-for-1",
+      "partner": "Allen Moore connection",
+      "shape": "2-for-1",
       "partner_profile": {
         "needs": [
           {
-            "pos": "RB",
-            "gap": 5.8
+            "pos": "WR",
+            "gap": 10.6
+          },
+          {
+            "pos": "TE",
+            "gap": 1.1
           }
         ],
         "spare": []
       },
       "give": [
         {
-          "name": "Breece Hall",
+          "name": "Rachaad White",
           "pos": "RB",
-          "ros_pg": 12.5
+          "ros_pg": 9.08
+        },
+        {
+          "name": "Denzel Boston",
+          "pos": "WR",
+          "ros_pg": 9.32
         }
       ],
       "get": [
         {
-          "name": "Chase Brown",
+          "name": "Cam Skattebo",
           "pos": "RB",
-          "ros_pg": 14.64
+          "ros_pg": 11.51
         }
       ],
       "tags": [
@@ -34,702 +43,154 @@
       "all_tags": [
         "LINEUP"
       ],
-      "thesis": "Chase Brown starts for you over Breece Hall: +2.88 pts/wk to your lineup over the weeks that count most.",
-      "kill": "Wrong if Chase Brown's projection falls below Breece Hall's (14.6 vs 12.5 now).",
+      "thesis": "Cam Skattebo starts for you over Michael Wilson (the free-agent pickup you'd otherwise make): +1.06 pts/wk to your lineup over the weeks that count most.",
+      "kill": "Wrong if Cam Skattebo's projection falls below Michael Wilson's (11.5 vs 10.9 now).",
       "second": null,
       "us": {
-        "d_week": 0.72,
-        "d_ros": 2.88,
-        "d_title": 0.0335,
-        "se_title": 0.0046,
+        "d_week": 2.9,
+        "d_ros": 1.06,
+        "d_title": 0.0315,
+        "se_title": 0.0043,
         "title_noise": false,
-        "p_title": 0.144,
-        "p_playoffs": 0.8082
+        "p_title": 0.1182,
+        "p_playoffs": 0.6925
       },
       "them": {
-        "d_week": -0.72,
-        "d_ros": -2.94,
-        "d_title": -0.0078,
-        "se_title": 0.0052,
+        "d_week": -2.23,
+        "d_ros": -1.86,
+        "d_title": -0.0003,
+        "se_title": 0.0007,
         "title_noise": true,
-        "p_playoffs_now": 0.9145
+        "p_playoffs_now": 0.0238
       },
       "i_would_start": [
-        "Chase Brown"
+        "Cam Skattebo"
       ],
-      "i_would_bench": [],
-      "netted_free_swap": false,
+      "i_would_bench": [
+        "Michael Wilson"
+      ],
+      "netted_free_swap": true,
       "they_would_start": [
-        "Breece Hall"
+        "Denzel Boston",
+        "Rachaad White"
       ],
-      "they_would_bench": [],
+      "they_would_bench": [
+        "Caleb Douglas"
+      ],
       "fa_add": null,
-      "pitch": "They start Chase Brown at RB (14.6/g) and sit at 91% playoff odds.",
-      "p_accept": 0.672,
-      "flag": "LIKELY",
+      "pitch": "They start Cam Skattebo at RB (11.5/g) and sit at 2% playoff odds.",
+      "p_accept": 0.486,
+      "flag": "EXPLOIT",
       "why": [
-        "Their lineup loses 2.9 pts/wk over the weeks that matter to them",
-        "By name they get 115% of what they give",
-        "Breece Hall starts at RB, where they're thin",
-        "Breece Hall is a big name",
-        "Chase Brown plays for CIN, their team: hard to pry loose"
+        "Their lineup loses 1.9 pts/wk over the next few weeks \u2014 out of the race, they're playing for wins now",
+        "By name they get 83% of what they give",
+        "Denzel Boston starts at WR, where they're thin",
+        "Denzel Boston is unproven, so weak currency"
       ],
-      "exp_title": 0.02251,
-      "exp_ros": 1.933,
+      "exp_title": 0.01532,
+      "exp_ros": 0.516,
       "flags": [
         {
-          "kind": "rebound",
-          "text": "Rebound bet: projected at 14.6/g from here, against 10.4/g so far."
+          "kind": "role_risk",
+          "text": "Role risk: Cam Skattebo's share of the NYG offense fell from 21% to 11% over the last three games."
         },
         {
           "kind": "need",
-          "text": "Your weakest starter stays FLEX (Denzel Boston, 9.3/g vs a typical FLEX's 10.6)."
+          "text": "Your weakest starter goes from RB2 (Breece Hall, 12.4/g vs a typical RB2's 13.4) to RB2 (Cam Skattebo, 11.5/g vs a typical RB2's 13.4)."
         }
       ],
       "matchups": [
         {
-          "week": 9,
-          "opp": "L'Omar",
-          "win_before": 0.728,
-          "win_after": 0.738,
-          "before": [
-            86.7,
-            114.8,
-            145.1
-          ],
-          "after": [
-            87.2,
-            115.6,
-            145.3
-          ]
-        },
-        {
           "week": 10,
           "opp": "deez nuts",
-          "win_before": 0.488,
-          "win_after": 0.52,
+          "win_before": 0.501,
+          "win_after": 0.522,
           "before": [
-            80.1,
-            106.5,
-            135.9
+            83.5,
+            110.3,
+            139.5
           ],
           "after": [
-            81.1,
-            108.6,
-            138.5
+            85.2,
+            112.4,
+            142.4
           ]
         },
         {
           "week": 11,
           "opp": "Saquon Hater",
-          "win_before": 0.642,
-          "win_after": 0.674,
+          "win_before": 0.638,
+          "win_after": 0.661,
           "before": [
-            74.2,
-            100.0,
-            128.0
+            75.8,
+            102.6,
+            131.0
           ],
           "after": [
-            75.8,
-            102.3,
-            130.7
+            77.9,
+            104.6,
+            133.0
           ]
         },
         {
           "week": 12,
           "opp": "Heartbreak Drake",
-          "win_before": 0.493,
-          "win_after": 0.524,
+          "win_before": 0.531,
+          "win_after": 0.563,
           "before": [
-            74.8,
-            101.4,
-            129.3
+            75.2,
+            102.2,
+            131.6
           ],
           "after": [
-            76.6,
-            103.3,
-            132.6
+            77.6,
+            104.5,
+            133.9
           ]
         },
         {
           "week": 13,
           "opp": "Crabcakes and Football",
-          "win_before": 0.439,
-          "win_after": 0.507,
+          "win_before": 0.436,
+          "win_after": 0.453,
           "before": [
-            71.5,
-            99.0,
-            127.9
-          ],
-          "after": [
-            74.0,
-            103.4,
-            132.6
-          ]
-        },
-        {
-          "week": 14,
-          "opp": "BillsMafia",
-          "win_before": 0.456,
-          "win_after": 0.482,
-          "before": [
-            71.3,
-            98.7,
-            128.5
-          ],
-          "after": [
-            73.1,
-            100.9,
-            130.1
-          ]
-        },
-        {
-          "week": 15,
-          "opp": null,
-          "before": [
-            75.0,
-            102.7,
-            132.5
-          ],
-          "after": [
-            76.9,
-            104.4,
-            134.1
-          ]
-        },
-        {
-          "week": 16,
-          "opp": null,
-          "before": [
-            69.3,
-            95.7,
-            124.9
+            71.6,
+            100.6,
+            130.4
           ],
           "after": [
             71.9,
-            98.5,
-            128.8
-          ]
-        },
-        {
-          "week": 17,
-          "opp": null,
-          "before": [
-            73.6,
-            100.8,
-            129.8
-          ],
-          "after": [
-            75.5,
-            102.9,
-            133.1
-          ]
-        }
-      ],
-      "fairness": 1.15,
-      "sits_for_them": [],
-      "ranks": {
-        "give": [
-          {
-            "name": "Breece Hall",
-            "pos": "RB",
-            "our_rank": 23,
-            "ecr_rank": 19,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Chase Brown",
-            "pos": "RB",
-            "our_rank": 18,
-            "ecr_rank": 11,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
-      "partner": "Heartbreak Drake",
-      "shape": "1-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "WR",
-            "gap": 5.7
-          }
-        ],
-        "spare": [
-          {
-            "name": "Tyler Shough",
-            "pos": "QB",
-            "ppg": 17.5
-          },
-          {
-            "name": "Stefon Diggs",
-            "pos": "WR",
-            "ppg": 9.9
-          }
-        ]
-      },
-      "give": [
-        {
-          "name": "Christian Watson",
-          "pos": "WR",
-          "ros_pg": 12.31
-        }
-      ],
-      "get": [
-        {
-          "name": "Ashton Jeanty",
-          "pos": "RB",
-          "ros_pg": 15.13
-        }
-      ],
-      "tags": [
-        "LINEUP"
-      ],
-      "all_tags": [
-        "LINEUP"
-      ],
-      "thesis": "Ashton Jeanty starts for you over Christian Watson: +2.55 pts/wk to your lineup over the weeks that count most.",
-      "kill": "Wrong if Ashton Jeanty's projection falls below Christian Watson's (15.1 vs 12.3 now).",
-      "second": null,
-      "us": {
-        "d_week": -2.08,
-        "d_ros": 2.55,
-        "d_title": 0.0247,
-        "se_title": 0.0046,
-        "title_noise": false,
-        "p_title": 0.1352,
-        "p_playoffs": 0.7917
-      },
-      "them": {
-        "d_week": 0.21,
-        "d_ros": -2.51,
-        "d_title": -0.0313,
-        "se_title": 0.0046,
-        "title_noise": false,
-        "p_playoffs_now": 0.7788
-      },
-      "i_would_start": [
-        "Ashton Jeanty"
-      ],
-      "i_would_bench": [],
-      "netted_free_swap": false,
-      "they_would_start": [
-        "Christian Watson"
-      ],
-      "they_would_bench": [],
-      "fa_add": null,
-      "pitch": "They start Ashton Jeanty at RB (15.1/g) and sit at 78% playoff odds.",
-      "p_accept": 0.699,
-      "flag": "LIKELY",
-      "why": [
-        "Their lineup loses 2.5 pts/wk over the weeks that matter to them",
-        "By name they get 116% of what they give",
-        "Christian Watson starts at WR, where they're thin"
-      ],
-      "exp_title": 0.01725,
-      "exp_ros": 1.785,
-      "flags": [
-        {
-          "kind": "role_risk",
-          "text": "Role risk: Ashton Jeanty's share of the LV offense fell from 23% to 13% over the last three games."
-        },
-        {
-          "kind": "need",
-          "text": "Your weakest starter goes from FLEX (Denzel Boston, 9.3/g vs a typical FLEX's 10.6) to WR2 (Denzel Boston, 9.3/g vs a typical WR2's 11.7)."
-        }
-      ],
-      "matchups": [
-        {
-          "week": 9,
-          "opp": "L'Omar",
-          "win_before": 0.728,
-          "win_after": 0.704,
-          "before": [
-            86.7,
-            114.8,
-            145.1
-          ],
-          "after": [
-            84.8,
-            112.5,
-            141.0
-          ]
-        },
-        {
-          "week": 10,
-          "opp": "deez nuts",
-          "win_before": 0.488,
-          "win_after": 0.509,
-          "before": [
-            80.1,
-            106.5,
-            135.9
-          ],
-          "after": [
-            81.0,
-            108.4,
-            137.0
-          ]
-        },
-        {
-          "week": 11,
-          "opp": "Saquon Hater",
-          "win_before": 0.642,
-          "win_after": 0.697,
-          "before": [
-            74.2,
-            100.0,
-            128.0
-          ],
-          "after": [
-            78.0,
-            104.7,
-            132.5
-          ]
-        },
-        {
-          "week": 12,
-          "opp": "Heartbreak Drake",
-          "win_before": 0.493,
-          "win_after": 0.554,
-          "before": [
-            74.8,
-            101.4,
-            129.3
-          ],
-          "after": [
-            76.6,
-            103.7,
+            101.5,
             132.3
           ]
         },
         {
-          "week": 13,
-          "opp": "Crabcakes and Football",
-          "win_before": 0.439,
-          "win_after": 0.392,
-          "before": [
-            71.5,
-            99.0,
-            127.9
-          ],
-          "after": [
-            67.1,
-            94.5,
-            124.4
-          ]
-        },
-        {
           "week": 14,
-          "opp": "BillsMafia",
-          "win_before": 0.456,
-          "win_after": 0.485,
+          "opp": "Burrow-Chase combo",
+          "win_before": 0.578,
+          "win_after": 0.627,
           "before": [
-            71.3,
-            98.7,
-            128.5
+            67.6,
+            95.4,
+            126.0
           ],
           "after": [
-            73.0,
-            101.1,
-            130.3
+            71.8,
+            99.4,
+            129.7
           ]
         },
         {
           "week": 15,
           "opp": null,
-          "before": [
-            75.0,
-            102.7,
-            132.5
-          ],
-          "after": [
-            75.8,
-            103.8,
-            133.4
-          ]
-        },
-        {
-          "week": 16,
-          "opp": null,
-          "before": [
-            69.3,
-            95.7,
-            124.9
-          ],
-          "after": [
-            72.2,
-            99.3,
-            129.1
-          ]
-        },
-        {
-          "week": 17,
-          "opp": null,
-          "before": [
-            73.6,
-            100.8,
-            129.8
-          ],
-          "after": [
-            76.0,
-            104.0,
-            134.5
-          ]
-        }
-      ],
-      "fairness": 1.16,
-      "sits_for_them": [],
-      "ranks": {
-        "give": [
-          {
-            "name": "Christian Watson",
-            "pos": "WR",
-            "our_rank": 10,
-            "ecr_rank": 12,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Ashton Jeanty",
-            "pos": "RB",
-            "our_rank": 17,
-            "ecr_rank": 10,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
-      "partner": "Revenge of the Smith",
-      "shape": "2-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "TE",
-            "gap": 2.4
-          },
-          {
-            "pos": "RB",
-            "gap": 1.8
-          }
-        ],
-        "spare": [
-          {
-            "name": "Kirk Cousins",
-            "pos": "QB",
-            "ppg": 15.2
-          },
-          {
-            "name": "Jaylen Waddle",
-            "pos": "WR",
-            "ppg": 10.3
-          },
-          {
-            "name": "Rome Odunze",
-            "pos": "WR",
-            "ppg": 9.0
-          }
-        ]
-      },
-      "give": [
-        {
-          "name": "Malik Nabers",
-          "pos": "WR",
-          "ros_pg": 12.88
-        },
-        {
-          "name": "Rachaad White",
-          "pos": "RB",
-          "ros_pg": 9.03
-        }
-      ],
-      "get": [
-        {
-          "name": "James Cook III",
-          "pos": "RB",
-          "ros_pg": 17.6
-        }
-      ],
-      "tags": [
-        "CONSOLIDATION",
-        "LINEUP"
-      ],
-      "all_tags": [
-        "CONSOLIDATION",
-        "LINEUP"
-      ],
-      "thesis": "Two for one: -0.2 this week, but +3.37 pts/wk over the weeks that count most \u2014 already net of picking up Jalen Hurts, which you could do anyway.",
-      "kill": "Wrong if James Cook III misses time: this puts Malik Nabers and Rachaad White's points on one player.",
-      "second": {
-        "tag": "LINEUP",
-        "thesis": "James Cook III starts for you over Malik Nabers: +3.37 pts/wk to your lineup over the weeks that count most."
-      },
-      "us": {
-        "d_week": -0.22,
-        "d_ros": 3.37,
-        "d_title": 0.036,
-        "se_title": 0.0049,
-        "title_noise": false,
-        "p_title": 0.1465,
-        "p_playoffs": 0.8177
-      },
-      "them": {
-        "d_week": -1.52,
-        "d_ros": -4.01,
-        "d_title": -0.0092,
-        "se_title": 0.0018,
-        "title_noise": false,
-        "p_playoffs_now": 0.1503
-      },
-      "i_would_start": [
-        "James Cook III"
-      ],
-      "i_would_bench": [],
-      "netted_free_swap": true,
-      "they_would_start": [
-        "Rachaad White",
-        "Malik Nabers"
-      ],
-      "they_would_bench": [
-        "DeVonta Smith"
-      ],
-      "fa_add": "Jalen Hurts",
-      "pitch": "They start James Cook III at RB (17.6/g) and sit at 15% playoff odds.",
-      "p_accept": 0.383,
-      "flag": "EXPLOIT",
-      "why": [
-        "Their lineup loses 4.0 pts/wk over the weeks that matter to them",
-        "By name they get 70% of what they give",
-        "Rachaad White starts at RB, where they're thin",
-        "Malik Nabers is a big name",
-        "They'd give up a big name in James Cook III"
-      ],
-      "exp_title": 0.01378,
-      "exp_ros": 1.289,
-      "flags": [
-        {
-          "kind": "need",
-          "text": "Your weakest starter goes from FLEX (Denzel Boston, 9.3/g vs a typical FLEX's 10.6) to WR2 (Denzel Boston, 9.3/g vs a typical WR2's 11.7)."
-        }
-      ],
-      "matchups": [
-        {
-          "week": 9,
-          "opp": "L'Omar",
-          "win_before": 0.728,
-          "win_after": 0.731,
-          "before": [
-            86.7,
-            114.8,
-            145.1
-          ],
-          "after": [
-            87.5,
-            114.1,
-            143.9
-          ]
-        },
-        {
-          "week": 10,
-          "opp": "deez nuts",
-          "win_before": 0.488,
-          "win_after": 0.542,
-          "before": [
-            80.1,
-            106.5,
-            135.9
-          ],
-          "after": [
-            83.3,
-            110.5,
-            139.7
-          ]
-        },
-        {
-          "week": 11,
-          "opp": "Saquon Hater",
-          "win_before": 0.642,
-          "win_after": 0.68,
-          "before": [
-            74.2,
-            100.0,
-            128.0
-          ],
-          "after": [
-            75.3,
-            102.9,
-            131.7
-          ]
-        },
-        {
-          "week": 12,
-          "opp": "Heartbreak Drake",
-          "win_before": 0.493,
-          "win_after": 0.531,
           "before": [
             74.8,
-            101.4,
-            129.3
-          ],
-          "after": [
-            76.5,
             104.0,
-            134.2
-          ]
-        },
-        {
-          "week": 13,
-          "opp": "Crabcakes and Football",
-          "win_before": 0.439,
-          "win_after": 0.458,
-          "before": [
-            71.5,
-            99.0,
-            127.9
+            135.5
           ],
           "after": [
-            71.0,
-            100.3,
-            131.2
-          ]
-        },
-        {
-          "week": 14,
-          "opp": "BillsMafia",
-          "win_before": 0.456,
-          "win_after": 0.515,
-          "before": [
-            71.3,
-            98.7,
-            128.5
-          ],
-          "after": [
-            75.1,
-            103.8,
-            134.7
-          ]
-        },
-        {
-          "week": 15,
-          "opp": null,
-          "before": [
-            75.0,
-            102.7,
-            132.5
-          ],
-          "after": [
-            77.7,
-            106.2,
+            77.9,
+            106.3,
             137.6
           ]
         },
@@ -737,47 +198,47 @@
           "week": 16,
           "opp": null,
           "before": [
-            69.3,
+            67.6,
             95.7,
-            124.9
+            126.9
           ],
           "after": [
-            70.8,
-            98.5,
-            128.1
+            71.4,
+            99.6,
+            130.4
           ]
         },
         {
           "week": 17,
           "opp": null,
           "before": [
-            73.6,
-            100.8,
-            129.8
+            71.7,
+            100.6,
+            131.2
           ],
           "after": [
-            76.2,
-            104.1,
-            134.8
+            75.3,
+            103.4,
+            134.1
           ]
         }
       ],
-      "fairness": 0.7,
+      "fairness": 0.83,
       "sits_for_them": [],
       "ranks": {
         "give": [
           {
-            "name": "Malik Nabers",
-            "pos": "WR",
-            "our_rank": 9,
-            "ecr_rank": 9,
-            "driver": "efficiency",
+            "name": "Rachaad White",
+            "pos": "RB",
+            "our_rank": 43,
+            "ecr_rank": 33,
+            "driver": "usage",
             "view": "consensus view"
           },
           {
-            "name": "Rachaad White",
-            "pos": "RB",
-            "our_rank": 42,
+            "name": "Denzel Boston",
+            "pos": "WR",
+            "our_rank": 29,
             "ecr_rank": 35,
             "driver": "efficiency",
             "view": "consensus view"
@@ -785,10 +246,10 @@
         ],
         "get": [
           {
-            "name": "James Cook III",
+            "name": "Cam Skattebo",
             "pos": "RB",
-            "our_rank": 8,
-            "ecr_rank": 4,
+            "our_rank": 21,
+            "ecr_rank": 25,
             "driver": "efficiency",
             "view": "consensus view"
           }
@@ -796,78 +257,71 @@
       }
     },
     {
-      "partner": "L'Omar",
+      "partner": "Don R.I.C.O",
       "shape": "2-for-1",
       "partner_profile": {
         "needs": [
           {
-            "pos": "RB",
-            "gap": 5.0
-          },
-          {
-            "pos": "QB",
-            "gap": 1.9
-          },
-          {
-            "pos": "TE",
-            "gap": 1.3
+            "pos": "WR",
+            "gap": 2.7
           }
         ],
-        "spare": []
+        "spare": [
+          {
+            "name": "Tucker Kraft",
+            "pos": "TE",
+            "ppg": 9.0
+          }
+        ]
       },
       "give": [
         {
           "name": "Christian Watson",
           "pos": "WR",
-          "ros_pg": 12.31
+          "ros_pg": 13.27
         },
         {
           "name": "Breece Hall",
           "pos": "RB",
-          "ros_pg": 12.5
+          "ros_pg": 12.41
         }
       ],
       "get": [
         {
-          "name": "Puka Nacua",
+          "name": "Jaxon Smith-Njigba",
           "pos": "WR",
-          "ros_pg": 18.7
+          "ros_pg": 19.77
         }
       ],
       "tags": [
-        "BUY_LOW",
         "LINEUP"
       ],
       "all_tags": [
-        "BUY_LOW",
         "LINEUP"
       ],
-      "thesis": "Buy Puka Nacua low: -4.0 pts/g under what his usage earns, and his usage ranks WR1 against consensus WR2.",
-      "kill": "Wrong if his share of his team's expected points falls below 13% (now 19%, minus one sd).",
-      "second": {
-        "tag": "LINEUP",
-        "thesis": "Puka Nacua starts for you over Breece Hall: +2.54 pts/wk to your lineup over the weeks that count most."
-      },
+      "thesis": "Jaxon Smith-Njigba starts for you over Breece Hall: +2.89 pts/wk to your lineup over the weeks that count most.",
+      "kill": "Wrong if Jaxon Smith-Njigba's projection falls below Breece Hall's (19.8 vs 12.4 now).",
+      "second": null,
       "us": {
-        "d_week": 1.48,
-        "d_ros": 2.54,
-        "d_title": 0.0272,
-        "se_title": 0.0049,
+        "d_week": 2.73,
+        "d_ros": 2.89,
+        "d_title": 0.0225,
+        "se_title": 0.0045,
         "title_noise": false,
-        "p_title": 0.1377,
-        "p_playoffs": 0.8037
+        "p_title": 0.1092,
+        "p_playoffs": 0.699
       },
       "them": {
-        "d_week": 2.15,
-        "d_ros": -3.44,
-        "d_title": -0.024,
-        "se_title": 0.0046,
+        "d_week": -3.28,
+        "d_ros": -3.35,
+        "d_title": -0.038,
+        "se_title": 0.0052,
         "title_noise": false,
-        "p_playoffs_now": 0.6753
+        "p_playoffs_now": 0.9233
       },
       "i_would_start": [
         "Rachaad White",
-        "Puka Nacua"
+        "Jaxon Smith-Njigba"
       ],
       "i_would_bench": [],
       "netted_free_swap": true,
@@ -876,176 +330,160 @@
         "Breece Hall"
       ],
       "they_would_bench": [
-        "Carnell Tate"
+        "Rico Dowdle"
       ],
       "fa_add": null,
-      "pitch": "They start Puka Nacua at WR (18.7/g) and sit at 68% playoff odds.",
-      "p_accept": 0.485,
+      "pitch": "They start Jaxon Smith-Njigba at WR (19.8/g) and sit at 92% playoff odds.",
+      "p_accept": 0.452,
       "flag": "EXPLOIT",
       "why": [
-        "Their lineup loses 3.4 pts/wk over the weeks that matter to them",
-        "By name they get 89% of what they give",
-        "Breece Hall starts at RB, where they're thin",
+        "Their lineup loses 3.3 pts/wk over the weeks that matter to them",
+        "By name they get 87% of what they give",
+        "Christian Watson starts at WR, where they're thin",
         "Breece Hall is a big name",
-        "They'd give up a big name in Puka Nacua"
+        "They'd give up a big name in Jaxon Smith-Njigba"
       ],
-      "exp_title": 0.01317,
-      "exp_ros": 1.232,
+      "exp_title": 0.01016,
+      "exp_ros": 1.304,
       "flags": [
         {
           "kind": "need",
-          "text": "Your weakest starter goes from FLEX (Denzel Boston, 9.3/g vs a typical FLEX's 10.6) to RB2 (Rachaad White, 9.0/g vs a typical RB2's 13.6)."
+          "text": "Your weakest starter goes from RB2 (Breece Hall, 12.4/g vs a typical RB2's 13.4) to RB2 (Rachaad White, 9.1/g vs a typical RB2's 13.4)."
         }
       ],
       "matchups": [
         {
-          "week": 9,
-          "opp": "L'Omar",
-          "win_before": 0.728,
-          "win_after": 0.73,
-          "before": [
-            86.7,
-            114.8,
-            145.1
-          ],
-          "after": [
-            87.3,
-            116.7,
-            149.6
-          ]
-        },
-        {
           "week": 10,
           "opp": "deez nuts",
-          "win_before": 0.488,
-          "win_after": 0.539,
+          "win_before": 0.501,
+          "win_after": 0.532,
           "before": [
-            80.1,
-            106.5,
-            135.9
+            83.5,
+            110.3,
+            139.5
           ],
           "after": [
-            82.2,
-            110.4,
-            141.7
+            83.9,
+            113.3,
+            144.9
           ]
         },
         {
           "week": 11,
           "opp": "Saquon Hater",
-          "win_before": 0.642,
-          "win_after": 0.588,
+          "win_before": 0.638,
+          "win_after": 0.614,
           "before": [
-            74.2,
-            100.0,
-            128.0
+            75.8,
+            102.6,
+            131.0
           ],
           "after": [
-            70.0,
-            95.7,
-            123.9
+            73.8,
+            100.7,
+            128.4
           ]
         },
         {
           "week": 12,
           "opp": "Heartbreak Drake",
-          "win_before": 0.493,
-          "win_after": 0.533,
+          "win_before": 0.531,
+          "win_after": 0.564,
           "before": [
-            74.8,
-            101.4,
-            129.3
+            75.2,
+            102.2,
+            131.6
           ],
           "after": [
-            76.4,
-            104.3,
-            135.0
+            76.6,
+            105.4,
+            136.5
           ]
         },
         {
           "week": 13,
           "opp": "Crabcakes and Football",
-          "win_before": 0.439,
-          "win_after": 0.506,
+          "win_before": 0.436,
+          "win_after": 0.508,
           "before": [
-            71.5,
-            99.0,
-            127.9
+            71.6,
+            100.6,
+            130.4
           ],
           "after": [
-            75.3,
-            104.4,
-            135.2
+            76.2,
+            107.0,
+            140.2
           ]
         },
         {
           "week": 14,
-          "opp": "BillsMafia",
-          "win_before": 0.456,
-          "win_after": 0.479,
+          "opp": "Burrow-Chase combo",
+          "win_before": 0.578,
+          "win_after": 0.6,
           "before": [
-            71.3,
-            98.7,
-            128.5
+            67.6,
+            95.4,
+            126.0
           ],
           "after": [
-            72.1,
-            101.0,
-            130.8
+            68.6,
+            97.8,
+            129.7
           ]
         },
         {
           "week": 15,
           "opp": null,
           "before": [
-            75.0,
-            102.7,
-            132.5
+            74.8,
+            104.0,
+            135.5
           ],
           "after": [
-            75.0,
-            105.3,
-            136.9
+            75.5,
+            105.7,
+            139.5
           ]
         },
         {
           "week": 16,
           "opp": null,
           "before": [
-            69.3,
+            67.6,
             95.7,
-            124.9
+            126.9
           ],
           "after": [
-            69.2,
-            96.8,
-            126.8
+            66.1,
+            97.5,
+            129.5
           ]
         },
         {
           "week": 17,
           "opp": null,
           "before": [
-            73.6,
-            100.8,
-            129.8
+            71.7,
+            100.6,
+            131.2
           ],
           "after": [
-            74.7,
-            104.3,
-            134.1
+            73.1,
+            104.2,
+            136.3
           ]
         }
       ],
-      "fairness": 0.89,
+      "fairness": 0.87,
       "sits_for_them": [],
       "ranks": {
         "give": [
           {
             "name": "Christian Watson",
             "pos": "WR",
-            "our_rank": 10,
-            "ecr_rank": 12,
+            "our_rank": 9,
+            "ecr_rank": 9,
             "driver": "efficiency",
             "view": "consensus view"
           },
@@ -1053,17 +491,17 @@
             "name": "Breece Hall",
             "pos": "RB",
             "our_rank": 23,
-            "ecr_rank": 19,
+            "ecr_rank": 18,
             "driver": "efficiency",
             "view": "consensus view"
           }
         ],
         "get": [
           {
-            "name": "Puka Nacua",
+            "name": "Jaxon Smith-Njigba",
             "pos": "WR",
-            "our_rank": 1,
-            "ecr_rank": 2,
+            "our_rank": 3,
+            "ecr_rank": 1,
             "driver": "efficiency",
             "view": "consensus view"
           }
@@ -1074,17 +512,12 @@
       "partner": "deez nuts",
       "shape": "1-for-1",
       "partner_profile": {
-        "needs": [
-          {
-            "pos": "TE",
-            "gap": 1.2
-          }
-        ],
+        "needs": [],
         "spare": [
           {
             "name": "Jalen Coker",
             "pos": "WR",
-            "ppg": 10.0
+            "ppg": 9.7
           }
         ]
       },
@@ -1092,14 +525,14 @@
         {
           "name": "Christian McCaffrey",
           "pos": "RB",
-          "ros_pg": 17.76
+          "ros_pg": 17.87
         }
       ],
       "get": [
         {
           "name": "Jahmyr Gibbs",
           "pos": "RB",
-          "ros_pg": 23.3
+          "ros_pg": 22.05
         }
       ],
       "tags": [
@@ -1108,25 +541,25 @@
       "all_tags": [
         "LINEUP"
       ],
-      "thesis": "Jahmyr Gibbs starts for you over Christian McCaffrey: +4.92 pts/wk to your lineup over the weeks that count most.",
-      "kill": "Wrong if Jahmyr Gibbs's projection falls below Christian McCaffrey's (23.3 vs 17.8 now).",
+      "thesis": "Jahmyr Gibbs starts for you over Christian McCaffrey: +3.81 pts/wk to your lineup over the weeks that count most.",
+      "kill": "Wrong if Jahmyr Gibbs's projection falls below Christian McCaffrey's (22.1 vs 17.9 now).",
       "second": null,
       "us": {
-        "d_week": 2.98,
-        "d_ros": 4.92,
-        "d_title": 0.0672,
-        "se_title": 0.0053,
+        "d_week": 2.61,
+        "d_ros": 3.81,
+        "d_title": 0.0373,
+        "se_title": 0.0044,
         "title_noise": false,
-        "p_title": 0.1777,
-        "p_playoffs": 0.847
+        "p_title": 0.1123,
+        "p_playoffs": 0.7157
       },
       "them": {
-        "d_week": -2.98,
-        "d_ros": -4.86,
-        "d_title": -0.0593,
-        "se_title": 0.0047,
+        "d_week": -2.61,
+        "d_ros": -3.87,
+        "d_title": -0.0372,
+        "se_title": 0.0048,
         "title_noise": false,
-        "p_playoffs_now": 0.8403
+        "p_playoffs_now": 0.9012
       },
       "i_would_start": [
         "Jahmyr Gibbs"
@@ -1138,164 +571,148 @@
       ],
       "they_would_bench": [],
       "fa_add": null,
-      "pitch": "They start Jahmyr Gibbs at RB (23.3/g) and sit at 84% playoff odds.",
-      "p_accept": 0.187,
+      "pitch": "They start Jahmyr Gibbs at RB (22.1/g) and sit at 90% playoff odds.",
+      "p_accept": 0.23,
       "flag": "NEEDS_PITCH",
       "why": [
-        "Their lineup loses 4.9 pts/wk over the weeks that matter to them",
-        "By name they get 89% of what they give",
+        "Their lineup loses 3.9 pts/wk over the weeks that matter to them",
+        "By name they get 90% of what they give",
         "Christian McCaffrey is a big name",
         "They'd give up a big name in Jahmyr Gibbs"
       ],
-      "exp_title": 0.01258,
-      "exp_ros": 0.921,
+      "exp_title": 0.00857,
+      "exp_ros": 0.874,
       "flags": [
         {
           "kind": "need",
-          "text": "Your weakest starter stays FLEX (Denzel Boston, 9.3/g vs a typical FLEX's 10.6)."
+          "text": "Your weakest starter stays RB2 (Breece Hall, 12.4/g vs a typical RB2's 13.4)."
         }
       ],
       "matchups": [
         {
-          "week": 9,
-          "opp": "L'Omar",
-          "win_before": 0.728,
-          "win_after": 0.754,
-          "before": [
-            86.7,
-            114.8,
-            145.1
-          ],
-          "after": [
-            88.4,
-            117.6,
-            147.9
-          ]
-        },
-        {
           "week": 10,
           "opp": "deez nuts",
-          "win_before": 0.488,
-          "win_after": 0.564,
+          "win_before": 0.487,
+          "win_after": 0.549,
           "before": [
-            80.1,
-            106.5,
-            135.9
+            83.0,
+            109.7,
+            139.3
           ],
           "after": [
-            81.8,
-            109.3,
-            139.7
+            84.3,
+            112.2,
+            142.9
           ]
         },
         {
           "week": 11,
           "opp": "Saquon Hater",
-          "win_before": 0.642,
-          "win_after": 0.698,
+          "win_before": 0.638,
+          "win_after": 0.685,
           "before": [
-            74.2,
-            100.0,
-            128.0
+            75.9,
+            102.5,
+            130.9
           ],
           "after": [
-            77.1,
-            104.4,
-            133.6
+            78.3,
+            106.6,
+            136.3
           ]
         },
         {
           "week": 12,
           "opp": "Heartbreak Drake",
-          "win_before": 0.493,
-          "win_after": 0.569,
+          "win_before": 0.522,
+          "win_after": 0.577,
           "before": [
-            74.8,
-            101.4,
-            129.3
+            74.3,
+            101.9,
+            130.6
           ],
           "after": [
-            78.6,
-            107.0,
-            138.5
+            77.2,
+            106.2,
+            137.9
           ]
         },
         {
           "week": 13,
           "opp": "Crabcakes and Football",
-          "win_before": 0.439,
-          "win_after": 0.486,
+          "win_before": 0.425,
+          "win_after": 0.462,
           "before": [
-            71.5,
-            99.0,
-            127.9
+            70.8,
+            99.3,
+            129.9
           ],
           "after": [
-            72.9,
-            103.1,
-            134.4
+            73.1,
+            103.2,
+            134.5
           ]
         },
         {
           "week": 14,
-          "opp": "BillsMafia",
-          "win_before": 0.456,
-          "win_after": 0.524,
+          "opp": "Burrow-Chase combo",
+          "win_before": 0.577,
+          "win_after": 0.626,
           "before": [
-            71.3,
-            98.7,
-            128.5
+            67.9,
+            95.5,
+            126.1
           ],
           "after": [
-            75.1,
-            104.1,
-            135.3
+            70.7,
+            99.9,
+            131.5
           ]
         },
         {
           "week": 15,
           "opp": null,
           "before": [
-            75.0,
-            102.7,
-            132.5
+            73.6,
+            102.3,
+            133.7
           ],
           "after": [
-            77.2,
-            105.9,
-            136.9
+            74.9,
+            104.4,
+            136.1
           ]
         },
         {
           "week": 16,
           "opp": null,
           "before": [
-            69.3,
-            95.7,
-            124.9
+            66.2,
+            94.4,
+            125.0
           ],
           "after": [
-            73.9,
-            101.5,
-            132.8
+            69.7,
+            98.7,
+            130.6
           ]
         },
         {
           "week": 17,
           "opp": null,
           "before": [
-            73.6,
-            100.8,
-            129.8
+            70.6,
+            98.8,
+            129.6
           ],
           "after": [
-            76.0,
-            105.3,
-            135.4
+            72.5,
+            101.9,
+            133.8
           ]
         }
       ],
-      "fairness": 0.89,
+      "fairness": 0.9,
       "sits_for_them": [],
       "ranks": {
         "give": [
@@ -1321,842 +738,37 @@
       }
     },
     {
-      "partner": "Don R.I.C.O",
-      "shape": "2-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "WR",
-            "gap": 2.8
-          },
-          {
-            "pos": "QB",
-            "gap": 1.1
-          }
-        ],
-        "spare": [
-          {
-            "name": "Tucker Kraft",
-            "pos": "TE",
-            "ppg": 9.5
-          }
-        ]
-      },
-      "give": [
-        {
-          "name": "Malik Nabers",
-          "pos": "WR",
-          "ros_pg": 12.88
-        },
-        {
-          "name": "Emeka Egbuka",
-          "pos": "WR",
-          "ros_pg": 9.88
-        }
-      ],
-      "get": [
-        {
-          "name": "Jaxon Smith-Njigba",
-          "pos": "WR",
-          "ros_pg": 19.14
-        }
-      ],
-      "tags": [
-        "LINEUP"
-      ],
-      "all_tags": [
-        "LINEUP"
-      ],
-      "thesis": "Jaxon Smith-Njigba starts for you over Malik Nabers: +3.99 pts/wk to your lineup over the weeks that count most.",
-      "kill": "Wrong if Jaxon Smith-Njigba's projection falls below Malik Nabers's (19.1 vs 12.9 now).",
-      "second": null,
-      "us": {
-        "d_week": 5.46,
-        "d_ros": 3.99,
-        "d_title": 0.0357,
-        "se_title": 0.005,
-        "title_noise": false,
-        "p_title": 0.1462,
-        "p_playoffs": 0.806
-      },
-      "them": {
-        "d_week": -4.96,
-        "d_ros": -3.61,
-        "d_title": -0.0327,
-        "se_title": 0.005,
-        "title_noise": false,
-        "p_playoffs_now": 0.8397
-      },
-      "i_would_start": [
-        "Jaxon Smith-Njigba"
-      ],
-      "i_would_bench": [],
-      "netted_free_swap": true,
-      "they_would_start": [
-        "Malik Nabers",
-        "Emeka Egbuka"
-      ],
-      "they_would_bench": [
-        "Ladd McConkey"
-      ],
-      "fa_add": null,
-      "pitch": "They start Jaxon Smith-Njigba at WR (19.1/g) and sit at 84% playoff odds.",
-      "p_accept": 0.294,
-      "flag": "NEEDS_PITCH",
-      "why": [
-        "Their lineup loses 3.6 pts/wk over the weeks that matter to them",
-        "By name they get 70% of what they give",
-        "Malik Nabers starts at WR, where they're thin",
-        "Malik Nabers is a big name",
-        "Emeka Egbuka is unproven, so weak currency",
-        "They'd give up a big name in Jaxon Smith-Njigba"
-      ],
-      "exp_title": 0.01047,
-      "exp_ros": 1.17,
-      "flags": [
-        {
-          "kind": "need",
-          "text": "Your weakest starter stays FLEX (Denzel Boston, 9.3/g vs a typical FLEX's 10.6)."
-        }
-      ],
-      "matchups": [
-        {
-          "week": 9,
-          "opp": "L'Omar",
-          "win_before": 0.728,
-          "win_after": 0.779,
-          "before": [
-            86.7,
-            114.8,
-            145.1
-          ],
-          "after": [
-            90.9,
-            120.4,
-            151.6
-          ]
-        },
-        {
-          "week": 10,
-          "opp": "deez nuts",
-          "win_before": 0.488,
-          "win_after": 0.559,
-          "before": [
-            80.1,
-            106.5,
-            135.9
-          ],
-          "after": [
-            84.1,
-            112.2,
-            143.3
-          ]
-        },
-        {
-          "week": 11,
-          "opp": "Saquon Hater",
-          "win_before": 0.642,
-          "win_after": 0.476,
-          "before": [
-            74.2,
-            100.0,
-            128.0
-          ],
-          "after": [
-            62.9,
-            86.7,
-            112.7
-          ]
-        },
-        {
-          "week": 12,
-          "opp": "Heartbreak Drake",
-          "win_before": 0.493,
-          "win_after": 0.547,
-          "before": [
-            74.8,
-            101.4,
-            129.3
-          ],
-          "after": [
-            76.7,
-            104.5,
-            135.0
-          ]
-        },
-        {
-          "week": 13,
-          "opp": "Crabcakes and Football",
-          "win_before": 0.439,
-          "win_after": 0.484,
-          "before": [
-            71.5,
-            99.0,
-            127.9
-          ],
-          "after": [
-            72.7,
-            102.6,
-            135.4
-          ]
-        },
-        {
-          "week": 14,
-          "opp": "BillsMafia",
-          "win_before": 0.456,
-          "win_after": 0.536,
-          "before": [
-            71.3,
-            98.7,
-            128.5
-          ],
-          "after": [
-            75.9,
-            105.4,
-            137.1
-          ]
-        },
-        {
-          "week": 15,
-          "opp": null,
-          "before": [
-            75.0,
-            102.7,
-            132.5
-          ],
-          "after": [
-            76.6,
-            106.0,
-            137.4
-          ]
-        },
-        {
-          "week": 16,
-          "opp": null,
-          "before": [
-            69.3,
-            95.7,
-            124.9
-          ],
-          "after": [
-            70.1,
-            99.0,
-            130.2
-          ]
-        },
-        {
-          "week": 17,
-          "opp": null,
-          "before": [
-            73.6,
-            100.8,
-            129.8
-          ],
-          "after": [
-            75.9,
-            104.7,
-            135.8
-          ]
-        }
-      ],
-      "fairness": 0.7,
-      "sits_for_them": [],
-      "ranks": {
-        "give": [
-          {
-            "name": "Malik Nabers",
-            "pos": "WR",
-            "our_rank": 9,
-            "ecr_rank": 9,
-            "driver": "efficiency",
-            "view": "consensus view"
-          },
-          {
-            "name": "Emeka Egbuka",
-            "pos": "WR",
-            "our_rank": 30,
-            "ecr_rank": 31,
-            "driver": "usage",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Jaxon Smith-Njigba",
-            "pos": "WR",
-            "our_rank": 2,
-            "ecr_rank": 1,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
-      "partner": "Allen Moore connection",
-      "shape": "2-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "WR",
-            "gap": 9.7
-          }
-        ],
-        "spare": []
-      },
-      "give": [
-        {
-          "name": "Rachaad White",
-          "pos": "RB",
-          "ros_pg": 9.03
-        },
-        {
-          "name": "Denzel Boston",
-          "pos": "WR",
-          "ros_pg": 9.28
-        }
-      ],
-      "get": [
-        {
-          "name": "Cam Skattebo",
-          "pos": "RB",
-          "ros_pg": 12.12
-        }
-      ],
-      "tags": [
-        "LINEUP",
-        "PORTFOLIO"
-      ],
-      "all_tags": [
-        "LINEUP",
-        "PORTFOLIO"
-      ],
-      "thesis": "Cam Skattebo starts for you over Denzel Boston: +2.76 pts/wk to your lineup over the weeks that count most.",
-      "kill": "Wrong if Cam Skattebo's projection falls below Denzel Boston's (12.1 vs 9.3 now).",
-      "second": {
-        "tag": "PORTFOLIO",
-        "thesis": "Spreads your byes: 2 starters off in week 11 today, 1 at most after."
-      },
-      "us": {
-        "d_week": 0.15,
-        "d_ros": 2.76,
-        "d_title": 0.0285,
-        "se_title": 0.0044,
-        "title_noise": false,
-        "p_title": 0.139,
-        "p_playoffs": 0.7997
-      },
-      "them": {
-        "d_week": 0.47,
-        "d_ros": -2.14,
-        "d_title": -0.0003,
-        "se_title": 0.0011,
-        "title_noise": true,
-        "p_playoffs_now": 0.0685
-      },
-      "i_would_start": [
-        "Cam Skattebo"
-      ],
-      "i_would_bench": [],
-      "netted_free_swap": true,
-      "they_would_start": [
-        "Denzel Boston"
-      ],
-      "they_would_bench": [],
-      "fa_add": null,
-      "pitch": "They start Cam Skattebo at RB (12.1/g) and sit at 7% playoff odds.",
-      "p_accept": 0.318,
-      "flag": "EXPLOIT",
-      "why": [
-        "Their lineup loses 2.1 pts/wk over the next few weeks \u2014 out of the race, they're playing for wins now",
-        "By name they get 56% of what they give",
-        "Denzel Boston starts at WR, where they're thin",
-        "Rachaad White wouldn't start for them (they start Tony Pollard & Omarion Hampton)",
-        "Denzel Boston is unproven, so weak currency"
-      ],
-      "exp_title": 0.00905,
-      "exp_ros": 0.877,
-      "flags": [
-        {
-          "kind": "role_risk",
-          "text": "Role risk: Cam Skattebo's share of the NYG offense fell from 21% to 11% over the last three games."
-        },
-        {
-          "kind": "need",
-          "text": "Fixes your weakest starter, FLEX (Denzel Boston, 9.3/g vs a typical FLEX's 10.6); weakest after: RB2 (Cam Skattebo, 12.1/g vs a typical RB2's 13.6)."
-        }
-      ],
-      "matchups": [
-        {
-          "week": 9,
-          "opp": "L'Omar",
-          "win_before": 0.728,
-          "win_after": 0.732,
-          "before": [
-            86.7,
-            114.8,
-            145.1
-          ],
-          "after": [
-            87.1,
-            114.9,
-            144.7
-          ]
-        },
-        {
-          "week": 10,
-          "opp": "deez nuts",
-          "win_before": 0.488,
-          "win_after": 0.543,
-          "before": [
-            80.1,
-            106.5,
-            135.9
-          ],
-          "after": [
-            82.8,
-            109.9,
-            140.1
-          ]
-        },
-        {
-          "week": 11,
-          "opp": "Saquon Hater",
-          "win_before": 0.642,
-          "win_after": 0.657,
-          "before": [
-            74.2,
-            100.0,
-            128.0
-          ],
-          "after": [
-            75.3,
-            102.0,
-            130.4
-          ]
-        },
-        {
-          "week": 12,
-          "opp": "Heartbreak Drake",
-          "win_before": 0.493,
-          "win_after": 0.511,
-          "before": [
-            74.8,
-            101.4,
-            129.3
-          ],
-          "after": [
-            75.7,
-            102.6,
-            132.2
-          ]
-        },
-        {
-          "week": 13,
-          "opp": "Crabcakes and Football",
-          "win_before": 0.439,
-          "win_after": 0.453,
-          "before": [
-            71.5,
-            99.0,
-            127.9
-          ],
-          "after": [
-            69.8,
-            99.4,
-            130.2
-          ]
-        },
-        {
-          "week": 14,
-          "opp": "BillsMafia",
-          "win_before": 0.456,
-          "win_after": 0.465,
-          "before": [
-            71.3,
-            98.7,
-            128.5
-          ],
-          "after": [
-            71.9,
-            99.4,
-            129.2
-          ]
-        },
-        {
-          "week": 15,
-          "opp": null,
-          "before": [
-            75.0,
-            102.7,
-            132.5
-          ],
-          "after": [
-            75.3,
-            104.0,
-            134.9
-          ]
-        },
-        {
-          "week": 16,
-          "opp": null,
-          "before": [
-            69.3,
-            95.7,
-            124.9
-          ],
-          "after": [
-            70.8,
-            98.9,
-            129.9
-          ]
-        },
-        {
-          "week": 17,
-          "opp": null,
-          "before": [
-            73.6,
-            100.8,
-            129.8
-          ],
-          "after": [
-            75.1,
-            102.9,
-            133.3
-          ]
-        }
-      ],
-      "fairness": 0.56,
-      "sits_for_them": [
-        "Rachaad White wouldn't start for them (they start Tony Pollard & Omarion Hampton)"
-      ],
-      "ranks": {
-        "give": [
-          {
-            "name": "Rachaad White",
-            "pos": "RB",
-            "our_rank": 42,
-            "ecr_rank": 35,
-            "driver": "efficiency",
-            "view": "consensus view"
-          },
-          {
-            "name": "Denzel Boston",
-            "pos": "WR",
-            "our_rank": 31,
-            "ecr_rank": 35,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Cam Skattebo",
-            "pos": "RB",
-            "our_rank": 21,
-            "ecr_rank": 23,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
-      "partner": "Burrow-Chase combo",
-      "shape": "2-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "WR",
-            "gap": 4.2
-          }
-        ],
-        "spare": []
-      },
-      "give": [
-        {
-          "name": "Emeka Egbuka",
-          "pos": "WR",
-          "ros_pg": 9.88
-        },
-        {
-          "name": "Rachaad White",
-          "pos": "RB",
-          "ros_pg": 9.03
-        }
-      ],
-      "get": [
-        {
-          "name": "Quinshon Judkins",
-          "pos": "RB",
-          "ros_pg": 12.13
-        }
-      ],
-      "tags": [
-        "LINEUP"
-      ],
-      "all_tags": [
-        "LINEUP"
-      ],
-      "thesis": "Quinshon Judkins starts for you over Denzel Boston: +2.21 pts/wk to your lineup over the weeks that count most.",
-      "kill": "Wrong if Quinshon Judkins's projection falls below Denzel Boston's (12.1 vs 9.3 now).",
-      "second": null,
-      "us": {
-        "d_week": 0.33,
-        "d_ros": 2.21,
-        "d_title": 0.019,
-        "se_title": 0.0043,
-        "title_noise": false,
-        "p_title": 0.1295,
-        "p_playoffs": 0.7818
-      },
-      "them": {
-        "d_week": 1.43,
-        "d_ros": 0.61,
-        "d_title": -0.0008,
-        "se_title": 0.0014,
-        "title_noise": true,
-        "p_playoffs_now": 0.0663
-      },
-      "i_would_start": [
-        "Quinshon Judkins"
-      ],
-      "i_would_bench": [
-        "Denzel Boston"
-      ],
-      "netted_free_swap": true,
-      "they_would_start": [
-        "Rachaad White",
-        "Emeka Egbuka"
-      ],
-      "they_would_bench": [
-        "Alvin Kamara"
-      ],
-      "fa_add": null,
-      "pitch": "They start Quinshon Judkins at RB (12.1/g) and sit at 7% playoff odds.",
-      "p_accept": 0.475,
-      "flag": "EXPLOIT",
-      "why": [
-        "Their lineup gains 0.6 pts/wk over the next few weeks \u2014 out of the race, they're playing for wins now",
-        "By name they get 62% of what they give",
-        "Emeka Egbuka starts at WR, where they're thin",
-        "Emeka Egbuka is unproven, so weak currency"
-      ],
-      "exp_title": 0.00903,
-      "exp_ros": 1.048,
-      "flags": [
-        {
-          "kind": "need",
-          "text": "Fixes your weakest starter, FLEX (Denzel Boston, 9.3/g vs a typical FLEX's 10.6); weakest after: RB2 (Quinshon Judkins, 12.1/g vs a typical RB2's 13.6)."
-        }
-      ],
-      "matchups": [
-        {
-          "week": 9,
-          "opp": "L'Omar",
-          "win_before": 0.728,
-          "win_after": 0.734,
-          "before": [
-            86.7,
-            114.8,
-            145.1
-          ],
-          "after": [
-            87.1,
-            115.3,
-            145.4
-          ]
-        },
-        {
-          "week": 10,
-          "opp": "deez nuts",
-          "win_before": 0.488,
-          "win_after": 0.524,
-          "before": [
-            80.1,
-            106.5,
-            135.9
-          ],
-          "after": [
-            82.4,
-            109.1,
-            138.6
-          ]
-        },
-        {
-          "week": 11,
-          "opp": "Saquon Hater",
-          "win_before": 0.642,
-          "win_after": 0.582,
-          "before": [
-            74.2,
-            100.0,
-            128.0
-          ],
-          "after": [
-            69.5,
-            95.0,
-            123.9
-          ]
-        },
-        {
-          "week": 12,
-          "opp": "Heartbreak Drake",
-          "win_before": 0.493,
-          "win_after": 0.523,
-          "before": [
-            74.8,
-            101.4,
-            129.3
-          ],
-          "after": [
-            76.0,
-            103.5,
-            133.6
-          ]
-        },
-        {
-          "week": 13,
-          "opp": "Crabcakes and Football",
-          "win_before": 0.439,
-          "win_after": 0.453,
-          "before": [
-            71.5,
-            99.0,
-            127.9
-          ],
-          "after": [
-            69.9,
-            99.2,
-            130.3
-          ]
-        },
-        {
-          "week": 14,
-          "opp": "BillsMafia",
-          "win_before": 0.456,
-          "win_after": 0.491,
-          "before": [
-            71.3,
-            98.7,
-            128.5
-          ],
-          "after": [
-            73.3,
-            101.5,
-            131.5
-          ]
-        },
-        {
-          "week": 15,
-          "opp": null,
-          "before": [
-            75.0,
-            102.7,
-            132.5
-          ],
-          "after": [
-            74.7,
-            104.0,
-            135.1
-          ]
-        },
-        {
-          "week": 16,
-          "opp": null,
-          "before": [
-            69.3,
-            95.7,
-            124.9
-          ],
-          "after": [
-            70.1,
-            97.8,
-            127.7
-          ]
-        },
-        {
-          "week": 17,
-          "opp": null,
-          "before": [
-            73.6,
-            100.8,
-            129.8
-          ],
-          "after": [
-            76.2,
-            103.5,
-            133.0
-          ]
-        }
-      ],
-      "fairness": 0.62,
-      "sits_for_them": [],
-      "ranks": {
-        "give": [
-          {
-            "name": "Emeka Egbuka",
-            "pos": "WR",
-            "our_rank": 30,
-            "ecr_rank": 31,
-            "driver": "usage",
-            "view": "consensus view"
-          },
-          {
-            "name": "Rachaad White",
-            "pos": "RB",
-            "our_rank": 42,
-            "ecr_rank": 35,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Quinshon Judkins",
-            "pos": "RB",
-            "our_rank": 22,
-            "ecr_rank": 22,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
-      "partner": "Don R.I.C.O",
+      "partner": "L'Omar",
       "shape": "1-for-1",
       "partner_profile": {
         "needs": [
           {
-            "pos": "WR",
-            "gap": 2.8
+            "pos": "RB",
+            "gap": 3.3
           },
           {
             "pos": "QB",
-            "gap": 1.1
+            "gap": 2.2
+          },
+          {
+            "pos": "TE",
+            "gap": 1.2
           }
         ],
-        "spare": [
-          {
-            "name": "Tucker Kraft",
-            "pos": "TE",
-            "ppg": 9.5
-          }
-        ]
+        "spare": []
       },
       "give": [
         {
-          "name": "Tyler Allgeier",
+          "name": "Rachaad White",
           "pos": "RB",
-          "ros_pg": 7.95
+          "ros_pg": 9.08
         }
       ],
       "get": [
         {
-          "name": "Jeremiyah Love",
-          "pos": "RB",
-          "ros_pg": 11.75
+          "name": "Carnell Tate",
+          "pos": "WR",
+          "ros_pg": 10.53
         }
       ],
       "tags": [
@@ -2167,443 +779,164 @@
         "LINEUP",
         "PORTFOLIO"
       ],
-      "thesis": "Jeremiyah Love starts for you over Denzel Boston: +1.95 pts/wk to your lineup over the weeks that count most.",
-      "kill": "Wrong if Jeremiyah Love's projection falls below Denzel Boston's (11.8 vs 9.3 now).",
+      "thesis": "Carnell Tate starts for you over Denzel Boston: +1.53 pts/wk to your lineup over the weeks that count most.",
+      "kill": "Wrong if Carnell Tate's projection falls below Denzel Boston's (10.5 vs 9.3 now).",
       "second": {
         "tag": "PORTFOLIO",
         "thesis": "Spreads your byes: 2 starters off in week 11 today, 1 at most after."
       },
       "us": {
-        "d_week": 0.06,
-        "d_ros": 1.95,
-        "d_title": 0.0332,
-        "se_title": 0.0044,
+        "d_week": 0.29,
+        "d_ros": 1.53,
+        "d_title": 0.0125,
+        "se_title": 0.0037,
         "title_noise": false,
-        "p_title": 0.1437,
-        "p_playoffs": 0.796
+        "p_title": 0.0875,
+        "p_playoffs": 0.6378
       },
       "them": {
-        "d_week": -0.8,
-        "d_ros": -2.42,
-        "d_title": -0.0255,
-        "se_title": 0.0043,
+        "d_week": 8.2,
+        "d_ros": -1.74,
+        "d_title": -0.0132,
+        "se_title": 0.0045,
         "title_noise": false,
-        "p_playoffs_now": 0.8397
+        "p_playoffs_now": 0.8383
       },
       "i_would_start": [
-        "Jeremiyah Love"
+        "Carnell Tate"
       ],
       "i_would_bench": [
         "Denzel Boston"
       ],
       "netted_free_swap": false,
       "they_would_start": [
-        "Rico Dowdle"
+        "Rachaad White"
       ],
       "they_would_bench": [],
       "fa_add": null,
-      "pitch": "They start Jeremiyah Love at FLEX (11.8/g) and sit at 84% playoff odds.",
-      "p_accept": 0.215,
-      "flag": "NEEDS_PITCH",
+      "pitch": "They start Carnell Tate at WR (10.5/g) and sit at 84% playoff odds.",
+      "p_accept": 0.619,
+      "flag": "LIKELY",
       "why": [
-        "Their lineup loses 2.4 pts/wk over the weeks that matter to them",
-        "By name they get 84% of what they give",
-        "Tyler Allgeier wouldn't start for them (they start Derrick Henry & Chuba Hubbard & Rico Dowdle)",
-        "Tyler Allgeier is unproven, so weak currency",
-        "Jeremiyah Love is unproven, easier for them to part with"
+        "Their lineup loses 1.7 pts/wk over the weeks that matter to them",
+        "By name it's about even",
+        "Rachaad White starts at RB, where they're thin",
+        "Carnell Tate is unproven, easier for them to part with"
       ],
-      "exp_title": 0.00715,
-      "exp_ros": 0.419,
+      "exp_title": 0.00774,
+      "exp_ros": 0.945,
       "flags": [
         {
-          "kind": "role_risk",
-          "text": "Role risk: Jeremiyah Love's share of the ARI offense fell from 15% to 8% over the last three games."
-        },
-        {
-          "kind": "rebound",
-          "text": "Rebound bet: projected at 11.8/g from here, against 8.0/g so far."
-        },
-        {
           "kind": "need",
-          "text": "Fixes your weakest starter, FLEX (Denzel Boston, 9.3/g vs a typical FLEX's 10.6); weakest after: RB2 (Breece Hall, 12.5/g vs a typical RB2's 13.6)."
+          "text": "Your weakest starter stays RB2 (Breece Hall, 12.4/g vs a typical RB2's 13.4)."
         }
       ],
       "matchups": [
         {
-          "week": 9,
-          "opp": "L'Omar",
-          "win_before": 0.728,
-          "win_after": 0.728,
-          "before": [
-            86.7,
-            114.8,
-            145.1
-          ],
-          "after": [
-            86.7,
-            114.8,
-            145.1
-          ]
-        },
-        {
           "week": 10,
           "opp": "deez nuts",
-          "win_before": 0.488,
-          "win_after": 0.522,
+          "win_before": 0.487,
+          "win_after": 0.493,
           "before": [
-            80.1,
-            106.5,
-            135.9
+            83.0,
+            109.7,
+            139.3
           ],
           "after": [
-            82.1,
-            108.5,
-            138.4
+            83.0,
+            109.8,
+            139.1
           ]
         },
         {
           "week": 11,
           "opp": "Saquon Hater",
-          "win_before": 0.642,
-          "win_after": 0.665,
+          "win_before": 0.638,
+          "win_after": 0.656,
           "before": [
-            74.2,
-            100.0,
-            128.0
+            75.9,
+            102.5,
+            130.9
           ],
           "after": [
-            75.6,
-            101.9,
-            130.1
+            77.0,
+            103.5,
+            132.0
           ]
         },
         {
           "week": 12,
           "opp": "Heartbreak Drake",
-          "win_before": 0.493,
-          "win_after": 0.515,
+          "win_before": 0.522,
+          "win_after": 0.517,
           "before": [
-            74.8,
-            101.4,
-            129.3
+            74.3,
+            101.9,
+            130.6
           ],
           "after": [
-            76.1,
-            103.1,
-            132.2
+            73.9,
+            101.6,
+            130.8
           ]
         },
         {
           "week": 13,
           "opp": "Crabcakes and Football",
-          "win_before": 0.439,
-          "win_after": 0.473,
+          "win_before": 0.425,
+          "win_after": 0.427,
           "before": [
-            71.5,
-            99.0,
-            127.9
+            70.8,
+            99.3,
+            129.9
           ],
           "after": [
-            72.8,
-            101.3,
+            70.8,
+            99.8,
             130.9
           ]
         },
         {
           "week": 14,
-          "opp": "BillsMafia",
-          "win_before": 0.456,
-          "win_after": 0.456,
+          "opp": "Burrow-Chase combo",
+          "win_before": 0.577,
+          "win_after": 0.593,
           "before": [
-            71.3,
-            98.7,
-            128.5
+            67.9,
+            95.5,
+            126.1
           ],
           "after": [
-            71.3,
-            98.7,
-            128.5
-          ]
-        },
-        {
-          "week": 15,
-          "opp": null,
-          "before": [
-            75.0,
-            102.7,
-            132.5
-          ],
-          "after": [
-            76.8,
-            104.9,
-            135.8
-          ]
-        },
-        {
-          "week": 16,
-          "opp": null,
-          "before": [
-            69.3,
-            95.7,
-            124.9
-          ],
-          "after": [
-            70.9,
-            97.9,
+            68.6,
+            97.4,
             127.9
           ]
         },
         {
-          "week": 17,
+          "week": 15,
           "opp": null,
           "before": [
             73.6,
-            100.8,
-            129.8
+            102.3,
+            133.7
           ],
           "after": [
-            75.7,
-            103.5,
-            132.8
-          ]
-        }
-      ],
-      "fairness": 0.84,
-      "sits_for_them": [
-        "Tyler Allgeier wouldn't start for them (they start Derrick Henry & Chuba Hubbard & Rico Dowdle)"
-      ],
-      "ranks": {
-        "give": [
-          {
-            "name": "Tyler Allgeier",
-            "pos": "RB",
-            "our_rank": 49,
-            "ecr_rank": 47,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Jeremiyah Love",
-            "pos": "RB",
-            "our_rank": 31,
-            "ecr_rank": 18,
-            "driver": "usage",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
-      "partner": "Allen Moore connection",
-      "shape": "1-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "WR",
-            "gap": 9.7
-          }
-        ],
-        "spare": []
-      },
-      "give": [
-        {
-          "name": "Josh Downs",
-          "pos": "WR",
-          "ros_pg": 8.42
-        }
-      ],
-      "get": [
-        {
-          "name": "Omarion Hampton",
-          "pos": "RB",
-          "ros_pg": 10.64
-        }
-      ],
-      "tags": [
-        "LINEUP",
-        "PORTFOLIO"
-      ],
-      "all_tags": [
-        "LINEUP",
-        "PORTFOLIO"
-      ],
-      "thesis": "Omarion Hampton starts for you over Denzel Boston: +1.16 pts/wk to your lineup over the weeks that count most.",
-      "kill": "Wrong if Omarion Hampton's projection falls below Denzel Boston's (10.6 vs 9.3 now).",
-      "second": {
-        "tag": "PORTFOLIO",
-        "thesis": "Spreads your byes: 2 starters off in week 11 today, 1 at most after."
-      },
-      "us": {
-        "d_week": 0.0,
-        "d_ros": 1.16,
-        "d_title": 0.0103,
-        "se_title": 0.0039,
-        "title_noise": false,
-        "p_title": 0.1208,
-        "p_playoffs": 0.785
-      },
-      "them": {
-        "d_week": -7.47,
-        "d_ros": -1.23,
-        "d_title": -0.002,
-        "se_title": 0.0009,
-        "title_noise": false,
-        "p_playoffs_now": 0.0685
-      },
-      "i_would_start": [
-        "Omarion Hampton"
-      ],
-      "i_would_bench": [
-        "Denzel Boston"
-      ],
-      "netted_free_swap": false,
-      "they_would_start": [
-        "Josh Downs"
-      ],
-      "they_would_bench": [],
-      "fa_add": null,
-      "pitch": "They start Omarion Hampton at FLEX (10.6/g) and sit at 7% playoff odds.",
-      "p_accept": 0.376,
-      "flag": "EXPLOIT",
-      "why": [
-        "Their lineup loses 1.2 pts/wk over the next few weeks \u2014 out of the race, they're playing for wins now",
-        "By name they get 52% of what they give",
-        "Josh Downs starts at WR, where they're thin",
-        "Josh Downs is unproven, so weak currency",
-        "Lopsided enough that the league could object"
-      ],
-      "exp_title": 0.00388,
-      "exp_ros": 0.436,
-      "flags": [
-        {
-          "kind": "need",
-          "text": "Fixes your weakest starter, FLEX (Denzel Boston, 9.3/g vs a typical FLEX's 10.6); weakest after: RB2 (Breece Hall, 12.5/g vs a typical RB2's 13.6)."
-        }
-      ],
-      "matchups": [
-        {
-          "week": 9,
-          "opp": "L'Omar",
-          "win_before": 0.728,
-          "win_after": 0.728,
-          "before": [
-            86.7,
-            114.8,
-            145.1
-          ],
-          "after": [
-            86.7,
-            114.8,
-            145.1
-          ]
-        },
-        {
-          "week": 10,
-          "opp": "deez nuts",
-          "win_before": 0.488,
-          "win_after": 0.503,
-          "before": [
-            80.1,
-            106.5,
+            74.0,
+            103.4,
             135.9
-          ],
-          "after": [
-            81.0,
-            107.6,
-            136.8
-          ]
-        },
-        {
-          "week": 11,
-          "opp": "Saquon Hater",
-          "win_before": 0.642,
-          "win_after": 0.656,
-          "before": [
-            74.2,
-            100.0,
-            128.0
-          ],
-          "after": [
-            74.4,
-            101.3,
-            129.6
-          ]
-        },
-        {
-          "week": 12,
-          "opp": "Heartbreak Drake",
-          "win_before": 0.493,
-          "win_after": 0.495,
-          "before": [
-            74.8,
-            101.4,
-            129.3
-          ],
-          "after": [
-            74.5,
-            101.6,
-            129.7
-          ]
-        },
-        {
-          "week": 13,
-          "opp": "Crabcakes and Football",
-          "win_before": 0.439,
-          "win_after": 0.456,
-          "before": [
-            71.5,
-            99.0,
-            127.9
-          ],
-          "after": [
-            71.6,
-            99.8,
-            129.4
-          ]
-        },
-        {
-          "week": 14,
-          "opp": "BillsMafia",
-          "win_before": 0.456,
-          "win_after": 0.474,
-          "before": [
-            71.3,
-            98.7,
-            128.5
-          ],
-          "after": [
-            72.6,
-            100.3,
-            130.5
-          ]
-        },
-        {
-          "week": 15,
-          "opp": null,
-          "before": [
-            75.0,
-            102.7,
-            132.5
-          ],
-          "after": [
-            75.0,
-            103.2,
-            133.1
           ]
         },
         {
           "week": 16,
           "opp": null,
           "before": [
-            69.3,
-            95.7,
-            124.9
+            66.2,
+            94.4,
+            125.0
           ],
           "after": [
-            70.3,
-            97.2,
+            67.4,
+            96.5,
             126.3
           ]
         },
@@ -2611,576 +944,36 @@
           "week": 17,
           "opp": null,
           "before": [
-            73.6,
-            100.8,
-            129.8
+            70.6,
+            98.8,
+            129.6
           ],
           "after": [
-            74.2,
-            101.6,
-            130.3
+            71.4,
+            99.8,
+            129.5
           ]
         }
       ],
-      "fairness": 0.52,
+      "fairness": 1.04,
       "sits_for_them": [],
       "ranks": {
         "give": [
           {
-            "name": "Josh Downs",
-            "pos": "WR",
-            "our_rank": 48,
-            "ecr_rank": 36,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Omarion Hampton",
+            "name": "Rachaad White",
             "pos": "RB",
-            "our_rank": 29,
-            "ecr_rank": 25,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
-      "partner": "Saquon Hater",
-      "shape": "1-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "RB",
-            "gap": 11.9
-          },
-          {
-            "pos": "TE",
-            "gap": 2.1
-          },
-          {
-            "pos": "QB",
-            "gap": 1.1
-          }
-        ],
-        "spare": [
-          {
-            "name": "Jordan Love",
-            "pos": "QB",
-            "ppg": 18.4
-          },
-          {
-            "name": "Jonah Coleman",
-            "pos": "RB",
-            "ppg": 9.9
-          }
-        ]
-      },
-      "give": [
-        {
-          "name": "Tyler Allgeier",
-          "pos": "RB",
-          "ros_pg": 7.95
-        }
-      ],
-      "get": [
-        {
-          "name": "Saquon Barkley",
-          "pos": "RB",
-          "ros_pg": 11.76
-        }
-      ],
-      "tags": [
-        "LINEUP",
-        "PORTFOLIO"
-      ],
-      "all_tags": [
-        "LINEUP",
-        "PORTFOLIO"
-      ],
-      "thesis": "Saquon Barkley starts for you over Denzel Boston: +0.72 pts/wk to your lineup over the weeks that count most.",
-      "kill": "Wrong if Saquon Barkley's projection falls below Denzel Boston's (11.8 vs 9.3 now).",
-      "second": {
-        "tag": "PORTFOLIO",
-        "thesis": "Spreads your byes: 2 starters off in week 11 today, 1 at most after."
-      },
-      "us": {
-        "d_week": 0.88,
-        "d_ros": 0.72,
-        "d_title": 0.016,
-        "se_title": 0.0041,
-        "title_noise": false,
-        "p_title": 0.1265,
-        "p_playoffs": 0.7983
-      },
-      "them": {
-        "d_week": -3.52,
-        "d_ros": -0.12,
-        "d_title": -0.0002,
-        "se_title": 0.0004,
-        "title_noise": true,
-        "p_playoffs_now": 0.0105
-      },
-      "i_would_start": [
-        "Saquon Barkley"
-      ],
-      "i_would_bench": [
-        "Denzel Boston"
-      ],
-      "netted_free_swap": false,
-      "they_would_start": [
-        "Jonah Coleman"
-      ],
-      "they_would_bench": [],
-      "fa_add": null,
-      "pitch": "They start Saquon Barkley at RB (11.8/g) and sit at 1% playoff odds.",
-      "p_accept": 0.03,
-      "flag": "LONGSHOT",
-      "why": [
-        "Their lineup loses 0.1 pts/wk over the next few weeks \u2014 out of the race, they're playing for wins now",
-        "By name they get 11% of what they give",
-        "Tyler Allgeier wouldn't start for them (they start Aaron Jones Sr. & Jonah Coleman)",
-        "Tyler Allgeier is unproven, so weak currency",
-        "They'd give up a big name in Saquon Barkley"
-      ],
-      "exp_title": 0.00049,
-      "exp_ros": 0.022,
-      "flags": [
-        {
-          "kind": "role_risk",
-          "text": "Role risk: Saquon Barkley's share of the PHI offense fell from 15% to 11% over the last three games."
-        },
-        {
-          "kind": "rebound",
-          "text": "Rebound bet: projected at 11.8/g from here, against 7.8/g so far."
-        },
-        {
-          "kind": "need",
-          "text": "Fixes your weakest starter, FLEX (Denzel Boston, 9.3/g vs a typical FLEX's 10.6); weakest after: RB2 (Breece Hall, 12.5/g vs a typical RB2's 13.6)."
-        }
-      ],
-      "matchups": [
-        {
-          "week": 9,
-          "opp": "L'Omar",
-          "win_before": 0.728,
-          "win_after": 0.733,
-          "before": [
-            86.7,
-            114.8,
-            145.1
-          ],
-          "after": [
-            87.6,
-            115.2,
-            145.8
-          ]
-        },
-        {
-          "week": 10,
-          "opp": "deez nuts",
-          "win_before": 0.488,
-          "win_after": 0.488,
-          "before": [
-            80.1,
-            106.5,
-            135.9
-          ],
-          "after": [
-            80.1,
-            106.5,
-            135.9
-          ]
-        },
-        {
-          "week": 11,
-          "opp": "Saquon Hater",
-          "win_before": 0.642,
-          "win_after": 0.698,
-          "before": [
-            74.2,
-            100.0,
-            128.0
-          ],
-          "after": [
-            75.4,
-            101.9,
-            129.9
-          ]
-        },
-        {
-          "week": 12,
-          "opp": "Heartbreak Drake",
-          "win_before": 0.493,
-          "win_after": 0.511,
-          "before": [
-            74.8,
-            101.4,
-            129.3
-          ],
-          "after": [
-            76.4,
-            102.8,
-            131.9
-          ]
-        },
-        {
-          "week": 13,
-          "opp": "Crabcakes and Football",
-          "win_before": 0.439,
-          "win_after": 0.47,
-          "before": [
-            71.5,
-            99.0,
-            127.9
-          ],
-          "after": [
-            72.9,
-            101.4,
-            130.5
-          ]
-        },
-        {
-          "week": 14,
-          "opp": "BillsMafia",
-          "win_before": 0.456,
-          "win_after": 0.487,
-          "before": [
-            71.3,
-            98.7,
-            128.5
-          ],
-          "after": [
-            73.7,
-            101.4,
-            131.3
-          ]
-        },
-        {
-          "week": 15,
-          "opp": null,
-          "before": [
-            75.0,
-            102.7,
-            132.5
-          ],
-          "after": [
-            75.0,
-            102.7,
-            132.5
-          ]
-        },
-        {
-          "week": 16,
-          "opp": null,
-          "before": [
-            69.3,
-            95.7,
-            124.9
-          ],
-          "after": [
-            69.3,
-            96.3,
-            125.9
-          ]
-        },
-        {
-          "week": 17,
-          "opp": null,
-          "before": [
-            73.6,
-            100.8,
-            129.8
-          ],
-          "after": [
-            74.1,
-            101.4,
-            130.4
-          ]
-        }
-      ],
-      "fairness": 0.11,
-      "sits_for_them": [
-        "Tyler Allgeier wouldn't start for them (they start Aaron Jones Sr. & Jonah Coleman)"
-      ],
-      "ranks": {
-        "give": [
-          {
-            "name": "Tyler Allgeier",
-            "pos": "RB",
-            "our_rank": 49,
-            "ecr_rank": 47,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Saquon Barkley",
-            "pos": "RB",
-            "our_rank": 37,
-            "ecr_rank": 17,
+            "our_rank": 43,
+            "ecr_rank": 33,
             "driver": "usage",
             "view": "consensus view"
           }
-        ]
-      }
-    },
-    {
-      "partner": "BillsMafia",
-      "shape": "1-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "TE",
-            "gap": 1.5
-          }
-        ],
-        "spare": [
-          {
-            "name": "Bo Nix",
-            "pos": "QB",
-            "ppg": 16.4
-          },
-          {
-            "name": "Michael Wilson",
-            "pos": "WR",
-            "ppg": 11.1
-          }
-        ]
-      },
-      "give": [
-        {
-          "name": "Tyler Allgeier",
-          "pos": "RB",
-          "ros_pg": 7.95
-        }
-      ],
-      "get": [
-        {
-          "name": "Brock Purdy",
-          "pos": "QB",
-          "ros_pg": 20.39
-        }
-      ],
-      "tags": [
-        "LINEUP"
-      ],
-      "all_tags": [
-        "LINEUP"
-      ],
-      "thesis": "Brock Purdy starts for you over Jayden Daniels: +2.24 pts/wk to your lineup over the weeks that count most.",
-      "kill": "Wrong if Brock Purdy's projection falls below Jayden Daniels's (20.4 vs 17.9 now).",
-      "second": null,
-      "us": {
-        "d_week": 2.69,
-        "d_ros": 2.24,
-        "d_title": 0.0155,
-        "se_title": 0.0045,
-        "title_noise": false,
-        "p_title": 0.126,
-        "p_playoffs": 0.7972
-      },
-      "them": {
-        "d_week": -3.43,
-        "d_ros": -2.58,
-        "d_title": 0.0073,
-        "se_title": 0.0049,
-        "title_noise": true,
-        "p_playoffs_now": 0.7568
-      },
-      "i_would_start": [
-        "Brock Purdy"
-      ],
-      "i_would_bench": [
-        "Jayden Daniels"
-      ],
-      "netted_free_swap": false,
-      "they_would_start": [
-        "Malik Willis"
-      ],
-      "they_would_bench": [],
-      "fa_add": null,
-      "pitch": "They start Brock Purdy at QB (20.4/g) and sit at 76% playoff odds.",
-      "p_accept": 0.016,
-      "flag": "LONGSHOT",
-      "why": [
-        "Their lineup loses 2.6 pts/wk over the weeks that matter to them",
-        "By name they get 32% of what they give",
-        "Tyler Allgeier wouldn't start for them (they start Kenneth Walker III & D'Andre Swift)",
-        "Tyler Allgeier is unproven, so weak currency"
-      ],
-      "exp_title": 0.00024,
-      "exp_ros": 0.035,
-      "flags": [
-        {
-          "kind": "need",
-          "text": "Your weakest starter stays FLEX (Denzel Boston, 9.3/g vs a typical FLEX's 10.6)."
-        }
-      ],
-      "matchups": [
-        {
-          "week": 9,
-          "opp": "L'Omar",
-          "win_before": 0.728,
-          "win_after": 0.747,
-          "before": [
-            86.7,
-            114.8,
-            145.1
-          ],
-          "after": [
-            88.0,
-            116.5,
-            146.3
-          ]
-        },
-        {
-          "week": 10,
-          "opp": "deez nuts",
-          "win_before": 0.488,
-          "win_after": 0.518,
-          "before": [
-            80.1,
-            106.5,
-            135.9
-          ],
-          "after": [
-            82.6,
-            108.7,
-            138.1
-          ]
-        },
-        {
-          "week": 11,
-          "opp": "Saquon Hater",
-          "win_before": 0.642,
-          "win_after": 0.655,
-          "before": [
-            74.2,
-            100.0,
-            128.0
-          ],
-          "after": [
-            74.6,
-            100.1,
-            128.1
-          ]
-        },
-        {
-          "week": 12,
-          "opp": "Heartbreak Drake",
-          "win_before": 0.493,
-          "win_after": 0.494,
-          "before": [
-            74.8,
-            101.4,
-            129.3
-          ],
-          "after": [
-            74.6,
-            101.3,
-            129.5
-          ]
-        },
-        {
-          "week": 13,
-          "opp": "Crabcakes and Football",
-          "win_before": 0.439,
-          "win_after": 0.452,
-          "before": [
-            71.5,
-            99.0,
-            127.9
-          ],
-          "after": [
-            72.5,
-            100.2,
-            129.3
-          ]
-        },
-        {
-          "week": 14,
-          "opp": "BillsMafia",
-          "win_before": 0.456,
-          "win_after": 0.5,
-          "before": [
-            71.3,
-            98.7,
-            128.5
-          ],
-          "after": [
-            72.3,
-            100.2,
-            128.5
-          ]
-        },
-        {
-          "week": 15,
-          "opp": null,
-          "before": [
-            75.0,
-            102.7,
-            132.5
-          ],
-          "after": [
-            76.1,
-            103.4,
-            133.2
-          ]
-        },
-        {
-          "week": 16,
-          "opp": null,
-          "before": [
-            69.3,
-            95.7,
-            124.9
-          ],
-          "after": [
-            70.3,
-            97.8,
-            127.0
-          ]
-        },
-        {
-          "week": 17,
-          "opp": null,
-          "before": [
-            73.6,
-            100.8,
-            129.8
-          ],
-          "after": [
-            76.0,
-            103.2,
-            132.4
-          ]
-        }
-      ],
-      "fairness": 0.32,
-      "sits_for_them": [
-        "Tyler Allgeier wouldn't start for them (they start Kenneth Walker III & D'Andre Swift)"
-      ],
-      "ranks": {
-        "give": [
-          {
-            "name": "Tyler Allgeier",
-            "pos": "RB",
-            "our_rank": 49,
-            "ecr_rank": 47,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
         ],
         "get": [
           {
-            "name": "Brock Purdy",
-            "pos": "QB",
-            "our_rank": 5,
-            "ecr_rank": 3,
+            "name": "Carnell Tate",
+            "pos": "WR",
+            "our_rank": 26,
+            "ecr_rank": 24,
             "driver": "efficiency",
             "view": "consensus view"
           }
@@ -3194,242 +987,226 @@
         "needs": [
           {
             "pos": "RB",
-            "gap": 5.8
+            "gap": 6.2
           }
         ],
         "spare": []
       },
       "give": [
         {
-          "name": "George Kittle",
-          "pos": "TE",
-          "ros_pg": 12.48
+          "name": "Breece Hall",
+          "pos": "RB",
+          "ros_pg": 12.41
         }
       ],
       "get": [
         {
-          "name": "Trey McBride",
-          "pos": "TE",
-          "ros_pg": 14.77
+          "name": "Chase Brown",
+          "pos": "RB",
+          "ros_pg": 13.89
         }
       ],
       "tags": [
-        "PLAYOFF_SCHEDULE",
         "LINEUP"
       ],
       "all_tags": [
-        "PLAYOFF_SCHEDULE",
         "LINEUP"
       ],
-      "thesis": "Trey McBride's weeks 15\u201317 opponents (NYJ, NO, LV) have allowed +11% to TEs \u2014 the only position where a schedule read has predicted anything (backtest).",
-      "kill": "Wrong if those defenses' TE numbers regress toward average (now 1.11\u00d7 league).",
-      "second": {
-        "tag": "LINEUP",
-        "thesis": "Trey McBride starts for you over George Kittle: +2.15 pts/wk to your lineup over the weeks that count most."
-      },
+      "thesis": "Chase Brown starts for you over Breece Hall: +2.30 pts/wk to your lineup over the weeks that count most.",
+      "kill": "Wrong if Chase Brown's projection falls below Breece Hall's (13.9 vs 12.4 now).",
+      "second": null,
       "us": {
-        "d_week": 0.79,
-        "d_ros": 2.15,
-        "d_title": 0.0295,
-        "se_title": 0.0049,
+        "d_week": 1.1,
+        "d_ros": 2.3,
+        "d_title": 0.0105,
+        "se_title": 0.0039,
         "title_noise": false,
-        "p_title": 0.14,
-        "p_playoffs": 0.7737
+        "p_title": 0.0855,
+        "p_playoffs": 0.6642
       },
       "them": {
-        "d_week": -0.79,
-        "d_ros": -2.09,
-        "d_title": -0.0067,
-        "se_title": 0.0056,
-        "title_noise": true,
-        "p_playoffs_now": 0.9145
+        "d_week": -1.1,
+        "d_ros": -2.26,
+        "d_title": 0.0177,
+        "se_title": 0.0058,
+        "title_noise": false,
+        "p_playoffs_now": 0.9258
       },
       "i_would_start": [
-        "Trey McBride"
+        "Chase Brown"
       ],
       "i_would_bench": [],
       "netted_free_swap": false,
       "they_would_start": [
-        "George Kittle"
+        "Breece Hall"
       ],
       "they_would_bench": [],
       "fa_add": null,
-      "pitch": "They start Trey McBride at TE (14.8/g) and sit at 91% playoff odds.",
-      "p_accept": 0.006,
-      "flag": "LONGSHOT",
+      "pitch": "They start Chase Brown at RB (13.9/g) and sit at 93% playoff odds.",
+      "p_accept": 0.701,
+      "flag": "LIKELY",
       "why": [
-        "Their lineup loses 2.1 pts/wk over the weeks that matter to them",
-        "By name they get 24% of what they give",
-        "George Kittle is a big name",
-        "They'd give up an elite TE in Trey McBride"
+        "Their lineup loses 2.3 pts/wk over the weeks that matter to them",
+        "By name they get 115% of what they give",
+        "Breece Hall starts at RB, where they're thin",
+        "Breece Hall is a big name",
+        "Chase Brown plays for CIN, their team: hard to pry loose"
       ],
-      "exp_title": 0.00018,
-      "exp_ros": 0.013,
+      "exp_title": 0.00736,
+      "exp_ros": 1.611,
       "flags": [
         {
+          "kind": "rebound",
+          "text": "Rebound bet: projected at 13.9/g from here, against 10.2/g so far."
+        },
+        {
           "kind": "need",
-          "text": "Your weakest starter stays FLEX (Denzel Boston, 9.3/g vs a typical FLEX's 10.6)."
+          "text": "Fixes your weakest starter, RB2 (Breece Hall, 12.4/g vs a typical RB2's 13.4); weakest after: QB (Jayden Daniels, 17.9/g vs a typical QB's 19.2)."
         }
       ],
       "matchups": [
         {
-          "week": 9,
-          "opp": "L'Omar",
-          "win_before": 0.728,
-          "win_after": 0.741,
-          "before": [
-            86.7,
-            114.8,
-            145.1
-          ],
-          "after": [
-            87.8,
-            115.5,
-            146.1
-          ]
-        },
-        {
           "week": 10,
           "opp": "deez nuts",
-          "win_before": 0.488,
-          "win_after": 0.508,
+          "win_before": 0.487,
+          "win_after": 0.502,
           "before": [
-            80.1,
-            106.5,
-            135.9
+            83.0,
+            109.7,
+            139.3
           ],
           "after": [
-            80.6,
-            107.8,
-            137.0
+            83.1,
+            110.7,
+            139.8
           ]
         },
         {
           "week": 11,
           "opp": "Saquon Hater",
-          "win_before": 0.642,
-          "win_after": 0.67,
+          "win_before": 0.638,
+          "win_after": 0.661,
           "before": [
-            74.2,
-            100.0,
-            128.0
+            75.9,
+            102.5,
+            130.9
           ],
           "after": [
-            75.6,
-            101.8,
-            130.4
+            77.0,
+            104.1,
+            133.0
           ]
         },
         {
           "week": 12,
           "opp": "Heartbreak Drake",
-          "win_before": 0.493,
-          "win_after": 0.548,
+          "win_before": 0.522,
+          "win_after": 0.543,
           "before": [
-            74.8,
-            101.4,
-            129.3
+            74.3,
+            101.9,
+            130.6
           ],
           "after": [
-            77.9,
-            105.5,
-            135.1
+            76.2,
+            103.5,
+            133.1
           ]
         },
         {
           "week": 13,
           "opp": "Crabcakes and Football",
-          "win_before": 0.439,
-          "win_after": 0.472,
+          "win_before": 0.425,
+          "win_after": 0.452,
           "before": [
-            71.5,
-            99.0,
-            127.9
+            70.8,
+            99.3,
+            129.9
           ],
           "after": [
-            73.5,
-            101.6,
-            132.1
+            73.0,
+            103.0,
+            132.8
           ]
         },
         {
           "week": 14,
-          "opp": "BillsMafia",
-          "win_before": 0.456,
-          "win_after": 0.316,
+          "opp": "Burrow-Chase combo",
+          "win_before": 0.577,
+          "win_after": 0.6,
           "before": [
-            71.3,
-            98.7,
-            128.5
+            67.9,
+            95.5,
+            126.1
           ],
           "after": [
-            62.9,
-            88.0,
-            114.2
+            69.3,
+            97.4,
+            127.2
           ]
         },
         {
           "week": 15,
           "opp": null,
           "before": [
-            75.0,
-            102.7,
-            132.5
+            73.6,
+            102.3,
+            133.7
           ],
           "after": [
-            77.6,
-            106.5,
-            137.9
+            75.0,
+            103.9,
+            135.0
           ]
         },
         {
           "week": 16,
           "opp": null,
           "before": [
-            69.3,
-            95.7,
-            124.9
+            66.2,
+            94.4,
+            125.0
           ],
           "after": [
-            71.9,
-            100.2,
-            129.9
+            67.6,
+            96.2,
+            126.8
           ]
         },
         {
           "week": 17,
           "opp": null,
           "before": [
-            73.6,
-            100.8,
-            129.8
+            70.6,
+            98.8,
+            129.6
           ],
           "after": [
-            75.8,
-            104.2,
-            134.3
+            71.6,
+            100.2,
+            131.3
           ]
         }
       ],
-      "fairness": 0.24,
+      "fairness": 1.15,
       "sits_for_them": [],
       "ranks": {
         "give": [
           {
-            "name": "George Kittle",
-            "pos": "TE",
-            "our_rank": 3,
-            "ecr_rank": 3,
+            "name": "Breece Hall",
+            "pos": "RB",
+            "our_rank": 23,
+            "ecr_rank": 18,
             "driver": "efficiency",
             "view": "consensus view"
           }
         ],
         "get": [
           {
-            "name": "Trey McBride",
-            "pos": "TE",
-            "our_rank": 1,
-            "ecr_rank": 1,
+            "name": "Chase Brown",
+            "pos": "RB",
+            "our_rank": 18,
+            "ecr_rank": 13,
             "driver": "efficiency",
             "view": "consensus view"
           }
@@ -3438,574 +1215,41 @@
     },
     {
       "partner": "L'Omar",
-      "shape": "1-for-1",
+      "shape": "2-for-1",
       "partner_profile": {
         "needs": [
           {
             "pos": "RB",
-            "gap": 5.0
+            "gap": 3.3
           },
           {
             "pos": "QB",
-            "gap": 1.9
+            "gap": 2.2
           },
           {
             "pos": "TE",
-            "gap": 1.3
+            "gap": 1.2
           }
         ],
         "spare": []
       },
       "give": [
         {
-          "name": "Josh Downs",
+          "name": "Christian Watson",
           "pos": "WR",
-          "ros_pg": 8.42
-        }
-      ],
-      "get": [
-        {
-          "name": "Carnell Tate",
-          "pos": "WR",
-          "ros_pg": 10.35
-        }
-      ],
-      "tags": [
-        "LINEUP",
-        "PORTFOLIO"
-      ],
-      "all_tags": [
-        "LINEUP",
-        "PORTFOLIO"
-      ],
-      "thesis": "Carnell Tate starts for you over Denzel Boston: +0.78 pts/wk to your lineup over the weeks that count most.",
-      "kill": "Wrong if Carnell Tate's projection falls below Denzel Boston's (10.3 vs 9.3 now).",
-      "second": {
-        "tag": "PORTFOLIO",
-        "thesis": "Spreads your byes: 2 starters off in week 11 today, 1 at most after."
-      },
-      "us": {
-        "d_week": 0.0,
-        "d_ros": 0.78,
-        "d_title": 0.009,
-        "se_title": 0.004,
-        "title_noise": false,
-        "p_title": 0.1195,
-        "p_playoffs": 0.7847
-      },
-      "them": {
-        "d_week": 0.81,
-        "d_ros": -1.67,
-        "d_title": -0.0243,
-        "se_title": 0.0039,
-        "title_noise": false,
-        "p_playoffs_now": 0.6753
-      },
-      "i_would_start": [
-        "Carnell Tate"
-      ],
-      "i_would_bench": [
-        "Denzel Boston"
-      ],
-      "netted_free_swap": false,
-      "they_would_start": [
-        "Jakobi Meyers"
-      ],
-      "they_would_bench": [],
-      "fa_add": null,
-      "pitch": "They start Carnell Tate at FLEX (10.3/g) and sit at 68% playoff odds.",
-      "p_accept": 0.0,
-      "flag": "LONGSHOT",
-      "why": [
-        "Their lineup loses 1.7 pts/wk over the weeks that matter to them",
-        "By name they get 8% of what they give",
-        "Josh Downs wouldn't start for them (they start Puka Nacua & Zay Flowers & Jakobi Meyers)",
-        "Josh Downs is unproven, so weak currency",
-        "Carnell Tate is unproven, easier for them to part with"
-      ],
-      "exp_title": 0.0,
-      "exp_ros": 0.0,
-      "flags": [
-        {
-          "kind": "injury",
-          "text": "Carnell Tate is out until week 10, back for the playoffs."
+          "ros_pg": 13.27
         },
         {
-          "kind": "need",
-          "text": "Fixes your weakest starter, FLEX (Denzel Boston, 9.3/g vs a typical FLEX's 10.6); weakest after: RB2 (Breece Hall, 12.5/g vs a typical RB2's 13.6)."
-        }
-      ],
-      "matchups": [
-        {
-          "week": 9,
-          "opp": "L'Omar",
-          "win_before": 0.728,
-          "win_after": 0.727,
-          "before": [
-            86.7,
-            114.8,
-            145.1
-          ],
-          "after": [
-            86.7,
-            114.8,
-            145.1
-          ]
-        },
-        {
-          "week": 10,
-          "opp": "deez nuts",
-          "win_before": 0.488,
-          "win_after": 0.488,
-          "before": [
-            80.1,
-            106.5,
-            135.9
-          ],
-          "after": [
-            80.3,
-            106.3,
-            135.9
-          ]
-        },
-        {
-          "week": 11,
-          "opp": "Saquon Hater",
-          "win_before": 0.642,
-          "win_after": 0.658,
-          "before": [
-            74.2,
-            100.0,
-            128.0
-          ],
-          "after": [
-            75.0,
-            100.7,
-            129.1
-          ]
-        },
-        {
-          "week": 12,
-          "opp": "Heartbreak Drake",
-          "win_before": 0.493,
-          "win_after": 0.493,
-          "before": [
-            74.8,
-            101.4,
-            129.3
-          ],
-          "after": [
-            74.8,
-            101.4,
-            129.3
-          ]
-        },
-        {
-          "week": 13,
-          "opp": "Crabcakes and Football",
-          "win_before": 0.439,
-          "win_after": 0.457,
-          "before": [
-            71.5,
-            99.0,
-            127.9
-          ],
-          "after": [
-            72.3,
-            100.4,
-            129.7
-          ]
-        },
-        {
-          "week": 14,
-          "opp": "BillsMafia",
-          "win_before": 0.456,
-          "win_after": 0.474,
-          "before": [
-            71.3,
-            98.7,
-            128.5
-          ],
-          "after": [
-            72.3,
-            100.1,
-            130.1
-          ]
-        },
-        {
-          "week": 15,
-          "opp": null,
-          "before": [
-            75.0,
-            102.7,
-            132.5
-          ],
-          "after": [
-            75.8,
-            104.0,
-            134.0
-          ]
-        },
-        {
-          "week": 16,
-          "opp": null,
-          "before": [
-            69.3,
-            95.7,
-            124.9
-          ],
-          "after": [
-            70.5,
-            97.1,
-            126.3
-          ]
-        },
-        {
-          "week": 17,
-          "opp": null,
-          "before": [
-            73.6,
-            100.8,
-            129.8
-          ],
-          "after": [
-            74.2,
-            101.0,
-            129.6
-          ]
-        }
-      ],
-      "fairness": 0.08,
-      "sits_for_them": [
-        "Josh Downs wouldn't start for them (they start Puka Nacua & Zay Flowers & Jakobi Meyers)"
-      ],
-      "ranks": {
-        "give": [
-          {
-            "name": "Josh Downs",
-            "pos": "WR",
-            "our_rank": 48,
-            "ecr_rank": 36,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Carnell Tate",
-            "pos": "WR",
-            "our_rank": 26,
-            "ecr_rank": 26,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
-      "partner": "Heartbreak Drake",
-      "shape": "1-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "WR",
-            "gap": 5.7
-          }
-        ],
-        "spare": [
-          {
-            "name": "Tyler Shough",
-            "pos": "QB",
-            "ppg": 17.5
-          },
-          {
-            "name": "Stefon Diggs",
-            "pos": "WR",
-            "ppg": 9.9
-          }
-        ]
-      },
-      "give": [
-        {
-          "name": "Josh Downs",
-          "pos": "WR",
-          "ros_pg": 8.42
-        }
-      ],
-      "get": [
-        {
-          "name": "Drake Maye",
-          "pos": "QB",
-          "ros_pg": 20.6
-        }
-      ],
-      "tags": [
-        "LINEUP"
-      ],
-      "all_tags": [
-        "LINEUP"
-      ],
-      "thesis": "Drake Maye starts for you over Jayden Daniels: +1.45 pts/wk to your lineup over the weeks that count most.",
-      "kill": "Wrong if Drake Maye's projection falls below Jayden Daniels's (20.6 vs 17.9 now).",
-      "second": null,
-      "us": {
-        "d_week": 0.83,
-        "d_ros": 1.45,
-        "d_title": 0.0237,
-        "se_title": 0.0045,
-        "title_noise": false,
-        "p_title": 0.1342,
-        "p_playoffs": 0.7973
-      },
-      "them": {
-        "d_week": -2.52,
-        "d_ros": -0.83,
-        "d_title": -0.0455,
-        "se_title": 0.0044,
-        "title_noise": false,
-        "p_playoffs_now": 0.7788
-      },
-      "i_would_start": [
-        "Drake Maye"
-      ],
-      "i_would_bench": [
-        "Jayden Daniels"
-      ],
-      "netted_free_swap": false,
-      "they_would_start": [
-        "Tyler Shough"
-      ],
-      "they_would_bench": [],
-      "fa_add": null,
-      "pitch": "They start Drake Maye at QB (20.6/g) and sit at 78% playoff odds.",
-      "p_accept": 0.0,
-      "flag": "LONGSHOT",
-      "why": [
-        "Their lineup loses 0.8 pts/wk over the weeks that matter to them",
-        "By name they get 5% of what they give",
-        "Josh Downs wouldn't start for them (they start Nico Collins & Tetairoa McMillan)",
-        "Josh Downs is unproven, so weak currency",
-        "They'd give up a big name in Drake Maye"
-      ],
-      "exp_title": 0.0,
-      "exp_ros": 0.0,
-      "flags": [
-        {
-          "kind": "need",
-          "text": "Your weakest starter stays FLEX (Denzel Boston, 9.3/g vs a typical FLEX's 10.6)."
-        }
-      ],
-      "matchups": [
-        {
-          "week": 9,
-          "opp": "L'Omar",
-          "win_before": 0.728,
-          "win_after": 0.724,
-          "before": [
-            86.7,
-            114.8,
-            145.1
-          ],
-          "after": [
-            86.4,
-            114.5,
-            144.0
-          ]
-        },
-        {
-          "week": 10,
-          "opp": "deez nuts",
-          "win_before": 0.488,
-          "win_after": 0.531,
-          "before": [
-            80.1,
-            106.5,
-            135.9
-          ],
-          "after": [
-            82.7,
-            109.1,
-            138.3
-          ]
-        },
-        {
-          "week": 11,
-          "opp": "Saquon Hater",
-          "win_before": 0.642,
-          "win_after": 0.627,
-          "before": [
-            74.2,
-            100.0,
-            128.0
-          ],
-          "after": [
-            73.0,
-            98.9,
-            127.3
-          ]
-        },
-        {
-          "week": 12,
-          "opp": "Heartbreak Drake",
-          "win_before": 0.493,
-          "win_after": 0.55,
-          "before": [
-            74.8,
-            101.4,
-            129.3
-          ],
-          "after": [
-            75.6,
-            101.9,
-            129.9
-          ]
-        },
-        {
-          "week": 13,
-          "opp": "Crabcakes and Football",
-          "win_before": 0.439,
-          "win_after": 0.469,
-          "before": [
-            71.5,
-            99.0,
-            127.9
-          ],
-          "after": [
-            73.5,
-            101.4,
-            130.0
-          ]
-        },
-        {
-          "week": 14,
-          "opp": "BillsMafia",
-          "win_before": 0.456,
-          "win_after": 0.455,
-          "before": [
-            71.3,
-            98.7,
-            128.5
-          ],
-          "after": [
-            72.1,
-            99.2,
-            128.1
-          ]
-        },
-        {
-          "week": 15,
-          "opp": null,
-          "before": [
-            75.0,
-            102.7,
-            132.5
-          ],
-          "after": [
-            75.2,
-            103.1,
-            132.5
-          ]
-        },
-        {
-          "week": 16,
-          "opp": null,
-          "before": [
-            69.3,
-            95.7,
-            124.9
-          ],
-          "after": [
-            71.4,
-            98.9,
-            127.8
-          ]
-        },
-        {
-          "week": 17,
-          "opp": null,
-          "before": [
-            73.6,
-            100.8,
-            129.8
-          ],
-          "after": [
-            75.1,
-            102.2,
-            131.7
-          ]
-        }
-      ],
-      "fairness": 0.05,
-      "sits_for_them": [
-        "Josh Downs wouldn't start for them (they start Nico Collins & Tetairoa McMillan)"
-      ],
-      "ranks": {
-        "give": [
-          {
-            "name": "Josh Downs",
-            "pos": "WR",
-            "our_rank": 48,
-            "ecr_rank": 36,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Drake Maye",
-            "pos": "QB",
-            "our_rank": 4,
-            "ecr_rank": 2,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
-      "partner": "Revenge of the Smith",
-      "shape": "1-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "TE",
-            "gap": 2.4
-          },
-          {
-            "pos": "RB",
-            "gap": 1.8
-          }
-        ],
-        "spare": [
-          {
-            "name": "Kirk Cousins",
-            "pos": "QB",
-            "ppg": 15.2
-          },
-          {
-            "name": "Jaylen Waddle",
-            "pos": "WR",
-            "ppg": 10.3
-          },
-          {
-            "name": "Rome Odunze",
-            "pos": "WR",
-            "ppg": 9.0
-          }
-        ]
-      },
-      "give": [
-        {
-          "name": "Jadarian Price",
+          "name": "Breece Hall",
           "pos": "RB",
-          "ros_pg": 8.22
+          "ros_pg": 12.41
         }
       ],
       "get": [
         {
-          "name": "Josh Jacobs",
-          "pos": "RB",
-          "ros_pg": 14.35
+          "name": "Puka Nacua",
+          "pos": "WR",
+          "ros_pg": 19.1
         }
       ],
       "tags": [
@@ -4017,167 +1261,1142 @@
         "TRAJECTORY",
         "LINEUP"
       ],
-      "thesis": "Buy Josh Jacobs low: -6.2 pts/g under what his usage earns, and his usage ranks RB4 against consensus RB20.",
-      "kill": "Wrong if his share of his team's expected points falls below 14% (now 21%, minus one sd).",
+      "thesis": "Buy Puka Nacua low: -4.4 pts/g under what his usage earns, and his usage ranks WR1 against consensus WR2.",
+      "kill": "Wrong if his share of his team's expected points falls below 18% (now 24%, minus one sd).",
       "second": {
         "tag": "TRAJECTORY",
-        "thesis": "Josh Jacobs's role is growing \u2014 share up from 16% to 26%, top fifth at RB \u2014 and we rank him RB6 to consensus RB20."
+        "thesis": "Puka Nacua's role is growing \u2014 share up from 21% to 29%, top fifth at WR \u2014 and we rank him WR1 to consensus WR2."
       },
       "us": {
-        "d_week": 2.38,
-        "d_ros": 3.87,
-        "d_title": 0.0377,
-        "se_title": 0.0043,
+        "d_week": 1.66,
+        "d_ros": 2.07,
+        "d_title": 0.0163,
+        "se_title": 0.0044,
         "title_noise": false,
-        "p_title": 0.1482,
-        "p_playoffs": 0.8242
+        "p_title": 0.103,
+        "p_playoffs": 0.6805
       },
       "them": {
-        "d_week": -3.66,
-        "d_ros": -4.8,
-        "d_title": -0.0078,
-        "se_title": 0.0018,
+        "d_week": 6.87,
+        "d_ros": -3.68,
+        "d_title": -0.0187,
+        "se_title": 0.0051,
         "title_noise": false,
-        "p_playoffs_now": 0.1503
+        "p_playoffs_now": 0.8383
       },
       "i_would_start": [
-        "Josh Jacobs"
+        "Rachaad White",
+        "Puka Nacua"
       ],
-      "i_would_bench": [
-        "Denzel Boston"
-      ],
-      "netted_free_swap": false,
+      "i_would_bench": [],
+      "netted_free_swap": true,
       "they_would_start": [
-        "Emanuel Wilson"
+        "Christian Watson",
+        "Breece Hall"
       ],
-      "they_would_bench": [],
+      "they_would_bench": [
+        "Zay Flowers"
+      ],
       "fa_add": null,
-      "pitch": "They start Josh Jacobs at RB (14.3/g) and sit at 15% playoff odds.",
-      "p_accept": 0.0,
-      "flag": "LONGSHOT",
+      "pitch": "They start Puka Nacua at WR (19.1/g) and sit at 84% playoff odds.",
+      "p_accept": 0.411,
+      "flag": "EXPLOIT",
       "why": [
-        "Their lineup loses 4.8 pts/wk over the weeks that matter to them",
-        "By name they get 0% of what they give",
-        "Jadarian Price starts at RB, where they're thin",
-        "Jadarian Price is unproven, so weak currency",
-        "They'd give up a big name in Josh Jacobs"
+        "Their lineup loses 3.7 pts/wk over the weeks that matter to them",
+        "By name they get 89% of what they give",
+        "Breece Hall starts at RB, where they're thin",
+        "Breece Hall is a big name",
+        "They'd give up a big name in Puka Nacua"
       ],
-      "exp_title": 0.0,
-      "exp_ros": 0.0,
+      "exp_title": 0.00672,
+      "exp_ros": 0.85,
       "flags": [
         {
           "kind": "need",
-          "text": "Fixes your weakest starter, FLEX (Denzel Boston, 9.3/g vs a typical FLEX's 10.6); weakest after: QB (Jayden Daniels, 17.9/g vs a typical QB's 19.4)."
+          "text": "Your weakest starter goes from RB2 (Breece Hall, 12.4/g vs a typical RB2's 13.4) to RB2 (Rachaad White, 9.1/g vs a typical RB2's 13.4)."
         }
       ],
       "matchups": [
         {
-          "week": 9,
-          "opp": "L'Omar",
-          "win_before": 0.728,
-          "win_after": 0.752,
-          "before": [
-            86.7,
-            114.8,
-            145.1
-          ],
-          "after": [
-            88.4,
-            117.0,
-            146.2
-          ]
-        },
-        {
           "week": 10,
           "opp": "deez nuts",
-          "win_before": 0.488,
-          "win_after": 0.543,
+          "win_before": 0.501,
+          "win_after": 0.518,
           "before": [
-            80.1,
-            106.5,
-            135.9
+            83.5,
+            110.3,
+            139.5
           ],
           "after": [
-            84.1,
-            110.6,
-            140.1
+            84.2,
+            112.0,
+            142.9
           ]
         },
         {
           "week": 11,
           "opp": "Saquon Hater",
-          "win_before": 0.642,
-          "win_after": 0.642,
+          "win_before": 0.638,
+          "win_after": 0.614,
           "before": [
-            74.2,
-            100.0,
-            128.0
+            75.8,
+            102.6,
+            131.0
           ],
           "after": [
-            74.2,
-            100.0,
-            128.0
+            73.8,
+            100.7,
+            128.4
           ]
         },
         {
           "week": 12,
           "opp": "Heartbreak Drake",
-          "win_before": 0.493,
-          "win_after": 0.532,
+          "win_before": 0.531,
+          "win_after": 0.565,
           "before": [
-            74.8,
-            101.4,
-            129.3
+            75.2,
+            102.2,
+            131.6
           ],
           "after": [
-            77.3,
-            103.9,
-            132.4
+            76.7,
+            105.6,
+            137.0
           ]
         },
         {
           "week": 13,
           "opp": "Crabcakes and Football",
-          "win_before": 0.439,
-          "win_after": 0.493,
+          "win_before": 0.436,
+          "win_after": 0.486,
           "before": [
-            71.5,
-            99.0,
-            127.9
+            71.6,
+            100.6,
+            130.4
           ],
           "after": [
-            74.5,
-            103.4,
-            132.8
+            75.1,
+            105.3,
+            137.4
           ]
         },
         {
           "week": 14,
-          "opp": "BillsMafia",
-          "win_before": 0.456,
-          "win_after": 0.505,
+          "opp": "Burrow-Chase combo",
+          "win_before": 0.578,
+          "win_after": 0.59,
           "before": [
-            71.3,
-            98.7,
-            128.5
+            67.6,
+            95.4,
+            126.0
           ],
           "after": [
-            74.9,
-            102.8,
-            133.0
+            68.0,
+            97.1,
+            128.5
           ]
         },
         {
           "week": 15,
           "opp": null,
           "before": [
-            75.0,
-            102.7,
-            132.5
+            74.8,
+            104.0,
+            135.5
+          ],
+          "after": [
+            75.9,
+            107.2,
+            140.9
+          ]
+        },
+        {
+          "week": 16,
+          "opp": null,
+          "before": [
+            67.6,
+            95.7,
+            126.9
+          ],
+          "after": [
+            66.6,
+            96.0,
+            127.0
+          ]
+        },
+        {
+          "week": 17,
+          "opp": null,
+          "before": [
+            71.7,
+            100.6,
+            131.2
+          ],
+          "after": [
+            72.4,
+            103.2,
+            135.2
+          ]
+        }
+      ],
+      "fairness": 0.89,
+      "sits_for_them": [],
+      "ranks": {
+        "give": [
+          {
+            "name": "Christian Watson",
+            "pos": "WR",
+            "our_rank": 9,
+            "ecr_rank": 9,
+            "driver": "efficiency",
+            "view": "consensus view"
+          },
+          {
+            "name": "Breece Hall",
+            "pos": "RB",
+            "our_rank": 23,
+            "ecr_rank": 18,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ],
+        "get": [
+          {
+            "name": "Puka Nacua",
+            "pos": "WR",
+            "our_rank": 1,
+            "ecr_rank": 2,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ]
+      }
+    },
+    {
+      "partner": "L'Omar",
+      "shape": "2-for-1",
+      "partner_profile": {
+        "needs": [
+          {
+            "pos": "RB",
+            "gap": 3.3
+          },
+          {
+            "pos": "QB",
+            "gap": 2.2
+          },
+          {
+            "pos": "TE",
+            "gap": 1.2
+          }
+        ],
+        "spare": []
+      },
+      "give": [
+        {
+          "name": "Christian Watson",
+          "pos": "WR",
+          "ros_pg": 13.27
+        },
+        {
+          "name": "Rachaad White",
+          "pos": "RB",
+          "ros_pg": 9.08
+        }
+      ],
+      "get": [
+        {
+          "name": "Jaylen Warren",
+          "pos": "RB",
+          "ros_pg": 15.08
+        }
+      ],
+      "tags": [
+        "LINEUP"
+      ],
+      "all_tags": [
+        "LINEUP"
+      ],
+      "thesis": "Jaylen Warren starts for you over Christian Watson: +2.75 pts/wk to your lineup over the weeks that count most.",
+      "kill": "Wrong if Jaylen Warren's projection falls below Christian Watson's (15.1 vs 13.3 now).",
+      "second": null,
+      "us": {
+        "d_week": 2.55,
+        "d_ros": 2.75,
+        "d_title": 0.0192,
+        "se_title": 0.0043,
+        "title_noise": false,
+        "p_title": 0.1058,
+        "p_playoffs": 0.6837
+      },
+      "them": {
+        "d_week": -3.27,
+        "d_ros": -4.61,
+        "d_title": -0.0373,
+        "se_title": 0.0049,
+        "title_noise": false,
+        "p_playoffs_now": 0.8383
+      },
+      "i_would_start": [
+        "Jaylen Warren"
+      ],
+      "i_would_bench": [],
+      "netted_free_swap": true,
+      "they_would_start": [
+        "Rachaad White",
+        "Christian Watson"
+      ],
+      "they_would_bench": [
+        "Zay Flowers"
+      ],
+      "fa_add": null,
+      "pitch": "They start Jaylen Warren at RB (15.1/g) and sit at 84% playoff odds.",
+      "p_accept": 0.299,
+      "flag": "NEEDS_PITCH",
+      "why": [
+        "Their lineup loses 4.6 pts/wk over the weeks that matter to them",
+        "By name they get 81% of what they give",
+        "Rachaad White starts at RB, where they're thin"
+      ],
+      "exp_title": 0.00572,
+      "exp_ros": 0.821,
+      "flags": [
+        {
+          "kind": "need",
+          "text": "Fixes your weakest starter, RB2 (Breece Hall, 12.4/g vs a typical RB2's 13.4); weakest after: QB (Jayden Daniels, 17.9/g vs a typical QB's 19.2)."
+        }
+      ],
+      "matchups": [
+        {
+          "week": 10,
+          "opp": "deez nuts",
+          "win_before": 0.501,
+          "win_after": 0.53,
+          "before": [
+            83.5,
+            110.3,
+            139.5
+          ],
+          "after": [
+            85.3,
+            112.7,
+            142.3
+          ]
+        },
+        {
+          "week": 11,
+          "opp": "Saquon Hater",
+          "win_before": 0.638,
+          "win_after": 0.697,
+          "before": [
+            75.8,
+            102.6,
+            131.0
+          ],
+          "after": [
+            80.0,
+            107.6,
+            136.2
+          ]
+        },
+        {
+          "week": 12,
+          "opp": "Heartbreak Drake",
+          "win_before": 0.531,
+          "win_after": 0.551,
+          "before": [
+            75.2,
+            102.2,
+            131.6
+          ],
+          "after": [
+            76.3,
+            104.7,
+            133.0
+          ]
+        },
+        {
+          "week": 13,
+          "opp": "Crabcakes and Football",
+          "win_before": 0.436,
+          "win_after": 0.445,
+          "before": [
+            71.6,
+            100.6,
+            130.4
+          ],
+          "after": [
+            72.5,
+            101.0,
+            131.3
+          ]
+        },
+        {
+          "week": 14,
+          "opp": "Burrow-Chase combo",
+          "win_before": 0.578,
+          "win_after": 0.576,
+          "before": [
+            67.6,
+            95.4,
+            126.0
+          ],
+          "after": [
+            67.7,
+            95.7,
+            126.4
+          ]
+        },
+        {
+          "week": 15,
+          "opp": null,
+          "before": [
+            74.8,
+            104.0,
+            135.5
+          ],
+          "after": [
+            74.8,
+            104.8,
+            136.3
+          ]
+        },
+        {
+          "week": 16,
+          "opp": null,
+          "before": [
+            67.6,
+            95.7,
+            126.9
+          ],
+          "after": [
+            68.9,
+            97.8,
+            130.0
+          ]
+        },
+        {
+          "week": 17,
+          "opp": null,
+          "before": [
+            71.7,
+            100.6,
+            131.2
+          ],
+          "after": [
+            73.9,
+            102.8,
+            134.8
+          ]
+        }
+      ],
+      "fairness": 0.81,
+      "sits_for_them": [],
+      "ranks": {
+        "give": [
+          {
+            "name": "Christian Watson",
+            "pos": "WR",
+            "our_rank": 9,
+            "ecr_rank": 9,
+            "driver": "efficiency",
+            "view": "consensus view"
+          },
+          {
+            "name": "Rachaad White",
+            "pos": "RB",
+            "our_rank": 43,
+            "ecr_rank": 33,
+            "driver": "usage",
+            "view": "consensus view"
+          }
+        ],
+        "get": [
+          {
+            "name": "Jaylen Warren",
+            "pos": "RB",
+            "our_rank": 14,
+            "ecr_rank": 9,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ]
+      }
+    },
+    {
+      "partner": "Burrow-Chase combo",
+      "shape": "1-for-1",
+      "partner_profile": {
+        "needs": [
+          {
+            "pos": "WR",
+            "gap": 2.7
+          }
+        ],
+        "spare": []
+      },
+      "give": [
+        {
+          "name": "Denzel Boston",
+          "pos": "WR",
+          "ros_pg": 9.32
+        }
+      ],
+      "get": [
+        {
+          "name": "Quinshon Judkins",
+          "pos": "RB",
+          "ros_pg": 11.92
+        }
+      ],
+      "tags": [
+        "LINEUP"
+      ],
+      "all_tags": [
+        "LINEUP"
+      ],
+      "thesis": "Quinshon Judkins starts for you over Denzel Boston: +2.03 pts/wk to your lineup over the weeks that count most.",
+      "kill": "Wrong if Quinshon Judkins's projection falls below Denzel Boston's (11.9 vs 9.3 now).",
+      "second": null,
+      "us": {
+        "d_week": 2.5,
+        "d_ros": 2.03,
+        "d_title": 0.0232,
+        "se_title": 0.0037,
+        "title_noise": false,
+        "p_title": 0.0982,
+        "p_playoffs": 0.6772
+      },
+      "them": {
+        "d_week": -3.13,
+        "d_ros": -0.88,
+        "d_title": -0.0015,
+        "se_title": 0.001,
+        "title_noise": true,
+        "p_playoffs_now": 0.0468
+      },
+      "i_would_start": [
+        "Quinshon Judkins"
+      ],
+      "i_would_bench": [],
+      "netted_free_swap": false,
+      "they_would_start": [
+        "Alvin Kamara"
+      ],
+      "they_would_bench": [],
+      "fa_add": null,
+      "pitch": "They start Quinshon Judkins at RB (11.9/g) and sit at 5% playoff odds.",
+      "p_accept": 0.182,
+      "flag": "NEEDS_PITCH",
+      "why": [
+        "Their lineup loses 0.9 pts/wk over the next few weeks \u2014 out of the race, they're playing for wins now",
+        "By name they get 36% of what they give",
+        "Denzel Boston starts at WR, where they're thin",
+        "Denzel Boston is unproven, so weak currency"
+      ],
+      "exp_title": 0.00421,
+      "exp_ros": 0.368,
+      "flags": [
+        {
+          "kind": "need",
+          "text": "Your weakest starter stays RB2 (Breece Hall, 12.4/g vs a typical RB2's 13.4)."
+        }
+      ],
+      "matchups": [
+        {
+          "week": 10,
+          "opp": "deez nuts",
+          "win_before": 0.487,
+          "win_after": 0.523,
+          "before": [
+            83.0,
+            109.7,
+            139.3
+          ],
+          "after": [
+            85.6,
+            112.0,
+            142.6
+          ]
+        },
+        {
+          "week": 11,
+          "opp": "Saquon Hater",
+          "win_before": 0.638,
+          "win_after": 0.638,
+          "before": [
+            75.9,
+            102.5,
+            130.9
+          ],
+          "after": [
+            75.9,
+            102.5,
+            130.9
+          ]
+        },
+        {
+          "week": 12,
+          "opp": "Heartbreak Drake",
+          "win_before": 0.522,
+          "win_after": 0.553,
+          "before": [
+            74.3,
+            101.9,
+            130.6
+          ],
+          "after": [
+            76.5,
+            104.4,
+            134.7
+          ]
+        },
+        {
+          "week": 13,
+          "opp": "Crabcakes and Football",
+          "win_before": 0.425,
+          "win_after": 0.438,
+          "before": [
+            70.8,
+            99.3,
+            129.9
+          ],
+          "after": [
+            69.5,
+            100.2,
+            131.3
+          ]
+        },
+        {
+          "week": 14,
+          "opp": "Burrow-Chase combo",
+          "win_before": 0.577,
+          "win_after": 0.638,
+          "before": [
+            67.9,
+            95.5,
+            126.1
+          ],
+          "after": [
+            70.1,
+            98.1,
+            128.7
+          ]
+        },
+        {
+          "week": 15,
+          "opp": null,
+          "before": [
+            73.6,
+            102.3,
+            133.7
+          ],
+          "after": [
+            75.1,
+            104.5,
+            136.2
+          ]
+        },
+        {
+          "week": 16,
+          "opp": null,
+          "before": [
+            66.2,
+            94.4,
+            125.0
+          ],
+          "after": [
+            67.8,
+            96.2,
+            127.5
+          ]
+        },
+        {
+          "week": 17,
+          "opp": null,
+          "before": [
+            70.6,
+            98.8,
+            129.6
+          ],
+          "after": [
+            72.4,
+            101.1,
+            132.0
+          ]
+        }
+      ],
+      "fairness": 0.36,
+      "sits_for_them": [],
+      "ranks": {
+        "give": [
+          {
+            "name": "Denzel Boston",
+            "pos": "WR",
+            "our_rank": 29,
+            "ecr_rank": 35,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ],
+        "get": [
+          {
+            "name": "Quinshon Judkins",
+            "pos": "RB",
+            "our_rank": 24,
+            "ecr_rank": 21,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ]
+      }
+    },
+    {
+      "partner": "Allen Moore connection",
+      "shape": "2-for-1",
+      "partner_profile": {
+        "needs": [
+          {
+            "pos": "WR",
+            "gap": 10.6
+          },
+          {
+            "pos": "TE",
+            "gap": 1.1
+          }
+        ],
+        "spare": []
+      },
+      "give": [
+        {
+          "name": "Jayden Daniels",
+          "pos": "QB",
+          "ros_pg": 17.93
+        },
+        {
+          "name": "Malik Nabers",
+          "pos": "WR",
+          "ros_pg": 13.41
+        }
+      ],
+      "get": [
+        {
+          "name": "Josh Allen",
+          "pos": "QB",
+          "ros_pg": 25.66
+        }
+      ],
+      "tags": [
+        "LINEUP"
+      ],
+      "all_tags": [
+        "LINEUP"
+      ],
+      "thesis": "Josh Allen starts for you over Jayden Daniels: +1.85 pts/wk to your lineup over the weeks that count most.",
+      "kill": "Wrong if Josh Allen's projection falls below Jayden Daniels's (25.7 vs 17.9 now).",
+      "second": null,
+      "us": {
+        "d_week": 4.6,
+        "d_ros": 1.85,
+        "d_title": 0.0138,
+        "se_title": 0.0045,
+        "title_noise": false,
+        "p_title": 0.1005,
+        "p_playoffs": 0.6837
+      },
+      "them": {
+        "d_week": -4.14,
+        "d_ros": -1.48,
+        "d_title": -0.0013,
+        "se_title": 0.0007,
+        "title_noise": false,
+        "p_playoffs_now": 0.0238
+      },
+      "i_would_start": [
+        "Josh Allen",
+        "Denzel Boston"
+      ],
+      "i_would_bench": [],
+      "netted_free_swap": true,
+      "they_would_start": [
+        "Jayden Daniels",
+        "Malik Nabers"
+      ],
+      "they_would_bench": [
+        "Caleb Douglas"
+      ],
+      "fa_add": null,
+      "pitch": "They start Josh Allen at QB (25.7/g) and sit at 2% playoff odds.",
+      "p_accept": 0.211,
+      "flag": "NEEDS_PITCH",
+      "why": [
+        "Their lineup loses 1.5 pts/wk over the next few weeks \u2014 out of the race, they're playing for wins now",
+        "By name they get 88% of what they give",
+        "Malik Nabers starts at WR, where they're thin",
+        "Malik Nabers is a big name",
+        "Jayden Daniels is a throw-in they'd have to cut someone for",
+        "They'd give up an elite QB in Josh Allen"
+      ],
+      "exp_title": 0.00291,
+      "exp_ros": 0.389,
+      "flags": [
+        {
+          "kind": "need",
+          "text": "Your weakest starter stays RB2 (Breece Hall, 12.4/g vs a typical RB2's 13.4)."
+        }
+      ],
+      "matchups": [
+        {
+          "week": 10,
+          "opp": "deez nuts",
+          "win_before": 0.501,
+          "win_after": 0.544,
+          "before": [
+            83.5,
+            110.3,
+            139.5
+          ],
+          "after": [
+            86.2,
+            114.1,
+            143.0
+          ]
+        },
+        {
+          "week": 11,
+          "opp": "Saquon Hater",
+          "win_before": 0.638,
+          "win_after": 0.673,
+          "before": [
+            75.8,
+            102.6,
+            131.0
+          ],
+          "after": [
+            76.9,
+            105.6,
+            135.6
+          ]
+        },
+        {
+          "week": 12,
+          "opp": "Heartbreak Drake",
+          "win_before": 0.531,
+          "win_after": 0.549,
+          "before": [
+            75.2,
+            102.2,
+            131.6
+          ],
+          "after": [
+            74.4,
+            104.8,
+            135.5
+          ]
+        },
+        {
+          "week": 13,
+          "opp": "Crabcakes and Football",
+          "win_before": 0.436,
+          "win_after": 0.438,
+          "before": [
+            71.6,
+            100.6,
+            130.4
+          ],
+          "after": [
+            71.1,
+            100.3,
+            131.9
+          ]
+        },
+        {
+          "week": 14,
+          "opp": "Burrow-Chase combo",
+          "win_before": 0.578,
+          "win_after": 0.608,
+          "before": [
+            67.6,
+            95.4,
+            126.0
+          ],
+          "after": [
+            68.3,
+            98.3,
+            129.9
+          ]
+        },
+        {
+          "week": 15,
+          "opp": null,
+          "before": [
+            74.8,
+            104.0,
+            135.5
+          ],
+          "after": [
+            74.2,
+            105.4,
+            139.0
+          ]
+        },
+        {
+          "week": 16,
+          "opp": null,
+          "before": [
+            67.6,
+            95.7,
+            126.9
+          ],
+          "after": [
+            66.8,
+            96.7,
+            128.4
+          ]
+        },
+        {
+          "week": 17,
+          "opp": null,
+          "before": [
+            71.7,
+            100.6,
+            131.2
+          ],
+          "after": [
+            71.8,
+            102.3,
+            134.7
+          ]
+        }
+      ],
+      "fairness": 0.88,
+      "sits_for_them": [],
+      "ranks": {
+        "give": [
+          {
+            "name": "Jayden Daniels",
+            "pos": "QB",
+            "our_rank": 16,
+            "ecr_rank": 11,
+            "driver": "efficiency",
+            "view": "consensus view"
+          },
+          {
+            "name": "Malik Nabers",
+            "pos": "WR",
+            "our_rank": 11,
+            "ecr_rank": 6,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ],
+        "get": [
+          {
+            "name": "Josh Allen",
+            "pos": "QB",
+            "our_rank": 1,
+            "ecr_rank": 1,
+            "driver": "efficiency",
+            "view": "consensus view"
+          }
+        ]
+      }
+    },
+    {
+      "partner": "Heartbreak Drake",
+      "shape": "2-for-1",
+      "partner_profile": {
+        "needs": [
+          {
+            "pos": "WR",
+            "gap": 6.8
+          }
+        ],
+        "spare": [
+          {
+            "name": "Tyler Shough",
+            "pos": "QB",
+            "ppg": 17.8
+          },
+          {
+            "name": "Stefon Diggs",
+            "pos": "WR",
+            "ppg": 9.8
+          }
+        ]
+      },
+      "give": [
+        {
+          "name": "Emeka Egbuka",
+          "pos": "WR",
+          "ros_pg": 9.39
+        },
+        {
+          "name": "Jadarian Price",
+          "pos": "RB",
+          "ros_pg": 8.38
+        }
+      ],
+      "get": [
+        {
+          "name": "Tyler Shough",
+          "pos": "QB",
+          "ros_pg": 17.8
+        }
+      ],
+      "tags": [
+        "LINEUP"
+      ],
+      "all_tags": [
+        "LINEUP"
+      ],
+      "thesis": "Tyler Shough starts for you over Jayden Daniels: +0.67 pts/wk to your lineup over the weeks that count most.",
+      "kill": "Wrong if Tyler Shough's projection falls below Jayden Daniels's (17.8 vs 17.9 now).",
+      "second": null,
+      "us": {
+        "d_week": 1.92,
+        "d_ros": 0.67,
+        "d_title": 0.037,
+        "se_title": 0.0039,
+        "title_noise": false,
+        "p_title": 0.1237,
+        "p_playoffs": 0.7115
+      },
+      "them": {
+        "d_week": -0.34,
+        "d_ros": -0.07,
+        "d_title": -0.0263,
+        "se_title": 0.0031,
+        "title_noise": false,
+        "p_playoffs_now": 0.6215
+      },
+      "i_would_start": [
+        "Tyler Shough"
+      ],
+      "i_would_bench": [
+        "Jayden Daniels"
+      ],
+      "netted_free_swap": true,
+      "they_would_start": [],
+      "they_would_bench": [],
+      "fa_add": null,
+      "pitch": "It deepens their bench more than their lineup and sit at 62% playoff odds.",
+      "p_accept": 0.018,
+      "flag": "LONGSHOT",
+      "why": [
+        "Their lineup loses 0.1 pts/wk over the weeks that matter to them",
+        "By name they get 68% of what they give",
+        "Too small a change for either side to bother",
+        "Emeka Egbuka wouldn't start for them (they start Nico Collins & Tetairoa McMillan)",
+        "Emeka Egbuka is unproven, so weak currency",
+        "Jadarian Price is a throw-in they'd have to cut someone for",
+        "Tyler Shough is unproven, easier for them to part with"
+      ],
+      "exp_title": 0.00067,
+      "exp_ros": 0.012,
+      "flags": [
+        {
+          "kind": "injury",
+          "text": "You'd give up Emeka Egbuka, out until week 11, back for the playoffs."
+        },
+        {
+          "kind": "need",
+          "text": "Your weakest starter goes from RB2 (Breece Hall, 12.4/g vs a typical RB2's 13.4) to QB (Tyler Shough, 17.8/g vs a typical QB's 19.2)."
+        }
+      ],
+      "matchups": [
+        {
+          "week": 10,
+          "opp": "deez nuts",
+          "win_before": 0.501,
+          "win_after": 0.515,
+          "before": [
+            83.5,
+            110.3,
+            139.5
+          ],
+          "after": [
+            84.9,
+            111.6,
+            141.8
+          ]
+        },
+        {
+          "week": 11,
+          "opp": "Saquon Hater",
+          "win_before": 0.638,
+          "win_after": 0.655,
+          "before": [
+            75.8,
+            102.6,
+            131.0
+          ],
+          "after": [
+            77.8,
+            104.0,
+            131.6
+          ]
+        },
+        {
+          "week": 12,
+          "opp": "Heartbreak Drake",
+          "win_before": 0.531,
+          "win_after": 0.582,
+          "before": [
+            75.2,
+            102.2,
+            131.6
+          ],
+          "after": [
+            78.2,
+            104.2,
+            132.9
+          ]
+        },
+        {
+          "week": 13,
+          "opp": "Crabcakes and Football",
+          "win_before": 0.436,
+          "win_after": 0.463,
+          "before": [
+            71.6,
+            100.6,
+            130.4
+          ],
+          "after": [
+            74.1,
+            102.2,
+            131.9
+          ]
+        },
+        {
+          "week": 14,
+          "opp": "Burrow-Chase combo",
+          "win_before": 0.578,
+          "win_after": 0.623,
+          "before": [
+            67.6,
+            95.4,
+            126.0
+          ],
+          "after": [
+            71.5,
+            99.0,
+            128.5
+          ]
+        },
+        {
+          "week": 15,
+          "opp": null,
+          "before": [
+            74.8,
+            104.0,
+            135.5
           ],
           "after": [
             78.3,
-            106.6,
+            106.9,
             137.6
           ]
         },
@@ -4185,344 +2404,61 @@
           "week": 16,
           "opp": null,
           "before": [
-            69.3,
+            67.6,
             95.7,
-            124.9
+            126.9
           ],
           "after": [
-            72.3,
-            100.0,
-            129.7
+            72.0,
+            100.5,
+            130.2
           ]
         },
         {
           "week": 17,
           "opp": null,
           "before": [
-            73.6,
-            100.8,
-            129.8
+            71.7,
+            100.6,
+            131.2
           ],
           "after": [
-            76.4,
-            103.6,
-            132.5
+            76.1,
+            104.7,
+            134.5
           ]
         }
       ],
-      "fairness": 0.0,
-      "sits_for_them": [],
+      "fairness": 0.68,
+      "sits_for_them": [
+        "Emeka Egbuka wouldn't start for them (they start Nico Collins & Tetairoa McMillan)",
+        "Jadarian Price wouldn't start for them (they start Jonathan Taylor & Ashton Jeanty & Ollie Gordon II)"
+      ],
       "ranks": {
         "give": [
+          {
+            "name": "Emeka Egbuka",
+            "pos": "WR",
+            "our_rank": 30,
+            "ecr_rank": 31,
+            "driver": "usage",
+            "view": "consensus view"
+          },
           {
             "name": "Jadarian Price",
             "pos": "RB",
             "our_rank": 46,
-            "ecr_rank": 43,
+            "ecr_rank": 42,
             "driver": "efficiency",
             "view": "consensus view"
           }
         ],
         "get": [
           {
-            "name": "Josh Jacobs",
-            "pos": "RB",
-            "our_rank": 6,
-            "ecr_rank": 20,
-            "driver": "usage",
-            "view": "consensus view"
-          }
-        ]
-      }
-    },
-    {
-      "partner": "Saquon Hater",
-      "shape": "2-for-1",
-      "partner_profile": {
-        "needs": [
-          {
-            "pos": "RB",
-            "gap": 11.9
-          },
-          {
-            "pos": "TE",
-            "gap": 2.1
-          },
-          {
+            "name": "Tyler Shough",
             "pos": "QB",
-            "gap": 1.1
-          }
-        ],
-        "spare": [
-          {
-            "name": "Jordan Love",
-            "pos": "QB",
-            "ppg": 18.4
-          },
-          {
-            "name": "Jonah Coleman",
-            "pos": "RB",
-            "ppg": 9.9
-          }
-        ]
-      },
-      "give": [
-        {
-          "name": "George Kittle",
-          "pos": "TE",
-          "ros_pg": 12.48
-        },
-        {
-          "name": "Bryce Young",
-          "pos": "QB",
-          "ros_pg": 17.21
-        }
-      ],
-      "get": [
-        {
-          "name": "Amon-Ra St. Brown",
-          "pos": "WR",
-          "ros_pg": 16.16
-        }
-      ],
-      "tags": [
-        "BUY_LOW",
-        "CONSOLIDATION"
-      ],
-      "all_tags": [
-        "BUY_LOW",
-        "CONSOLIDATION",
-        "LINEUP",
-        "PORTFOLIO"
-      ],
-      "thesis": "Buy Amon-Ra St. Brown low: -5.2 pts/g under what his usage earns, and his usage ranks WR3 against consensus WR4.",
-      "kill": "Wrong if his share of his team's expected points falls below 15% (now 19%, minus one sd).",
-      "second": {
-        "tag": "CONSOLIDATION",
-        "thesis": "Two for one: -1.1 this week, but +1.33 pts/wk over the weeks that count most \u2014 already net of picking up Chig Okonkwo, which you could do anyway."
-      },
-      "us": {
-        "d_week": -1.14,
-        "d_ros": 1.33,
-        "d_title": -0.025,
-        "se_title": 0.0045,
-        "title_noise": false,
-        "p_title": 0.0855,
-        "p_playoffs": 0.702
-      },
-      "them": {
-        "d_week": -3.28,
-        "d_ros": -0.61,
-        "d_title": 0.0008,
-        "se_title": 0.0006,
-        "title_noise": true,
-        "p_playoffs_now": 0.0105
-      },
-      "i_would_start": [
-        "Amon-Ra St. Brown",
-        "Chig Okonkwo"
-      ],
-      "i_would_bench": [
-        "Denzel Boston"
-      ],
-      "netted_free_swap": true,
-      "they_would_start": [
-        "George Kittle",
-        "Jonah Coleman"
-      ],
-      "they_would_bench": [
-        "Kyle Pitts Sr."
-      ],
-      "fa_add": "Chig Okonkwo",
-      "pitch": "They start Amon-Ra St. Brown at WR (16.2/g) and sit at 1% playoff odds.",
-      "p_accept": 0.015,
-      "flag": "LONGSHOT",
-      "why": [
-        "Their lineup loses 0.6 pts/wk over the next few weeks \u2014 out of the race, they're playing for wins now",
-        "By name they get 10% of what they give",
-        "George Kittle starts at TE, where they're thin",
-        "George Kittle is a big name",
-        "Bryce Young is a throw-in they'd have to cut someone for",
-        "They'd give up a big name in Amon-Ra St. Brown",
-        "Amon-Ra St. Brown plays for DET, their team: hard to pry loose"
-      ],
-      "exp_title": -0.00038,
-      "exp_ros": 0.02,
-      "flags": [
-        {
-          "kind": "need",
-          "text": "Fixes your weakest starter, FLEX (Denzel Boston, 9.3/g vs a typical FLEX's 10.6); weakest after: RB2 (Breece Hall, 12.5/g vs a typical RB2's 13.6)."
-        }
-      ],
-      "matchups": [
-        {
-          "week": 9,
-          "opp": "L'Omar",
-          "win_before": 0.728,
-          "win_after": 0.706,
-          "before": [
-            86.7,
-            114.8,
-            145.1
-          ],
-          "after": [
-            85.7,
-            112.2,
-            141.8
-          ]
-        },
-        {
-          "week": 10,
-          "opp": "deez nuts",
-          "win_before": 0.488,
-          "win_after": 0.464,
-          "before": [
-            80.1,
-            106.5,
-            135.9
-          ],
-          "after": [
-            77.7,
-            104.2,
-            132.3
-          ]
-        },
-        {
-          "week": 11,
-          "opp": "Saquon Hater",
-          "win_before": 0.642,
-          "win_after": 0.531,
-          "before": [
-            74.2,
-            100.0,
-            128.0
-          ],
-          "after": [
-            72.5,
-            99.0,
-            127.7
-          ]
-        },
-        {
-          "week": 12,
-          "opp": "Heartbreak Drake",
-          "win_before": 0.493,
-          "win_after": 0.478,
-          "before": [
-            74.8,
-            101.4,
-            129.3
-          ],
-          "after": [
-            73.0,
-            100.1,
-            129.9
-          ]
-        },
-        {
-          "week": 13,
-          "opp": "Crabcakes and Football",
-          "win_before": 0.439,
-          "win_after": 0.416,
-          "before": [
-            71.5,
-            99.0,
-            127.9
-          ],
-          "after": [
-            68.7,
-            97.4,
-            126.8
-          ]
-        },
-        {
-          "week": 14,
-          "opp": "BillsMafia",
-          "win_before": 0.456,
-          "win_after": 0.416,
-          "before": [
-            71.3,
-            98.7,
-            128.5
-          ],
-          "after": [
-            68.2,
-            95.5,
-            124.8
-          ]
-        },
-        {
-          "week": 15,
-          "opp": null,
-          "before": [
-            75.0,
-            102.7,
-            132.5
-          ],
-          "after": [
-            71.4,
-            99.5,
-            128.8
-          ]
-        },
-        {
-          "week": 16,
-          "opp": null,
-          "before": [
-            69.3,
-            95.7,
-            124.9
-          ],
-          "after": [
-            66.1,
-            93.8,
-            122.9
-          ]
-        },
-        {
-          "week": 17,
-          "opp": null,
-          "before": [
-            73.6,
-            100.8,
-            129.8
-          ],
-          "after": [
-            69.7,
-            97.6,
-            126.9
-          ]
-        }
-      ],
-      "fairness": 0.1,
-      "sits_for_them": [
-        "Bryce Young wouldn't start for them (they start Patrick Mahomes)"
-      ],
-      "ranks": {
-        "give": [
-          {
-            "name": "George Kittle",
-            "pos": "TE",
-            "our_rank": 3,
-            "ecr_rank": 3,
-            "driver": "efficiency",
-            "view": "consensus view"
-          },
-          {
-            "name": "Bryce Young",
-            "pos": "QB",
-            "our_rank": 20,
+            "our_rank": 11,
             "ecr_rank": 15,
-            "driver": "efficiency",
-            "view": "consensus view"
-          }
-        ],
-        "get": [
-          {
-            "name": "Amon-Ra St. Brown",
-            "pos": "WR",
-            "our_rank": 4,
-            "ecr_rank": 4,
             "driver": "efficiency",
             "view": "consensus view"
           }
@@ -4532,12 +2468,12 @@
   ],
   "deadline": "2026-11-28",
   "meta": {
-    "evaluated": 3192,
-    "simulated": 25,
-    "shown": 17,
-    "p_playoffs": 0.7701666666666667,
-    "p_title": 0.1105,
-    "posture": "protect",
+    "evaluated": 2844,
+    "simulated": 18,
+    "shown": 10,
+    "p_playoffs": 0.6248333333333334,
+    "p_title": 0.075,
+    "posture": "balanced",
     "seasons": 6000,
     "priors": "estimated",
     "league_trades": 1,

@@ -24,10 +24,10 @@
   "out_reason": null,
   "seasons": {
     "2026": {
-      "games": 1,
-      "pts_pg": 1.4,
-      "xfp_pg": 1.0270000000000001,
-      "vs_exp_pg": 0.3729999999999998,
+      "games": 2,
+      "pts_pg": 0.7,
+      "xfp_pg": 0.5135000000000001,
+      "vs_exp_pg": 0.1864999999999999,
       "usage_label": "Carry share",
       "usage_value": 0.0,
       "usage_fmt": "0%",
@@ -39,13 +39,13 @@
       "card": [
         {
           "stat": "Pts/game",
-          "value_fmt": "1.4",
+          "value_fmt": "0.7",
           "pos_rank": "\u2014",
           "means": "Half-PPR fantasy points per game."
         },
         {
           "stat": "Expected pts/g",
-          "value_fmt": "1.0",
+          "value_fmt": "0.5",
           "pos_rank": "\u2014",
           "means": "What his touches should score."
         },
@@ -81,25 +81,25 @@
         },
         {
           "stat": "Target share",
-          "value_fmt": "3.1%",
+          "value_fmt": "1.5%",
           "pos_rank": "\u2014",
           "means": "Receiving role \u2014 worth more than carries in half-PPR."
         },
         {
           "stat": "Targets/g",
-          "value_fmt": "1.0",
+          "value_fmt": "0.5",
           "pos_rank": "\u2014",
           "means": ""
         },
         {
           "stat": "Receptions/g",
-          "value_fmt": "1.0",
+          "value_fmt": "0.5",
           "pos_rank": "\u2014",
           "means": "Catches are half a point each \u2014 a pass-catching back's floor."
         },
         {
           "stat": "Rec yds/g",
-          "value_fmt": "9.0",
+          "value_fmt": "4.5",
           "pos_rank": "\u2014",
           "means": ""
         },
@@ -126,86 +126,87 @@
           "half_ppr": 1.4,
           "xfp": 1.0270000000000001,
           "vs_exp": 0.3729999999999998
+        },
+        {
+          "week": 9,
+          "game": "vs NYG",
+          "snap_pct": 0.0,
+          "carries": 0,
+          "rushing_yards": 0,
+          "rushing_tds": 0,
+          "targets": 0,
+          "tgt_pct": 0.0,
+          "receptions": 0,
+          "receiving_yards": 0,
+          "receiving_tds": 0,
+          "half_ppr": 0.0,
+          "xfp": null,
+          "vs_exp": null
         }
       ],
       "role": {
         "headline": "Backup RB",
-        "from_usage": false,
-        "games": 1,
+        "from_usage": true,
+        "games": 2,
         "rows": [
           {
             "metric": "target share",
-            "him": 0.02759341115505499,
-            "role_avg": 0.0224159402241594,
-            "vs_role": 123.0972730972731,
-            "nfl_avg": 0.059035081766981065,
-            "vs_nfl": 46.740701171499474,
+            "him": 0.016954999097279762,
+            "role_avg": 0.02147158942131448,
+            "vs_role": 78.96480677135538,
+            "nfl_avg": 0.05571578395385422,
+            "vs_nfl": 30.431231320952946,
             "fmt": "{:.1%}"
           },
           {
             "metric": "1D per target",
-            "him": 0.23467674223341728,
-            "role_avg": 0.24074074074074073,
-            "vs_role": 97.48110831234257,
-            "nfl_avg": 0.2367816091954023,
-            "vs_nfl": 99.11105133158884,
+            "him": 0.21992689070467533,
+            "role_avg": 0.22560975609756098,
+            "vs_role": 97.48110831234258,
+            "nfl_avg": 0.24235294117647058,
+            "vs_nfl": 90.7465325723175,
             "fmt": "{:.3f}"
           },
           {
             "metric": "1D per touch",
-            "him": 0.20397083579165018,
-            "role_avg": 0.2056921086675291,
-            "vs_role": 99.16317991631797,
-            "nfl_avg": 0.22999035679845709,
-            "vs_nfl": 88.68669044693553,
+            "him": 0.1963128942505788,
+            "role_avg": 0.19796954314720813,
+            "vs_role": 99.163179916318,
+            "nfl_avg": 0.22480260102183,
+            "vs_nfl": 87.32678952923474,
             "fmt": "{:.3f}"
           },
           {
             "metric": "carry share",
-            "him": 0.029240121272858872,
-            "role_avg": 0.10923667947218975,
-            "vs_role": 26.767676767676765,
-            "nfl_avg": 0.2802969178634823,
-            "vs_nfl": 10.431838314790237,
+            "him": 0.016915891875337947,
+            "role_avg": 0.10309119010819165,
+            "vs_role": 16.408668730650152,
+            "nfl_avg": 0.2765183107134733,
+            "vs_nfl": 6.117458128429728,
             "fmt": "{:.1%}"
           },
           {
             "metric": "snap %",
-            "him": 0.12627850254425876,
-            "role_avg": 0.1600802407221665,
-            "vs_role": 78.88450315578069,
-            "nfl_avg": 0.3419514902229622,
-            "vs_nfl": 36.928776787000274,
+            "him": 0.07016459783058125,
+            "role_avg": 0.1532394366197183,
+            "vs_role": 45.78755924605946,
+            "nfl_avg": 0.3350852096031845,
+            "vs_nfl": 20.939330003157036,
             "fmt": "{:.1%}"
           },
           {
             "metric": "xFP share",
-            "him": 0.025374879433096156,
-            "role_avg": 0.034025582778016164,
-            "vs_role": 74.57588485300182,
-            "nfl_avg": 0.09203788925507692,
-            "vs_nfl": 27.570036251886822,
+            "him": 0.016839065379688236,
+            "role_avg": 0.03206620728448882,
+            "vs_role": 52.513430198630594,
+            "nfl_avg": 0.08975191439593545,
+            "vs_nfl": 18.761789643175362,
             "fmt": "{:.1%}"
           }
         ]
       },
       "this_week": {
-        "bye": false,
-        "opponent": "NYG",
-        "home": true,
-        "ease_rank": 20,
-        "out_reason": null,
-        "projection": 0.4,
-        "proj_source": "ffanalytics",
-        "matchup_mult": 1.01,
-        "matchup_pct": 1.0,
-        "matchup_basis": "defense+vegas",
-        "matchup_def_rank": 6,
-        "matchup_def_pct": 6.4,
-        "matchup_vegas_pct": -2.5,
-        "matchup_baseline": 3.1,
-        "expected_pts": 3.2,
-        "delta_pts": 0.0
+        "bye": true
       }
     },
     "2025": {

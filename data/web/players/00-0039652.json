@@ -20,7 +20,166 @@
     "slot": null,
     "waiver_until": null
   },
-  "nfl_status": "Practice squad",
+  "nfl_status": "Active",
   "out_reason": null,
-  "seasons": {}
+  "seasons": {
+    "2026": {
+      "games": 1,
+      "pts_pg": 0.0,
+      "xfp_pg": null,
+      "vs_exp_pg": null,
+      "usage_label": "Carry share",
+      "usage_value": 0.0,
+      "usage_fmt": "0%",
+      "ranks": {
+        "pts_pg": null,
+        "xfp_pg": null,
+        "rush_share": null
+      },
+      "card": [
+        {
+          "stat": "Pts/game",
+          "value_fmt": "0.0",
+          "pos_rank": "\u2014",
+          "means": "Half-PPR fantasy points per game."
+        },
+        {
+          "stat": "Expected pts/g",
+          "value_fmt": "\u2014",
+          "pos_rank": "\u2014",
+          "means": "What his touches should score."
+        },
+        {
+          "stat": "Snap share",
+          "value_fmt": "3%",
+          "pos_rank": "\u2014",
+          "means": "Share of his offense's plays he was on the field for."
+        },
+        {
+          "stat": "Carry share",
+          "value_fmt": "0%",
+          "pos_rank": "\u2014",
+          "means": "His share of his team's carries."
+        },
+        {
+          "stat": "Carries/g",
+          "value_fmt": "0.0",
+          "pos_rank": "\u2014",
+          "means": ""
+        },
+        {
+          "stat": "Yds/carry",
+          "value_fmt": "\u2014",
+          "pos_rank": "\u2014",
+          "means": ""
+        },
+        {
+          "stat": "Rush EPA/carry",
+          "value_fmt": "\u2014",
+          "pos_rank": "\u2014",
+          "means": "Points added per carry. Above 0 is rare for backs."
+        },
+        {
+          "stat": "Target share",
+          "value_fmt": "0.0%",
+          "pos_rank": "\u2014",
+          "means": "Receiving role \u2014 worth more than carries in half-PPR."
+        },
+        {
+          "stat": "Targets/g",
+          "value_fmt": "0.0",
+          "pos_rank": "\u2014",
+          "means": ""
+        },
+        {
+          "stat": "Receptions/g",
+          "value_fmt": "0.0",
+          "pos_rank": "\u2014",
+          "means": "Catches are half a point each \u2014 a pass-catching back's floor."
+        },
+        {
+          "stat": "Rec yds/g",
+          "value_fmt": "0.0",
+          "pos_rank": "\u2014",
+          "means": ""
+        },
+        {
+          "stat": "Rush TD",
+          "value_fmt": "0",
+          "pos_rank": "\u2014",
+          "means": ""
+        }
+      ],
+      "game_log": [
+        {
+          "week": 9,
+          "game": "@ MIA",
+          "snap_pct": 0.03,
+          "carries": 0,
+          "rushing_yards": 0,
+          "rushing_tds": 0,
+          "targets": 0,
+          "tgt_pct": 0.0,
+          "receptions": 0,
+          "receiving_yards": 0,
+          "receiving_tds": 0,
+          "half_ppr": 0.0,
+          "xfp": null,
+          "vs_exp": null
+        }
+      ],
+      "role": {
+        "headline": "Backup RB",
+        "from_usage": true,
+        "games": 1,
+        "rows": [
+          {
+            "metric": "target share",
+            "him": 0.010194494137010656,
+            "role_avg": 0.02147158942131448,
+            "vs_role": 47.47899159663866,
+            "nfl_avg": 0.05571578395385422,
+            "vs_nfl": 18.29731794755701,
+            "fmt": "{:.1%}"
+          },
+          {
+            "metric": "carry share",
+            "him": 0.028310015936446407,
+            "role_avg": 0.10309119010819165,
+            "vs_role": 27.46113989637305,
+            "nfl_avg": 0.2765183107134733,
+            "vs_nfl": 10.238025779703639,
+            "fmt": "{:.1%}"
+          },
+          {
+            "metric": "snap %",
+            "him": 0.06533523236799073,
+            "role_avg": 0.1532394366197183,
+            "vs_role": 42.636043181317476,
+            "nfl_avg": 0.3350852096031845,
+            "vs_nfl": 19.49809496078988,
+            "fmt": "{:.1%}"
+          }
+        ]
+      },
+      "this_week": {
+        "bye": false,
+        "opponent": "NE",
+        "home": true,
+        "ease_rank": 28,
+        "out_reason": null,
+        "projection": 3.3,
+        "proj_source": "nflverse-est",
+        "matchup_mult": 0.937,
+        "matchup_pct": -6.3,
+        "matchup_basis": "defense+vegas",
+        "matchup_def_rank": 30,
+        "matchup_def_pct": -9.1,
+        "matchup_vegas_pct": -1.0,
+        "matchup_baseline": 3.3,
+        "expected_pts": 3.1,
+        "delta_pts": -0.2
+      }
+    }
+  }
 }
