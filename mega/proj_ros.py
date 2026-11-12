@@ -46,6 +46,15 @@ DEFAULT_PARAMS = {"h": 3.0, "k_s": 2.0, "k_t": 4.0, "k_eff": 32.0}
 DNP_P_ACTIVE = 0.35
 
 
+def sat_out_practice(cw: pd.DataFrame) -> set:
+    """gsis_ids who did not practice this week for a reason that threatens Sunday. A veteran's
+    rest day is not one: the rule benched McCaffrey (18.4 -> 7.7) on a Wednesday "Not injury
+    related - resting player" (2026-11-12; 22 players had one that week)."""
+    dnp = cw["practice_status"].fillna("").astype(str).str.lower().str.contains("did not participate")
+    rest = cw["practice_primary_injury"].fillna("").astype(str).str.contains("resting player", case=False)
+    return set(cw.loc[dnp & ~rest, "gsis_id"])
+
+
 # ======================================================================== inputs
 @functools.lru_cache(maxsize=8)
 def games(season: int) -> pd.DataFrame:
@@ -318,9 +327,9 @@ def build(season: int, now: int, write: bool = True) -> dict:
     if inj is not None and not inj.empty:
         cw = inj[pd.to_numeric(inj["week"], errors="coerce") == int(now)]
         status_now = dict(zip(cw["gsis_id"], cw["report_status"].fillna("")))
-        practice_now = dict(zip(cw["gsis_id"], cw["practice_status"].fillna("")))
+        dnp_now = sat_out_practice(cw)
     else:
-        practice_now = {}
+        dnp_now = set()
     kick = pd.Timestamp(f"{season}-09-01")
     ages = {g: (kick - d).days / 365.25 for g, d in _birthdays().items() if pd.notna(d)}
     quant = cfg.get("quantiles") or {}
@@ -368,7 +377,7 @@ def build(season: int, now: int, write: bool = True) -> dict:
             elif w == now:
                 if status_now.get(r.gsis_id):
                     pa = cg.status_p_active(status_now[r.gsis_id], missed=missed_now.get(r.gsis_id, 0) > 0)
-                elif "did not participate" in str(practice_now.get(r.gsis_id, "")).lower():
+                elif r.gsis_id in dnp_now:
                     pa = DNP_P_ACTIVE
                 else:
                     pa = 1.0

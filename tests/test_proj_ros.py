@@ -128,3 +128,16 @@ def test_first_games_back_from_an_absence_are_discounted():
     assert return_factor(curve, "WR", 3, 2) == 0.89         # out three: the 2+ row, second game back
     assert return_factor(curve, "WR", 3, 3) == 1.0          # third game back: full strength
     assert return_factor(curve, "TE", 2, 1) == 1.0          # no curve for him: untouched
+
+
+def test_a_rest_day_is_not_a_missed_practice():
+    import pandas as pd
+    from mega import proj_ros as P
+    cw = pd.DataFrame([
+        {"gsis_id": "cmc", "practice_status": "Did Not Participate In Practice",
+         "practice_primary_injury": "Not injury related - resting player"},
+        {"gsis_id": "boston", "practice_status": "Did Not Participate In Practice", "practice_primary_injury": "Toe"},
+        {"gsis_id": "nabers", "practice_status": "Full Participation in Practice", "practice_primary_injury": "Knee"},
+        {"gsis_id": "x", "practice_status": None, "practice_primary_injury": None},
+    ])
+    assert P.sat_out_practice(cw) == {"boston"}
