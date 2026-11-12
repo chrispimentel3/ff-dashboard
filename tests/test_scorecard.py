@@ -154,3 +154,22 @@ def test_playoff_odds_wait_for_the_regular_season_to_end():
     g = S.grade_playoff_odds(hist, st, pd.DataFrame({"week": [14]}))
     assert {b["bucket"]: (b["n"], b["happened"]) for b in g["buckets"]} == \
         {"under 25%": (1, 0.0), "25–75%": (1, 1.0), "75%+": (1, 1.0)}
+
+
+def test_market_check_measures_how_far_sunday_lines_moved_toward_us():
+    import random
+    from mega import scorecard as sc
+    rnd = random.Random(7)
+    rows = []
+    for i in range(400):
+        cons = rnd.uniform(6, 20)
+        ours = cons + rnd.gauss(0, 1.5)
+        # the props sit 1 pt low across the board and take 40% of our difference, plus noise
+        rows.append({"week": 10 + i % 2, "pos": "WR" if i % 2 else "RB", "ours": ours, "consensus": cons,
+                     "line": cons - 1.0 + 0.4 * (ours - cons) + rnd.gauss(0, 0.8)})
+    g = sc.grade_market(rows)
+    assert g["weeks"] == [10, 11] and g["n"] == 400
+    assert abs(g["toward_ours"] - 0.4) < 2 * g["se"] + 0.02          # the level offset drops out
+    assert set(g["by_pos"]) == {"RB", "WR"}
+    assert "toward_ours" not in sc.grade_market(rows[:10])            # too few to say
+    assert sc.grade_market([]) == {"weeks": [], "n": 0}

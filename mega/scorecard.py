@@ -397,6 +397,65 @@ def grade_close(rows: list[dict], weeks: set[int]) -> dict:
             "active": k >= TIEBREAK_WEEKS and rate is not None and rate >= TIEBREAK_EDGE}
 
 
+MARKET_MIN = 30         # player-weeks before the market check reports a number
+DISAGREE = 1.0          # (J) pts apart, ours vs the consensus, that count as a real disagreement
+
+
+def market_rows(season: int, week: int, sw: dict) -> list[dict]:
+    """Our projection and the consensus as published midweek (by Wednesday night, the same run
+    wrote both) against that week's Sunday-morning prop line. Only games on Sunday or later (a
+    Thursday game keeps its midweek line), healthy players (a prop assumes he plays), and only
+    props with every market posted (a partial set undercounts him)."""
+    from datetime import timedelta
+    sun = sw["kick"]
+    mid = (sun - timedelta(days=4)).replace(hour=23, minute=59)      # Wednesday night
+    ours_txt = snapshot(f"data/proj_ros_{season}.json", mid)
+    cons_txt = snapshot(f"data/build/proj_{season}_wk{week:02d}.csv", mid)
+    line_txt = snapshot(f"data/build/vegas_{season}_wk{week:02d}.csv", sun)
+    if not (ours_txt and cons_txt and line_txt):
+        return []
+    ours_j = json.loads(ours_txt)
+    if int((ours_j.get("meta") or {}).get("week") or 0) != week:
+        return []
+    lv = pd.read_csv(io.StringIO(line_txt))
+    if "vegas_complete" in lv.columns:
+        lv = lv[lv["vegas_complete"].astype(str).str.lower() == "true"]
+    line = dict(lv[["gsis_id", "vegas"]].dropna().values)
+    day0 = sun.replace(hour=0, minute=0)
+    rows = []
+    for g, c, pos in zip(*(_consensus(cons_txt)[k] for k in ("gsis_id", "proj", "pos"))):
+        p = ours_j["players"].get(g) or {}
+        w = (p.get("weeks") or {}).get(str(week)) or {}
+        k = sw["kicks"].get(p.get("team"))
+        if (pos in SKILL and c is not None and float(c) >= MIN_PROJ and w.get("expected") is not None
+                and float(w.get("p_active", 1.0)) >= 0.9 and g in line and k is not None and k >= day0):
+            rows.append({"week": week, "pos": pos, "ours": float(w["expected"]), "consensus": float(c),
+                         "line": float(line[g])})
+    return rows
+
+
+def grade_market(rows: list[dict]) -> dict:
+    """Did Sunday's lines move toward us? The share of the midweek gap from the consensus to ours
+    that the Sunday prop line covered: the slope of (line - consensus) on (ours - consensus), with
+    an intercept so the props' own level drops out. 0 = the market ignored where we differed,
+    1 = it agreed fully. Faster than grading against what happened (borrowed from
+    BlairCurrey/nfl-analytics' publish-vs-closing-line check, 2026-11-12)."""
+    def fit(d: pd.DataFrame) -> dict:
+        x, y = d["ours"] - d["consensus"], d["line"] - d["consensus"]
+        out = {"n": len(d), "disagree": int((x.abs() >= DISAGREE).sum())}
+        if len(d) < MARKET_MIN or float(x.var()) == 0:
+            return out
+        b = float(((x - x.mean()) * (y - y.mean())).sum() / ((x - x.mean()) ** 2).sum())
+        resid = y - y.mean() - b * (x - x.mean())
+        se = float((resid.pow(2).sum() / (len(d) - 2) / ((x - x.mean()) ** 2).sum()) ** 0.5)
+        return {**out, "toward_ours": round(b, 3), "se": round(se, 3)}
+    if not rows:
+        return {"weeks": [], "n": 0}
+    d = pd.DataFrame(rows)
+    return {"weeks": sorted(int(w) for w in d["week"].unique()), **fit(d),
+            "by_pos": {p: fit(g) for p, g in d.groupby("pos")}}
+
+
 MATCHUP_EDGE = 5.0      # matchup tags at +5% or better / -5% or worse are the ones the page calls out
 
 
@@ -584,6 +643,9 @@ def build(season: int, now_week: int) -> dict:
     movers = grade_movers({w: s for w, s in wv_snaps.items() if w <= through}, act) if through else []
     from .odds import sunday_weeks
     close = grade_close(proj_rows, set(sunday_weeks(season)))
+    # finished weeks only: by then the Sunday sweep is committed and readable at kickoff
+    market = grade_market([r for w in sorted(sunday_weeks(season)) if w < now_week and w in sched
+                           for r in market_rows(season, w, sched[w])])
     try:
         VEGAS_TIEBREAK.write_text(json.dumps({"season": season, "through_week": through, **close}, indent=1))
     except Exception:
@@ -622,6 +684,7 @@ def build(season: int, now_week: int) -> dict:
         "movers": movers,
         "live_blend": lb,
         "close_calls": close,
+        "market": market,
         "live_calib": calib,
         # said vs happened for the close-call chances: the headline on the page
         "call_grades": {**LC.grade_calls(call_rows),
