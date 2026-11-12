@@ -88,9 +88,25 @@ class LeagueSession:
         self._browser = self._pw.chromium.launch(headless=True)
         self._ctx = self._browser.new_context(storage_state=str(STATE))
 
+    TRIES = 2       # per page: one slow load used to fail the whole pull
+
+    def _open(self, url: str):
+        """A new tab at `url`. A load that times out gets one more try in a fresh tab: Yahoo
+        now and then takes over 45 s on a single page (2026-11-11 the transactions page,
+        11-12 the players list), and each of those mornings the whole pull failed."""
+        from playwright.sync_api import TimeoutError as PWTimeout
+        for attempt in range(self.TRIES):
+            page = self._ctx.new_page()
+            try:
+                page.goto(url, wait_until="domcontentloaded", timeout=45_000)
+                return page
+            except PWTimeout:
+                page.close()
+                if attempt == self.TRIES - 1:
+                    raise
+
     def get(self, url: str) -> str:
-        page = self._ctx.new_page()
-        page.goto(url, wait_until="domcontentloaded", timeout=45_000)
+        page = self._open(url)
         page.wait_for_timeout(600)
         htmltext = page.content()
         page.close()
@@ -102,8 +118,7 @@ class LeagueSession:
         """Rendered innerText. Needed where layout newlines carry the structure —
         the standings page has no <table>, so only the visual line breaks separate
         team from manager from record."""
-        page = self._ctx.new_page()
-        page.goto(url, wait_until="domcontentloaded", timeout=45_000)
+        page = self._open(url)
         page.wait_for_timeout(2500)
         text = page.evaluate("document.body.innerText")
         page.close()
