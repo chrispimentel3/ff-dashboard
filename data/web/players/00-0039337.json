@@ -26,14 +26,14 @@
     "2026": {
       "games": 9,
       "pts_pg": 12.022222222222222,
-      "xfp_pg": 11.872,
-      "vs_exp_pg": 0.15022222222222265,
+      "xfp_pg": 12.770777777777777,
+      "vs_exp_pg": -0.748555555555555,
       "usage_label": "Target share",
       "usage_value": 0.2891156462585034,
       "usage_fmt": "28.9%",
       "ranks": {
         "pts_pg": "#16 of 150",
-        "xfp_pg": "#13 of 144",
+        "xfp_pg": "#12 of 144",
         "tgt_share": "#6 of 150"
       },
       "card": [
@@ -45,8 +45,8 @@
         },
         {
           "stat": "Expected pts/g",
-          "value_fmt": "11.9",
-          "pos_rank": "#13 of 144",
+          "value_fmt": "12.8",
+          "pos_rank": "#12 of 144",
           "means": "What his targets should score."
         },
         {
@@ -291,12 +291,12 @@
           "receiving_air_yards": 75,
           "receiving_yards_after_catch": 20,
           "half_ppr": 4.9,
-          "xfp": null,
-          "vs_exp": null
+          "xfp": 8.089,
+          "vs_exp": -3.189
         }
       ],
       "role": {
-        "headline": "WR1 \u00b7 downfield",
+        "headline": "WR1",
         "from_usage": true,
         "games": 4,
         "rows": [
@@ -311,11 +311,11 @@
           },
           {
             "metric": "air-yards share",
-            "him": 0.4243967260135418,
-            "role_avg": 0.35170445004198153,
-            "vs_role": 120.66856872663489,
-            "nfl_avg": 0.16155510938437068,
-            "vs_nfl": 262.6947099542487,
+            "him": 0.3371342227301699,
+            "role_avg": 0.3458959537572254,
+            "vs_role": 97.46694607673695,
+            "nfl_avg": 0.1598899624261943,
+            "vs_nfl": 210.8539007792888,
             "fmt": "{:.1%}"
           },
           {
@@ -383,11 +383,11 @@
           },
           {
             "metric": "xFP share",
-            "him": 0.19121569556272375,
-            "role_avg": 0.16280306462402921,
-            "vs_role": 117.45214747910887,
-            "nfl_avg": 0.07308710363377958,
-            "vs_nfl": 261.627135371044,
+            "him": 0.17707193393208684,
+            "role_avg": 0.16256696834662,
+            "vs_role": 108.92245560890318,
+            "nfl_avg": 0.07302457113815909,
+            "vs_nfl": 242.4826755874745,
             "fmt": "{:.1%}"
           }
         ]
@@ -408,7 +408,19 @@
         "matchup_vegas_pct": null,
         "matchup_baseline": null,
         "expected_pts": null,
-        "delta_pts": null
+        "delta_pts": null,
+        "ml": {
+          "proj": 11.8,
+          "week": -0.2,
+          "call": "normal",
+          "avg": 12.9,
+          "why": [
+            {
+              "label": "Quarterback",
+              "pts": -0.4
+            }
+          ]
+        }
       }
     },
     "2025": {

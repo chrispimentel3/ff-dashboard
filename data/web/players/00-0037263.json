@@ -326,11 +326,11 @@
           },
           {
             "metric": "xFP share",
-            "him": 0.14344233437110573,
-            "role_avg": 0.19278174627284536,
-            "vs_role": 74.40659561621088,
-            "nfl_avg": 0.08953294966133352,
-            "vs_nfl": 160.21178226975582,
+            "him": 0.14354030416815003,
+            "role_avg": 0.1933039987051512,
+            "vs_role": 74.25625187769329,
+            "nfl_avg": 0.0894284508634977,
+            "vs_nfl": 160.50854373766117,
             "fmt": "{:.1%}"
           }
         ]
@@ -343,15 +343,35 @@
         "out_reason": null,
         "projection": 9.7,
         "proj_source": "ffanalytics",
-        "matchup_mult": 0.858,
-        "matchup_pct": -14.2,
+        "matchup_mult": 0.863,
+        "matchup_pct": -13.7,
         "matchup_basis": "defense+vegas",
-        "matchup_def_rank": 29,
-        "matchup_def_pct": -8.5,
+        "matchup_def_rank": 27,
+        "matchup_def_pct": -7.5,
         "matchup_vegas_pct": -9.7,
         "matchup_baseline": 10.9,
         "expected_pts": 9.4,
-        "delta_pts": -1.5
+        "delta_pts": -1.5,
+        "ml": {
+          "proj": 9.6,
+          "week": -1.8,
+          "call": "bad",
+          "avg": 8.8,
+          "why": [
+            {
+              "label": "Vegas line",
+              "pts": -1.8
+            },
+            {
+              "label": "Teammates out",
+              "pts": 0.7
+            },
+            {
+              "label": "Opposing defense",
+              "pts": -0.6
+            }
+          ]
+        }
       }
     },
     "2025": {

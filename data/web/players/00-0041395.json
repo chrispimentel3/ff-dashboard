@@ -294,11 +294,11 @@
           },
           {
             "metric": "air-yards share",
-            "him": 0.11772221127651733,
-            "role_avg": 0.16278877546803322,
-            "vs_role": 72.31592653612313,
-            "nfl_avg": 0.0660347755463674,
-            "vs_nfl": 178.27305431492948,
+            "him": 0.11721007209726339,
+            "role_avg": 0.1594930558367413,
+            "vs_role": 73.48913812099806,
+            "nfl_avg": 0.06513130945337035,
+            "vs_nfl": 179.95964319000518,
             "fmt": "{:.1%}"
           },
           {
@@ -366,11 +366,11 @@
           },
           {
             "metric": "xFP share",
-            "him": 0.09575972631538507,
-            "role_avg": 0.10930866538649565,
-            "vs_role": 87.6048810739716,
-            "nfl_avg": 0.049828797072926305,
-            "vs_nfl": 192.17747957117476,
+            "him": 0.09596742208802762,
+            "role_avg": 0.1102234391448141,
+            "vs_role": 87.0662563540078,
+            "nfl_avg": 0.05016245454242929,
+            "vs_nfl": 191.3132500461172,
             "fmt": "{:.1%}"
           }
         ]
@@ -383,15 +383,27 @@
         "out_reason": null,
         "projection": 4.7,
         "proj_source": "ffanalytics",
-        "matchup_mult": 1.084,
-        "matchup_pct": 8.4,
+        "matchup_mult": 1.08,
+        "matchup_pct": 8.0,
         "matchup_basis": "defense+vegas",
         "matchup_def_rank": 1,
         "matchup_def_pct": 29.6,
-        "matchup_vegas_pct": 1.2,
+        "matchup_vegas_pct": 0.8,
         "matchup_baseline": 5.3,
         "expected_pts": 5.8,
-        "delta_pts": 0.4
+        "delta_pts": 0.4,
+        "ml": {
+          "proj": 6.4,
+          "week": 0.5,
+          "call": "normal",
+          "avg": 5.3,
+          "why": [
+            {
+              "label": "Opposing defense",
+              "pts": 0.7
+            }
+          ]
+        }
       }
     }
   }

@@ -26,14 +26,14 @@
     "2026": {
       "games": 7,
       "pts_pg": 19.708571428571428,
-      "xfp_pg": 16.078828571428573,
-      "vs_exp_pg": 3.629742857142856,
+      "xfp_pg": 19.2514,
+      "vs_exp_pg": 0.4571714285714279,
       "usage_label": "Pass att/g",
       "usage_value": 30.428571428571427,
       "usage_fmt": "30.4",
       "ranks": {
         "pts_pg": "#8 of 35",
-        "xfp_pg": "#19 of 35",
+        "xfp_pg": "#11 of 35",
         "att_pg": "#19 of 35"
       },
       "card": [
@@ -45,8 +45,8 @@
         },
         {
           "stat": "Expected pts/g",
-          "value_fmt": "16.1",
-          "pos_rank": "#19 of 35",
+          "value_fmt": "19.3",
+          "pos_rank": "#11 of 35",
           "means": "What his volume should score."
         },
         {
@@ -216,8 +216,8 @@
           "rushing_yards": 16,
           "rushing_tds": 0,
           "half_ppr": 14.560000000000002,
-          "xfp": 14.9534,
-          "vs_exp": -0.393399999999998
+          "xfp": 14.7006,
+          "vs_exp": -0.1405999999999974
         },
         {
           "week": 10,
@@ -233,8 +233,8 @@
           "rushing_yards": 28,
           "rushing_tds": 0,
           "half_ppr": 22.76,
-          "xfp": null,
-          "vs_exp": null
+          "xfp": 22.4608,
+          "vs_exp": 0.2992000000000026
         }
       ],
       "role": {
@@ -271,11 +271,11 @@
           },
           {
             "metric": "xFP share",
-            "him": 0.22900231037403473,
-            "role_avg": 0.1507288436660783,
-            "vs_role": 151.92998553174195,
-            "nfl_avg": 0.19539473894016332,
-            "vs_nfl": 117.19983435386314,
+            "him": 0.24517395049954854,
+            "role_avg": 0.1515315352154143,
+            "vs_role": 161.7973117945476,
+            "nfl_avg": 0.19514748761298245,
+            "vs_nfl": 125.63520724682802,
             "fmt": "{:.1%}"
           }
         ]
@@ -296,7 +296,23 @@
         "matchup_vegas_pct": null,
         "matchup_baseline": null,
         "expected_pts": null,
-        "delta_pts": null
+        "delta_pts": null,
+        "ml": {
+          "proj": 17.5,
+          "week": -1.9,
+          "call": "bad",
+          "avg": 19.2,
+          "why": [
+            {
+              "label": "Vegas line",
+              "pts": -2.4
+            },
+            {
+              "label": "Injury report",
+              "pts": 0.6
+            }
+          ]
+        }
       }
     },
     "2025": {

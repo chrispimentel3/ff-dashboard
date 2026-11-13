@@ -26,14 +26,14 @@
     "2026": {
       "games": 7,
       "pts_pg": 12.942857142857141,
-      "xfp_pg": 9.251571428571427,
-      "vs_exp_pg": 3.6912857142857143,
+      "xfp_pg": 11.665285714285716,
+      "vs_exp_pg": 1.2775714285714261,
       "usage_label": "Carry share",
       "usage_value": 0.5576923076923077,
       "usage_fmt": "56%",
       "ranks": {
         "pts_pg": "#17 of 90",
-        "xfp_pg": "#28 of 88",
+        "xfp_pg": "#21 of 88",
         "rush_share": "#14 of 90"
       },
       "card": [
@@ -45,8 +45,8 @@
         },
         {
           "stat": "Expected pts/g",
-          "value_fmt": "9.3",
-          "pos_rank": "#28 of 88",
+          "value_fmt": "11.7",
+          "pos_rank": "#21 of 88",
           "means": "What his touches should score."
         },
         {
@@ -220,8 +220,8 @@
           "receiving_yards": 44,
           "receiving_tds": 0,
           "half_ppr": 25.700000000000003,
-          "xfp": null,
-          "vs_exp": null
+          "xfp": 16.896,
+          "vs_exp": 8.804000000000002
         }
       ],
       "role": {
@@ -294,11 +294,11 @@
           },
           {
             "metric": "xFP share",
-            "him": 0.13276911499151614,
-            "role_avg": 0.19278174627284536,
-            "vs_role": 68.87016927609271,
-            "nfl_avg": 0.08953294966133352,
-            "vs_nfl": 148.2907862342605,
+            "him": 0.15338240750456197,
+            "role_avg": 0.1933039987051512,
+            "vs_role": 79.34776752265633,
+            "nfl_avg": 0.0894284508634977,
+            "vs_nfl": 171.51410543685105,
             "fmt": "{:.1%}"
           }
         ]
@@ -319,7 +319,27 @@
         "matchup_vegas_pct": null,
         "matchup_baseline": null,
         "expected_pts": null,
-        "delta_pts": null
+        "delta_pts": null,
+        "ml": {
+          "proj": 11.2,
+          "week": 0.2,
+          "call": "normal",
+          "avg": 10.8,
+          "why": [
+            {
+              "label": "Teammates out",
+              "pts": 0.8
+            },
+            {
+              "label": "Injury report",
+              "pts": -0.6
+            },
+            {
+              "label": "Vegas line",
+              "pts": 0.3
+            }
+          ]
+        }
       }
     },
     "2025": {

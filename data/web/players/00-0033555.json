@@ -33,7 +33,7 @@
       "usage_fmt": "16.9%",
       "ranks": {
         "pts_pg": "#41 of 150",
-        "xfp_pg": "#40 of 144",
+        "xfp_pg": "#41 of 144",
         "tgt_share": "#53 of 150"
       },
       "card": [
@@ -46,7 +46,7 @@
         {
           "stat": "Expected pts/g",
           "value_fmt": "8.0",
-          "pos_rank": "#40 of 144",
+          "pos_rank": "#41 of 144",
           "means": "What his targets should score."
         },
         {
@@ -243,11 +243,11 @@
           },
           {
             "metric": "air-yards share",
-            "him": 0.22936874412547278,
-            "role_avg": 0.18969102792632203,
-            "vs_role": 120.91702313646695,
-            "nfl_avg": 0.16155510938437068,
-            "vs_nfl": 141.97554320597837,
+            "him": 0.22900110303280038,
+            "role_avg": 0.18691451990632318,
+            "vs_role": 122.51648675960001,
+            "nfl_avg": 0.1598899624261943,
+            "vs_nfl": 143.22418966012827,
             "fmt": "{:.1%}"
           },
           {
@@ -315,11 +315,11 @@
           },
           {
             "metric": "xFP share",
-            "him": 0.1085333517525672,
-            "role_avg": 0.079302651950085,
-            "vs_role": 136.85967503442473,
-            "nfl_avg": 0.07308710363377958,
-            "vs_nfl": 148.4986356777791,
+            "him": 0.10850242827907822,
+            "role_avg": 0.07915961690171563,
+            "vs_role": 137.06790472949677,
+            "nfl_avg": 0.07302457113815909,
+            "vs_nfl": 148.58345155330892,
             "fmt": "{:.1%}"
           }
         ]
@@ -332,15 +332,35 @@
         "out_reason": null,
         "projection": 5.9,
         "proj_source": "ffanalytics",
-        "matchup_mult": 1.028,
-        "matchup_pct": 2.8,
+        "matchup_mult": 1.026,
+        "matchup_pct": 2.6,
         "matchup_basis": "defense+vegas",
         "matchup_def_rank": 9,
         "matchup_def_pct": 5.7,
-        "matchup_vegas_pct": 0.8,
+        "matchup_vegas_pct": 0.5,
         "matchup_baseline": 8.1,
         "expected_pts": 8.3,
-        "delta_pts": 0.2
+        "delta_pts": 0.2,
+        "ml": {
+          "proj": 7.7,
+          "week": 0.6,
+          "call": "normal",
+          "avg": 7.9,
+          "why": [
+            {
+              "label": "Teammates out",
+              "pts": -0.6
+            },
+            {
+              "label": "Injury report",
+              "pts": 0.5
+            },
+            {
+              "label": "Game setting",
+              "pts": 0.5
+            }
+          ]
+        }
       }
     },
     "2025": {

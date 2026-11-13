@@ -311,11 +311,11 @@
           },
           {
             "metric": "air-yards share",
-            "him": 0.22413870013783257,
-            "role_avg": 0.25765852100303466,
-            "vs_role": 86.99060262602093,
-            "nfl_avg": 0.16155510938437068,
-            "vs_nfl": 138.73823055918552,
+            "him": 0.22350925648844422,
+            "role_avg": 0.25360792328250276,
+            "vs_role": 88.1318113391392,
+            "nfl_avg": 0.1598899624261943,
+            "vs_nfl": 139.7894233614676,
             "fmt": "{:.1%}"
           },
           {
@@ -383,11 +383,11 @@
           },
           {
             "metric": "xFP share",
-            "him": 0.11350080574523906,
-            "role_avg": 0.11495380721643399,
-            "vs_role": 98.73601274600742,
-            "nfl_avg": 0.07308710363377958,
-            "vs_nfl": 155.29525744235536,
+            "him": 0.11330513993296715,
+            "role_avg": 0.11409201812853349,
+            "vs_role": 99.31031266825356,
+            "nfl_avg": 0.07302457113815909,
+            "vs_nfl": 155.1602949075854,
             "fmt": "{:.1%}"
           }
         ]
@@ -400,15 +400,31 @@
         "out_reason": null,
         "projection": 7.7,
         "proj_source": "ffanalytics",
-        "matchup_mult": 1.028,
-        "matchup_pct": 2.8,
+        "matchup_mult": 1.026,
+        "matchup_pct": 2.6,
         "matchup_basis": "defense+vegas",
         "matchup_def_rank": 9,
         "matchup_def_pct": 5.7,
-        "matchup_vegas_pct": 0.8,
+        "matchup_vegas_pct": 0.5,
         "matchup_baseline": 8.2,
         "expected_pts": 8.4,
-        "delta_pts": 0.2
+        "delta_pts": 0.2,
+        "ml": {
+          "proj": 7.8,
+          "week": -0.1,
+          "call": "normal",
+          "avg": 9.0,
+          "why": [
+            {
+              "label": "Teammates out",
+              "pts": -0.8
+            },
+            {
+              "label": "Game setting",
+              "pts": 0.5
+            }
+          ]
+        }
       }
     },
     "2025": {

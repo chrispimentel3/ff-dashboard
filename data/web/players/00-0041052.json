@@ -310,11 +310,11 @@
           },
           {
             "metric": "xFP share",
-            "him": 0.10355154390462096,
-            "role_avg": 0.12693917967917576,
-            "vs_role": 81.57571536726141,
-            "nfl_avg": 0.08953294966133352,
-            "vs_nfl": 115.65746945265853,
+            "him": 0.10348797747605809,
+            "role_avg": 0.12660963620210688,
+            "vs_role": 81.73783653470127,
+            "nfl_avg": 0.0894284508634977,
+            "vs_nfl": 115.72153657678881,
             "fmt": "{:.1%}"
           }
         ]
@@ -327,15 +327,31 @@
         "out_reason": null,
         "projection": 5.3,
         "proj_source": "ffanalytics",
-        "matchup_mult": 1.104,
-        "matchup_pct": 10.4,
+        "matchup_mult": 1.098,
+        "matchup_pct": 9.8,
         "matchup_basis": "defense+vegas",
-        "matchup_def_rank": 1,
-        "matchup_def_pct": 9.7,
+        "matchup_def_rank": 2,
+        "matchup_def_pct": 8.6,
         "matchup_vegas_pct": 4.7,
         "matchup_baseline": 6.0,
-        "expected_pts": 6.7,
-        "delta_pts": 0.6
+        "expected_pts": 6.6,
+        "delta_pts": 0.6,
+        "ml": {
+          "proj": 9.1,
+          "week": 1.3,
+          "call": "good",
+          "avg": 4.5,
+          "why": [
+            {
+              "label": "Vegas line",
+              "pts": 1.0
+            },
+            {
+              "label": "Teammates out",
+              "pts": -0.3
+            }
+          ]
+        }
       }
     }
   }

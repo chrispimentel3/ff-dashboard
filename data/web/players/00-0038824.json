@@ -209,11 +209,11 @@
           },
           {
             "metric": "air-yards share",
-            "him": 0.06399287664866844,
-            "role_avg": 0.0779333629015469,
-            "vs_role": 82.11229987535704,
-            "nfl_avg": 0.16155510938437068,
-            "vs_nfl": 39.61055573700061,
+            "him": 0.06388350173405638,
+            "role_avg": 0.07744477225300425,
+            "vs_role": 82.48910788368701,
+            "nfl_avg": 0.1598899624261943,
+            "vs_nfl": 39.954666800015794,
             "fmt": "{:.1%}"
           },
           {
@@ -263,11 +263,11 @@
           },
           {
             "metric": "xFP share",
-            "him": 0.027302661469748534,
-            "role_avg": 0.03465193621138973,
-            "vs_role": 78.7911570170051,
-            "nfl_avg": 0.07308710363377958,
-            "vs_nfl": 37.35633252968273,
+            "him": 0.027269756073398165,
+            "role_avg": 0.03454908771675044,
+            "vs_role": 78.93046640469457,
+            "nfl_avg": 0.07302457113815909,
+            "vs_nfl": 37.34326083450056,
             "fmt": "{:.1%}"
           }
         ]
@@ -280,15 +280,35 @@
         "out_reason": null,
         "projection": 0.7,
         "proj_source": "ffanalytics",
-        "matchup_mult": 1.028,
-        "matchup_pct": 2.8,
+        "matchup_mult": 1.026,
+        "matchup_pct": 2.6,
         "matchup_basis": "defense+vegas",
         "matchup_def_rank": 9,
         "matchup_def_pct": 5.7,
-        "matchup_vegas_pct": 0.8,
+        "matchup_vegas_pct": 0.5,
         "matchup_baseline": 3.2,
         "expected_pts": 3.3,
-        "delta_pts": 0.1
+        "delta_pts": 0.1,
+        "ml": {
+          "proj": 2.1,
+          "week": 0.8,
+          "call": "normal",
+          "avg": 5.6,
+          "why": [
+            {
+              "label": "Vegas line",
+              "pts": 1.2
+            },
+            {
+              "label": "Teammates out",
+              "pts": -1.0
+            },
+            {
+              "label": "Game setting",
+              "pts": 0.3
+            }
+          ]
+        }
       }
     },
     "2025": {

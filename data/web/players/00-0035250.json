@@ -26,14 +26,14 @@
     "2026": {
       "games": 6,
       "pts_pg": 5.783333333333334,
-      "xfp_pg": 5.643166666666666,
-      "vs_exp_pg": 0.14016666666666802,
+      "xfp_pg": 5.735166666666667,
+      "vs_exp_pg": 0.04816666666666691,
       "usage_label": "Carry share",
       "usage_value": 0.23529411764705882,
       "usage_fmt": "24%",
       "ranks": {
         "pts_pg": "#43 of 90",
-        "xfp_pg": "#48 of 88",
+        "xfp_pg": "#46 of 88",
         "rush_share": "#49 of 90"
       },
       "card": [
@@ -45,8 +45,8 @@
         },
         {
           "stat": "Expected pts/g",
-          "value_fmt": "5.6",
-          "pos_rank": "#48 of 88",
+          "value_fmt": "5.7",
+          "pos_rank": "#46 of 88",
           "means": "What his touches should score."
         },
         {
@@ -204,8 +204,8 @@
           "receiving_yards": 0,
           "receiving_tds": 0,
           "half_ppr": 0.30000000000000004,
-          "xfp": null,
-          "vs_exp": null
+          "xfp": 0.552,
+          "vs_exp": -0.252
         }
       ],
       "role": {
@@ -278,11 +278,11 @@
           },
           {
             "metric": "xFP share",
-            "him": 0.08612401726748825,
-            "role_avg": 0.03250885225851162,
-            "vs_role": 264.9248167318453,
-            "nfl_avg": 0.08953294966133352,
-            "vs_nfl": 96.19253871704231,
+            "him": 0.07109234721473667,
+            "role_avg": 0.032216833860311815,
+            "vs_role": 220.6683236564594,
+            "nfl_avg": 0.0894284508634977,
+            "vs_nfl": 79.49634207938033,
             "fmt": "{:.1%}"
           }
         ]
@@ -303,7 +303,27 @@
         "matchup_vegas_pct": null,
         "matchup_baseline": null,
         "expected_pts": null,
-        "delta_pts": null
+        "delta_pts": null,
+        "ml": {
+          "proj": 9.6,
+          "week": -0.5,
+          "call": "normal",
+          "avg": 6.9,
+          "why": [
+            {
+              "label": "Teammates out",
+              "pts": -0.4
+            },
+            {
+              "label": "Opposing defense",
+              "pts": -0.3
+            },
+            {
+              "label": "Injury report",
+              "pts": 0.3
+            }
+          ]
+        }
       }
     },
     "2025": {

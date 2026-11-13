@@ -26,14 +26,14 @@
     "2026": {
       "games": 9,
       "pts_pg": 14.333333333333334,
-      "xfp_pg": 10.079222222222223,
-      "vs_exp_pg": 4.2541111111111105,
+      "xfp_pg": 11.470222222222223,
+      "vs_exp_pg": 2.8631111111111114,
       "usage_label": "Target share",
       "usage_value": 0.272108843537415,
       "usage_fmt": "27.2%",
       "ranks": {
         "pts_pg": "#2 of 81",
-        "xfp_pg": "#4 of 77",
+        "xfp_pg": "#3 of 77",
         "tgt_share": "#3 of 81"
       },
       "card": [
@@ -45,8 +45,8 @@
         },
         {
           "stat": "Expected pts/g",
-          "value_fmt": "10.1",
-          "pos_rank": "#4 of 77",
+          "value_fmt": "11.5",
+          "pos_rank": "#3 of 77",
           "means": "What his targets should score."
         },
         {
@@ -291,8 +291,8 @@
           "receiving_air_yards": 61,
           "receiving_yards_after_catch": 73,
           "half_ppr": 23.200000000000003,
-          "xfp": null,
-          "vs_exp": null
+          "xfp": 12.519,
+          "vs_exp": 10.681000000000003
         }
       ],
       "role": {
@@ -311,11 +311,11 @@
           },
           {
             "metric": "air-yards share",
-            "him": 0.22907973973975895,
-            "role_avg": 0.16278877546803322,
-            "vs_role": 140.72207317803878,
-            "nfl_avg": 0.0660347755463674,
-            "vs_nfl": 346.90772830583313,
+            "him": 0.18195489132742948,
+            "role_avg": 0.1594930558367413,
+            "vs_role": 114.08326862435963,
+            "nfl_avg": 0.06513130945337035,
+            "vs_nfl": 279.36624160411975,
             "fmt": "{:.1%}"
           },
           {
@@ -383,11 +383,11 @@
           },
           {
             "metric": "xFP share",
-            "him": 0.12563652601750885,
-            "role_avg": 0.10930866538649565,
-            "vs_role": 114.93738906543304,
-            "nfl_avg": 0.049828797072926305,
-            "vs_nfl": 252.13638176662204,
+            "him": 0.1366659067680191,
+            "role_avg": 0.1102234391448141,
+            "vs_role": 123.9898771335417,
+            "nfl_avg": 0.05016245454242929,
+            "vs_nfl": 272.44660974957264,
             "fmt": "{:.1%}"
           }
         ]
@@ -408,7 +408,23 @@
         "matchup_vegas_pct": null,
         "matchup_baseline": null,
         "expected_pts": null,
-        "delta_pts": null
+        "delta_pts": null,
+        "ml": {
+          "proj": 11.1,
+          "week": 1.2,
+          "call": "good",
+          "avg": 13.2,
+          "why": [
+            {
+              "label": "Game setting",
+              "pts": 0.5
+            },
+            {
+              "label": "Opposing defense",
+              "pts": 0.4
+            }
+          ]
+        }
       }
     },
     "2025": {

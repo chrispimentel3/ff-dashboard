@@ -26,14 +26,14 @@
     "2026": {
       "games": 7,
       "pts_pg": 5.3999999999999995,
-      "xfp_pg": 5.513714285714286,
-      "vs_exp_pg": -0.11371428571428664,
+      "xfp_pg": 6.867571428571429,
+      "vs_exp_pg": -1.467571428571429,
       "usage_label": "Target share",
       "usage_value": 0.17972350230414746,
       "usage_fmt": "18.0%",
       "ranks": {
         "pts_pg": "#30 of 81",
-        "xfp_pg": "#30 of 77",
+        "xfp_pg": "#14 of 77",
         "tgt_share": "#11 of 81"
       },
       "card": [
@@ -45,8 +45,8 @@
         },
         {
           "stat": "Expected pts/g",
-          "value_fmt": "5.5",
-          "pos_rank": "#30 of 77",
+          "value_fmt": "6.9",
+          "pos_rank": "#14 of 77",
           "means": "What his targets should score."
         },
         {
@@ -240,8 +240,8 @@
           "receiving_air_yards": 36,
           "receiving_yards_after_catch": 25,
           "half_ppr": 8.7,
-          "xfp": 8.002,
-          "vs_exp": 0.6979999999999986
+          "xfp": 8.096,
+          "vs_exp": 0.6039999999999992
         },
         {
           "week": 10,
@@ -257,8 +257,8 @@
           "receiving_air_yards": 35,
           "receiving_yards_after_catch": 17,
           "half_ppr": 4.4,
-          "xfp": null,
-          "vs_exp": null
+          "xfp": 9.383,
+          "vs_exp": -4.982999999999999
         }
       ],
       "role": {
@@ -277,11 +277,11 @@
           },
           {
             "metric": "air-yards share",
-            "him": 0.1869711515416,
-            "role_avg": 0.16278877546803322,
-            "vs_role": 114.85506356567898,
-            "nfl_avg": 0.0660347755463674,
-            "vs_nfl": 283.14043622411515,
+            "him": 0.15616051460352656,
+            "role_avg": 0.1594930558367413,
+            "vs_role": 97.9105414867554,
+            "nfl_avg": 0.06513130945337035,
+            "vs_nfl": 239.7625902413754,
             "fmt": "{:.1%}"
           },
           {
@@ -349,11 +349,11 @@
           },
           {
             "metric": "xFP share",
-            "him": 0.11305489346439326,
-            "role_avg": 0.10930866538649565,
-            "vs_role": 103.42720137022224,
-            "nfl_avg": 0.049828797072926305,
-            "vs_nfl": 226.88666013536954,
+            "him": 0.11700530903005163,
+            "role_avg": 0.1102234391448141,
+            "vs_role": 106.15283821468077,
+            "nfl_avg": 0.05016245454242929,
+            "vs_nfl": 233.25275865654487,
             "fmt": "{:.1%}"
           }
         ]
@@ -374,7 +374,23 @@
         "matchup_vegas_pct": null,
         "matchup_baseline": null,
         "expected_pts": null,
-        "delta_pts": null
+        "delta_pts": null,
+        "ml": {
+          "proj": 6.9,
+          "week": -0.3,
+          "call": "normal",
+          "avg": 5.6,
+          "why": [
+            {
+              "label": "Vegas line",
+              "pts": -0.7
+            },
+            {
+              "label": "Game setting",
+              "pts": 0.6
+            }
+          ]
+        }
       }
     },
     "2025": {
