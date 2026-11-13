@@ -564,8 +564,9 @@ def players(c) -> dict:
                 out_for_week(c.next_week), c.sched, c.next_week, cur, player_ids.norm, mm)
     ml = ml_week(cur, c.next_week)
     for gid, card in (out.get("players") or {}).items():
-        if gid in ml and isinstance(card.get("this_week"), dict):
-            card["this_week"]["ml"] = ml[gid]
+        tw = ((card.get("seasons") or {}).get(str(cur)) or {}).get("this_week")
+        if gid in ml and isinstance(tw, dict):
+            tw["ml"] = ml[gid]
     return out
 
 
