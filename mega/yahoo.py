@@ -89,21 +89,26 @@ class LeagueSession:
         self._ctx = self._browser.new_context(storage_state=str(STATE))
 
     TRIES = 2       # per page: one slow load used to fail the whole pull
+    RETRY_WAIT = 5  # seconds before the second try: a network that just changed needs a moment
 
     def _open(self, url: str):
-        """A new tab at `url`. A load that times out gets one more try in a fresh tab: Yahoo
-        now and then takes over 45 s on a single page (2026-11-11 the transactions page,
-        11-12 the players list), and each of those mornings the whole pull failed."""
-        from playwright.sync_api import TimeoutError as PWTimeout
+        """A new tab at `url`. A load that fails gets one more try in a fresh tab: Yahoo now
+        and then takes over 45 s on a single page (2026-11-11 the transactions page, 11-12
+        the players list), and a Mac just awake can change networks mid-load (11-13,
+        ERR_NETWORK_CHANGED); each of those mornings the whole pull failed."""
+        import time
+
+        from playwright.sync_api import Error as PWError
         for attempt in range(self.TRIES):
             page = self._ctx.new_page()
             try:
                 page.goto(url, wait_until="domcontentloaded", timeout=45_000)
                 return page
-            except PWTimeout:
+            except PWError:                 # timeouts included
                 page.close()
                 if attempt == self.TRIES - 1:
                     raise
+                time.sleep(self.RETRY_WAIT)
 
     def get(self, url: str) -> str:
         page = self._open(url)

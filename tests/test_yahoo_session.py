@@ -37,7 +37,7 @@ class FakeCtx:
 
 def _session(slow_loads: int) -> LeagueSession:
     s = object.__new__(LeagueSession)          # no browser, no saved login
-    s._ctx = FakeCtx(slow_loads)
+    s._ctx, s.RETRY_WAIT = FakeCtx(slow_loads), 0
     return s
 
 
