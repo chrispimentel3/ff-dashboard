@@ -2,6 +2,19 @@
   "available": true,
   "mine": [
     {
+      "player": "Jayden Daniels",
+      "pos": "QB",
+      "team": "WAS",
+      "arch_fit": 95.4,
+      "tags": "RUSH+",
+      "carries_pg": 6.0,
+      "tgt_share": null,
+      "tm_rank": null,
+      "age": 25.9,
+      "exp_yrs": 2.0,
+      "why": "6.0 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
+    },
+    {
       "player": "Christian Watson",
       "pos": "WR",
       "team": "GB",
@@ -23,22 +36,9 @@
       "carries_pg": 16.5,
       "tgt_share": 0.054,
       "tm_rank": 8.0,
-      "age": 25.4,
+      "age": 25.5,
       "exp_yrs": 4.0,
-      "why": "16.5 carries/g, age 25"
-    },
-    {
-      "player": "Jayden Daniels",
-      "pos": "QB",
-      "team": "WAS",
-      "arch_fit": 85.6,
-      "tags": "RUSH",
-      "carries_pg": 5.2,
-      "tgt_share": null,
-      "tm_rank": null,
-      "age": 25.9,
-      "exp_yrs": 2.0,
-      "why": "5.2 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
+      "why": "16.5 carries/g, age 26"
     },
     {
       "player": "Josh Downs",
@@ -49,22 +49,9 @@
       "carries_pg": 0.1,
       "tgt_share": 0.199,
       "tm_rank": 2.0,
-      "age": 25.2,
+      "age": 25.3,
       "exp_yrs": 3.0,
       "why": "35% FD/tgt, 2.2 FD/g (proxy), exp 3y"
-    },
-    {
-      "player": "Malik Nabers",
-      "pos": "WR",
-      "team": "NYG",
-      "arch_fit": 81.5,
-      "tags": "",
-      "carries_pg": 0.2,
-      "tgt_share": 0.3,
-      "tm_rank": 1.0,
-      "age": 23.3,
-      "exp_yrs": 2.0,
-      "why": "37% FD/tgt, 3.6 FD/g (proxy), exp 2y"
     },
     {
       "player": "George Kittle",
@@ -78,6 +65,19 @@
       "age": 33.1,
       "exp_yrs": 9.0,
       "why": "25% tgt share, team 29 ppg"
+    },
+    {
+      "player": "Malik Nabers",
+      "pos": "WR",
+      "team": "NYG",
+      "arch_fit": 79.2,
+      "tags": "",
+      "carries_pg": 0.2,
+      "tgt_share": 0.289,
+      "tm_rank": 1.0,
+      "age": 23.3,
+      "exp_yrs": 2.0,
+      "why": "35% FD/tgt, 3.3 FD/g (proxy), exp 2y"
     },
     {
       "player": "Jadarian Price",
@@ -161,17 +161,30 @@
       "player": "Rachaad White",
       "pos": "RB",
       "team": "WAS",
-      "arch_fit": 38.6,
+      "arch_fit": 39.6,
       "tags": "AGE\u26a0",
-      "carries_pg": 7.7,
-      "tgt_share": 0.085,
+      "carries_pg": 8.1,
+      "tgt_share": 0.082,
       "tm_rank": 6.0,
       "age": 27.8,
       "exp_yrs": 4.0,
-      "why": "7.7 carries/g, age 28"
+      "why": "8.1 carries/g, age 28"
     }
   ],
   "board": [
+    {
+      "status": "rostered",
+      "player": "Tee Higgins",
+      "pos": "WR",
+      "team": "CIN",
+      "arch_fit": 100.0,
+      "tags": "",
+      "half_ppr_pg": 17.0,
+      "proj_ppg": 10.9,
+      "tgt_share": 0.232,
+      "tm_rank": 2.0,
+      "why": "60% FD/tgt, 5.0 FD/g (proxy), exp 6y"
+    },
     {
       "status": "rostered",
       "player": "Jahmyr Gibbs",
@@ -184,19 +197,6 @@
       "tgt_share": 0.167,
       "tm_rank": 4.0,
       "why": "22.1 carries/g, age 25"
-    },
-    {
-      "status": "rostered",
-      "player": "Bijan Robinson",
-      "pos": "RB",
-      "team": "ATL",
-      "arch_fit": 100.0,
-      "tags": "R1-3 ADP",
-      "half_ppr_pg": 18.3,
-      "proj_ppg": 19.4,
-      "tgt_share": 0.166,
-      "tm_rank": 2.0,
-      "why": "18.8 carries/g, age 25"
     },
     {
       "status": "rostered",
@@ -213,16 +213,16 @@
     },
     {
       "status": "rostered",
-      "player": "Tee Higgins",
-      "pos": "WR",
-      "team": "CIN",
+      "player": "Bijan Robinson",
+      "pos": "RB",
+      "team": "ATL",
       "arch_fit": 100.0,
-      "tags": "",
-      "half_ppr_pg": 17.0,
-      "proj_ppg": 10.9,
-      "tgt_share": 0.232,
+      "tags": "R1-3 ADP",
+      "half_ppr_pg": 18.3,
+      "proj_ppg": 19.4,
+      "tgt_share": 0.166,
       "tm_rank": 2.0,
-      "why": "60% FD/tgt, 5.0 FD/g (proxy), exp 6y"
+      "why": "18.8 carries/g, age 25"
     },
     {
       "status": "rostered",
@@ -314,6 +314,19 @@
       "tgt_share": 0.223,
       "tm_rank": 1.0,
       "why": "22% tgt share, team 26 ppg"
+    },
+    {
+      "status": "mine",
+      "player": "Jayden Daniels",
+      "pos": "QB",
+      "team": "WAS",
+      "arch_fit": 95.4,
+      "tags": "RUSH+",
+      "half_ppr_pg": 19.7,
+      "proj_ppg": 18.4,
+      "tgt_share": null,
+      "tm_rank": null,
+      "why": "6.0 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
     },
     {
       "status": "rostered",
@@ -446,19 +459,6 @@
       "why": "5.5 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
     },
     {
-      "status": "available",
-      "player": "Dontayvion Wicks",
-      "pos": "WR",
-      "team": "PHI",
-      "arch_fit": 89.5,
-      "tags": "",
-      "half_ppr_pg": 7.3,
-      "proj_ppg": 3.9,
-      "tgt_share": 0.112,
-      "tm_rank": 4.0,
-      "why": "50% FD/tgt, 2.7 FD/g (proxy), exp 3y"
-    },
-    {
       "status": "rostered",
       "player": "Kenneth Walker III",
       "pos": "RB",
@@ -470,6 +470,19 @@
       "tgt_share": 0.146,
       "tm_rank": 3.0,
       "why": "19.9 carries/g, age 26"
+    },
+    {
+      "status": "available",
+      "player": "Dontayvion Wicks",
+      "pos": "WR",
+      "team": "PHI",
+      "arch_fit": 89.5,
+      "tags": "",
+      "half_ppr_pg": 7.3,
+      "proj_ppg": 3.9,
+      "tgt_share": 0.112,
+      "tm_rank": 4.0,
+      "why": "50% FD/tgt, 2.7 FD/g (proxy), exp 3y"
     },
     {
       "status": "rostered",
@@ -499,19 +512,6 @@
     },
     {
       "status": "rostered",
-      "player": "Jeremiyah Love",
-      "pos": "RB",
-      "team": "ARI",
-      "arch_fit": 88.1,
-      "tags": "R1-3 ADP",
-      "half_ppr_pg": 8.0,
-      "proj_ppg": 13.4,
-      "tgt_share": 0.041,
-      "tm_rank": 7.0,
-      "why": "12.7 carries/g, age 21"
-    },
-    {
-      "status": "rostered",
       "player": "Ashton Jeanty",
       "pos": "RB",
       "team": "LV",
@@ -522,6 +522,19 @@
       "tgt_share": 0.178,
       "tm_rank": 3.0,
       "why": "12.7 carries/g, age 23"
+    },
+    {
+      "status": "rostered",
+      "player": "Jeremiyah Love",
+      "pos": "RB",
+      "team": "ARI",
+      "arch_fit": 88.1,
+      "tags": "R1-3 ADP",
+      "half_ppr_pg": 8.0,
+      "proj_ppg": 13.4,
+      "tgt_share": 0.041,
+      "tm_rank": 7.0,
+      "why": "12.7 carries/g, age 22"
     },
     {
       "status": "available",
@@ -547,7 +560,7 @@
       "proj_ppg": 12.8,
       "tgt_share": 0.088,
       "tm_rank": 4.0,
-      "why": "17.1 carries/g, age 26"
+      "why": "17.1 carries/g, age 27"
     },
     {
       "status": "rostered",
@@ -561,6 +574,19 @@
       "tgt_share": 0.267,
       "tm_rank": 1.0,
       "why": "38% FD/tgt, 3.0 FD/g (proxy), exp 3y"
+    },
+    {
+      "status": "rostered",
+      "player": "Cam Skattebo",
+      "pos": "RB",
+      "team": "NYG",
+      "arch_fit": 86.8,
+      "tags": "",
+      "half_ppr_pg": 12.9,
+      "proj_ppg": 13.0,
+      "tgt_share": 0.058,
+      "tm_rank": 5.0,
+      "why": "16.6 carries/g, age 25"
     },
     {
       "status": "rostered",
@@ -590,6 +616,19 @@
     },
     {
       "status": "available",
+      "player": "Van Jefferson",
+      "pos": "WR",
+      "team": "WAS",
+      "arch_fit": 86.5,
+      "tags": "",
+      "half_ppr_pg": 7.2,
+      "proj_ppg": null,
+      "tgt_share": 0.029,
+      "tm_rank": 9.0,
+      "why": "50% FD/tgt, 2.0 FD/g (proxy), exp 6y"
+    },
+    {
+      "status": "available",
       "player": "Tyquan Thornton",
       "pos": "WR",
       "team": "KC",
@@ -602,32 +641,6 @@
       "why": "53% FD/tgt, 2.0 FD/g (proxy), exp 4y"
     },
     {
-      "status": "available",
-      "player": "Van Jefferson",
-      "pos": "WR",
-      "team": "WAS",
-      "arch_fit": 86.5,
-      "tags": "",
-      "half_ppr_pg": 7.2,
-      "proj_ppg": null,
-      "tgt_share": 0.032,
-      "tm_rank": 8.0,
-      "why": "50% FD/tgt, 2.0 FD/g (proxy), exp 6y"
-    },
-    {
-      "status": "rostered",
-      "player": "Cam Skattebo",
-      "pos": "RB",
-      "team": "NYG",
-      "arch_fit": 86.3,
-      "tags": "",
-      "half_ppr_pg": 10.8,
-      "proj_ppg": 13.0,
-      "tgt_share": 0.05,
-      "tm_rank": 5.0,
-      "why": "16.3 carries/g, age 25"
-    },
-    {
       "status": "mine",
       "player": "Breece Hall",
       "pos": "RB",
@@ -638,7 +651,7 @@
       "proj_ppg": 13.5,
       "tgt_share": 0.054,
       "tm_rank": 8.0,
-      "why": "16.5 carries/g, age 25"
+      "why": "16.5 carries/g, age 26"
     },
     {
       "status": "rostered",
@@ -665,19 +678,6 @@
       "tgt_share": 0.181,
       "tm_rank": 2.0,
       "why": "39% FD/tgt, 2.4 FD/g (proxy), exp 3y"
-    },
-    {
-      "status": "mine",
-      "player": "Jayden Daniels",
-      "pos": "QB",
-      "team": "WAS",
-      "arch_fit": 85.6,
-      "tags": "RUSH",
-      "half_ppr_pg": 19.2,
-      "proj_ppg": 18.4,
-      "tgt_share": null,
-      "tm_rank": null,
-      "why": "5.2 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
     },
     {
       "status": "rostered",
@@ -798,19 +798,6 @@
     },
     {
       "status": "rostered",
-      "player": "Wan'Dale Robinson",
-      "pos": "WR",
-      "team": "TEN",
-      "arch_fit": 83.1,
-      "tags": "",
-      "half_ppr_pg": 7.5,
-      "proj_ppg": 8.7,
-      "tgt_share": 0.214,
-      "tm_rank": 2.0,
-      "why": "36% FD/tgt, 2.2 FD/g (proxy), exp 4y"
-    },
-    {
-      "status": "rostered",
       "player": "Tyler Warren",
       "pos": "TE",
       "team": "IND",
@@ -821,6 +808,19 @@
       "tgt_share": 0.185,
       "tm_rank": 3.0,
       "why": "18% tgt share, team 20 ppg"
+    },
+    {
+      "status": "rostered",
+      "player": "Wan'Dale Robinson",
+      "pos": "WR",
+      "team": "TEN",
+      "arch_fit": 83.1,
+      "tags": "",
+      "half_ppr_pg": 7.5,
+      "proj_ppg": 8.7,
+      "tgt_share": 0.214,
+      "tm_rank": 2.0,
+      "why": "36% FD/tgt, 2.2 FD/g (proxy), exp 4y"
     },
     {
       "status": "rostered",
@@ -847,19 +847,6 @@
       "tgt_share": 0.199,
       "tm_rank": 2.0,
       "why": "35% FD/tgt, 2.2 FD/g (proxy), exp 3y"
-    },
-    {
-      "status": "available",
-      "player": "Treylon Burks",
-      "pos": "WR",
-      "team": "WAS",
-      "arch_fit": 82.2,
-      "tags": "",
-      "half_ppr_pg": 6.9,
-      "proj_ppg": 3.9,
-      "tgt_share": 0.089,
-      "tm_rank": 5.0,
-      "why": "41% FD/tgt, 1.5 FD/g (proxy), exp 4y"
     },
     {
       "status": "rostered",
@@ -927,19 +914,6 @@
       "why": "49% FD/tgt, 2.8 FD/g (proxy), exp 2y"
     },
     {
-      "status": "mine",
-      "player": "Malik Nabers",
-      "pos": "WR",
-      "team": "NYG",
-      "arch_fit": 81.5,
-      "tags": "",
-      "half_ppr_pg": 12.9,
-      "proj_ppg": 11.3,
-      "tgt_share": 0.3,
-      "tm_rank": 1.0,
-      "why": "37% FD/tgt, 3.6 FD/g (proxy), exp 2y"
-    },
-    {
       "status": "rostered",
       "player": "Parker Washington",
       "pos": "WR",
@@ -966,6 +940,19 @@
       "why": "58% FD/tgt, 0.9 FD/g (proxy), exp 3y"
     },
     {
+      "status": "available",
+      "player": "Treylon Burks",
+      "pos": "WR",
+      "team": "WAS",
+      "arch_fit": 81.4,
+      "tags": "",
+      "half_ppr_pg": 6.4,
+      "proj_ppg": 3.9,
+      "tgt_share": 0.089,
+      "tm_rank": 5.0,
+      "why": "40% FD/tgt, 1.4 FD/g (proxy), exp 4y"
+    },
+    {
       "status": "mine",
       "player": "George Kittle",
       "pos": "TE",
@@ -977,19 +964,6 @@
       "tgt_share": 0.245,
       "tm_rank": 1.0,
       "why": "25% tgt share, team 29 ppg"
-    },
-    {
-      "status": "available",
-      "player": "Cody White",
-      "pos": "WR",
-      "team": "LV",
-      "arch_fit": 81.2,
-      "tags": "",
-      "half_ppr_pg": 5.0,
-      "proj_ppg": null,
-      "tgt_share": 0.061,
-      "tm_rank": 6.0,
-      "why": "42% FD/tgt, 1.1 FD/g (proxy), exp 6y"
     },
     {
       "status": "available",
@@ -1005,6 +979,19 @@
       "why": "41% FD/tgt, 1.3 FD/g (proxy), exp 4y"
     },
     {
+      "status": "available",
+      "player": "Cody White",
+      "pos": "WR",
+      "team": "LV",
+      "arch_fit": 81.2,
+      "tags": "",
+      "half_ppr_pg": 5.0,
+      "proj_ppg": null,
+      "tgt_share": 0.061,
+      "tm_rank": 6.0,
+      "why": "42% FD/tgt, 1.1 FD/g (proxy), exp 6y"
+    },
+    {
       "status": "rostered",
       "player": "Kyren Williams",
       "pos": "RB",
@@ -1016,19 +1003,6 @@
       "tgt_share": 0.136,
       "tm_rank": 3.0,
       "why": "14.1 carries/g, age 26"
-    },
-    {
-      "status": "rostered",
-      "player": "Kayshon Boutte",
-      "pos": "WR",
-      "team": "HOU",
-      "arch_fit": 80.8,
-      "tags": "",
-      "half_ppr_pg": 6.7,
-      "proj_ppg": 5.3,
-      "tgt_share": 0.104,
-      "tm_rank": 4.0,
-      "why": "39% FD/tgt, 1.4 FD/g (proxy), exp 3y"
     },
     {
       "status": "rostered",
@@ -1055,6 +1029,19 @@
       "tgt_share": 0.102,
       "tm_rank": 4.0,
       "why": "39% FD/tgt, 1.4 FD/g (proxy), exp 6y"
+    },
+    {
+      "status": "rostered",
+      "player": "Kayshon Boutte",
+      "pos": "WR",
+      "team": "HOU",
+      "arch_fit": 80.8,
+      "tags": "",
+      "half_ppr_pg": 6.7,
+      "proj_ppg": 5.3,
+      "tgt_share": 0.104,
+      "tm_rank": 4.0,
+      "why": "39% FD/tgt, 1.4 FD/g (proxy), exp 3y"
     },
     {
       "status": "rostered",
@@ -1109,6 +1096,19 @@
       "why": "33% FD/tgt, 1.9 FD/g (proxy), exp 3y"
     },
     {
+      "status": "mine",
+      "player": "Malik Nabers",
+      "pos": "WR",
+      "team": "NYG",
+      "arch_fit": 79.2,
+      "tags": "",
+      "half_ppr_pg": 12.0,
+      "proj_ppg": 11.3,
+      "tgt_share": 0.289,
+      "tm_rank": 1.0,
+      "why": "35% FD/tgt, 3.3 FD/g (proxy), exp 2y"
+    },
+    {
       "status": "rostered",
       "player": "James Cook",
       "pos": "RB",
@@ -1120,6 +1120,19 @@
       "tgt_share": 0.081,
       "tm_rank": 5.0,
       "why": "21.1 carries/g, age 27"
+    },
+    {
+      "status": "rostered",
+      "player": "Jonathan Taylor",
+      "pos": "RB",
+      "team": "IND",
+      "arch_fit": 78.8,
+      "tags": "AGE\u26a0 R1-3 ADP",
+      "half_ppr_pg": 15.6,
+      "proj_ppg": 17.1,
+      "tgt_share": 0.125,
+      "tm_rank": 4.0,
+      "why": "17.9 carries/g, age 28"
     },
     {
       "status": "rostered",
@@ -1148,19 +1161,6 @@
       "why": "4.8 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
     },
     {
-      "status": "rostered",
-      "player": "Jonathan Taylor",
-      "pos": "RB",
-      "team": "IND",
-      "arch_fit": 78.8,
-      "tags": "AGE\u26a0 R1-3 ADP",
-      "half_ppr_pg": 15.6,
-      "proj_ppg": 17.1,
-      "tgt_share": 0.125,
-      "tm_rank": 4.0,
-      "why": "17.9 carries/g, age 28"
-    },
-    {
       "status": "available",
       "player": "Tutu Atwell",
       "pos": "WR",
@@ -1172,19 +1172,6 @@
       "tgt_share": 0.039,
       "tm_rank": 9.0,
       "why": "38% FD/tgt, 1.0 FD/g (proxy), exp 5y"
-    },
-    {
-      "status": "rostered",
-      "player": "Isaiah Likely",
-      "pos": "TE",
-      "team": "NYG",
-      "arch_fit": 78.3,
-      "tags": "",
-      "half_ppr_pg": 13.2,
-      "proj_ppg": 7.9,
-      "tgt_share": 0.265,
-      "tm_rank": 2.0,
-      "why": "27% tgt share, team 23 ppg"
     },
     {
       "status": "available",
@@ -1253,6 +1240,19 @@
     },
     {
       "status": "rostered",
+      "player": "Isaiah Likely",
+      "pos": "TE",
+      "team": "NYG",
+      "arch_fit": 78.0,
+      "tags": "",
+      "half_ppr_pg": 14.3,
+      "proj_ppg": 7.9,
+      "tgt_share": 0.272,
+      "tm_rank": 2.0,
+      "why": "27% tgt share, team 23 ppg"
+    },
+    {
+      "status": "rostered",
       "player": "Matthew Golden",
       "pos": "WR",
       "team": "GB",
@@ -1266,19 +1266,6 @@
     },
     {
       "status": "rostered",
-      "player": "Jalen Hurts",
-      "pos": "QB",
-      "team": "PHI",
-      "arch_fit": 77.9,
-      "tags": "RUSH",
-      "half_ppr_pg": 16.6,
-      "proj_ppg": 18.4,
-      "tgt_share": null,
-      "tm_rank": null,
-      "why": "4.6 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
-    },
-    {
-      "status": "rostered",
       "player": "Jakobi Meyers",
       "pos": "WR",
       "team": "JAX",
@@ -1289,6 +1276,19 @@
       "tgt_share": 0.174,
       "tm_rank": 2.0,
       "why": "59% FD/tgt, 2.8 FD/g (proxy), exp 7y"
+    },
+    {
+      "status": "rostered",
+      "player": "Jalen Hurts",
+      "pos": "QB",
+      "team": "PHI",
+      "arch_fit": 77.9,
+      "tags": "RUSH",
+      "half_ppr_pg": 16.6,
+      "proj_ppg": 18.4,
+      "tgt_share": null,
+      "tm_rank": null,
+      "why": "4.6 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
     },
     {
       "status": "available",
@@ -1429,7 +1429,7 @@
       "tags": "",
       "half_ppr_pg": 7.7,
       "proj_ppg": 10.5,
-      "tgt_share": 0.109,
+      "tgt_share": 0.096,
       "tm_rank": 4.0,
       "why": "44% FD/tgt, 2.4 FD/g (proxy), exp 7y"
     },
@@ -1512,19 +1512,6 @@
       "why": "33% FD/tgt, 0.8 FD/g (proxy), exp 3y"
     },
     {
-      "status": "available",
-      "player": "Darnell Mooney",
-      "pos": "WR",
-      "team": "NYG",
-      "arch_fit": 74.9,
-      "tags": "",
-      "half_ppr_pg": 3.2,
-      "proj_ppg": 5.1,
-      "tgt_share": 0.1,
-      "tm_rank": 4.0,
-      "why": "31% FD/tgt, 1.0 FD/g (proxy), exp 6y"
-    },
-    {
       "status": "rostered",
       "player": "Jalen Coker",
       "pos": "WR",
@@ -1577,6 +1564,19 @@
       "why": "69% FD/tgt, 2.2 FD/g (proxy), exp 1y"
     },
     {
+      "status": "available",
+      "player": "Darnell Mooney",
+      "pos": "WR",
+      "team": "NYG",
+      "arch_fit": 74.0,
+      "tags": "",
+      "half_ppr_pg": 3.0,
+      "proj_ppg": 5.1,
+      "tgt_share": 0.105,
+      "tm_rank": 4.0,
+      "why": "29% FD/tgt, 1.0 FD/g (proxy), exp 6y"
+    },
+    {
       "status": "rostered",
       "player": "Justin Jefferson",
       "pos": "WR",
@@ -1590,19 +1590,6 @@
       "why": "39% FD/tgt, 2.9 FD/g (proxy), exp 0y"
     },
     {
-      "status": "rostered",
-      "player": "Marvin Harrison Jr.",
-      "pos": "WR",
-      "team": "HOU",
-      "arch_fit": 73.9,
-      "tags": "",
-      "half_ppr_pg": 4.6,
-      "proj_ppg": 9.6,
-      "tgt_share": 0.09,
-      "tm_rank": 5.0,
-      "why": "42% FD/tgt, 1.4 FD/g (proxy), exp 2y"
-    },
-    {
       "status": "available",
       "player": "Malik Washington",
       "pos": "WR",
@@ -1614,6 +1601,19 @@
       "tgt_share": 0.24,
       "tm_rank": 1.0,
       "why": "35% FD/tgt, 2.1 FD/g (proxy), exp 2y"
+    },
+    {
+      "status": "rostered",
+      "player": "Marvin Harrison Jr.",
+      "pos": "WR",
+      "team": "HOU",
+      "arch_fit": 73.9,
+      "tags": "",
+      "half_ppr_pg": 4.6,
+      "proj_ppg": 9.6,
+      "tgt_share": 0.09,
+      "tm_rank": 5.0,
+      "why": "42% FD/tgt, 1.4 FD/g (proxy), exp 2y"
     },
     {
       "status": "available",
@@ -1708,19 +1708,6 @@
     },
     {
       "status": "available",
-      "player": "Charlie Jones",
-      "pos": "WR",
-      "team": "NYG",
-      "arch_fit": 72.6,
-      "tags": "",
-      "half_ppr_pg": 1.5,
-      "proj_ppg": null,
-      "tgt_share": 0.012,
-      "tm_rank": 9.0,
-      "why": "33% FD/tgt, 0.2 FD/g (proxy), exp 3y"
-    },
-    {
-      "status": "available",
       "player": "Devontez Walker",
       "pos": "WR",
       "team": "BAL",
@@ -1744,6 +1731,19 @@
       "tgt_share": 0.195,
       "tm_rank": 1.0,
       "why": "20% tgt share, team 25 ppg"
+    },
+    {
+      "status": "available",
+      "player": "Charlie Jones",
+      "pos": "WR",
+      "team": "NYG",
+      "arch_fit": 72.4,
+      "tags": "",
+      "half_ppr_pg": 1.3,
+      "proj_ppg": null,
+      "tgt_share": 0.01,
+      "tm_rank": 9.0,
+      "why": "33% FD/tgt, 0.2 FD/g (proxy), exp 3y"
     },
     {
       "status": "available",
@@ -1838,19 +1838,6 @@
     },
     {
       "status": "available",
-      "player": "Jeshaun Jones",
-      "pos": "WR",
-      "team": "MIN",
-      "arch_fit": 71.4,
-      "tags": "",
-      "half_ppr_pg": 1.9,
-      "proj_ppg": null,
-      "tgt_share": 0.005,
-      "tm_rank": 14.0,
-      "why": "100% FD/tgt, 0.5 FD/g (proxy), exp 2y"
-    },
-    {
-      "status": "available",
       "player": "Brandon Smith",
       "pos": "WR",
       "team": "PIT",
@@ -1861,6 +1848,19 @@
       "tgt_share": 0.007,
       "tm_rank": 10.0,
       "why": "50% FD/tgt, 0.5 FD/g (proxy), exp 2y"
+    },
+    {
+      "status": "available",
+      "player": "Jeshaun Jones",
+      "pos": "WR",
+      "team": "MIN",
+      "arch_fit": 71.4,
+      "tags": "",
+      "half_ppr_pg": 1.9,
+      "proj_ppg": null,
+      "tgt_share": 0.005,
+      "tm_rank": 14.0,
+      "why": "100% FD/tgt, 0.5 FD/g (proxy), exp 2y"
     },
     {
       "status": "rostered",
@@ -1876,19 +1876,6 @@
       "why": "4.2 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
     },
     {
-      "status": "rostered",
-      "player": "Sam LaPorta",
-      "pos": "TE",
-      "team": "DET",
-      "arch_fit": 71.1,
-      "tags": "",
-      "half_ppr_pg": 9.4,
-      "proj_ppg": 8.7,
-      "tgt_share": 0.182,
-      "tm_rank": 2.0,
-      "why": "18% tgt share, team 28 ppg"
-    },
-    {
       "status": "available",
       "player": "Marquise Brown",
       "pos": "WR",
@@ -1900,6 +1887,19 @@
       "tgt_share": 0.028,
       "tm_rank": 9.0,
       "why": "62% FD/tgt, 1.2 FD/g (proxy), exp 7y"
+    },
+    {
+      "status": "rostered",
+      "player": "Sam LaPorta",
+      "pos": "TE",
+      "team": "DET",
+      "arch_fit": 71.1,
+      "tags": "",
+      "half_ppr_pg": 9.4,
+      "proj_ppg": 8.7,
+      "tgt_share": 0.182,
+      "tm_rank": 2.0,
+      "why": "18% tgt share, team 28 ppg"
     },
     {
       "status": "rostered",
@@ -1929,19 +1929,6 @@
     },
     {
       "status": "available",
-      "player": "Efton Chism III",
-      "pos": "WR",
-      "team": "NE",
-      "arch_fit": 70.8,
-      "tags": "",
-      "half_ppr_pg": 5.1,
-      "proj_ppg": null,
-      "tgt_share": 0.095,
-      "tm_rank": 6.0,
-      "why": "48% FD/tgt, 1.5 FD/g (proxy), exp 1y"
-    },
-    {
-      "status": "available",
       "player": "Tory Horton",
       "pos": "WR",
       "team": "SEA",
@@ -1952,6 +1939,19 @@
       "tgt_share": 0.069,
       "tm_rank": 5.0,
       "why": "47% FD/tgt, 1.5 FD/g (proxy), exp 1y"
+    },
+    {
+      "status": "available",
+      "player": "Efton Chism III",
+      "pos": "WR",
+      "team": "NE",
+      "arch_fit": 70.8,
+      "tags": "",
+      "half_ppr_pg": 5.1,
+      "proj_ppg": null,
+      "tgt_share": 0.095,
+      "tm_rank": 6.0,
+      "why": "48% FD/tgt, 1.5 FD/g (proxy), exp 1y"
     },
     {
       "status": "rostered",
@@ -1968,19 +1968,6 @@
     },
     {
       "status": "rostered",
-      "player": "Luther Burden III",
-      "pos": "WR",
-      "team": "CHI",
-      "arch_fit": 70.7,
-      "tags": "",
-      "half_ppr_pg": 12.4,
-      "proj_ppg": 10.1,
-      "tgt_share": 0.223,
-      "tm_rank": 1.0,
-      "why": "35% FD/tgt, 2.6 FD/g (proxy), exp 1y"
-    },
-    {
-      "status": "rostered",
       "player": "Carnell Tate",
       "pos": "WR",
       "team": "TEN",
@@ -1991,6 +1978,19 @@
       "tgt_share": 0.218,
       "tm_rank": 1.0,
       "why": "35% FD/tgt, 2.6 FD/g (proxy), exp 0y"
+    },
+    {
+      "status": "rostered",
+      "player": "Luther Burden III",
+      "pos": "WR",
+      "team": "CHI",
+      "arch_fit": 70.7,
+      "tags": "",
+      "half_ppr_pg": 12.4,
+      "proj_ppg": 10.1,
+      "tgt_share": 0.223,
+      "tm_rank": 1.0,
+      "why": "35% FD/tgt, 2.6 FD/g (proxy), exp 1y"
     },
     {
       "status": "rostered",
@@ -2027,7 +2027,7 @@
       "tags": "",
       "half_ppr_pg": 1.7,
       "proj_ppg": null,
-      "tgt_share": 0.065,
+      "tgt_share": 0.057,
       "tm_rank": 7.0,
       "why": "25% FD/tgt, 0.6 FD/g (proxy), exp 5y"
     },
@@ -2045,6 +2045,19 @@
       "why": "18% tgt share, team 26 ppg"
     },
     {
+      "status": "available",
+      "player": "Malachi Fields",
+      "pos": "WR",
+      "team": "NYG",
+      "arch_fit": 70.0,
+      "tags": "",
+      "half_ppr_pg": 5.8,
+      "proj_ppg": 1.6,
+      "tgt_share": 0.133,
+      "tm_rank": 3.0,
+      "why": "41% FD/tgt, 1.8 FD/g (proxy), exp 0y"
+    },
+    {
       "status": "rostered",
       "player": "Bo Nix",
       "pos": "QB",
@@ -2056,6 +2069,19 @@
       "tgt_share": null,
       "tm_rank": null,
       "why": "4.1 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
+    },
+    {
+      "status": "available",
+      "player": "Calvin Ridley",
+      "pos": "WR",
+      "team": "TEN",
+      "arch_fit": 70.0,
+      "tags": "",
+      "half_ppr_pg": 2.0,
+      "proj_ppg": 7.5,
+      "tgt_share": 0.056,
+      "tm_rank": 8.0,
+      "why": "46% FD/tgt, 1.0 FD/g (proxy), exp 8y"
     },
     {
       "status": "available",
@@ -2082,19 +2108,6 @@
       "tgt_share": 0.058,
       "tm_rank": 7.0,
       "why": "40% FD/tgt, 0.8 FD/g (proxy), exp 2y"
-    },
-    {
-      "status": "available",
-      "player": "Calvin Ridley",
-      "pos": "WR",
-      "team": "TEN",
-      "arch_fit": 70.0,
-      "tags": "",
-      "half_ppr_pg": 2.0,
-      "proj_ppg": 7.5,
-      "tgt_share": 0.056,
-      "tm_rank": 8.0,
-      "why": "46% FD/tgt, 1.0 FD/g (proxy), exp 8y"
     },
     {
       "status": "available",
@@ -2189,19 +2202,6 @@
     },
     {
       "status": "available",
-      "player": "Nate Boerkircher",
-      "pos": "TE",
-      "team": "JAX",
-      "arch_fit": 69.0,
-      "tags": "WR-thin O",
-      "half_ppr_pg": 4.4,
-      "proj_ppg": null,
-      "tgt_share": 0.056,
-      "tm_rank": 7.0,
-      "why": "6% tgt share, team 29 ppg"
-    },
-    {
-      "status": "available",
       "player": "Ben Skowronek",
       "pos": "WR",
       "team": "PIT",
@@ -2212,6 +2212,32 @@
       "tgt_share": 0.015,
       "tm_rank": 9.0,
       "why": "25% FD/tgt, 0.3 FD/g (proxy), exp 5y"
+    },
+    {
+      "status": "available",
+      "player": "Antonio Williams",
+      "pos": "WR",
+      "team": "WAS",
+      "arch_fit": 69.0,
+      "tags": "",
+      "half_ppr_pg": 6.5,
+      "proj_ppg": 6.1,
+      "tgt_share": 0.146,
+      "tm_rank": 2.0,
+      "why": "39% FD/tgt, 1.8 FD/g (proxy), exp 0y"
+    },
+    {
+      "status": "available",
+      "player": "Nate Boerkircher",
+      "pos": "TE",
+      "team": "JAX",
+      "arch_fit": 69.0,
+      "tags": "WR-thin O",
+      "half_ppr_pg": 4.4,
+      "proj_ppg": null,
+      "tgt_share": 0.056,
+      "tm_rank": 7.0,
+      "why": "6% tgt share, team 29 ppg"
     },
     {
       "status": "available",
@@ -2241,6 +2267,32 @@
     },
     {
       "status": "available",
+      "player": "Jaden Bradley",
+      "pos": "WR",
+      "team": "WAS",
+      "arch_fit": 68.5,
+      "tags": "",
+      "half_ppr_pg": 1.7,
+      "proj_ppg": null,
+      "tgt_share": 0.004,
+      "tm_rank": 16.0,
+      "why": "100% FD/tgt, 1.0 FD/g (proxy), exp 0y"
+    },
+    {
+      "status": "available",
+      "player": "Elijah Sarratt",
+      "pos": "WR",
+      "team": "BAL",
+      "arch_fit": 68.5,
+      "tags": "",
+      "half_ppr_pg": 1.8,
+      "proj_ppg": 2.9,
+      "tgt_share": 0.008,
+      "tm_rank": 12.0,
+      "why": "50% FD/tgt, 1.0 FD/g (proxy), exp 0y"
+    },
+    {
+      "status": "available",
       "player": "Theo Wease Jr.",
       "pos": "WR",
       "team": "LAC",
@@ -2267,19 +2319,6 @@
     },
     {
       "status": "available",
-      "player": "Elijah Sarratt",
-      "pos": "WR",
-      "team": "BAL",
-      "arch_fit": 68.5,
-      "tags": "",
-      "half_ppr_pg": 1.8,
-      "proj_ppg": 2.9,
-      "tgt_share": 0.008,
-      "tm_rank": 12.0,
-      "why": "50% FD/tgt, 1.0 FD/g (proxy), exp 0y"
-    },
-    {
-      "status": "available",
       "player": "Colby Parkinson",
       "pos": "TE",
       "team": "LA",
@@ -2290,32 +2329,6 @@
       "tgt_share": 0.068,
       "tm_rank": 5.0,
       "why": "7% tgt share, team 24 ppg"
-    },
-    {
-      "status": "available",
-      "player": "Malachi Fields",
-      "pos": "WR",
-      "team": "NYG",
-      "arch_fit": 67.4,
-      "tags": "",
-      "half_ppr_pg": 5.5,
-      "proj_ppg": 1.6,
-      "tgt_share": 0.135,
-      "tm_rank": 3.0,
-      "why": "37% FD/tgt, 1.6 FD/g (proxy), exp 0y"
-    },
-    {
-      "status": "available",
-      "player": "Isaiah Bond",
-      "pos": "WR",
-      "team": "CLE",
-      "arch_fit": 67.3,
-      "tags": "",
-      "half_ppr_pg": 2.2,
-      "proj_ppg": null,
-      "tgt_share": 0.033,
-      "tm_rank": 8.0,
-      "why": "44% FD/tgt, 0.8 FD/g (proxy), exp 1y"
     },
     {
       "status": "rostered",
@@ -2332,16 +2345,16 @@
     },
     {
       "status": "available",
-      "player": "Antonio Williams",
+      "player": "Isaiah Bond",
       "pos": "WR",
-      "team": "WAS",
+      "team": "CLE",
       "arch_fit": 67.3,
       "tags": "",
-      "half_ppr_pg": 5.9,
-      "proj_ppg": 6.1,
-      "tgt_share": 0.158,
-      "tm_rank": 2.0,
-      "why": "36% FD/tgt, 1.8 FD/g (proxy), exp 0y"
+      "half_ppr_pg": 2.2,
+      "proj_ppg": null,
+      "tgt_share": 0.033,
+      "tm_rank": 8.0,
+      "why": "44% FD/tgt, 0.8 FD/g (proxy), exp 1y"
     },
     {
       "status": "available",
@@ -2396,17 +2409,17 @@
       "why": "30% FD/tgt, 2.0 FD/g (proxy), exp 7y"
     },
     {
-      "status": "available",
-      "player": "Jaden Bradley",
+      "status": "rostered",
+      "player": "KC Concepcion",
       "pos": "WR",
-      "team": "WAS",
-      "arch_fit": 67.0,
+      "team": "CLE",
+      "arch_fit": 66.9,
       "tags": "",
-      "half_ppr_pg": 1.7,
-      "proj_ppg": null,
-      "tgt_share": 0.004,
-      "tm_rank": 16.0,
-      "why": "100% FD/tgt"
+      "half_ppr_pg": 7.8,
+      "proj_ppg": 6.9,
+      "tgt_share": 0.201,
+      "tm_rank": 2.0,
+      "why": "33% FD/tgt, 2.0 FD/g (proxy), exp 0y"
     },
     {
       "status": "available",
@@ -2420,19 +2433,6 @@
       "tgt_share": 0.086,
       "tm_rank": 5.0,
       "why": "39% FD/tgt, 1.3 FD/g (proxy), exp 1y"
-    },
-    {
-      "status": "rostered",
-      "player": "KC Concepcion",
-      "pos": "WR",
-      "team": "CLE",
-      "arch_fit": 66.9,
-      "tags": "",
-      "half_ppr_pg": 7.8,
-      "proj_ppg": 6.9,
-      "tgt_share": 0.201,
-      "tm_rank": 2.0,
-      "why": "33% FD/tgt, 2.0 FD/g (proxy), exp 0y"
     },
     {
       "status": "available",
@@ -2513,19 +2513,6 @@
       "why": "33% FD/tgt, 0.6 FD/g (proxy), exp 2y"
     },
     {
-      "status": "rostered",
-      "player": "Makai Lemon",
-      "pos": "WR",
-      "team": "PHI",
-      "arch_fit": 65.7,
-      "tags": "",
-      "half_ppr_pg": 6.1,
-      "proj_ppg": 7.9,
-      "tgt_share": 0.189,
-      "tm_rank": 1.0,
-      "why": "31% FD/tgt, 1.9 FD/g (proxy), exp 0y"
-    },
-    {
       "status": "available",
       "player": "J. Michael Sturdivant",
       "pos": "WR",
@@ -2537,6 +2524,19 @@
       "tgt_share": 0.015,
       "tm_rank": 12.0,
       "why": "60% FD/tgt, 0.4 FD/g (proxy), exp 0y"
+    },
+    {
+      "status": "rostered",
+      "player": "Makai Lemon",
+      "pos": "WR",
+      "team": "PHI",
+      "arch_fit": 65.7,
+      "tags": "",
+      "half_ppr_pg": 6.1,
+      "proj_ppg": 7.9,
+      "tgt_share": 0.189,
+      "tm_rank": 1.0,
+      "why": "31% FD/tgt, 1.9 FD/g (proxy), exp 0y"
     },
     {
       "status": "available",
@@ -2599,8 +2599,8 @@
       "tags": "",
       "half_ppr_pg": 0.9,
       "proj_ppg": null,
-      "tgt_share": 0.008,
-      "tm_rank": 13.0,
+      "tgt_share": 0.007,
+      "tm_rank": 14.0,
       "why": "50% FD/tgt, 0.2 FD/g (proxy), exp 1y"
     },
     {
@@ -2631,6 +2631,19 @@
     },
     {
       "status": "available",
+      "player": "Jahdae Walker",
+      "pos": "WR",
+      "team": "CHI",
+      "arch_fit": 64.8,
+      "tags": "",
+      "half_ppr_pg": 1.1,
+      "proj_ppg": null,
+      "tgt_share": 0.007,
+      "tm_rank": 11.0,
+      "why": "50% FD/tgt, 0.2 FD/g (proxy), exp 1y"
+    },
+    {
+      "status": "available",
       "player": "Elijah Moore",
       "pos": "WR",
       "team": "PHI",
@@ -2654,19 +2667,6 @@
       "tgt_share": 0.026,
       "tm_rank": 8.0,
       "why": "38% FD/tgt, 1.0 FD/g (proxy), exp 1y"
-    },
-    {
-      "status": "available",
-      "player": "Jahdae Walker",
-      "pos": "WR",
-      "team": "CHI",
-      "arch_fit": 64.8,
-      "tags": "",
-      "half_ppr_pg": 1.1,
-      "proj_ppg": null,
-      "tgt_share": 0.007,
-      "tm_rank": 11.0,
-      "why": "50% FD/tgt, 0.2 FD/g (proxy), exp 1y"
     },
     {
       "status": "available",
@@ -2878,19 +2878,6 @@
     },
     {
       "status": "available",
-      "player": "Jalen Royals",
-      "pos": "WR",
-      "team": "KC",
-      "arch_fit": 62.2,
-      "tags": "",
-      "half_ppr_pg": 2.0,
-      "proj_ppg": null,
-      "tgt_share": 0.057,
-      "tm_rank": 8.0,
-      "why": "36% FD/tgt, 0.6 FD/g (proxy), exp 1y"
-    },
-    {
-      "status": "available",
       "player": "Elijah Higgins",
       "pos": "TE",
       "team": "ARI",
@@ -2901,6 +2888,19 @@
       "tgt_share": 0.058,
       "tm_rank": 5.0,
       "why": "6% tgt share, team 20 ppg"
+    },
+    {
+      "status": "available",
+      "player": "Jalen Royals",
+      "pos": "WR",
+      "team": "KC",
+      "arch_fit": 62.2,
+      "tags": "",
+      "half_ppr_pg": 2.0,
+      "proj_ppg": null,
+      "tgt_share": 0.057,
+      "tm_rank": 8.0,
+      "why": "36% FD/tgt, 0.6 FD/g (proxy), exp 1y"
     },
     {
       "status": "available",
@@ -2916,19 +2916,6 @@
       "why": "32% FD/tgt, 1.0 FD/g (proxy), exp 0y"
     },
     {
-      "status": "mine",
-      "player": "Emeka Egbuka",
-      "pos": "WR",
-      "team": "TB",
-      "arch_fit": 61.9,
-      "tags": "",
-      "half_ppr_pg": 8.9,
-      "proj_ppg": 11.2,
-      "tgt_share": 0.234,
-      "tm_rank": 1.0,
-      "why": "24% FD/tgt, 1.9 FD/g (proxy), exp 1y"
-    },
-    {
       "status": "available",
       "player": "Jacob Cowing",
       "pos": "WR",
@@ -2942,6 +2929,19 @@
       "why": "27% FD/tgt, 0.4 FD/g (proxy), exp 2y"
     },
     {
+      "status": "mine",
+      "player": "Emeka Egbuka",
+      "pos": "WR",
+      "team": "TB",
+      "arch_fit": 61.9,
+      "tags": "",
+      "half_ppr_pg": 8.9,
+      "proj_ppg": 11.2,
+      "tgt_share": 0.234,
+      "tm_rank": 1.0,
+      "why": "24% FD/tgt, 1.9 FD/g (proxy), exp 1y"
+    },
+    {
       "status": "rostered",
       "player": "Jacory Croskey-Merritt",
       "pos": "RB",
@@ -2950,7 +2950,7 @@
       "tags": "",
       "half_ppr_pg": 8.5,
       "proj_ppg": 8.1,
-      "tgt_share": 0.028,
+      "tgt_share": 0.025,
       "tm_rank": 10.0,
       "why": "13.4 carries/g, age 26"
     },
@@ -3033,6 +3033,19 @@
       "why": "6% tgt share, team 18 ppg"
     },
     {
+      "status": "rostered",
+      "player": "Kyle Pitts",
+      "pos": "TE",
+      "team": "ATL",
+      "arch_fit": 60.7,
+      "tags": "",
+      "half_ppr_pg": 6.5,
+      "proj_ppg": 9.2,
+      "tgt_share": 0.154,
+      "tm_rank": 3.0,
+      "why": "15% tgt share, team 21 ppg"
+    },
+    {
       "status": "available",
       "player": "Konata Mumpfield",
       "pos": "WR",
@@ -3046,17 +3059,17 @@
       "why": "30% FD/tgt, 0.9 FD/g (proxy), exp 1y"
     },
     {
-      "status": "rostered",
-      "player": "Kyle Pitts",
+      "status": "available",
+      "player": "Darren Waller",
       "pos": "TE",
-      "team": "ATL",
-      "arch_fit": 60.7,
+      "team": "CAR",
+      "arch_fit": 60.5,
       "tags": "",
-      "half_ppr_pg": 6.5,
-      "proj_ppg": 9.2,
-      "tgt_share": 0.154,
+      "half_ppr_pg": 8.2,
+      "proj_ppg": null,
+      "tgt_share": 0.124,
       "tm_rank": 3.0,
-      "why": "15% tgt share, team 21 ppg"
+      "why": "12% tgt share, team 25 ppg"
     },
     {
       "status": "available",
@@ -3083,19 +3096,6 @@
       "tgt_share": 0.03,
       "tm_rank": 9.0,
       "why": "10% FD/tgt, 0.1 FD/g (proxy), exp 4y"
-    },
-    {
-      "status": "available",
-      "player": "Darren Waller",
-      "pos": "TE",
-      "team": "CAR",
-      "arch_fit": 60.5,
-      "tags": "",
-      "half_ppr_pg": 8.2,
-      "proj_ppg": null,
-      "tgt_share": 0.124,
-      "tm_rank": 3.0,
-      "why": "12% tgt share, team 25 ppg"
     },
     {
       "status": "available",
@@ -3203,16 +3203,16 @@
     },
     {
       "status": "available",
-      "player": "Mark Redman",
+      "player": "Chig Okonkwo",
       "pos": "TE",
-      "team": "GB",
-      "arch_fit": 59.2,
-      "tags": "WR-thin O",
-      "half_ppr_pg": 2.0,
-      "proj_ppg": null,
-      "tgt_share": 0.009,
-      "tm_rank": 14.0,
-      "why": "1% tgt share, team 24 ppg"
+      "team": "WAS",
+      "arch_fit": 59.4,
+      "tags": "",
+      "half_ppr_pg": 5.4,
+      "proj_ppg": 5.9,
+      "tgt_share": 0.139,
+      "tm_rank": 3.0,
+      "why": "14% tgt share, team 22 ppg"
     },
     {
       "status": "available",
@@ -3226,6 +3226,19 @@
       "tgt_share": 0.101,
       "tm_rank": 5.0,
       "why": "34% FD/tgt, 1.1 FD/g (proxy), exp 10y"
+    },
+    {
+      "status": "available",
+      "player": "Mark Redman",
+      "pos": "TE",
+      "team": "GB",
+      "arch_fit": 59.2,
+      "tags": "WR-thin O",
+      "half_ppr_pg": 2.0,
+      "proj_ppg": null,
+      "tgt_share": 0.009,
+      "tm_rank": 14.0,
+      "why": "1% tgt share, team 24 ppg"
     },
     {
       "status": "available",
@@ -3372,19 +3385,6 @@
     },
     {
       "status": "available",
-      "player": "Chig Okonkwo",
-      "pos": "TE",
-      "team": "WAS",
-      "arch_fit": 56.9,
-      "tags": "",
-      "half_ppr_pg": 5.6,
-      "proj_ppg": 5.9,
-      "tgt_share": 0.126,
-      "tm_rank": 3.0,
-      "why": "13% tgt share, team 22 ppg"
-    },
-    {
-      "status": "available",
       "player": "Emanuel Wilson",
       "pos": "RB",
       "team": "SEA",
@@ -3398,19 +3398,6 @@
     },
     {
       "status": "available",
-      "player": "Kevin Coleman Jr.",
-      "pos": "WR",
-      "team": "MIA",
-      "arch_fit": 56.6,
-      "tags": "",
-      "half_ppr_pg": 3.7,
-      "proj_ppg": null,
-      "tgt_share": 0.105,
-      "tm_rank": 5.0,
-      "why": "24% FD/tgt, 0.7 FD/g (proxy), exp 0y"
-    },
-    {
-      "status": "available",
       "player": "Robert Tonyan",
       "pos": "TE",
       "team": "PIT",
@@ -3421,6 +3408,19 @@
       "tgt_share": 0.004,
       "tm_rank": 11.0,
       "why": "0% tgt share, team 22 ppg"
+    },
+    {
+      "status": "available",
+      "player": "Kevin Coleman Jr.",
+      "pos": "WR",
+      "team": "MIA",
+      "arch_fit": 56.6,
+      "tags": "",
+      "half_ppr_pg": 3.7,
+      "proj_ppg": null,
+      "tgt_share": 0.105,
+      "tm_rank": 5.0,
+      "why": "24% FD/tgt, 0.7 FD/g (proxy), exp 0y"
     },
     {
       "status": "rostered",
@@ -3437,19 +3437,6 @@
     },
     {
       "status": "available",
-      "player": "Mike Gesicki",
-      "pos": "TE",
-      "team": "CIN",
-      "arch_fit": 56.4,
-      "tags": "",
-      "half_ppr_pg": 10.1,
-      "proj_ppg": 5.4,
-      "tgt_share": 0.09,
-      "tm_rank": 4.0,
-      "why": "9% tgt share, team 30 ppg"
-    },
-    {
-      "status": "available",
       "player": "Andrew Ogletree",
       "pos": "TE",
       "team": "IND",
@@ -3460,6 +3447,19 @@
       "tgt_share": 0.017,
       "tm_rank": 12.0,
       "why": "2% tgt share, team 20 ppg"
+    },
+    {
+      "status": "available",
+      "player": "Mike Gesicki",
+      "pos": "TE",
+      "team": "CIN",
+      "arch_fit": 56.4,
+      "tags": "",
+      "half_ppr_pg": 10.1,
+      "proj_ppg": 5.4,
+      "tgt_share": 0.09,
+      "tm_rank": 4.0,
+      "why": "9% tgt share, team 30 ppg"
     },
     {
       "status": "available",
@@ -3554,6 +3554,19 @@
     },
     {
       "status": "available",
+      "player": "Bryce Lance",
+      "pos": "WR",
+      "team": "NO",
+      "arch_fit": 55.2,
+      "tags": "",
+      "half_ppr_pg": 2.3,
+      "proj_ppg": null,
+      "tgt_share": 0.078,
+      "tm_rank": 5.0,
+      "why": "22% FD/tgt, 0.6 FD/g (proxy), exp 0y"
+    },
+    {
+      "status": "available",
       "player": "Josh Palmer",
       "pos": "WR",
       "team": "BUF",
@@ -3577,19 +3590,6 @@
       "tgt_share": null,
       "tm_rank": null,
       "why": "3.1 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
-    },
-    {
-      "status": "available",
-      "player": "Bryce Lance",
-      "pos": "WR",
-      "team": "NO",
-      "arch_fit": 55.2,
-      "tags": "",
-      "half_ppr_pg": 2.3,
-      "proj_ppg": null,
-      "tgt_share": 0.078,
-      "tm_rank": 5.0,
-      "why": "22% FD/tgt, 0.6 FD/g (proxy), exp 0y"
     },
     {
       "status": "available",
@@ -3619,19 +3619,6 @@
     },
     {
       "status": "available",
-      "player": "Jalin Hyatt",
-      "pos": "WR",
-      "team": "NYG",
-      "arch_fit": 55.0,
-      "tags": "",
-      "half_ppr_pg": 0.0,
-      "proj_ppg": null,
-      "tgt_share": 0.004,
-      "tm_rank": 11.0,
-      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 3y"
-    },
-    {
-      "status": "available",
       "player": "Nick Westbrook-Ikhine",
       "pos": "WR",
       "team": "IND",
@@ -3642,6 +3629,19 @@
       "tgt_share": 0.003,
       "tm_rank": 13.0,
       "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 6y"
+    },
+    {
+      "status": "available",
+      "player": "Deven Thompkins",
+      "pos": "WR",
+      "team": "LV",
+      "arch_fit": 55.0,
+      "tags": "",
+      "half_ppr_pg": 1.3,
+      "proj_ppg": null,
+      "tgt_share": 0.003,
+      "tm_rank": 13.0,
+      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 4y"
     },
     {
       "status": "available",
@@ -3671,32 +3671,6 @@
     },
     {
       "status": "available",
-      "player": "Chris Blair",
-      "pos": "WR",
-      "team": "ATL",
-      "arch_fit": 55.0,
-      "tags": "",
-      "half_ppr_pg": 0.4,
-      "proj_ppg": null,
-      "tgt_share": 0.021,
-      "tm_rank": 10.0,
-      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 5y"
-    },
-    {
-      "status": "available",
-      "player": "Deven Thompkins",
-      "pos": "WR",
-      "team": "LV",
-      "arch_fit": 55.0,
-      "tags": "",
-      "half_ppr_pg": 1.3,
-      "proj_ppg": null,
-      "tgt_share": 0.003,
-      "tm_rank": 13.0,
-      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 4y"
-    },
-    {
-      "status": "available",
       "player": "Xavier Smith",
       "pos": "WR",
       "team": "LA",
@@ -3710,16 +3684,29 @@
     },
     {
       "status": "available",
-      "player": "Corey Kiner",
-      "pos": "RB",
-      "team": "NE",
-      "arch_fit": 54.8,
+      "player": "Chris Blair",
+      "pos": "WR",
+      "team": "ATL",
+      "arch_fit": 55.0,
       "tags": "",
-      "half_ppr_pg": 3.4,
+      "half_ppr_pg": 0.4,
       "proj_ppg": null,
-      "tgt_share": 0.008,
-      "tm_rank": 12.0,
-      "why": "5.6 carries/g, age 25"
+      "tgt_share": 0.021,
+      "tm_rank": 10.0,
+      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 5y"
+    },
+    {
+      "status": "available",
+      "player": "Jalin Hyatt",
+      "pos": "WR",
+      "team": "NYG",
+      "arch_fit": 55.0,
+      "tags": "",
+      "half_ppr_pg": 0.0,
+      "proj_ppg": null,
+      "tgt_share": 0.003,
+      "tm_rank": 11.0,
+      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 3y"
     },
     {
       "status": "available",
@@ -3736,6 +3723,19 @@
     },
     {
       "status": "available",
+      "player": "Corey Kiner",
+      "pos": "RB",
+      "team": "NE",
+      "arch_fit": 54.8,
+      "tags": "",
+      "half_ppr_pg": 3.4,
+      "proj_ppg": null,
+      "tgt_share": 0.008,
+      "tm_rank": 12.0,
+      "why": "5.6 carries/g, age 25"
+    },
+    {
+      "status": "available",
       "player": "Kenyon Sadiq",
       "pos": "TE",
       "team": "NYJ",
@@ -3746,19 +3746,6 @@
       "tgt_share": 0.12,
       "tm_rank": 3.0,
       "why": "12% tgt share, team 20 ppg"
-    },
-    {
-      "status": "available",
-      "player": "Chris Bell",
-      "pos": "WR",
-      "team": "MIA",
-      "arch_fit": 54.3,
-      "tags": "",
-      "half_ppr_pg": 2.9,
-      "proj_ppg": 4.2,
-      "tgt_share": 0.125,
-      "tm_rank": 4.0,
-      "why": "20% FD/tgt, 0.6 FD/g (proxy), exp 0y"
     },
     {
       "status": "available",
@@ -3775,6 +3762,19 @@
     },
     {
       "status": "available",
+      "player": "Chris Bell",
+      "pos": "WR",
+      "team": "MIA",
+      "arch_fit": 54.3,
+      "tags": "",
+      "half_ppr_pg": 2.9,
+      "proj_ppg": 4.2,
+      "tgt_share": 0.125,
+      "tm_rank": 4.0,
+      "why": "20% FD/tgt, 0.6 FD/g (proxy), exp 0y"
+    },
+    {
+      "status": "available",
       "player": "Teagan Quitoriano",
       "pos": "TE",
       "team": "ARI",
@@ -3785,19 +3785,6 @@
       "tgt_share": 0.009,
       "tm_rank": 11.0,
       "why": "1% tgt share, team 20 ppg"
-    },
-    {
-      "status": "available",
-      "player": "Blake Whiteheart",
-      "pos": "TE",
-      "team": "CLE",
-      "arch_fit": 54.1,
-      "tags": "WR-thin O",
-      "half_ppr_pg": 2.1,
-      "proj_ppg": null,
-      "tgt_share": 0.022,
-      "tm_rank": 9.0,
-      "why": "2% tgt share, team 18 ppg"
     },
     {
       "status": "available",
@@ -3813,17 +3800,17 @@
       "why": "0% tgt share, team 20 ppg"
     },
     {
-      "status": "rostered",
-      "player": "Dallas Goedert",
+      "status": "available",
+      "player": "Blake Whiteheart",
       "pos": "TE",
-      "team": "PHI",
-      "arch_fit": 54.0,
-      "tags": "",
-      "half_ppr_pg": 8.4,
-      "proj_ppg": 8.6,
-      "tgt_share": 0.144,
-      "tm_rank": 2.0,
-      "why": "14% tgt share, team 16 ppg"
+      "team": "CLE",
+      "arch_fit": 54.1,
+      "tags": "WR-thin O",
+      "half_ppr_pg": 2.1,
+      "proj_ppg": null,
+      "tgt_share": 0.022,
+      "tm_rank": 9.0,
+      "why": "2% tgt share, team 18 ppg"
     },
     {
       "status": "mine",
@@ -3839,17 +3826,17 @@
       "why": "9.9 carries/g, age 27"
     },
     {
-      "status": "available",
-      "player": "Hunter Long",
+      "status": "rostered",
+      "player": "Dallas Goedert",
       "pos": "TE",
-      "team": "ARI",
-      "arch_fit": 53.8,
-      "tags": "WR-thin O",
-      "half_ppr_pg": 0.6,
-      "proj_ppg": null,
-      "tgt_share": 0.006,
-      "tm_rank": 12.0,
-      "why": "1% tgt share, team 20 ppg"
+      "team": "PHI",
+      "arch_fit": 54.0,
+      "tags": "",
+      "half_ppr_pg": 8.4,
+      "proj_ppg": 8.6,
+      "tgt_share": 0.144,
+      "tm_rank": 2.0,
+      "why": "14% tgt share, team 16 ppg"
     },
     {
       "status": "rostered",
@@ -3863,6 +3850,19 @@
       "tgt_share": null,
       "tm_rank": null,
       "why": "2.9 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
+    },
+    {
+      "status": "available",
+      "player": "Hunter Long",
+      "pos": "TE",
+      "team": "ARI",
+      "arch_fit": 53.8,
+      "tags": "WR-thin O",
+      "half_ppr_pg": 0.6,
+      "proj_ppg": null,
+      "tgt_share": 0.006,
+      "tm_rank": 12.0,
+      "why": "1% tgt share, team 20 ppg"
     },
     {
       "status": "rostered",
@@ -3891,19 +3891,6 @@
       "why": "9.6 carries/g, age 26"
     },
     {
-      "status": "available",
-      "player": "Seth McGowan",
-      "pos": "RB",
-      "team": "IND",
-      "arch_fit": 53.1,
-      "tags": "",
-      "half_ppr_pg": 3.4,
-      "proj_ppg": null,
-      "tgt_share": 0.021,
-      "tm_rank": 10.0,
-      "why": "4.8 carries/g, age 25"
-    },
-    {
       "status": "rostered",
       "player": "Jonathon Brooks",
       "pos": "RB",
@@ -3917,17 +3904,17 @@
       "why": "4.5 carries/g, age 23"
     },
     {
-      "status": "available",
-      "player": "Noah Gray",
-      "pos": "TE",
-      "team": "KC",
+      "status": "rostered",
+      "player": "Dak Prescott",
+      "pos": "QB",
+      "team": "DAL",
       "arch_fit": 52.2,
       "tags": "",
-      "half_ppr_pg": 4.0,
-      "proj_ppg": null,
-      "tgt_share": 0.069,
-      "tm_rank": 5.0,
-      "why": "7% tgt share, team 25 ppg"
+      "half_ppr_pg": 19.2,
+      "proj_ppg": 17.3,
+      "tgt_share": null,
+      "tm_rank": null,
+      "why": "2.8 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
     },
     {
       "status": "available",
@@ -3943,17 +3930,17 @@
       "why": "6% tgt share, team 27 ppg"
     },
     {
-      "status": "rostered",
-      "player": "Dak Prescott",
-      "pos": "QB",
-      "team": "DAL",
+      "status": "available",
+      "player": "Noah Gray",
+      "pos": "TE",
+      "team": "KC",
       "arch_fit": 52.2,
       "tags": "",
-      "half_ppr_pg": 19.2,
-      "proj_ppg": 17.3,
-      "tgt_share": null,
-      "tm_rank": null,
-      "why": "2.8 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
+      "half_ppr_pg": 4.0,
+      "proj_ppg": null,
+      "tgt_share": 0.069,
+      "tm_rank": 5.0,
+      "why": "7% tgt share, team 25 ppg"
     },
     {
       "status": "available",
@@ -4009,19 +3996,6 @@
     },
     {
       "status": "available",
-      "player": "Zachariah Branch",
-      "pos": "WR",
-      "team": "ATL",
-      "arch_fit": 51.0,
-      "tags": "",
-      "half_ppr_pg": 1.8,
-      "proj_ppg": 4.7,
-      "tgt_share": 0.05,
-      "tm_rank": 6.0,
-      "why": "17% FD/tgt, 0.2 FD/g (proxy), exp 0y"
-    },
-    {
-      "status": "available",
       "player": "Demarcus Robinson",
       "pos": "WR",
       "team": "SF",
@@ -4032,6 +4006,19 @@
       "tgt_share": 0.046,
       "tm_rank": 7.0,
       "why": "60% FD/tgt, 2.0 FD/g (proxy), exp 10y"
+    },
+    {
+      "status": "available",
+      "player": "Zachariah Branch",
+      "pos": "WR",
+      "team": "ATL",
+      "arch_fit": 51.0,
+      "tags": "",
+      "half_ppr_pg": 1.8,
+      "proj_ppg": 4.7,
+      "tgt_share": 0.05,
+      "tm_rank": 6.0,
+      "why": "17% FD/tgt, 0.2 FD/g (proxy), exp 0y"
     },
     {
       "status": "mine",
@@ -4191,32 +4178,6 @@
     },
     {
       "status": "rostered",
-      "player": "Stefon Diggs",
-      "pos": "WR",
-      "team": "WAS",
-      "arch_fit": 49.4,
-      "tags": "AGE\u26a0",
-      "half_ppr_pg": 10.8,
-      "proj_ppg": 0.0,
-      "tgt_share": 0.198,
-      "tm_rank": 1.0,
-      "why": "37% FD/tgt, 2.6 FD/g (proxy), exp 11y"
-    },
-    {
-      "status": "available",
-      "player": "Sean Tucker",
-      "pos": "RB",
-      "team": "TB",
-      "arch_fit": 49.2,
-      "tags": "",
-      "half_ppr_pg": 4.0,
-      "proj_ppg": 1.8,
-      "tgt_share": null,
-      "tm_rank": null,
-      "why": "3.0 carries/g, age 25"
-    },
-    {
-      "status": "rostered",
       "player": "Cooper Kupp",
       "pos": "WR",
       "team": "SEA",
@@ -4268,19 +4229,6 @@
       "why": "2.8 carries/g, age 22"
     },
     {
-      "status": "rostered",
-      "player": "Tony Pollard",
-      "pos": "RB",
-      "team": "TEN",
-      "arch_fit": 48.6,
-      "tags": "AGE\u26a0",
-      "half_ppr_pg": 13.7,
-      "proj_ppg": 10.3,
-      "tgt_share": 0.09,
-      "tm_rank": 5.0,
-      "why": "16.6 carries/g, age 30"
-    },
-    {
       "status": "available",
       "player": "Mitchell Evans",
       "pos": "TE",
@@ -4292,6 +4240,19 @@
       "tgt_share": 0.049,
       "tm_rank": 7.0,
       "why": "5% tgt share, team 25 ppg"
+    },
+    {
+      "status": "rostered",
+      "player": "Tony Pollard",
+      "pos": "RB",
+      "team": "TEN",
+      "arch_fit": 48.6,
+      "tags": "AGE\u26a0",
+      "half_ppr_pg": 13.7,
+      "proj_ppg": 10.3,
+      "tgt_share": 0.09,
+      "tm_rank": 5.0,
+      "why": "16.6 carries/g, age 30"
     },
     {
       "status": "available",
@@ -4360,6 +4321,19 @@
     },
     {
       "status": "rostered",
+      "player": "Stefon Diggs",
+      "pos": "WR",
+      "team": "WAS",
+      "arch_fit": 47.7,
+      "tags": "AGE\u26a0",
+      "half_ppr_pg": 11.6,
+      "proj_ppg": 0.0,
+      "tgt_share": 0.211,
+      "tm_rank": 1.0,
+      "why": "34% FD/tgt, 2.5 FD/g (proxy), exp 11y"
+    },
+    {
+      "status": "rostered",
       "player": "Tank Bigsby",
       "pos": "RB",
       "team": "PHI",
@@ -4386,6 +4360,19 @@
     },
     {
       "status": "available",
+      "player": "Geno Smith",
+      "pos": "QB",
+      "team": "NYJ",
+      "arch_fit": 47.0,
+      "tags": "",
+      "half_ppr_pg": 14.8,
+      "proj_ppg": 12.9,
+      "tgt_share": null,
+      "tm_rank": null,
+      "why": "2.7 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
+    },
+    {
+      "status": "available",
       "player": "Erick All",
       "pos": "TE",
       "team": "CIN",
@@ -4399,16 +4386,16 @@
     },
     {
       "status": "available",
-      "player": "Geno Smith",
-      "pos": "QB",
-      "team": "NYJ",
-      "arch_fit": 47.0,
+      "player": "Robert Henry Jr.",
+      "pos": "RB",
+      "team": "WAS",
+      "arch_fit": 46.9,
       "tags": "",
-      "half_ppr_pg": 14.8,
-      "proj_ppg": 12.9,
+      "half_ppr_pg": 0.4,
+      "proj_ppg": null,
       "tgt_share": null,
       "tm_rank": null,
-      "why": "2.7 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
+      "why": "2.0 carries/g, age 25"
     },
     {
       "status": "available",
@@ -4437,16 +4424,16 @@
       "why": "1.9 carries/g, age 25"
     },
     {
-      "status": "available",
-      "player": "Jordan Whittington",
+      "status": "rostered",
+      "player": "Jalen McMillan",
       "pos": "WR",
-      "team": "LA",
+      "team": "TB",
       "arch_fit": 46.6,
       "tags": "",
-      "half_ppr_pg": 0.4,
-      "proj_ppg": null,
-      "tgt_share": 0.012,
-      "tm_rank": 11.0,
+      "half_ppr_pg": 0.0,
+      "proj_ppg": 6.5,
+      "tgt_share": 0.004,
+      "tm_rank": 10.0,
       "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 2y"
     },
     {
@@ -4476,19 +4463,6 @@
       "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 2y"
     },
     {
-      "status": "rostered",
-      "player": "Jalen McMillan",
-      "pos": "WR",
-      "team": "TB",
-      "arch_fit": 46.6,
-      "tags": "",
-      "half_ppr_pg": 0.0,
-      "proj_ppg": 6.5,
-      "tgt_share": 0.004,
-      "tm_rank": 10.0,
-      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 2y"
-    },
-    {
       "status": "available",
       "player": "Luke McCaffrey",
       "pos": "WR",
@@ -4497,35 +4471,22 @@
       "tags": "",
       "half_ppr_pg": 0.2,
       "proj_ppg": null,
-      "tgt_share": 0.008,
-      "tm_rank": 13.0,
+      "tgt_share": 0.007,
+      "tm_rank": 14.0,
       "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 2y"
     },
     {
       "status": "available",
-      "player": "Chris Moore",
+      "player": "Jordan Whittington",
       "pos": "WR",
-      "team": "BAL",
-      "arch_fit": 46.5,
-      "tags": "AGE\u26a0",
-      "half_ppr_pg": 4.6,
+      "team": "LA",
+      "arch_fit": 46.6,
+      "tags": "",
+      "half_ppr_pg": 0.4,
       "proj_ppg": null,
-      "tgt_share": 0.025,
-      "tm_rank": 10.0,
-      "why": "50% FD/tgt, 1.0 FD/g (proxy), exp 10y"
-    },
-    {
-      "status": "available",
-      "player": "Brandin Cooks",
-      "pos": "WR",
-      "team": "SF",
-      "arch_fit": 46.5,
-      "tags": "AGE\u26a0",
-      "half_ppr_pg": 2.9,
-      "proj_ppg": null,
-      "tgt_share": 0.046,
-      "tm_rank": 7.0,
-      "why": "50% FD/tgt, 1.0 FD/g (proxy), exp 12y"
+      "tgt_share": 0.012,
+      "tm_rank": 11.0,
+      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 2y"
     },
     {
       "status": "available",
@@ -4542,16 +4503,29 @@
     },
     {
       "status": "available",
-      "player": "Drew Sample",
-      "pos": "TE",
-      "team": "CIN",
-      "arch_fit": 46.4,
-      "tags": "",
-      "half_ppr_pg": 3.6,
+      "player": "Brandin Cooks",
+      "pos": "WR",
+      "team": "SF",
+      "arch_fit": 46.5,
+      "tags": "AGE\u26a0",
+      "half_ppr_pg": 2.9,
       "proj_ppg": null,
-      "tgt_share": 0.028,
-      "tm_rank": 9.0,
-      "why": "3% tgt share, team 30 ppg"
+      "tgt_share": 0.046,
+      "tm_rank": 7.0,
+      "why": "50% FD/tgt, 1.0 FD/g (proxy), exp 12y"
+    },
+    {
+      "status": "available",
+      "player": "Chris Moore",
+      "pos": "WR",
+      "team": "BAL",
+      "arch_fit": 46.5,
+      "tags": "AGE\u26a0",
+      "half_ppr_pg": 4.6,
+      "proj_ppg": null,
+      "tgt_share": 0.025,
+      "tm_rank": 10.0,
+      "why": "50% FD/tgt, 1.0 FD/g (proxy), exp 10y"
     },
     {
       "status": "available",
@@ -4565,6 +4539,19 @@
       "tgt_share": 0.028,
       "tm_rank": 9.0,
       "why": "3% tgt share, team 29 ppg"
+    },
+    {
+      "status": "available",
+      "player": "Drew Sample",
+      "pos": "TE",
+      "team": "CIN",
+      "arch_fit": 46.4,
+      "tags": "",
+      "half_ppr_pg": 3.6,
+      "proj_ppg": null,
+      "tgt_share": 0.028,
+      "tm_rank": 9.0,
+      "why": "3% tgt share, team 30 ppg"
     },
     {
       "status": "available",
@@ -4763,16 +4750,16 @@
     },
     {
       "status": "available",
-      "player": "Bam Knight",
-      "pos": "RB",
-      "team": "ARI",
-      "arch_fit": 44.4,
+      "player": "Theo Johnson",
+      "pos": "TE",
+      "team": "NYG",
+      "arch_fit": 44.6,
       "tags": "",
-      "half_ppr_pg": 4.4,
+      "half_ppr_pg": 3.0,
       "proj_ppg": null,
-      "tgt_share": 0.026,
-      "tm_rank": 9.0,
-      "why": "5.6 carries/g, age 26"
+      "tgt_share": 0.041,
+      "tm_rank": 6.0,
+      "why": "4% tgt share, team 23 ppg"
     },
     {
       "status": "rostered",
@@ -4802,6 +4789,19 @@
     },
     {
       "status": "available",
+      "player": "Bam Knight",
+      "pos": "RB",
+      "team": "ARI",
+      "arch_fit": 44.4,
+      "tags": "",
+      "half_ppr_pg": 4.4,
+      "proj_ppg": null,
+      "tgt_share": 0.026,
+      "tm_rank": 9.0,
+      "why": "5.6 carries/g, age 26"
+    },
+    {
+      "status": "available",
       "player": "Anthony Tyus III",
       "pos": "RB",
       "team": "CAR",
@@ -4828,19 +4828,6 @@
     },
     {
       "status": "available",
-      "player": "Theo Johnson",
-      "pos": "TE",
-      "team": "NYG",
-      "arch_fit": 43.8,
-      "tags": "",
-      "half_ppr_pg": 3.4,
-      "proj_ppg": null,
-      "tgt_share": 0.035,
-      "tm_rank": 7.0,
-      "why": "3% tgt share, team 23 ppg"
-    },
-    {
-      "status": "available",
       "player": "Tyler Conklin",
       "pos": "TE",
       "team": "DET",
@@ -4851,32 +4838,6 @@
       "tgt_share": 0.011,
       "tm_rank": 8.0,
       "why": "1% tgt share, team 28 ppg"
-    },
-    {
-      "status": "available",
-      "player": "Tahj Brooks",
-      "pos": "RB",
-      "team": "CIN",
-      "arch_fit": 43.6,
-      "tags": "",
-      "half_ppr_pg": 0.1,
-      "proj_ppg": null,
-      "tgt_share": null,
-      "tm_rank": null,
-      "why": "0.5 carries/g, age 24"
-    },
-    {
-      "status": "available",
-      "player": "Adam Trautman",
-      "pos": "TE",
-      "team": "DEN",
-      "arch_fit": 43.6,
-      "tags": "",
-      "half_ppr_pg": 1.7,
-      "proj_ppg": null,
-      "tgt_share": 0.039,
-      "tm_rank": 9.0,
-      "why": "4% tgt share, team 22 ppg"
     },
     {
       "status": "rostered",
@@ -4893,6 +4854,19 @@
     },
     {
       "status": "available",
+      "player": "Tahj Brooks",
+      "pos": "RB",
+      "team": "CIN",
+      "arch_fit": 43.6,
+      "tags": "",
+      "half_ppr_pg": 0.1,
+      "proj_ppg": null,
+      "tgt_share": null,
+      "tm_rank": null,
+      "why": "0.5 carries/g, age 24"
+    },
+    {
+      "status": "available",
       "player": "Kalif Raymond",
       "pos": "WR",
       "team": "CHI",
@@ -4903,6 +4877,19 @@
       "tgt_share": 0.14,
       "tm_rank": 4.0,
       "why": "34% FD/tgt, 1.6 FD/g (proxy), exp 10y"
+    },
+    {
+      "status": "available",
+      "player": "Adam Trautman",
+      "pos": "TE",
+      "team": "DEN",
+      "arch_fit": 43.6,
+      "tags": "",
+      "half_ppr_pg": 1.7,
+      "proj_ppg": null,
+      "tgt_share": 0.039,
+      "tm_rank": 9.0,
+      "why": "4% tgt share, team 22 ppg"
     },
     {
       "status": "available",
@@ -4919,19 +4906,6 @@
     },
     {
       "status": "available",
-      "player": "Charlie Kolar",
-      "pos": "TE",
-      "team": "LAC",
-      "arch_fit": 43.4,
-      "tags": "",
-      "half_ppr_pg": 3.0,
-      "proj_ppg": 2.6,
-      "tgt_share": 0.087,
-      "tm_rank": 6.0,
-      "why": "9% tgt share, team 15 ppg"
-    },
-    {
-      "status": "available",
       "player": "Austin Hooper",
       "pos": "TE",
       "team": "ATL",
@@ -4942,6 +4916,19 @@
       "tgt_share": 0.046,
       "tm_rank": 7.0,
       "why": "5% tgt share, team 21 ppg"
+    },
+    {
+      "status": "available",
+      "player": "Charlie Kolar",
+      "pos": "TE",
+      "team": "LAC",
+      "arch_fit": 43.4,
+      "tags": "",
+      "half_ppr_pg": 3.0,
+      "proj_ppg": 2.6,
+      "tgt_share": 0.087,
+      "tm_rank": 6.0,
+      "why": "9% tgt share, team 15 ppg"
     },
     {
       "status": "available",
@@ -4991,7 +4978,7 @@
       "tags": "",
       "half_ppr_pg": 0.0,
       "proj_ppg": null,
-      "tgt_share": 0.004,
+      "tgt_share": 0.003,
       "tm_rank": 11.0,
       "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 8y"
     },
@@ -5049,6 +5036,19 @@
     },
     {
       "status": "available",
+      "player": "Jackson Meeks",
+      "pos": "TE",
+      "team": "DET",
+      "arch_fit": 42.6,
+      "tags": "",
+      "half_ppr_pg": 1.3,
+      "proj_ppg": null,
+      "tgt_share": 0.004,
+      "tm_rank": 9.0,
+      "why": "0% tgt share, team 28 ppg"
+    },
+    {
+      "status": "available",
       "player": "Marlin Klein",
       "pos": "TE",
       "team": "HOU",
@@ -5062,29 +5062,16 @@
     },
     {
       "status": "available",
-      "player": "Jackson Meeks",
-      "pos": "TE",
-      "team": "DET",
+      "player": "Seth McGowan",
+      "pos": "RB",
+      "team": "IND",
       "arch_fit": 42.6,
       "tags": "",
-      "half_ppr_pg": 1.3,
+      "half_ppr_pg": 3.4,
       "proj_ppg": null,
-      "tgt_share": 0.004,
-      "tm_rank": 9.0,
-      "why": "0% tgt share, team 28 ppg"
-    },
-    {
-      "status": "rostered",
-      "player": "David Montgomery",
-      "pos": "RB",
-      "team": "HOU",
-      "arch_fit": 42.3,
-      "tags": "AGE\u26a0",
-      "half_ppr_pg": 8.4,
-      "proj_ppg": 10.4,
-      "tgt_share": 0.026,
+      "tgt_share": 0.021,
       "tm_rank": 10.0,
-      "why": "10.4 carries/g, age 29"
+      "why": "4.8 carries/g, age 25"
     },
     {
       "status": "rostered",
@@ -5098,6 +5085,19 @@
       "tgt_share": 0.091,
       "tm_rank": 6.0,
       "why": "7.0 carries/g"
+    },
+    {
+      "status": "rostered",
+      "player": "David Montgomery",
+      "pos": "RB",
+      "team": "HOU",
+      "arch_fit": 42.3,
+      "tags": "AGE\u26a0",
+      "half_ppr_pg": 8.4,
+      "proj_ppg": 10.4,
+      "tgt_share": 0.026,
+      "tm_rank": 10.0,
+      "why": "10.4 carries/g, age 29"
     },
     {
       "status": "available",
@@ -5140,48 +5140,9 @@
     },
     {
       "status": "available",
-      "player": "Brandon Johnson",
-      "pos": "WR",
-      "team": "PIT",
-      "arch_fit": 41.5,
-      "tags": "",
-      "half_ppr_pg": 1.4,
-      "proj_ppg": null,
-      "tgt_share": 0.004,
-      "tm_rank": 11.0,
-      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 1y"
-    },
-    {
-      "status": "available",
-      "player": "Myles Price",
-      "pos": "WR",
-      "team": "MIN",
-      "arch_fit": 41.5,
-      "tags": "",
-      "half_ppr_pg": 1.3,
-      "proj_ppg": null,
-      "tgt_share": 0.052,
-      "tm_rank": 5.0,
-      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 1y"
-    },
-    {
-      "status": "available",
       "player": "Ja'Seem Reed",
       "pos": "WR",
       "team": "CAR",
-      "arch_fit": 41.5,
-      "tags": "",
-      "half_ppr_pg": 0.0,
-      "proj_ppg": null,
-      "tgt_share": 0.004,
-      "tm_rank": 14.0,
-      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 1y"
-    },
-    {
-      "status": "available",
-      "player": "Arian Smith",
-      "pos": "WR",
-      "team": "NYJ",
       "arch_fit": 41.5,
       "tags": "",
       "half_ppr_pg": 0.0,
@@ -5205,6 +5166,32 @@
     },
     {
       "status": "available",
+      "player": "Skyler Bell",
+      "pos": "WR",
+      "team": "BUF",
+      "arch_fit": 41.5,
+      "tags": "",
+      "half_ppr_pg": 0.0,
+      "proj_ppg": null,
+      "tgt_share": 0.014,
+      "tm_rank": 11.0,
+      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 0y"
+    },
+    {
+      "status": "available",
+      "player": "Lewis Bond",
+      "pos": "WR",
+      "team": "HOU",
+      "arch_fit": 41.5,
+      "tags": "",
+      "half_ppr_pg": 0.0,
+      "proj_ppg": null,
+      "tgt_share": 0.004,
+      "tm_rank": 14.0,
+      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 0y"
+    },
+    {
+      "status": "available",
       "player": "Colbie Young",
       "pos": "WR",
       "team": "CIN",
@@ -5213,6 +5200,45 @@
       "half_ppr_pg": 1.0,
       "proj_ppg": null,
       "tgt_share": 0.007,
+      "tm_rank": 12.0,
+      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 0y"
+    },
+    {
+      "status": "available",
+      "player": "Brandon Johnson",
+      "pos": "WR",
+      "team": "PIT",
+      "arch_fit": 41.5,
+      "tags": "",
+      "half_ppr_pg": 1.4,
+      "proj_ppg": null,
+      "tgt_share": 0.004,
+      "tm_rank": 11.0,
+      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 1y"
+    },
+    {
+      "status": "available",
+      "player": "Arian Smith",
+      "pos": "WR",
+      "team": "NYJ",
+      "arch_fit": 41.5,
+      "tags": "",
+      "half_ppr_pg": 0.0,
+      "proj_ppg": null,
+      "tgt_share": 0.004,
+      "tm_rank": 14.0,
+      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 1y"
+    },
+    {
+      "status": "available",
+      "player": "Jordan Hudson",
+      "pos": "WR",
+      "team": "DAL",
+      "arch_fit": 41.5,
+      "tags": "",
+      "half_ppr_pg": 0.0,
+      "proj_ppg": null,
+      "tgt_share": 0.003,
       "tm_rank": 12.0,
       "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 0y"
     },
@@ -5231,42 +5257,16 @@
     },
     {
       "status": "available",
-      "player": "Jordan Hudson",
+      "player": "Myles Price",
       "pos": "WR",
-      "team": "DAL",
+      "team": "MIN",
       "arch_fit": 41.5,
       "tags": "",
-      "half_ppr_pg": 0.0,
+      "half_ppr_pg": 1.3,
       "proj_ppg": null,
-      "tgt_share": 0.003,
-      "tm_rank": 12.0,
-      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 0y"
-    },
-    {
-      "status": "available",
-      "player": "Lewis Bond",
-      "pos": "WR",
-      "team": "HOU",
-      "arch_fit": 41.5,
-      "tags": "",
-      "half_ppr_pg": 0.0,
-      "proj_ppg": null,
-      "tgt_share": 0.004,
-      "tm_rank": 14.0,
-      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 0y"
-    },
-    {
-      "status": "available",
-      "player": "Skyler Bell",
-      "pos": "WR",
-      "team": "BUF",
-      "arch_fit": 41.5,
-      "tags": "",
-      "half_ppr_pg": 0.0,
-      "proj_ppg": null,
-      "tgt_share": 0.014,
-      "tm_rank": 11.0,
-      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 0y"
+      "tgt_share": 0.052,
+      "tm_rank": 5.0,
+      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 1y"
     },
     {
       "status": "available",
@@ -5334,19 +5334,6 @@
       "why": "8.8 carries/g, age 28"
     },
     {
-      "status": "rostered",
-      "player": "RJ Harvey",
-      "pos": "RB",
-      "team": "DEN",
-      "arch_fit": 40.9,
-      "tags": "",
-      "half_ppr_pg": 9.2,
-      "proj_ppg": 9.1,
-      "tgt_share": 0.109,
-      "tm_rank": 4.0,
-      "why": "4.0 carries/g, age 26"
-    },
-    {
       "status": "available",
       "player": "Oscar Delp",
       "pos": "TE",
@@ -5358,6 +5345,19 @@
       "tgt_share": 0.014,
       "tm_rank": 12.0,
       "why": "1% tgt share, team 23 ppg"
+    },
+    {
+      "status": "rostered",
+      "player": "RJ Harvey",
+      "pos": "RB",
+      "team": "DEN",
+      "arch_fit": 40.9,
+      "tags": "",
+      "half_ppr_pg": 9.2,
+      "proj_ppg": 9.1,
+      "tgt_share": 0.109,
+      "tm_rank": 4.0,
+      "why": "4.0 carries/g, age 26"
     },
     {
       "status": "available",
@@ -5374,14 +5374,27 @@
     },
     {
       "status": "available",
+      "player": "Ben Sinnott",
+      "pos": "TE",
+      "team": "WAS",
+      "arch_fit": 40.6,
+      "tags": "",
+      "half_ppr_pg": 3.3,
+      "proj_ppg": null,
+      "tgt_share": 0.021,
+      "tm_rank": 11.0,
+      "why": "2% tgt share, team 22 ppg"
+    },
+    {
+      "status": "available",
       "player": "John Bates",
       "pos": "TE",
       "team": "WAS",
-      "arch_fit": 40.7,
+      "arch_fit": 40.6,
       "tags": "",
-      "half_ppr_pg": 1.0,
+      "half_ppr_pg": 0.9,
       "proj_ppg": null,
-      "tgt_share": 0.024,
+      "tgt_share": 0.021,
       "tm_rank": 11.0,
       "why": "2% tgt share, team 22 ppg"
     },
@@ -5433,9 +5446,22 @@
       "tags": "",
       "half_ppr_pg": 0.5,
       "proj_ppg": null,
-      "tgt_share": 0.02,
-      "tm_rank": 12.0,
+      "tgt_share": 0.018,
+      "tm_rank": 13.0,
       "why": "2% tgt share, team 22 ppg"
+    },
+    {
+      "status": "mine",
+      "player": "Rachaad White",
+      "pos": "RB",
+      "team": "WAS",
+      "arch_fit": 39.6,
+      "tags": "AGE\u26a0",
+      "half_ppr_pg": 8.6,
+      "proj_ppg": 8.7,
+      "tgt_share": 0.082,
+      "tm_rank": 6.0,
+      "why": "8.1 carries/g, age 28"
     },
     {
       "status": "available",
@@ -5491,16 +5517,16 @@
     },
     {
       "status": "available",
-      "player": "Thomas Fidone II",
-      "pos": "TE",
-      "team": "NYG",
-      "arch_fit": 38.9,
+      "player": "Sean Tucker",
+      "pos": "RB",
+      "team": "TB",
+      "arch_fit": 38.7,
       "tags": "",
-      "half_ppr_pg": 1.7,
-      "proj_ppg": null,
-      "tgt_share": 0.004,
-      "tm_rank": 11.0,
-      "why": "0% tgt share, team 23 ppg"
+      "half_ppr_pg": 4.0,
+      "proj_ppg": 1.8,
+      "tgt_share": null,
+      "tm_rank": null,
+      "why": "3.0 carries/g, age 25"
     },
     {
       "status": "rostered",
@@ -5517,16 +5543,16 @@
     },
     {
       "status": "available",
-      "player": "Gregory Desrosiers",
-      "pos": "RB",
+      "player": "Thomas Fidone II",
+      "pos": "TE",
       "team": "NYG",
-      "arch_fit": 38.7,
+      "arch_fit": 38.6,
       "tags": "",
-      "half_ppr_pg": 2.0,
+      "half_ppr_pg": 1.7,
       "proj_ppg": null,
-      "tgt_share": null,
-      "tm_rank": null,
-      "why": "3.0 carries/g, age 26"
+      "tgt_share": 0.003,
+      "tm_rank": 11.0,
+      "why": "0% tgt share, team 23 ppg"
     },
     {
       "status": "available",
@@ -5540,32 +5566,6 @@
       "tgt_share": 0.004,
       "tm_rank": 10.0,
       "why": "0% tgt share, team 22 ppg"
-    },
-    {
-      "status": "mine",
-      "player": "Rachaad White",
-      "pos": "RB",
-      "team": "WAS",
-      "arch_fit": 38.6,
-      "tags": "AGE\u26a0",
-      "half_ppr_pg": 9.0,
-      "proj_ppg": 8.7,
-      "tgt_share": 0.085,
-      "tm_rank": 6.0,
-      "why": "7.7 carries/g, age 28"
-    },
-    {
-      "status": "available",
-      "player": "Jelani Woods",
-      "pos": "TE",
-      "team": "NYJ",
-      "arch_fit": 38.4,
-      "tags": "",
-      "half_ppr_pg": 1.0,
-      "proj_ppg": null,
-      "tgt_share": 0.019,
-      "tm_rank": 12.0,
-      "why": "2% tgt share, team 20 ppg"
     },
     {
       "status": "rostered",
@@ -5582,16 +5582,16 @@
     },
     {
       "status": "available",
-      "player": "Ben Sinnott",
+      "player": "Jelani Woods",
       "pos": "TE",
-      "team": "WAS",
-      "arch_fit": 38.1,
+      "team": "NYJ",
+      "arch_fit": 38.4,
       "tags": "",
-      "half_ppr_pg": 0.4,
+      "half_ppr_pg": 1.0,
       "proj_ppg": null,
-      "tgt_share": 0.008,
-      "tm_rank": 13.0,
-      "why": "1% tgt share, team 22 ppg"
+      "tgt_share": 0.019,
+      "tm_rank": 12.0,
+      "why": "2% tgt share, team 20 ppg"
     },
     {
       "status": "available",
@@ -5686,6 +5686,19 @@
     },
     {
       "status": "available",
+      "player": "Kirk Cousins",
+      "pos": "QB",
+      "team": "LV",
+      "arch_fit": 35.4,
+      "tags": "",
+      "half_ppr_pg": 20.0,
+      "proj_ppg": 2.6,
+      "tgt_share": null,
+      "tm_rank": null,
+      "why": "2.4 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
+    },
+    {
+      "status": "available",
       "player": "Pierre Strong",
       "pos": "RB",
       "team": "GB",
@@ -5699,16 +5712,16 @@
     },
     {
       "status": "available",
-      "player": "Kirk Cousins",
-      "pos": "QB",
-      "team": "LV",
-      "arch_fit": 35.4,
+      "player": "Gregory Desrosiers",
+      "pos": "RB",
+      "team": "NYG",
+      "arch_fit": 35.3,
       "tags": "",
-      "half_ppr_pg": 20.0,
-      "proj_ppg": 2.6,
+      "half_ppr_pg": 1.0,
+      "proj_ppg": null,
       "tgt_share": null,
       "tm_rank": null,
-      "why": "2.4 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
+      "why": "1.5 carries/g, age 26"
     },
     {
       "status": "available",
@@ -5790,19 +5803,6 @@
     },
     {
       "status": "available",
-      "player": "Eli Stowers",
-      "pos": "TE",
-      "team": "PHI",
-      "arch_fit": 33.8,
-      "tags": "",
-      "half_ppr_pg": 2.3,
-      "proj_ppg": 2.5,
-      "tgt_share": 0.018,
-      "tm_rank": 14.0,
-      "why": "2% tgt share, team 16 ppg"
-    },
-    {
-      "status": "available",
       "player": "Sam Darnold",
       "pos": "QB",
       "team": "SEA",
@@ -5813,6 +5813,19 @@
       "tgt_share": null,
       "tm_rank": null,
       "why": "1.6 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
+    },
+    {
+      "status": "available",
+      "player": "Eli Stowers",
+      "pos": "TE",
+      "team": "PHI",
+      "arch_fit": 33.8,
+      "tags": "",
+      "half_ppr_pg": 2.3,
+      "proj_ppg": 2.5,
+      "tgt_share": 0.018,
+      "tm_rank": 14.0,
+      "why": "2% tgt share, team 16 ppg"
     },
     {
       "status": "available",
@@ -5972,19 +5985,6 @@
     },
     {
       "status": "available",
-      "player": "Devin Singletary",
-      "pos": "RB",
-      "team": "NYG",
-      "arch_fit": 29.0,
-      "tags": "AGE\u26a0",
-      "half_ppr_pg": 6.9,
-      "proj_ppg": null,
-      "tgt_share": 0.046,
-      "tm_rank": 6.0,
-      "why": "7.8 carries/g, age 29"
-    },
-    {
-      "status": "available",
       "player": "Michael Carter",
       "pos": "RB",
       "team": "TEN",
@@ -6005,7 +6005,7 @@
       "tags": "AGE\u26a0",
       "half_ppr_pg": 4.2,
       "proj_ppg": 6.2,
-      "tgt_share": 0.027,
+      "tgt_share": 0.024,
       "tm_rank": 8.0,
       "why": "2.7 carries/g, age 27"
     },
@@ -6036,6 +6036,19 @@
       "why": "6.7 carries/g, age 31"
     },
     {
+      "status": "available",
+      "player": "Devin Singletary",
+      "pos": "RB",
+      "team": "NYG",
+      "arch_fit": 26.5,
+      "tags": "AGE\u26a0",
+      "half_ppr_pg": 5.8,
+      "proj_ppg": null,
+      "tgt_share": 0.041,
+      "tm_rank": 6.0,
+      "why": "6.7 carries/g, age 29"
+    },
+    {
       "status": "rostered",
       "player": "Ray Davis",
       "pos": "RB",
@@ -6057,7 +6070,7 @@
       "tags": "AGE\u26a0",
       "half_ppr_pg": 2.2,
       "proj_ppg": null,
-      "tgt_share": 0.004,
+      "tgt_share": 0.003,
       "tm_rank": 11.0,
       "why": "6.2 carries/g, age 29"
     },
@@ -6086,6 +6099,19 @@
       "tgt_share": 0.049,
       "tm_rank": 6.0,
       "why": "5.7 carries/g, age 28"
+    },
+    {
+      "status": "available",
+      "player": "Austin Ekeler",
+      "pos": "RB",
+      "team": "WAS",
+      "arch_fit": 23.9,
+      "tags": "AGE\u26a0",
+      "half_ppr_pg": 4.2,
+      "proj_ppg": null,
+      "tgt_share": 0.043,
+      "tm_rank": 8.0,
+      "why": "5.5 carries/g, age 32"
     },
     {
       "status": "available",
@@ -6141,19 +6167,6 @@
     },
     {
       "status": "available",
-      "player": "Austin Ekeler",
-      "pos": "RB",
-      "team": "WAS",
-      "arch_fit": 22.4,
-      "tags": "AGE\u26a0",
-      "half_ppr_pg": 3.6,
-      "proj_ppg": null,
-      "tgt_share": 0.032,
-      "tm_rank": 8.0,
-      "why": "4.8 carries/g, age 32"
-    },
-    {
-      "status": "available",
       "player": "AJ Dillon",
       "pos": "RB",
       "team": "CAR",
@@ -6180,16 +6193,16 @@
     },
     {
       "status": "available",
-      "player": "Odell Beckham Jr.",
+      "player": "Sterling Shepard",
       "pos": "WR",
-      "team": "NYG",
+      "team": "NYJ",
       "arch_fit": 19.5,
       "tags": "AGE\u26a0",
-      "half_ppr_pg": 0.0,
+      "half_ppr_pg": 1.4,
       "proj_ppg": null,
-      "tgt_share": 0.004,
-      "tm_rank": 11.0,
-      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 12y"
+      "tgt_share": 0.008,
+      "tm_rank": 13.0,
+      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 10y"
     },
     {
       "status": "available",
@@ -6206,16 +6219,16 @@
     },
     {
       "status": "available",
-      "player": "Sterling Shepard",
+      "player": "Odell Beckham Jr.",
       "pos": "WR",
-      "team": "NYJ",
+      "team": "NYG",
       "arch_fit": 19.5,
       "tags": "AGE\u26a0",
-      "half_ppr_pg": 1.4,
+      "half_ppr_pg": 0.0,
       "proj_ppg": null,
-      "tgt_share": 0.008,
-      "tm_rank": 13.0,
-      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 10y"
+      "tgt_share": 0.003,
+      "tm_rank": 11.0,
+      "why": "0% FD/tgt, 0.0 FD/g (proxy), exp 12y"
     },
     {
       "status": "available",
@@ -6254,7 +6267,7 @@
       "proj_ppg": null,
       "tgt_share": 0.021,
       "tm_rank": 10.0,
-      "why": "2.3 carries/g, age 28"
+      "why": "2.3 carries/g, age 29"
     },
     {
       "status": "available",
@@ -6367,11 +6380,11 @@
       "team": "NYG",
       "arch_fit": null,
       "tags": "",
-      "half_ppr_pg": 11.2,
+      "half_ppr_pg": 9.8,
       "proj_ppg": null,
       "tgt_share": null,
       "tm_rank": null,
-      "why": "2.6 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
+      "why": "2.5 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
     },
     {
       "status": "available",
@@ -6421,7 +6434,7 @@
       "tags": "AGE\u26a0",
       "half_ppr_pg": 0.3,
       "proj_ppg": null,
-      "tgt_share": 0.012,
+      "tgt_share": 0.01,
       "tm_rank": 9.0,
       "why": "nan carries/g, age 32"
     },
@@ -7060,7 +7073,7 @@
       "proj_ppg": null,
       "tgt_share": null,
       "tm_rank": null,
-      "why": "nan carries/g, age 24"
+      "why": "nan carries/g, age 25"
     },
     {
       "status": "available",
@@ -7082,11 +7095,11 @@
       "team": "NYG",
       "arch_fit": null,
       "tags": "",
-      "half_ppr_pg": 8.7,
+      "half_ppr_pg": 10.6,
       "proj_ppg": null,
       "tgt_share": null,
       "tm_rank": null,
-      "why": "2.2 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
+      "why": "3.0 rush att/g (blueprint 3.2+/g, elite 5.9+/g)"
     },
     {
       "status": "available",
