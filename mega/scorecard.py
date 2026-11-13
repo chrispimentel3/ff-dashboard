@@ -397,6 +397,57 @@ def grade_close(rows: list[dict], weeks: set[int]) -> dict:
             "active": k >= TIEBREAK_WEEKS and rate is not None and rate >= TIEBREAK_EDGE}
 
 
+ML_BLEND = ROOT / "data" / "build" / "ml_blend.json"
+
+
+def ml_points(season: int, week: int, before: datetime, d: pd.DataFrame) -> tuple[dict, str]:
+    """gsis_id -> the matchup model's points-if-he-plays for a week, and where they came from:
+    "published" (data/build/ml_<season>_wk<NN>.csv as it stood at kickoff) or "replayed" (the
+    model run now on the games before that week — the weeks from before it was published, and
+    a little kind to it: it sees who really sat out, not who was expected to)."""
+    from . import ml_matchup as ML
+    txt = snapshot(f"data/build/ml_{season}_wk{week:02d}.csv", before)
+    if txt:
+        f = pd.read_csv(io.StringIO(txt))
+        return dict(zip(f["gsis_id"], f["ml"])), "published"
+    s = ML.score(season, week, d)
+    return dict(zip(s["gsis_id"], s["ml"])), "replayed"
+
+
+def grade_ml(rows: list[dict], weights: dict) -> dict:
+    """The matchup model (mega/ml_matchup.py) against ours and the consensus on the player-weeks
+    it scored, and the walk-forward test that decides whether it joins Start/Sit: a share `u`
+    of the projection Start/Sit uses (ours, live-blended by `weights`) is replaced by the
+    model's — `u` fitted on the weeks before, graded on the next, shrunk toward 0 by K_LIVE.
+    On once the blend has beaten the projection alone over MIN_TESTED tested weeks."""
+    d = pd.DataFrame([r for r in rows if r.get("ml") is not None])
+    off = {"u": 0.0, "tested": 0, "active": False}
+    if d.empty:
+        return {"n": 0, "blend": off}
+    wt = d["pos"].map(lambda p: float(weights.get(p, 1.0)))
+    d["cur"] = wt * d["ours"] + (1 - wt) * d["consensus"]
+    mix = lambda x, u: (1 - u) * x["cur"] + u * x["ml"]
+
+    def fit_u(x: pd.DataFrame) -> float:
+        mae = {u: float((mix(x, u) - x["actual"]).abs().mean()) for u in W_GRID}
+        return len(x) * min(mae, key=mae.get) / (len(x) + K_LIVE)
+
+    weeks = sorted(d["week"].unique())
+    tested, cur_err, mix_err = 0, 0.0, 0.0
+    for w in weeks[1:]:
+        tr, te = d[d["week"] < w], d[d["week"] == w]
+        mix_err += float((mix(te, fit_u(tr)) - te["actual"]).abs().sum())
+        cur_err += float((te["cur"] - te["actual"]).abs().sum())
+        tested += 1
+    gain = (cur_err - mix_err) / (len(d[d["week"] > weeks[0]]) or 1)
+    err = lambda c: round(float((d[c] - d["actual"]).abs().mean()), 2)
+    by = d.groupby("ml_src")["week"].unique()
+    return {"n": len(d), "mae_ml": err("ml"), "mae_ours": err("ours"), "mae_consensus": err("consensus"),
+            "weeks": {k: sorted(int(w) for w in by.get(k, [])) for k in ("published", "replayed")},
+            "blend": {"u": round(fit_u(d), 3), "tested": tested, "mae_gain": round(gain, 3),
+                      "active": tested >= MIN_TESTED and gain > 0}}
+
+
 MARKET_MIN = 30         # player-weeks before the market check reports a number
 DISAGREE = 1.0          # (J) pts apart, ours vs the consensus, that count as a real disagreement
 
@@ -591,6 +642,11 @@ def build(season: int, now_week: int) -> dict:
     sched = schedule(season)
     backfill = def_backfill(season)
     weeks, proj_rows, wv_snaps, rk_snaps, call_rows = [], [], {}, {}, []
+    try:        # the matchup model's history, once: every graded week is scored from it
+        from . import ml_matchup as ML
+        ml_data = ML.dataset(season)
+    except Exception:
+        ml_data = None
     tr_snaps, odds_snaps, rosters, pts_by_week = {}, {}, {}, {}
     for w in sorted(sched):
         if w >= now_week or w not in played:
@@ -616,6 +672,13 @@ def build(season: int, now_week: int) -> dict:
             lineup = grade_lineup(ss_k, by_norm, sched[w]["teams"], _ours_by_name(season, w, before, ss))
             call_rows += week_calls(season, w, before, ss_k, by_norm, sched[w]["kicks"])
         proj = grade_projections(season, w, before, by_gsis, sched[w]["opp"], backfill)
+        if proj and ml_data is not None:
+            try:        # as expected points, like ours: his chance to play times the model's number
+                mlp, src = ml_points(season, w, before, ml_data)
+                proj["rows"] = [{**r, "ml": mlp[r["gsis_id"]] * r["p_active"] if r["gsis_id"] in mlp else None,
+                                 "ml_src": src} for r in proj["rows"]]
+            except Exception:
+                pass
         rk_txt = snapshot("data/web/rankings.json", before)
         if rk_txt and int(json.loads(rk_txt).get("next_week") or 0) == w:
             rk_snaps[w] = json.loads(rk_txt)
@@ -641,6 +704,11 @@ def build(season: int, now_week: int) -> dict:
     except Exception:
         pass
     movers = grade_movers({w: s for w, s in wv_snaps.items() if w <= through}, act) if through else []
+    ml = grade_ml(proj_rows, lb["weights"] if lb.get("active") else {})
+    try:
+        ML_BLEND.write_text(json.dumps({"season": season, "through_week": through, **ml["blend"]}, indent=1))
+    except Exception:
+        pass
     from .odds import sunday_weeks
     close = grade_close(proj_rows, set(sunday_weeks(season)))
     # finished weeks only: by then the Sunday sweep is committed and readable at kickoff
@@ -685,6 +753,7 @@ def build(season: int, now_week: int) -> dict:
         "live_blend": lb,
         "close_calls": close,
         "market": market,
+        "ml": ml,
         "live_calib": calib,
         # said vs happened for the close-call chances: the headline on the page
         "call_grades": {**LC.grade_calls(call_rows),

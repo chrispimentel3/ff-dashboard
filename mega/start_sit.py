@@ -22,6 +22,9 @@ COLS = [
     # the matchup verdict the player cards show: the fitted model's % on a normal week,
     # what that's worth in points, and its two parts (defense rank, Vegas team line)
     "matchup_pct", "matchup_pts", "matchup_def_rank", "matchup_vegas_pct", "matchup_basis",
+    # our matchup model (mega/ml_matchup.py): its projection, his average going in, this week
+    # against his usual in points, the good / normal / bad call and its reasons
+    "ml_proj", "ml_avg", "ml_week", "ml_call", "ml_why",
 ]
 SLOT_ORDER = {"QB": 0, "RB": 1, "WR": 2, "TE": 3, "FLEX": 4, "K": 5, "DEF": 6}
 

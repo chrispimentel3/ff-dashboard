@@ -219,6 +219,19 @@ def intel_bundle(season: int) -> dict:
             "theses": theses, "roster_src": roster_src}
 
 
+@functools.lru_cache(maxsize=2)
+def ml_week(season: int, week: int) -> dict:
+    """gsis_id -> the matchup model's projection, good-week / bad-week call and reasons
+    (mega/ml_matchup.py). Scoring the week also writes data/build/ml_<season>_wk<NN>.csv, which
+    the scorecard grades. {} when it can't run: every page works without it."""
+    try:
+        from mega import ml_matchup
+        return ml_matchup.for_export(ml_matchup.publish(season, week))
+    except Exception as e:
+        _warn("matchup model", e)
+        return {}
+
+
 def my_roster_projected(c, skill: pd.DataFrame | None = None) -> pd.DataFrame:
     """My skill roster (or `skill`, another team's from team_skill) joined to this week's
     projections: ours (mega/proj_ros.py), with the consensus kept beside it, and the Vegas props."""
@@ -258,6 +271,20 @@ def my_roster_projected(c, skill: pd.DataFrame | None = None) -> pd.DataFrame:
             hit = (wt * hit + (1 - wt) * r["consensus"]).where(hit.notna() & r["consensus"].notna(), hit)
         r["proj"] = hit.where(hit.notna(), r["proj"])
         r["proj_source"] = r["proj_source"].where(hit.isna(), "ours")
+    ml = ml_week(season, week)
+    for col, key in (("ml_proj", "proj"), ("ml_week", "week"), ("ml_call", "call"), ("ml_avg", "avg"), ("ml_why", "why")):
+        r[col] = r["gsis_id"].map(lambda g: (ml.get(g) or {}).get(key))
+    try:        # the model joins the projection only once the scorecard's walk-forward test says so
+        from mega.proj_ros import cached
+        from mega.scorecard import ML_BLEND
+        mb = json.loads(ML_BLEND.read_text())
+        u = float(mb.get("u") or 0.0) if mb.get("active") and int(mb.get("season", 0)) == season else 0.0
+        if u and ours:
+            wk = {g: (p.get("weeks") or {}).get(str(week)) or {} for g, p in ((cached(season) or {}).get("players") or {}).items()}
+            m = pd.to_numeric(r["ml_proj"], errors="coerce") * r["gsis_id"].map(lambda g: float((wk.get(g) or {}).get("p_active", 1.0)))
+            r["proj"] = ((1 - u) * r["proj"] + u * m).where(m.notna() & (r["proj_source"] == "ours"), r["proj"])
+    except (OSError, ValueError):
+        pass
     v = vegas(season, week)
     if not v.empty:
         r = r.merge(v[["gsis_id", "vegas", "vegas_parts", "vegas_complete"]], on="gsis_id", how="left")
@@ -533,8 +560,13 @@ def players(c) -> dict:
         mm = week_matchups(cur, c.next_week)
     except Exception:
         mm = pd.DataFrame()
-    return build(idx, set(c.gsis_list), owner_info, seasons, rosters(cur), role_ctx, d, bp,
-                 out_for_week(c.next_week), c.sched, c.next_week, cur, player_ids.norm, mm)
+    out = build(idx, set(c.gsis_list), owner_info, seasons, rosters(cur), role_ctx, d, bp,
+                out_for_week(c.next_week), c.sched, c.next_week, cur, player_ids.norm, mm)
+    ml = ml_week(cur, c.next_week)
+    for gid, card in (out.get("players") or {}).items():
+        if gid in ml and isinstance(card.get("this_week"), dict):
+            card["this_week"]["ml"] = ml[gid]
+    return out
 
 
 EXPORTS = {

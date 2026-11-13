@@ -360,6 +360,40 @@ TOPICS = [
         ),
     },
     {
+        "key": "ml_matchup",
+        "title": "The matchup model: good week or bad week",
+        "headline": (
+            "Our own model, trained on every fantasy-relevant player-game since 2015 (about "
+            "30,000). It projects each player's points, then asks one question: is this week's "
+            "situation better or worse than the ones he has had this season? A point or more "
+            "better is a good week, a point or more worse a bad week, and the reasons are "
+            "listed in points."
+        ),
+        "detail": (
+            "- **What it looks at.** Who he is: his scoring and expected points this season, "
+            "his last 3 games and last game, last season, and his share of snaps, targets and "
+            "carries. This week's situation: the betting line, what the opposing defense has "
+            "allowed, which teammates are out, who is at quarterback, his injury tag, and "
+            "home, dome and rest.\n"
+            "- **What carries the signal.** Tested on 2019 onward, each season predicted only "
+            "from earlier ones: the Vegas line most, then teammates being out (running backs "
+            "above all), last season's level, and the injury report. The opposing defense adds "
+            "nothing once the Vegas line is in, so its reason is usually small.\n"
+            "- **Against his usual, not the league's.** Each reason is this week's value less "
+            "its average over his own games this season. A player on a bad offense isn't "
+            "marked down every week for it; he is marked down when this week is worse than "
+            "his normal.\n"
+            "- **Do the calls come true?** On 2019 onward, good-week calls (about 1 in 6 "
+            "player-games) said +1.8 points and those players scored +1.6 against the rest of "
+            "the projection. Bad-week calls said -1.8 and they scored -1.9.\n"
+            "- **How much it knows.** Most of a week can't be predicted. A player's season "
+            "average misses by 5.3 points a game; the model misses by 5.0.\n"
+            "- **A second opinion for now.** The scorecard grades its projection every week "
+            "beside ours and the consensus. It joins the Lineup projection only after a blend "
+            "with it has beaten our projection alone over four graded weeks."
+        ),
+    },
+    {
         "key": "trade_value",
         "title": "What the \"value\" number in a trade actually is",
         "headline": (
