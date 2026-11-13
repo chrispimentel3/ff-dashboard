@@ -13,6 +13,13 @@ is predicted by a ridge regression fitted on every earlier season, per position.
     error from season-week clusters.
   * The calls. mega.ml_matchup's good-week / bad-week call (this week's situation against his
     usual one), graded on what those players then scored against the rest of the model.
+
+Boosted trees were tried and not adopted (2026-11-13; scikit-learn HistGradientBoosting, three
+tree sizes, each fitted on points directly and on the ridge's residuals; the candidate picked
+on 2019-21 and judged on 2022-26, 11,824 player-games). Direct: 1.0-1.6% MORE squared error
+than the ridge. On residuals (curves and interactions only): -0.08% (+/-0.10), a 50/50 blend
++0.03% (+/-0.05); MAE 4.965 vs 4.964. Nothing left for trees to find, so the ridge stays and
+the pipeline needs no scikit-learn.
 """
 from __future__ import annotations
 
