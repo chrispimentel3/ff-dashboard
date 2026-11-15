@@ -1,5 +1,5 @@
 {
-  "headline": "17 trades raise your title odds.",
+  "headline": "1 free agent would start for you and 7 trades raise your title odds.",
   "subhead": "Everything below is ranked by what it adds to your starting nine, not by name.",
   "basis": null,
   "xfp_available": true,
@@ -16,7 +16,7 @@
       "why": "scoring 16.9/g, we project 13.5/g from here",
       "timing": {
         "call": "now",
-        "why": "sell now: his offense projects 21.9 pts over the next 3 games, 23.5 after, and his value is at its high"
+        "why": "sell now: his offense projects 21.8 pts over the next 3 games, 23.5 after, and his value is at its high"
       }
     }
   ],
@@ -66,7 +66,17 @@
       "why": "scoring 6.5/g, we project 8.6/g from here"
     }
   ],
-  "waivers": [],
+  "waivers": [
+    {
+      "player": "Dameon Pierce",
+      "pos": "RB",
+      "gain": 5.247,
+      "bid": 2,
+      "max_bid": 18,
+      "drop": "Tyler Allgeier",
+      "why": "+2.0 pts/wk over the next 3 weeks \u2014 starts for you"
+    }
+  ],
   "trades": [
     {
       "partner": "Don R.I.C.O",
@@ -74,80 +84,81 @@
       "give_val": 26.5,
       "get": "Jaxon Smith-Njigba (WR)",
       "get_val": 19.8,
-      "addresses": "lineup",
+      "addresses": "consolidation",
       "fairness": 0.84,
-      "d_title": 0.0598,
-      "thesis": "Jaxon Smith-Njigba starts for you over Breece Hall: +2.20 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 2.2,
-      "p_accept": 0.466,
+      "d_title": 0.0302,
+      "thesis": "Two for one: -0.5 this week, but +2.23 pts/wk over the weeks that count most \u2014 already net of picking up Dameon Pierce, which you could do anyway.",
+      "d_me": 2.23,
+      "p_accept": 0.453,
       "flag": "EXPLOIT",
+      "sits_for_them": []
+    },
+    {
+      "partner": "Undisputed",
+      "give": "Emeka Egbuka (WR) + Josh Downs (WR)",
+      "give_val": 18.4,
+      "get": "Caleb Williams (QB)",
+      "get_val": 20.1,
+      "addresses": "role expiry",
+      "fairness": 0.57,
+      "d_title": 0.055,
+      "thesis": "Sell Josh Downs's borrowed role: his share has run 9% with Tyquan Thornton out, and Tyquan Thornton is due back week 11.",
+      "d_me": 1.78,
+      "p_accept": 0.041,
+      "flag": "LONGSHOT",
+      "sits_for_them": []
+    },
+    {
+      "partner": "Revenge of the Smith",
+      "give": "Malik Nabers (WR)",
+      "give_val": 14.7,
+      "get": "James Cook III (RB)",
+      "get_val": 17.7,
+      "addresses": "lineup",
+      "fairness": 0.62,
+      "d_title": 0.0272,
+      "thesis": "James Cook III starts for you over Malik Nabers: +1.99 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 1.99,
+      "p_accept": 0.073,
+      "flag": "LONGSHOT",
+      "sits_for_them": []
+    },
+    {
+      "partner": "Burrow-Chase combo",
+      "give": "Malik Nabers (WR)",
+      "give_val": 14.7,
+      "get": "Ja'Marr Chase (WR)",
+      "get_val": 17.4,
+      "addresses": "lineup",
+      "fairness": 0.71,
+      "d_title": 0.0208,
+      "thesis": "Ja'Marr Chase starts for you over Malik Nabers: +2.17 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 2.17,
+      "p_accept": 0.086,
+      "flag": "LONGSHOT",
       "sits_for_them": []
     },
     {
       "partner": "Heartbreak Drake",
-      "give": "Denzel Boston (WR)",
-      "give_val": 9.3,
+      "give": "Jayden Daniels (QB) + Denzel Boston (WR)",
+      "give_val": 27.5,
       "get": "Tyler Shough (QB)",
       "get_val": 18.0,
       "addresses": "lineup",
       "fairness": 0.91,
-      "d_title": 0.0495,
+      "d_title": 0.0135,
       "thesis": "Tyler Shough starts for you over Jayden Daniels: +1.18 pts/wk to your lineup over the weeks that count most.",
       "d_me": 1.18,
-      "p_accept": 0.378,
-      "flag": "EXPLOIT",
+      "p_accept": 0.125,
+      "flag": "LONGSHOT",
       "sits_for_them": [
+        "Jayden Daniels wouldn't start for them (they start Drake Maye)",
         "Denzel Boston wouldn't start for them (they start Nico Collins & Tetairoa McMillan)"
       ]
-    },
-    {
-      "partner": "Undisputed",
-      "give": "Denzel Boston (WR)",
-      "give_val": 9.3,
-      "get": "Caleb Williams (QB)",
-      "get_val": 20.1,
-      "addresses": "lineup",
-      "fairness": 0.77,
-      "d_title": 0.0593,
-      "thesis": "Caleb Williams starts for you over Jayden Daniels: +1.82 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 1.82,
-      "p_accept": 0.263,
-      "flag": "NEEDS_PITCH",
-      "sits_for_them": []
-    },
-    {
-      "partner": "deez nuts",
-      "give": "Christian McCaffrey (RB)",
-      "give_val": 17.9,
-      "get": "Jahmyr Gibbs (RB)",
-      "get_val": 22.1,
-      "addresses": "lineup",
-      "fairness": 0.9,
-      "d_title": 0.05,
-      "thesis": "Jahmyr Gibbs starts for you over Christian McCaffrey: +3.60 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 3.6,
-      "p_accept": 0.24,
-      "flag": "NEEDS_PITCH",
-      "sits_for_them": []
-    },
-    {
-      "partner": "L'Omar",
-      "give": "Breece Hall (RB)",
-      "give_val": 13.0,
-      "get": "Jaylen Warren (RB)",
-      "get_val": 14.7,
-      "addresses": "lineup",
-      "fairness": 0.7,
-      "d_title": 0.0328,
-      "thesis": "Jaylen Warren starts for you over Breece Hall: +2.65 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 2.65,
-      "p_accept": 0.348,
-      "flag": "EXPLOIT",
-      "sits_for_them": []
     }
   ],
   "roster_src": "scraped Yahoo rosters",
-  "yahoo_pulled_at": "2026-11-13T20:19:30+00:00",
+  "yahoo_pulled_at": "2026-11-15T12:29:19+00:00",
   "season": 2026,
   "week": 10,
   "next_week": 10
