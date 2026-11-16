@@ -24,10 +24,10 @@
   "out_reason": null,
   "seasons": {
     "2026": {
-      "games": 2,
-      "pts_pg": -0.2,
-      "xfp_pg": -0.25,
-      "vs_exp_pg": 0.04999999999999999,
+      "games": 3,
+      "pts_pg": -0.20000000000000004,
+      "xfp_pg": -0.23333333333333336,
+      "vs_exp_pg": 0.033333333333333326,
       "usage_label": "Pass att/g",
       "usage_value": 0.0,
       "usage_fmt": "0.0",
@@ -93,13 +93,13 @@
         },
         {
           "stat": "Carries/g",
-          "value_fmt": "2.5",
+          "value_fmt": "2.3",
           "pos_rank": "\u2014",
           "means": "Rushing volume \u2014 the fantasy QB cheat code."
         },
         {
           "stat": "Rush yds",
-          "value_fmt": "-4",
+          "value_fmt": "-6",
           "pos_rank": "\u2014",
           "means": ""
         },
@@ -150,38 +150,55 @@
           "half_ppr": -0.2,
           "xfp": -0.30000000000000004,
           "vs_exp": 0.10000000000000003
+        },
+        {
+          "week": 10,
+          "game": "@ NYJ",
+          "snap_pct": 0.05,
+          "completions": 0,
+          "attempts": 0,
+          "passing_yards": 0,
+          "passing_tds": 0,
+          "passing_interceptions": 0,
+          "sacks_suffered": 0,
+          "carries": 2,
+          "rushing_yards": -2,
+          "rushing_tds": 0,
+          "half_ppr": -0.2,
+          "xfp": -0.2,
+          "vs_exp": 0.0
         }
       ],
       "role": {
         "headline": "Backup QB",
         "from_usage": true,
-        "games": 2,
+        "games": 3,
         "rows": [
           {
             "metric": "carry share",
-            "him": 0.0636372147286096,
-            "role_avg": 0.10223752151462995,
-            "vs_role": 62.24448107293296,
-            "nfl_avg": 0.11088218767559468,
-            "vs_nfl": 57.39173808041328,
+            "him": 0.06356507092819698,
+            "role_avg": 0.10480217456961644,
+            "vs_role": 60.65243511333147,
+            "nfl_avg": 0.10951621477937268,
+            "vs_nfl": 58.04169826016433,
             "fmt": "{:.1%}"
           },
           {
             "metric": "snap %",
-            "him": 0.11371345519664755,
-            "role_avg": 0.6550205519671168,
-            "vs_role": 17.360288139837813,
-            "nfl_avg": 0.802141563656405,
-            "vs_nfl": 14.176232768478805,
+            "him": 0.09878090845837235,
+            "role_avg": 0.6501088208936115,
+            "vs_role": 15.194519022614148,
+            "nfl_avg": 0.7794810438944141,
+            "vs_nfl": 12.672650506655923,
             "fmt": "{:.1%}"
           },
           {
             "metric": "xFP share",
-            "him": 0.04286520643509473,
-            "role_avg": 0.1515315352154143,
-            "vs_role": 28.287977399660328,
-            "nfl_avg": 0.19514748761298245,
-            "vs_nfl": 21.965543579072477,
+            "him": 0.03378848764893805,
+            "role_avg": 0.15212987851023801,
+            "vs_role": 22.210290299195997,
+            "nfl_avg": 0.18808669504026806,
+            "vs_nfl": 17.964315679907166,
             "fmt": "{:.1%}"
           }
         ]
@@ -190,19 +207,19 @@
         "bye": false,
         "opponent": "NYJ",
         "home": false,
-        "ease_rank": 18,
+        "ease_rank": 13,
         "out_reason": null,
         "projection": 0.2,
         "proj_source": "ffanalytics",
-        "matchup_mult": 1.037,
-        "matchup_pct": 3.7,
-        "matchup_basis": "defense+vegas",
-        "matchup_def_rank": 11,
-        "matchup_def_pct": 5.8,
-        "matchup_vegas_pct": 2.1,
-        "matchup_baseline": -0.0,
-        "expected_pts": -0.0,
-        "delta_pts": -0.0
+        "matchup_mult": null,
+        "matchup_pct": null,
+        "matchup_basis": null,
+        "matchup_def_rank": null,
+        "matchup_def_pct": null,
+        "matchup_vegas_pct": null,
+        "matchup_baseline": null,
+        "expected_pts": null,
+        "delta_pts": null
       }
     },
     "2025": {

@@ -24,71 +24,71 @@
   "out_reason": null,
   "seasons": {
     "2026": {
-      "games": 9,
-      "pts_pg": 16.873333333333335,
-      "xfp_pg": 18.9246,
-      "vs_exp_pg": -2.0512666666666663,
+      "games": 10,
+      "pts_pg": 17.262,
+      "xfp_pg": 18.5395,
+      "vs_exp_pg": -1.2775000000000005,
       "usage_label": "Pass att/g",
-      "usage_value": 38.44444444444444,
-      "usage_fmt": "38.4",
+      "usage_value": 37.2,
+      "usage_fmt": "37.2",
       "ranks": {
         "pts_pg": "#16 of 35",
-        "xfp_pg": "#13 of 35",
-        "att_pg": "#3 of 35"
+        "xfp_pg": "#14 of 35",
+        "att_pg": "#6 of 35"
       },
       "card": [
         {
           "stat": "Pts/game",
-          "value_fmt": "16.9",
+          "value_fmt": "17.3",
           "pos_rank": "#16 of 35",
           "means": "Half-PPR fantasy points per game."
         },
         {
           "stat": "Expected pts/g",
-          "value_fmt": "18.9",
-          "pos_rank": "#13 of 35",
+          "value_fmt": "18.5",
+          "pos_rank": "#14 of 35",
           "means": "What his volume should score."
         },
         {
           "stat": "Pass att/g",
-          "value_fmt": "38.4",
-          "pos_rank": "#3 of 35",
+          "value_fmt": "37.2",
+          "pos_rank": "#6 of 35",
           "means": "Dropback volume."
         },
         {
           "stat": "Pass yds/g",
-          "value_fmt": "264",
-          "pos_rank": "#7 of 35",
+          "value_fmt": "262",
+          "pos_rank": "#9 of 35",
           "means": ""
         },
         {
           "stat": "Pass TD",
-          "value_fmt": "16",
+          "value_fmt": "19",
           "pos_rank": "#7 of 35",
           "means": ""
         },
         {
           "stat": "Completion %",
-          "value_fmt": "66.5%",
-          "pos_rank": "#9 of 35",
+          "value_fmt": "66.7%",
+          "pos_rank": "#10 of 35",
           "means": ""
         },
         {
           "stat": "CPOE",
-          "value_fmt": "+0.0",
-          "pos_rank": "#20 of 35",
+          "value_fmt": "+0.4",
+          "pos_rank": "#17 of 35",
           "means": "Completion % over expected, given throw difficulty. Plus is accurate."
         },
         {
           "stat": "Yds/att",
-          "value_fmt": "6.9",
-          "pos_rank": "#21 of 35",
+          "value_fmt": "7.1",
+          "pos_rank": "#18 of 35",
           "means": ""
         },
         {
           "stat": "EPA/dropback",
-          "value_fmt": "+0.09",
-          "pos_rank": "#16 of 35",
+          "value_fmt": "+0.12",
+          "pos_rank": "#15 of 35",
           "means": "Points added per dropback, sacks included. Above +0.10 is good."
         },
         {
@@ -99,8 +99,8 @@
         },
         {
           "stat": "Rush yds",
-          "value_fmt": "19",
-          "pos_rank": "#34 of 35",
+          "value_fmt": "17",
+          "pos_rank": "#35 of 35",
           "means": ""
         },
         {
@@ -111,8 +111,8 @@
         },
         {
           "stat": "INT",
-          "value_fmt": "9",
-          "pos_rank": "#31 of 35",
+          "value_fmt": "10",
+          "pos_rank": "#32 of 35",
           "means": ""
         }
       ],
@@ -269,6 +269,23 @@
           "half_ppr": 12.22,
           "xfp": 20.833200000000005,
           "vs_exp": -8.613200000000004
+        },
+        {
+          "week": 10,
+          "game": "@ ARI",
+          "snap_pct": 1.0,
+          "completions": 18,
+          "attempts": 26,
+          "passing_yards": 249,
+          "passing_tds": 3,
+          "passing_interceptions": 1,
+          "sacks_suffered": 2,
+          "carries": 2,
+          "rushing_yards": -2,
+          "rushing_tds": 0,
+          "half_ppr": 20.76,
+          "xfp": 15.073600000000003,
+          "vs_exp": 5.686399999999999
         }
       ],
       "role": {
@@ -278,29 +295,38 @@
         "rows": [
           {
             "metric": "carry share",
-            "him": 0.04241345518477534,
-            "role_avg": 0.12119967132292522,
-            "vs_role": 34.994694888048535,
-            "nfl_avg": 0.11088218767559468,
-            "vs_nfl": 38.25091845126951,
+            "him": 0.04802004104792949,
+            "role_avg": 0.11620926243567753,
+            "vs_role": 41.32204270249874,
+            "nfl_avg": 0.10951621477937268,
+            "vs_nfl": 43.84742583065795,
+            "fmt": "{:.1%}"
+          },
+          {
+            "metric": "inside-10 share",
+            "him": 0.20388751033912322,
+            "role_avg": 0.27419354838709675,
+            "vs_role": 74.35897435897435,
+            "nfl_avg": 0.2603305785123967,
+            "vs_nfl": 78.31869444772668,
             "fmt": "{:.1%}"
           },
           {
             "metric": "snap %",
-            "him": 0.9979149551724152,
-            "role_avg": 0.9723212769570385,
-            "vs_role": 102.63222443259437,
-            "nfl_avg": 0.802141563656405,
-            "vs_nfl": 124.40633927802166,
+            "him": 0.9972511993434143,
+            "role_avg": 0.9611650485436893,
+            "vs_role": 103.75441770946634,
+            "nfl_avg": 0.7794810438944141,
+            "vs_nfl": 127.93783853433884,
             "fmt": "{:.1%}"
           },
           {
             "metric": "xFP share",
-            "him": 0.21197756020566758,
-            "role_avg": 0.24312187033361118,
-            "vs_role": 87.18983607471945,
-            "nfl_avg": 0.19514748761298245,
-            "vs_nfl": 108.62428350912855,
+            "him": 0.2116526849915364,
+            "role_avg": 0.23693634343378997,
+            "vs_role": 89.32892350922985,
+            "nfl_avg": 0.18808669504026806,
+            "vs_nfl": 112.52932321779753,
             "fmt": "{:.1%}"
           }
         ]
@@ -313,43 +339,15 @@
         "out_reason": null,
         "projection": 17.2,
         "proj_source": "ffanalytics",
-        "matchup_mult": 1.022,
-        "matchup_pct": 2.2,
-        "matchup_basis": "defense+vegas",
-        "matchup_def_rank": 4,
-        "matchup_def_pct": 15.8,
-        "matchup_vegas_pct": -2.0,
-        "matchup_baseline": 18.0,
-        "expected_pts": 18.4,
-        "delta_pts": 0.4,
-        "ml": {
-          "proj": 15.5,
-          "week": -2.7,
-          "call": "bad",
-          "avg": 16.9,
-          "why": [
-            {
-              "label": "Vegas line",
-              "pts": -2.6
-            },
-            {
-              "label": "Game setting",
-              "pts": -0.6
-            },
-            {
-              "label": "Teammates out",
-              "pts": -0.4
-            },
-            {
-              "label": "Quarterback",
-              "pts": 0.3
-            },
-            {
-              "label": "Injury report",
-              "pts": 0.3
-            }
-          ]
-        }
+        "matchup_mult": null,
+        "matchup_pct": null,
+        "matchup_basis": null,
+        "matchup_def_rank": null,
+        "matchup_def_pct": null,
+        "matchup_vegas_pct": null,
+        "matchup_baseline": null,
+        "expected_pts": null,
+        "delta_pts": null
       }
     },
     "2025": {
