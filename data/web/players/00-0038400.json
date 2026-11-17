@@ -15,10 +15,10 @@
     "headshot_url": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/oveivzhzv13jrfvkp8zg"
   },
   "ownership": {
-    "kind": "free_agent",
+    "kind": "waivers",
     "team": null,
     "slot": null,
-    "waiver_until": null
+    "waiver_until": "Nov 18"
   },
   "nfl_status": "Active",
   "out_reason": null,
@@ -87,7 +87,7 @@
         },
         {
           "stat": "EPA/dropback",
-          "value_fmt": "-0.18",
+          "value_fmt": "-0.14",
           "pos_rank": "\u2014",
           "means": "Points added per dropback, sacks included. Above +0.10 is good."
         },
@@ -176,35 +176,74 @@
         "rows": [
           {
             "metric": "carry share",
-            "him": 0.09163534858811771,
-            "role_avg": 0.10480217456961644,
-            "vs_role": 87.43649543955553,
-            "nfl_avg": 0.10951621477937268,
-            "vs_nfl": 83.67285956031525,
+            "him": 0.09180407631962238,
+            "role_avg": 0.1060373889059148,
+            "vs_role": 86.57708122281151,
+            "nfl_avg": 0.1097517730496454,
+            "vs_nfl": 83.64700976456707,
             "fmt": "{:.1%}"
           },
           {
             "metric": "snap %",
-            "him": 0.9664575016849396,
-            "role_avg": 0.6501088208936115,
-            "vs_role": 148.66088116701582,
-            "nfl_avg": 0.7794810438944141,
-            "vs_nfl": 123.98730017299212,
+            "him": 0.9664414472693568,
+            "role_avg": 0.6499413527955168,
+            "vs_role": 148.69671595945005,
+            "nfl_avg": 0.7792499438580732,
+            "vs_nfl": 124.02201050981111,
             "fmt": "{:.1%}"
           },
           {
             "metric": "xFP share",
-            "him": 0.1743843067544976,
-            "role_avg": 0.15212987851023801,
-            "vs_role": 114.62857162721122,
-            "nfl_avg": 0.18808669504026806,
-            "vs_nfl": 92.71485509230895,
+            "him": 0.173779491278547,
+            "role_avg": 0.14989745301509166,
+            "vs_role": 115.93225087090097,
+            "nfl_avg": 0.18717699642925198,
+            "vs_nfl": 92.84233350983976,
             "fmt": "{:.1%}"
           }
         ]
       },
       "this_week": {
-        "bye": true
+        "bye": false,
+        "opponent": "PIT",
+        "home": true,
+        "ease_rank": 26,
+        "out_reason": null,
+        "projection": 6.4,
+        "proj_source": "ffanalytics",
+        "matchup_mult": 0.98,
+        "matchup_pct": -2.0,
+        "matchup_basis": "defense+vegas",
+        "matchup_def_rank": 12,
+        "matchup_def_pct": 6.5,
+        "matchup_vegas_pct": -3.7,
+        "matchup_baseline": 6.9,
+        "expected_pts": 6.8,
+        "delta_pts": -0.1,
+        "ml": {
+          "proj": 5.0,
+          "week": -2.4,
+          "call": "bad",
+          "avg": 10.7,
+          "why": [
+            {
+              "label": "Injury report",
+              "pts": -1.4
+            },
+            {
+              "label": "Vegas line",
+              "pts": -1.0
+            },
+            {
+              "label": "Teammates out",
+              "pts": -0.4
+            },
+            {
+              "label": "Game setting",
+              "pts": 0.4
+            }
+          ]
+        }
       }
     },
     "2025": {

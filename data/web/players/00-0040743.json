@@ -16,7 +16,7 @@
   },
   "ownership": {
     "kind": "other_team",
-    "team": "Heartbreak Drake",
+    "team": "MAYE DAY MAYE DAY",
     "slot": "BN",
     "waiver_until": null
   },
@@ -33,7 +33,7 @@
       "usage_fmt": "38.1",
       "ranks": {
         "pts_pg": "#14 of 35",
-        "xfp_pg": "#6 of 35",
+        "xfp_pg": "#5 of 35",
         "att_pg": "#3 of 35"
       },
       "card": [
@@ -46,7 +46,7 @@
         {
           "stat": "Expected pts/g",
           "value_fmt": "20.8",
-          "pos_rank": "#6 of 35",
+          "pos_rank": "#5 of 35",
           "means": "What his volume should score."
         },
         {
@@ -87,14 +87,14 @@
         },
         {
           "stat": "EPA/dropback",
-          "value_fmt": "-0.01",
+          "value_fmt": "+0.02",
           "pos_rank": "#21 of 35",
           "means": "Points added per dropback, sacks included. Above +0.10 is good."
         },
         {
           "stat": "Carries/g",
           "value_fmt": "4.4",
-          "pos_rank": "#10 of 35",
+          "pos_rank": "#11 of 35",
           "means": "Rushing volume \u2014 the fantasy QB cheat code."
         },
         {
@@ -278,59 +278,71 @@
         "rows": [
           {
             "metric": "carry share",
-            "him": 0.2092190562339816,
-            "role_avg": 0.11620926243567753,
-            "vs_role": 180.0364720065111,
-            "nfl_avg": 0.10951621477937268,
-            "vs_nfl": 191.0393421243298,
+            "him": 0.20909964272034862,
+            "role_avg": 0.11485065208245687,
+            "vs_role": 182.06221639057463,
+            "nfl_avg": 0.1097517730496454,
+            "vs_nfl": 190.5205145303338,
             "fmt": "{:.1%}"
           },
           {
             "metric": "inside-10 share",
-            "him": 0.361975449614616,
-            "role_avg": 0.27419354838709675,
-            "vs_role": 132.0145757418011,
-            "nfl_avg": 0.2603305785123967,
-            "vs_nfl": 139.0445377884715,
+            "him": 0.36447828771352125,
+            "role_avg": 0.27906976744186046,
+            "vs_role": 130.6047197640118,
+            "nfl_avg": 0.2612244897959184,
+            "vs_nfl": 139.52684451533236,
             "fmt": "{:.1%}"
           },
           {
             "metric": "snap %",
-            "him": 0.990213753989142,
-            "role_avg": 0.9611650485436893,
-            "vs_role": 103.02223905139559,
-            "nfl_avg": 0.7794810438944141,
-            "vs_nfl": 127.03500126723712,
+            "him": 0.9896703974503713,
+            "role_avg": 0.9537460429124165,
+            "vs_role": 103.76665830541786,
+            "nfl_avg": 0.7792499438580732,
+            "vs_nfl": 127.00294754600874,
             "fmt": "{:.1%}"
           },
           {
             "metric": "xFP share",
-            "him": 0.2666036012972476,
-            "role_avg": 0.23693634343378997,
-            "vs_role": 112.52119342837241,
-            "nfl_avg": 0.18808669504026806,
-            "vs_nfl": 141.74506136128852,
+            "him": 0.2663221790815213,
+            "role_avg": 0.23552995954434658,
+            "vs_role": 113.07358927787571,
+            "nfl_avg": 0.18717699642925198,
+            "vs_nfl": 142.28360544410387,
             "fmt": "{:.1%}"
           }
         ]
       },
       "this_week": {
         "bye": false,
-        "opponent": "CAR",
-        "home": true,
-        "ease_rank": 22,
+        "opponent": "CHI",
+        "home": false,
+        "ease_rank": 11,
         "out_reason": null,
-        "projection": 18.2,
+        "projection": 15.9,
         "proj_source": "ffanalytics",
-        "matchup_mult": null,
-        "matchup_pct": null,
-        "matchup_basis": null,
-        "matchup_def_rank": null,
-        "matchup_def_pct": null,
-        "matchup_vegas_pct": null,
-        "matchup_baseline": null,
-        "expected_pts": null,
-        "delta_pts": null
+        "matchup_mult": 0.998,
+        "matchup_pct": -0.2,
+        "matchup_basis": "defense+vegas",
+        "matchup_def_rank": 2,
+        "matchup_def_pct": 20.0,
+        "matchup_vegas_pct": -5.3,
+        "matchup_baseline": 16.3,
+        "expected_pts": 16.2,
+        "delta_pts": -0.0,
+        "ml": {
+          "proj": 15.3,
+          "week": -1.9,
+          "call": "bad",
+          "avg": 18.1,
+          "why": [
+            {
+              "label": "Vegas line",
+              "pts": -1.4
+            }
+          ]
+        }
       }
     },
     "2025": {

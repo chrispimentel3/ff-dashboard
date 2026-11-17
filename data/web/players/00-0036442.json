@@ -33,7 +33,7 @@
       "usage_fmt": "37.8",
       "ranks": {
         "pts_pg": "#1 of 35",
-        "xfp_pg": "#4 of 35",
+        "xfp_pg": "#3 of 35",
         "att_pg": "#4 of 35"
       },
       "card": [
@@ -46,7 +46,7 @@
         {
           "stat": "Expected pts/g",
           "value_fmt": "21.5",
-          "pos_rank": "#4 of 35",
+          "pos_rank": "#3 of 35",
           "means": "What his volume should score."
         },
         {
@@ -87,7 +87,7 @@
         },
         {
           "stat": "EPA/dropback",
-          "value_fmt": "+0.31",
+          "value_fmt": "+0.27",
           "pos_rank": "#4 of 35",
           "means": "Points added per dropback, sacks included. Above +0.10 is good."
         },
@@ -278,59 +278,71 @@
         "rows": [
           {
             "metric": "carry share",
-            "him": 0.10931429681429683,
-            "role_avg": 0.11620926243567753,
-            "vs_role": 94.06676759075285,
-            "nfl_avg": 0.10951621477937268,
-            "vs_nfl": 99.81562733383123,
+            "him": 0.10916043709480816,
+            "role_avg": 0.11485065208245687,
+            "vs_role": 95.04555273786043,
+            "nfl_avg": 0.1097517730496454,
+            "vs_nfl": 99.46120601207076,
             "fmt": "{:.1%}"
           },
           {
             "metric": "inside-10 share",
-            "him": 0.40799120234604097,
-            "role_avg": 0.27419354838709675,
-            "vs_role": 148.79679144385025,
-            "nfl_avg": 0.2603305785123967,
-            "vs_nfl": 156.72043010752682,
+            "him": 0.41120507399577166,
+            "role_avg": 0.27906976744186046,
+            "vs_role": 147.34848484848484,
+            "nfl_avg": 0.2612244897959184,
+            "vs_nfl": 157.41444238900633,
             "fmt": "{:.1%}"
           },
           {
             "metric": "snap %",
-            "him": 0.9748453800231347,
-            "role_avg": 0.9611650485436893,
-            "vs_role": 101.42330721452815,
-            "nfl_avg": 0.7794810438944141,
-            "vs_nfl": 125.06338514053512,
+            "him": 0.9742679509607229,
+            "role_avg": 0.9537460429124165,
+            "vs_role": 102.15171619330022,
+            "nfl_avg": 0.7792499438580732,
+            "vs_nfl": 125.02637422559364,
             "fmt": "{:.1%}"
           },
           {
             "metric": "xFP share",
-            "him": 0.27410252335426116,
-            "role_avg": 0.23693634343378997,
-            "vs_role": 115.6861456464812,
-            "nfl_avg": 0.18808669504026806,
-            "vs_nfl": 145.73201113219503,
+            "him": 0.2738378968487478,
+            "role_avg": 0.23552995954434658,
+            "vs_role": 116.26457091849856,
+            "nfl_avg": 0.18717699642925198,
+            "vs_nfl": 146.29890535306853,
             "fmt": "{:.1%}"
           }
         ]
       },
       "this_week": {
         "bye": false,
-        "opponent": "PIT",
-        "home": true,
-        "ease_rank": 26,
+        "opponent": "WAS",
+        "home": false,
+        "ease_rank": 7,
         "out_reason": null,
-        "projection": 20.9,
+        "projection": 23.3,
         "proj_source": "ffanalytics",
-        "matchup_mult": null,
-        "matchup_pct": null,
-        "matchup_basis": null,
-        "matchup_def_rank": null,
-        "matchup_def_pct": null,
-        "matchup_vegas_pct": null,
-        "matchup_baseline": null,
-        "expected_pts": null,
-        "delta_pts": null
+        "matchup_mult": 1.073,
+        "matchup_pct": 7.3,
+        "matchup_basis": "defense+vegas",
+        "matchup_def_rank": 8,
+        "matchup_def_pct": 13.1,
+        "matchup_vegas_pct": 3.6,
+        "matchup_baseline": 24.6,
+        "expected_pts": 26.3,
+        "delta_pts": 1.8,
+        "ml": {
+          "proj": 23.3,
+          "week": 2.6,
+          "call": "good",
+          "avg": 26.5,
+          "why": [
+            {
+              "label": "Vegas line",
+              "pts": 2.5
+            }
+          ]
+        }
       }
     },
     "2025": {

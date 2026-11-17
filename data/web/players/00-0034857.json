@@ -34,7 +34,7 @@
       "ranks": {
         "pts_pg": "#2 of 35",
         "xfp_pg": "#1 of 35",
-        "att_pg": "#26 of 35"
+        "att_pg": "#25 of 35"
       },
       "card": [
         {
@@ -52,7 +52,7 @@
         {
           "stat": "Pass att/g",
           "value_fmt": "28.6",
-          "pos_rank": "#26 of 35",
+          "pos_rank": "#25 of 35",
           "means": "Dropback volume."
         },
         {
@@ -87,7 +87,7 @@
         },
         {
           "stat": "EPA/dropback",
-          "value_fmt": "+0.23",
+          "value_fmt": "+0.19",
           "pos_rank": "#6 of 35",
           "means": "Points added per dropback, sacks included. Above +0.10 is good."
         },
@@ -278,59 +278,79 @@
         "rows": [
           {
             "metric": "carry share",
-            "him": 0.1547370254266806,
-            "role_avg": 0.11620926243567753,
-            "vs_role": 133.1537798136602,
-            "nfl_avg": 0.10951621477937268,
-            "vs_nfl": 141.29142952795448,
+            "him": 0.154645063295492,
+            "role_avg": 0.11485065208245687,
+            "vs_role": 134.64883349940823,
+            "nfl_avg": 0.1097517730496454,
+            "vs_nfl": 140.90438723531094,
             "fmt": "{:.1%}"
           },
           {
             "metric": "inside-10 share",
-            "him": 0.32100157906609517,
-            "role_avg": 0.27419354838709675,
-            "vs_role": 117.07116412998766,
-            "nfl_avg": 0.2603305785123967,
-            "vs_nfl": 123.30536846665878,
+            "him": 0.32297934623516017,
+            "role_avg": 0.27906976744186046,
+            "vs_role": 115.73426573426572,
+            "nfl_avg": 0.2612244897959184,
+            "vs_nfl": 123.64053098064723,
             "fmt": "{:.1%}"
           },
           {
             "metric": "snap %",
-            "him": 0.9648834226688472,
-            "role_avg": 0.9611650485436893,
-            "vs_role": 100.3868611463548,
-            "nfl_avg": 0.7794810438944141,
-            "vs_nfl": 123.785360814951,
+            "him": 0.9643753375704381,
+            "role_avg": 0.9537460429124165,
+            "vs_role": 101.11447850683221,
+            "nfl_avg": 0.7792499438580732,
+            "vs_nfl": 123.75686968879425,
             "fmt": "{:.1%}"
           },
           {
             "metric": "xFP share",
-            "him": 0.2831595288154301,
-            "role_avg": 0.23693634343378997,
-            "vs_role": 119.5086936481557,
-            "nfl_avg": 0.18808669504026806,
-            "vs_nfl": 150.54734666628474,
+            "him": 0.282891018423119,
+            "role_avg": 0.23552995954434658,
+            "vs_role": 120.1082949151762,
+            "nfl_avg": 0.18717699642925198,
+            "vs_nfl": 151.1355689105976,
             "fmt": "{:.1%}"
           }
         ]
       },
       "this_week": {
         "bye": false,
-        "opponent": "NYJ",
-        "home": false,
-        "ease_rank": 13,
+        "opponent": "MIA",
+        "home": true,
+        "ease_rank": 19,
         "out_reason": null,
-        "projection": 25.3,
+        "projection": 26.2,
         "proj_source": "ffanalytics",
-        "matchup_mult": null,
-        "matchup_pct": null,
-        "matchup_basis": null,
-        "matchup_def_rank": null,
-        "matchup_def_pct": null,
-        "matchup_vegas_pct": null,
-        "matchup_baseline": null,
-        "expected_pts": null,
-        "delta_pts": null
+        "matchup_mult": 1.069,
+        "matchup_pct": 6.9,
+        "matchup_basis": "defense+vegas",
+        "matchup_def_rank": 9,
+        "matchup_def_pct": 9.4,
+        "matchup_vegas_pct": 4.2,
+        "matchup_baseline": 23.0,
+        "expected_pts": 24.6,
+        "delta_pts": 1.6,
+        "ml": {
+          "proj": 25.1,
+          "week": 0.5,
+          "call": "normal",
+          "avg": 25.5,
+          "why": [
+            {
+              "label": "Vegas line",
+              "pts": 0.9
+            },
+            {
+              "label": "Game setting",
+              "pts": -0.4
+            },
+            {
+              "label": "Opposing defense",
+              "pts": -0.3
+            }
+          ]
+        }
       }
     },
     "2025": {

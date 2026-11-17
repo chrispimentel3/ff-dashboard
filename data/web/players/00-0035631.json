@@ -135,8 +135,8 @@
         },
         {
           "stat": "EPA/target",
-          "value_fmt": "+0.43",
-          "pos_rank": "#21 of 82",
+          "value_fmt": "+0.39",
+          "pos_rank": "#19 of 82",
           "means": "Points added per target."
         }
       ],
@@ -237,8 +237,8 @@
             "him": 0.06354488389071816,
             "role_avg": 0.0975800156128025,
             "vs_role": 65.12079701120798,
-            "nfl_avg": 0.08021890977172895,
-            "vs_nfl": 79.2143449363019,
+            "nfl_avg": 0.08023581853476167,
+            "vs_nfl": 79.19765143691747,
             "fmt": "{:.1%}"
           },
           {
@@ -246,8 +246,8 @@
             "him": 0.020255737400288167,
             "role_avg": 0.08308171812603488,
             "vs_role": 24.380498931859155,
-            "nfl_avg": 0.06190690174724432,
-            "vs_nfl": 32.71967555893687,
+            "nfl_avg": 0.06189685632862508,
+            "vs_nfl": 32.72498572907428,
             "fmt": "{:.1%}"
           },
           {
@@ -255,8 +255,8 @@
             "him": 0.32942184154175586,
             "role_avg": 0.32,
             "vs_role": 102.9443254817987,
-            "nfl_avg": 0.3384201077199282,
-            "vs_nfl": 97.34109588263024,
+            "nfl_avg": 0.34139784946236557,
+            "vs_nfl": 96.49206697128598,
             "fmt": "{:.3f}"
           },
           {
@@ -264,8 +264,8 @@
             "him": 0.1126243088274922,
             "role_avg": 0.1354602397104402,
             "vs_role": 83.14196775986662,
-            "nfl_avg": 0.1498899371915416,
-            "vs_nfl": 75.13800521750282,
+            "nfl_avg": 0.15060464526263373,
+            "vs_nfl": 74.78143096522086,
             "fmt": "{:.3f}"
           },
           {
@@ -273,8 +273,8 @@
             "him": 0.03822506020042711,
             "role_avg": 0.043347276707340864,
             "vs_role": 88.18330262937532,
-            "nfl_avg": 0.05072576869049477,
-            "vs_nfl": 75.35629560127278,
+            "nfl_avg": 0.0514161020117056,
+            "vs_nfl": 74.34453158608686,
             "fmt": "{:.3f}"
           },
           {
@@ -282,8 +282,8 @@
             "him": 5.974142857142858,
             "role_avg": 6.824,
             "vs_role": 87.54605593702898,
-            "nfl_avg": 6.307001795332137,
-            "vs_nfl": 94.72239030539627,
+            "nfl_avg": 6.247311827956989,
+            "vs_nfl": 95.62741578559135,
             "fmt": "{:.1f}"
           },
           {
@@ -291,8 +291,8 @@
             "him": 0.5619054432150579,
             "role_avg": 0.6291666666666667,
             "vs_role": 89.30947441828734,
-            "nfl_avg": 0.45427769025275705,
-            "vs_nfl": 123.69206220592022,
+            "nfl_avg": 0.4525032532018355,
+            "vs_nfl": 124.17710574213802,
             "fmt": "{:.1%}"
           },
           {
@@ -300,29 +300,45 @@
             "him": 0.042700480100989854,
             "role_avg": 0.06005669330424644,
             "vs_role": 71.10028500015771,
-            "nfl_avg": 0.048668592283820825,
-            "vs_nfl": 87.7372409951233,
+            "nfl_avg": 0.04844407644856622,
+            "vs_nfl": 88.14386243140702,
             "fmt": "{:.1%}"
           }
         ]
       },
       "this_week": {
         "bye": false,
-        "opponent": "PIT",
-        "home": true,
-        "ease_rank": 16,
+        "opponent": "WAS",
+        "home": false,
+        "ease_rank": 2,
         "out_reason": null,
-        "projection": 2.4,
+        "projection": 2.8,
         "proj_source": "ffanalytics",
-        "matchup_mult": null,
-        "matchup_pct": null,
-        "matchup_basis": null,
-        "matchup_def_rank": null,
-        "matchup_def_pct": null,
-        "matchup_vegas_pct": null,
-        "matchup_baseline": null,
-        "expected_pts": null,
-        "delta_pts": null
+        "matchup_mult": 1.128,
+        "matchup_pct": 12.8,
+        "matchup_basis": "defense+vegas",
+        "matchup_def_rank": 1,
+        "matchup_def_pct": 33.7,
+        "matchup_vegas_pct": 4.4,
+        "matchup_baseline": 3.9,
+        "expected_pts": 4.4,
+        "delta_pts": 0.5,
+        "ml": {
+          "proj": 4.8,
+          "week": 1.5,
+          "call": "good",
+          "avg": 4.7,
+          "why": [
+            {
+              "label": "Vegas line",
+              "pts": 0.8
+            },
+            {
+              "label": "Opposing defense",
+              "pts": 0.4
+            }
+          ]
+        }
       }
     },
     "2025": {

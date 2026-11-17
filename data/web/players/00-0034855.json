@@ -15,10 +15,10 @@
     "headshot_url": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/gjb8e69jtt1ffqf1afue"
   },
   "ownership": {
-    "kind": "free_agent",
+    "kind": "waivers",
     "team": null,
     "slot": null,
-    "waiver_until": null
+    "waiver_until": "Nov 18"
   },
   "nfl_status": "Active",
   "out_reason": null,
@@ -33,7 +33,7 @@
       "usage_fmt": "23.7",
       "ranks": {
         "pts_pg": "#34 of 35",
-        "xfp_pg": "#29 of 35",
+        "xfp_pg": "#28 of 35",
         "att_pg": "#30 of 35"
       },
       "card": [
@@ -46,7 +46,7 @@
         {
           "stat": "Expected pts/g",
           "value_fmt": "13.8",
-          "pos_rank": "#29 of 35",
+          "pos_rank": "#28 of 35",
           "means": "What his volume should score."
         },
         {
@@ -87,7 +87,7 @@
         },
         {
           "stat": "EPA/dropback",
-          "value_fmt": "-0.27",
+          "value_fmt": "-0.22",
           "pos_rank": "#35 of 35",
           "means": "Points added per dropback, sacks included. Above +0.10 is good."
         },
@@ -227,44 +227,79 @@
         "rows": [
           {
             "metric": "carry share",
-            "him": 0.05535178037933131,
-            "role_avg": 0.10480217456961644,
-            "vs_role": 52.81548842535042,
-            "nfl_avg": 0.10951621477937268,
-            "vs_nfl": 50.54208684151563,
+            "him": 0.055431326381547366,
+            "role_avg": 0.1060373889059148,
+            "vs_role": 52.27526531300262,
+            "nfl_avg": 0.1097517730496454,
+            "vs_nfl": 50.50608736541634,
             "fmt": "{:.1%}"
           },
           {
             "metric": "inside-10 share",
-            "him": 0.21879815100154082,
-            "role_avg": 0.2457627118644068,
-            "vs_role": 89.0282131661442,
-            "nfl_avg": 0.2603305785123967,
-            "vs_nfl": 84.04627387678235,
+            "him": 0.21590909090909088,
+            "role_avg": 0.2413793103448276,
+            "vs_role": 89.44805194805194,
+            "nfl_avg": 0.2612244897959184,
+            "vs_nfl": 82.65269886363635,
             "fmt": "{:.1%}"
           },
           {
             "metric": "snap %",
-            "him": 0.9381618503054259,
-            "role_avg": 0.6501088208936115,
-            "vs_role": 144.30843270452306,
-            "nfl_avg": 0.7794810438944141,
-            "vs_nfl": 120.35723737657771,
+            "him": 0.938149279772271,
+            "role_avg": 0.6499413527955168,
+            "vs_role": 144.34368204717535,
+            "nfl_avg": 0.7792499438580732,
+            "vs_nfl": 120.39131823705829,
             "fmt": "{:.1%}"
           },
           {
             "metric": "xFP share",
-            "him": 0.17553547454093532,
-            "role_avg": 0.15212987851023801,
-            "vs_role": 115.38527228175113,
-            "nfl_avg": 0.18808669504026806,
-            "vs_nfl": 93.32689614401188,
+            "him": 0.17497709763570238,
+            "role_avg": 0.14989745301509166,
+            "vs_role": 116.73120130872785,
+            "nfl_avg": 0.18717699642925198,
+            "vs_nfl": 93.48215911875643,
             "fmt": "{:.1%}"
           }
         ]
       },
       "this_week": {
-        "bye": true
+        "bye": false,
+        "opponent": "DET",
+        "home": false,
+        "ease_rank": 1,
+        "out_reason": null,
+        "projection": 13.2,
+        "proj_source": "ffanalytics",
+        "matchup_mult": 1.027,
+        "matchup_pct": 2.7,
+        "matchup_basis": "defense+vegas",
+        "matchup_def_rank": 3,
+        "matchup_def_pct": 15.1,
+        "matchup_vegas_pct": -1.4,
+        "matchup_baseline": 12.9,
+        "expected_pts": 13.2,
+        "delta_pts": 0.3,
+        "ml": {
+          "proj": 13.6,
+          "week": -0.7,
+          "call": "normal",
+          "avg": 9.1,
+          "why": [
+            {
+              "label": "Vegas line",
+              "pts": -0.8
+            },
+            {
+              "label": "Injury report",
+              "pts": 0.6
+            },
+            {
+              "label": "Quarterback",
+              "pts": -0.4
+            }
+          ]
+        }
       }
     },
     "2025": {

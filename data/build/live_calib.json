@@ -1,63 +1,63 @@
 {
  "season": 2026,
- "through_week": 9,
+ "through_week": 10,
  "defense": {
   "QB": {
-   "beta": 0.377,
-   "tested": 5,
-   "dev_gain_pct": 1.55,
-   "mae_gain": 0.043,
+   "beta": 0.378,
+   "tested": 6,
+   "dev_gain_pct": 1.47,
+   "mae_gain": 0.063,
    "active": true
   },
   "RB": {
-   "beta": 0.507,
-   "tested": 5,
-   "dev_gain_pct": -0.67,
-   "mae_gain": -0.04,
+   "beta": 0.483,
+   "tested": 6,
+   "dev_gain_pct": -0.59,
+   "mae_gain": -0.035,
    "active": false
   },
   "WR": {
-   "beta": 0.329,
-   "tested": 5,
-   "dev_gain_pct": 0.39,
-   "mae_gain": -0.009,
+   "beta": 0.388,
+   "tested": 6,
+   "dev_gain_pct": 0.51,
+   "mae_gain": -0.004,
    "active": false
   },
   "TE": {
-   "beta": 0.286,
-   "tested": 5,
-   "dev_gain_pct": -0.22,
-   "mae_gain": -0.032,
+   "beta": 0.314,
+   "tested": 6,
+   "dev_gain_pct": 0.15,
+   "mae_gain": -0.016,
    "active": false
   }
  },
  "availability": {
   "buckets": {
    "0": {
-    "said": 0.208,
-    "n": 84,
-    "p": 0.238
+    "said": 0.179,
+    "n": 100,
+    "p": 0.209
    },
    "1": {
-    "said": 0.682,
-    "n": 16,
-    "p": 0.692
+    "said": 0.668,
+    "n": 27,
+    "p": 0.672
    },
    "3": {
     "said": 1.0,
-    "n": 930,
-    "p": 0.96
+    "n": 1065,
+    "p": 0.962
    }
   },
-  "tested": 5,
-  "brier_gain": 0.00141,
+  "tested": 6,
+  "brier_gain": 0.00127,
   "active": true
  },
  "odds": {
-  "s": 1.177,
-  "lam": 0.85,
-  "n": 18,
-  "logloss_gain": 0.0077,
+  "s": 1.174,
+  "lam": 0.852,
+  "n": 23,
+  "logloss_gain": 0.0058,
   "active": false
  }
 }
