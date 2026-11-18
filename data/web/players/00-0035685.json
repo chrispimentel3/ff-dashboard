@@ -20,20 +20,20 @@
     "slot": "BN",
     "waiver_until": null
   },
-  "nfl_status": "Inactive",
+  "nfl_status": "Active",
   "out_reason": null,
   "seasons": {
     "2026": {
       "games": 5,
       "pts_pg": 8.4,
-      "xfp_pg": 8.461400000000001,
-      "vs_exp_pg": -0.06140000000000043,
+      "xfp_pg": 8.1632,
+      "vs_exp_pg": 0.2367999999999995,
       "usage_label": "Carry share",
       "usage_value": 0.4444444444444444,
       "usage_fmt": "44%",
       "ranks": {
         "pts_pg": "#35 of 96",
-        "xfp_pg": "#34 of 94",
+        "xfp_pg": "#37 of 94",
         "rush_share": "#29 of 96"
       },
       "card": [
@@ -45,8 +45,8 @@
         },
         {
           "stat": "Expected pts/g",
-          "value_fmt": "8.5",
-          "pos_rank": "#34 of 94",
+          "value_fmt": "8.2",
+          "pos_rank": "#37 of 94",
           "means": "What his touches should score."
         },
         {
@@ -124,8 +124,8 @@
           "receiving_yards": 19,
           "receiving_tds": 1,
           "half_ppr": 27.4,
-          "xfp": 21.829,
-          "vs_exp": 5.570999999999998
+          "xfp": 20.994,
+          "vs_exp": 6.405999999999999
         },
         {
           "week": 2,
@@ -140,8 +140,8 @@
           "receiving_yards": 14,
           "receiving_tds": 0,
           "half_ppr": 3.4000000000000004,
-          "xfp": 5.026000000000001,
-          "vs_exp": -1.6260000000000003
+          "xfp": 4.901000000000001,
+          "vs_exp": -1.5010000000000003
         },
         {
           "week": 3,
@@ -156,8 +156,8 @@
           "receiving_yards": 15,
           "receiving_tds": 0,
           "half_ppr": 5.800000000000001,
-          "xfp": 7.315,
-          "vs_exp": -1.5149999999999997
+          "xfp": 7.153000000000001,
+          "vs_exp": -1.3530000000000006
         },
         {
           "week": 4,
@@ -172,8 +172,8 @@
           "receiving_yards": 19,
           "receiving_tds": 0,
           "half_ppr": 4.300000000000001,
-          "xfp": 5.604000000000001,
-          "vs_exp": -1.3040000000000003
+          "xfp": 5.32,
+          "vs_exp": -1.0199999999999996
         },
         {
           "week": 5,
@@ -188,8 +188,8 @@
           "receiving_yards": 0,
           "receiving_tds": 0,
           "half_ppr": 1.1,
-          "xfp": 2.5330000000000004,
-          "vs_exp": -1.4330000000000003
+          "xfp": 2.4479999999999995,
+          "vs_exp": -1.3479999999999994
         }
       ],
       "role": {
@@ -202,8 +202,8 @@
             "him": 0.037089598236555436,
             "role_avg": 0.08001022494887526,
             "vs_role": 46.35607293974596,
-            "nfl_avg": 0.05834179786693753,
-            "vs_nfl": 63.57294357151482,
+            "nfl_avg": 0.058330688670263406,
+            "vs_nfl": 63.58505116615135,
             "fmt": "{:.1%}"
           },
           {
@@ -262,11 +262,11 @@
           },
           {
             "metric": "xFP share",
-            "him": 0.08039611417898997,
-            "role_avg": 0.12739376804371644,
-            "vs_role": 63.1083571932665,
-            "nfl_avg": 0.08875627599268292,
-            "vs_nfl": 90.58076544989092,
+            "him": 0.07898760523609612,
+            "role_avg": 0.12564461874246088,
+            "vs_role": 62.86588795179551,
+            "nfl_avg": 0.08743429749270157,
+            "vs_nfl": 90.33938340122133,
             "fmt": "{:.1%}"
           }
         ]
@@ -279,24 +279,28 @@
         "out_reason": null,
         "projection": 12.6,
         "proj_source": "ffanalytics",
-        "matchup_mult": 1.119,
-        "matchup_pct": 11.9,
+        "matchup_mult": 1.117,
+        "matchup_pct": 11.7,
         "matchup_basis": "defense+vegas",
         "matchup_def_rank": 3,
         "matchup_def_pct": 8.3,
-        "matchup_vegas_pct": 6.9,
-        "matchup_baseline": 7.0,
-        "expected_pts": 7.8,
+        "matchup_vegas_pct": 6.7,
+        "matchup_baseline": 6.9,
+        "expected_pts": 7.7,
         "delta_pts": 0.8,
         "ml": {
-          "proj": 5.4,
-          "week": -0.9,
-          "call": "normal",
+          "proj": 9.3,
+          "week": 3.0,
+          "call": "good",
           "avg": 8.4,
           "why": [
             {
+              "label": "Teammates out",
+              "pts": 3.9
+            },
+            {
               "label": "Injury report",
-              "pts": -2.1
+              "pts": -2.3
             },
             {
               "label": "Vegas line",
