@@ -5,14 +5,14 @@
   "team": "IND",
   "last_team": null,
   "bio": {
-    "jersey_number": null,
-    "age": null,
-    "height": null,
-    "weight": null,
-    "college": null,
-    "draft_number": null,
-    "entry_year": null,
-    "headshot_url": null
+    "jersey_number": 5,
+    "age": 24,
+    "height": "6'4\"",
+    "weight": 244,
+    "college": "Florida",
+    "draft_number": 4,
+    "entry_year": 2023,
+    "headshot_url": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/wrddeyklfcgk9qybgofq"
   },
   "ownership": {
     "kind": "free_agent",
@@ -20,14 +20,14 @@
     "slot": null,
     "waiver_until": null
   },
-  "nfl_status": null,
+  "nfl_status": "Active",
   "out_reason": null,
   "seasons": {
     "2026": {
-      "games": 1,
-      "pts_pg": 0.72,
-      "xfp_pg": 1.2746,
-      "vs_exp_pg": -0.5546,
+      "games": 2,
+      "pts_pg": 0.45999999999999996,
+      "xfp_pg": 1.3009,
+      "vs_exp_pg": -0.8409,
       "usage_label": "Pass att/g",
       "usage_value": 2.0,
       "usage_fmt": "2.0",
@@ -39,7 +39,7 @@
       "card": [
         {
           "stat": "Pts/game",
-          "value_fmt": "0.7",
+          "value_fmt": "0.5",
           "pos_rank": "\u2014",
           "means": "Half-PPR fantasy points per game."
         },
@@ -57,7 +57,7 @@
         },
         {
           "stat": "Pass yds/g",
-          "value_fmt": "8",
+          "value_fmt": "4",
           "pos_rank": "\u2014",
           "means": ""
         },
@@ -69,37 +69,37 @@
         },
         {
           "stat": "Completion %",
-          "value_fmt": "100.0%",
+          "value_fmt": "50.0%",
           "pos_rank": "\u2014",
           "means": ""
         },
         {
           "stat": "CPOE",
-          "value_fmt": "+24.3",
+          "value_fmt": "-14.8",
           "pos_rank": "\u2014",
           "means": "Completion % over expected, given throw difficulty. Plus is accurate."
         },
         {
           "stat": "Yds/att",
-          "value_fmt": "4.0",
+          "value_fmt": "2.0",
           "pos_rank": "\u2014",
           "means": ""
         },
         {
           "stat": "EPA/dropback",
-          "value_fmt": "-1.25",
+          "value_fmt": "-1.09",
           "pos_rank": "\u2014",
           "means": "Points added per dropback, sacks included. Above +0.10 is good."
         },
         {
           "stat": "Carries/g",
-          "value_fmt": "2.0",
+          "value_fmt": "1.5",
           "pos_rank": "\u2014",
           "means": "Rushing volume \u2014 the fantasy QB cheat code."
         },
         {
           "stat": "Rush yds",
-          "value_fmt": "4",
+          "value_fmt": "6",
           "pos_rank": "\u2014",
           "means": ""
         },
@@ -131,40 +131,57 @@
           "rushing_yards": 4,
           "rushing_tds": 0,
           "half_ppr": 0.72,
-          "xfp": 1.2746,
-          "vs_exp": -0.5546
+          "xfp": 1.1582000000000001,
+          "vs_exp": -0.43820000000000014
+        },
+        {
+          "week": 11,
+          "game": "@ HOU",
+          "snap_pct": 0.06,
+          "completions": 0,
+          "attempts": 2,
+          "passing_yards": 0,
+          "passing_tds": 0,
+          "passing_interceptions": 0,
+          "sacks_suffered": 0,
+          "carries": 1,
+          "rushing_yards": 2,
+          "rushing_tds": 0,
+          "half_ppr": 0.2,
+          "xfp": 1.4436,
+          "vs_exp": -1.2436
         }
       ],
       "role": {
         "headline": "Backup QB",
-        "from_usage": false,
-        "games": 1,
+        "from_usage": true,
+        "games": 2,
         "rows": [
           {
             "metric": "carry share",
-            "him": 0.08535509077602996,
-            "role_avg": 0.1060373889059148,
-            "vs_role": 80.49527780409993,
-            "nfl_avg": 0.1097517730496454,
-            "vs_nfl": 77.77103586055071,
+            "him": 0.07753016874674772,
+            "role_avg": 0.10902047592695074,
+            "vs_role": 71.11523600272747,
+            "nfl_avg": 0.11078717201166181,
+            "vs_nfl": 69.9811786319328,
             "fmt": "{:.1%}"
           },
           {
             "metric": "snap %",
-            "him": 0.32538078616303784,
-            "role_avg": 0.6499413527955168,
-            "vs_role": 50.063099503288335,
-            "nfl_avg": 0.7792499438580732,
-            "vs_nfl": 41.755638062939695,
+            "him": 0.2256363517938767,
+            "role_avg": 0.654339434690574,
+            "vs_role": 34.48307404865126,
+            "nfl_avg": 0.7613326926157297,
+            "vs_nfl": 29.63702386385803,
             "fmt": "{:.1%}"
           },
           {
             "metric": "xFP share",
-            "him": 0.09646222408242483,
-            "role_avg": 0.1517180509034009,
-            "vs_role": 63.57992572936655,
-            "nfl_avg": 0.1890232196421085,
-            "vs_nfl": 51.03194425799318,
+            "him": 0.07897783988251839,
+            "role_avg": 0.15420737709528629,
+            "vs_role": 51.21534479749123,
+            "nfl_avg": 0.18559127203100795,
+            "vs_nfl": 42.55471661906765,
             "fmt": "{:.1%}"
           }
         ]
@@ -173,19 +190,19 @@
         "bye": false,
         "opponent": "HOU",
         "home": false,
-        "ease_rank": 10,
+        "ease_rank": 18,
         "out_reason": null,
         "projection": 0.5,
         "proj_source": "ffanalytics",
-        "matchup_mult": 0.862,
-        "matchup_pct": -13.8,
-        "matchup_basis": "defense+vegas",
-        "matchup_def_rank": 30,
-        "matchup_def_pct": -15.0,
-        "matchup_vegas_pct": -9.6,
-        "matchup_baseline": 1.0,
-        "expected_pts": 0.8,
-        "delta_pts": -0.1
+        "matchup_mult": null,
+        "matchup_pct": null,
+        "matchup_basis": null,
+        "matchup_def_rank": null,
+        "matchup_def_pct": null,
+        "matchup_vegas_pct": null,
+        "matchup_baseline": null,
+        "expected_pts": null,
+        "delta_pts": null
       }
     },
     "2025": {
