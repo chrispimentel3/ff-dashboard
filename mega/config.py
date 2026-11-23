@@ -22,8 +22,8 @@ TEAM_BY_SEAT = {
     1: "deez nuts",
     2: "Burrow-Chase combo",   # was "TyRick Hill"; confirmed by 13 of 15 draft picks still on that roster (2026-09-18)
     3: "Undisputed",
-    4: "Heartbreak Drake",
-    5: "L'Omar",
+    4: "MAYE DAY MAYE DAY",        # was "Heartbreak Drake"; confirmed by 10 of 15 draft picks still on that roster (2026-11-22)
+    5: "L'OL",                     # was "L'Omar", renamed Nov 18-22 2026 (its whole roster moved across)
     6: "Allen Moore connection",   # was "Barkley’s Balls Deep" (Andrew), renamed 2026-10-01
     7: "Saquon Hater",             # was "Saquon Enjoyer" and before that "A Place in the Hampton" (Alex), renamed 2026-10-05
     8: "TaylorMade",
@@ -41,6 +41,8 @@ FORMER_NAMES = {
     "Barkley's Balls Deep": 6,
     "A Place in the Hampton": 7,
     "Saquon Enjoyer": 7,
+    "Heartbreak Drake": 4,
+    "L'Omar": 5,
 }
 # Manager names as the standings page shows them. Teams get renamed; managers haven't,
 # so this is what pins a renamed team to its seat (mega/teams.py).
