@@ -26,8 +26,8 @@
     "2026": {
       "games": 1,
       "pts_pg": 10.7,
-      "xfp_pg": null,
-      "vs_exp_pg": null,
+      "xfp_pg": 11.449000000000002,
+      "vs_exp_pg": -0.7490000000000023,
       "usage_label": "Pass att/g",
       "usage_value": 31.0,
       "usage_fmt": "31.0",
@@ -45,7 +45,7 @@
         },
         {
           "stat": "Expected pts/g",
-          "value_fmt": "\u2014",
+          "value_fmt": "11.4",
           "pos_rank": "\u2014",
           "means": "What his volume should score."
         },
@@ -120,7 +120,7 @@
         {
           "week": 11,
           "game": "@ KC",
-          "snap_pct": null,
+          "snap_pct": 1.0,
           "completions": 18,
           "attempts": 31,
           "passing_yards": 155,
@@ -131,8 +131,8 @@
           "rushing_yards": 5,
           "rushing_tds": 0,
           "half_ppr": 10.7,
-          "xfp": null,
-          "vs_exp": null
+          "xfp": 11.449000000000002,
+          "vs_exp": -0.7490000000000023
         }
       ],
       "role": {
@@ -142,11 +142,29 @@
         "rows": [
           {
             "metric": "carry share",
-            "him": 0.09986129888688854,
-            "role_avg": 0.10902047592695074,
-            "vs_role": 91.59866349675512,
-            "nfl_avg": 0.11078717201166181,
-            "vs_nfl": 90.13796189000729,
+            "him": 0.09981188371243703,
+            "role_avg": 0.10887316276537834,
+            "vs_role": 91.67721518987341,
+            "nfl_avg": 0.11009018206567976,
+            "vs_nfl": 90.66374661174537,
+            "fmt": "{:.1%}"
+          },
+          {
+            "metric": "snap %",
+            "him": 0.9043672033508868,
+            "role_avg": 0.650555041628122,
+            "vs_role": 139.01470982187112,
+            "nfl_avg": 0.7668702838663313,
+            "vs_nfl": 117.92961891694864,
+            "fmt": "{:.1%}"
+          },
+          {
+            "metric": "xFP share",
+            "him": 0.17426490798149907,
+            "role_avg": 0.15229305982239127,
+            "vs_role": 114.42734697479453,
+            "nfl_avg": 0.18683597799745108,
+            "vs_nfl": 93.27160103172231,
             "fmt": "{:.1%}"
           }
         ]

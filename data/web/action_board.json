@@ -5,21 +5,6 @@
   "xfp_available": true,
   "shop": [
     {
-      "player": "Christian McCaffrey",
-      "pos": "RB",
-      "slot": "RB",
-      "half_ppr_pg": 21.4444444444,
-      "proj_pg": 18.18,
-      "per_g": -3.2644444444,
-      "tgt_pct": 0.137254902,
-      "tm_rank": 3.0,
-      "why": "scoring 21.4/g, we project 18.2/g from here; only 14% of targets; #3 option on his own offense",
-      "timing": {
-        "call": "now",
-        "why": "sell now: his value is at its season high and his schedule doesn't change"
-      }
-    },
-    {
       "player": "Christian Watson",
       "pos": "WR",
       "slot": "BN",
@@ -32,6 +17,21 @@
       "timing": {
         "call": "hold",
         "why": "no rush: his value isn't at its high and his schedule is flat"
+      }
+    },
+    {
+      "player": "Christian McCaffrey",
+      "pos": "RB",
+      "slot": "RB",
+      "half_ppr_pg": 20.62,
+      "proj_pg": 18.18,
+      "per_g": -2.44,
+      "tgt_pct": 0.1298701299,
+      "tm_rank": 3.0,
+      "why": "scoring 20.6/g, we project 18.2/g from here; only 13% of targets; #3 option on his own offense",
+      "timing": {
+        "call": "now",
+        "why": "sell now: his value is at its season high and his schedule doesn't change"
       }
     }
   ],
@@ -46,23 +46,34 @@
       "tgt_pct": 0.1111111111,
       "tm_rank": 3.0,
       "why": "scoring 6.2/g, we project 8.7/g from here"
+    },
+    {
+      "player": "Kaelon Black",
+      "pos": "RB",
+      "slot": "BN",
+      "half_ppr_pg": 5.18,
+      "proj_pg": 7.4,
+      "per_g": 2.22,
+      "tgt_pct": 0.038961039,
+      "tm_rank": 8.0,
+      "why": "scoring 5.2/g, we project 7.4/g from here"
     }
   ],
   "waivers": [],
   "trades": [
     {
       "partner": "Don R.I.C.O",
-      "give": "Breece Hall (RB) + Christian Watson (WR)",
-      "give_val": 24.9,
+      "give": "Malik Nabers (WR) + Christian Watson (WR)",
+      "give_val": 25.1,
       "get": "Jaxon Smith-Njigba (WR)",
       "get_val": 19.5,
       "addresses": "consolidation",
-      "fairness": 0.9,
-      "d_title": 0.0435,
-      "thesis": "Two for one: -5.2 this week, but +2.87 pts/wk over the weeks that count most \u2014 already net of picking up Bryce Young, which you could do anyway.",
-      "d_me": 2.87,
-      "p_accept": 0.486,
-      "flag": "EXPLOIT",
+      "fairness": 0.99,
+      "d_title": 0.0373,
+      "thesis": "Two for one: -5.1 this week, but +2.09 pts/wk over the weeks that count most \u2014 already net of picking up Bryce Young, which you could do anyway.",
+      "d_me": 2.09,
+      "p_accept": 0.624,
+      "flag": "LIKELY",
       "sits_for_them": []
     },
     {
@@ -72,11 +83,26 @@
       "get": "James Cook III (RB)",
       "get_val": 17.0,
       "addresses": "lineup",
-      "fairness": 0.81,
+      "fairness": 0.82,
       "d_title": 0.0302,
-      "thesis": "James Cook III starts for you over Breece Hall: +2.15 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 2.15,
-      "p_accept": 0.466,
+      "thesis": "James Cook III starts for you over Breece Hall: +2.07 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 2.07,
+      "p_accept": 0.473,
+      "flag": "EXPLOIT",
+      "sits_for_them": []
+    },
+    {
+      "partner": "BillsMafia",
+      "give": "Breece Hall (RB)",
+      "give_val": 12.3,
+      "get": "D'Andre Swift (RB)",
+      "get_val": 15.6,
+      "addresses": "lineup",
+      "fairness": 0.79,
+      "d_title": 0.0282,
+      "thesis": "D'Andre Swift starts for you over Breece Hall: +4.09 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 4.09,
+      "p_accept": 0.365,
       "flag": "EXPLOIT",
       "sits_for_them": []
     },
@@ -87,11 +113,11 @@
       "get": "Jahmyr Gibbs (RB)",
       "get_val": 22.4,
       "addresses": "lineup",
-      "fairness": 0.94,
-      "d_title": 0.0295,
-      "thesis": "Jahmyr Gibbs starts for you over Christian McCaffrey: +3.55 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 3.55,
-      "p_accept": 0.26,
+      "fairness": 0.92,
+      "d_title": 0.026,
+      "thesis": "Jahmyr Gibbs starts for you over Christian McCaffrey: +3.51 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 3.51,
+      "p_accept": 0.251,
       "flag": "NEEDS_PITCH",
       "sits_for_them": []
     },
@@ -102,32 +128,17 @@
       "get": "Caleb Williams (QB)",
       "get_val": 20.2,
       "addresses": "consolidation",
-      "fairness": 0.97,
-      "d_title": 0.0303,
-      "thesis": "Two for one: -0.5 this week, but +2.80 pts/wk over the weeks that count most \u2014 already net of picking up Bryce Young, which you could do anyway.",
-      "d_me": 2.8,
-      "p_accept": 0.146,
+      "fairness": 0.91,
+      "d_title": 0.0345,
+      "thesis": "Two for one: -0.5 this week, but +2.91 pts/wk over the weeks that count most \u2014 already net of picking up Bryce Young, which you could do anyway.",
+      "d_me": 2.91,
+      "p_accept": 0.122,
       "flag": "LONGSHOT",
-      "sits_for_them": []
-    },
-    {
-      "partner": "L'OL",
-      "give": "Denzel Boston (WR)",
-      "give_val": 9.2,
-      "get": "Carnell Tate (WR)",
-      "get_val": 10.8,
-      "addresses": "lineup",
-      "fairness": 0.9,
-      "d_title": 0.011,
-      "thesis": "Carnell Tate starts for you over Emeka Egbuka: +1.37 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 1.37,
-      "p_accept": 0.275,
-      "flag": "NEEDS_PITCH",
       "sits_for_them": []
     }
   ],
   "roster_src": "scraped Yahoo rosters",
-  "yahoo_pulled_at": "2026-11-23T01:37:30+00:00",
+  "yahoo_pulled_at": "2026-11-23T12:13:46+00:00",
   "season": 2026,
   "week": 11,
   "next_week": 11
