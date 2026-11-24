@@ -295,11 +295,11 @@
         "rows": [
           {
             "metric": "carry share",
-            "him": 0.09595600572741522,
-            "role_avg": 0.112119836586473,
-            "vs_role": 85.58343344837884,
-            "nfl_avg": 0.11009018206567976,
-            "vs_nfl": 87.16127444513437,
+            "him": 0.09598384199255026,
+            "role_avg": 0.11242603550295859,
+            "vs_role": 85.37510156179471,
+            "nfl_avg": 0.11037414965986395,
+            "vs_nfl": 86.96224821513029,
             "fmt": "{:.1%}"
           },
           {
@@ -307,56 +307,60 @@
             "him": 0.22819156152489486,
             "role_avg": 0.24786324786324787,
             "vs_role": 92.06349206349206,
-            "nfl_avg": 0.25098039215686274,
-            "vs_nfl": 90.9200752950753,
+            "nfl_avg": 0.25196850393700787,
+            "vs_nfl": 90.56352598019265,
             "fmt": "{:.1%}"
           },
           {
             "metric": "snap %",
-            "him": 0.9460726230518147,
-            "role_avg": 0.9578507689386747,
-            "vs_role": 98.77035690017658,
-            "nfl_avg": 0.7668702838663313,
-            "vs_nfl": 123.36801189922222,
+            "him": 0.9461191652207558,
+            "role_avg": 0.9584597875569044,
+            "vs_role": 98.71245278139371,
+            "nfl_avg": 0.7671862653545004,
+            "vs_nfl": 123.32326684492641,
             "fmt": "{:.1%}"
           },
           {
             "metric": "xFP share",
-            "him": 0.22620904455903876,
-            "role_avg": 0.2407222997016338,
-            "vs_role": 93.97095526231526,
-            "nfl_avg": 0.18683597799745108,
-            "vs_nfl": 121.07359994771716,
+            "him": 0.2260988117185609,
+            "role_avg": 0.2402221929583029,
+            "vs_role": 94.12070089536086,
+            "nfl_avg": 0.18587645279838708,
+            "vs_nfl": 121.63929767037325,
             "fmt": "{:.1%}"
           }
         ]
       },
       "this_week": {
         "bye": false,
-        "opponent": "PHI",
-        "home": false,
-        "ease_rank": 10,
+        "opponent": "DEN",
+        "home": true,
+        "ease_rank": 12,
         "out_reason": null,
-        "projection": 14.6,
-        "proj_source": "ffanalytics",
-        "matchup_mult": null,
-        "matchup_pct": null,
-        "matchup_basis": null,
-        "matchup_def_rank": null,
-        "matchup_def_pct": null,
-        "matchup_vegas_pct": null,
-        "matchup_baseline": null,
-        "expected_pts": null,
-        "delta_pts": null,
+        "projection": 14.4,
+        "proj_source": "nflverse-est",
+        "matchup_mult": 0.934,
+        "matchup_pct": -6.6,
+        "matchup_basis": "defense+vegas",
+        "matchup_def_rank": 18,
+        "matchup_def_pct": -1.8,
+        "matchup_vegas_pct": -6.1,
+        "matchup_baseline": 14.4,
+        "expected_pts": 13.5,
+        "delta_pts": -1.0,
         "ml": {
-          "proj": 13.6,
+          "proj": 12.9,
           "week": -1.2,
           "call": "bad",
-          "avg": 15.4,
+          "avg": 15.5,
           "why": [
             {
               "label": "Vegas line",
-              "pts": -1.0
+              "pts": -2.2
+            },
+            {
+              "label": "Game setting",
+              "pts": 0.8
             }
           ]
         }

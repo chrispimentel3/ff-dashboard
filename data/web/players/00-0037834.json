@@ -33,7 +33,7 @@
       "usage_fmt": "29.0",
       "ranks": {
         "pts_pg": "#3 of 31",
-        "xfp_pg": "#12 of 31",
+        "xfp_pg": "#11 of 31",
         "att_pg": "#23 of 31"
       },
       "card": [
@@ -46,7 +46,7 @@
         {
           "stat": "Expected pts/g",
           "value_fmt": "18.9",
-          "pos_rank": "#12 of 31",
+          "pos_rank": "#11 of 31",
           "means": "What his volume should score."
         },
         {
@@ -295,11 +295,11 @@
         "rows": [
           {
             "metric": "carry share",
-            "him": 0.0940468384862393,
-            "role_avg": 0.112119836586473,
-            "vs_role": 83.88064177537862,
-            "nfl_avg": 0.11009018206567976,
-            "vs_nfl": 85.42708961107085,
+            "him": 0.094071882533421,
+            "role_avg": 0.11242603550295859,
+            "vs_role": 83.67446393762182,
+            "nfl_avg": 0.11037414965986395,
+            "vs_nfl": 85.2299952691087,
             "fmt": "{:.1%}"
           },
           {
@@ -307,60 +307,64 @@
             "him": 0.23344660694058283,
             "role_avg": 0.24786324786324787,
             "vs_role": 94.18363107602825,
-            "nfl_avg": 0.25098039215686274,
-            "vs_nfl": 93.01388245288848,
+            "nfl_avg": 0.25196850393700787,
+            "vs_nfl": 92.64912212954381,
             "fmt": "{:.1%}"
           },
           {
             "metric": "snap %",
-            "him": 0.9538181699197636,
-            "role_avg": 0.9578507689386747,
-            "vs_role": 99.57899506377395,
-            "nfl_avg": 0.7668702838663313,
-            "vs_nfl": 124.37803237216298,
+            "him": 0.953864211814585,
+            "role_avg": 0.9584597875569044,
+            "vs_role": 99.52052492947739,
+            "nfl_avg": 0.7671862653545004,
+            "vs_nfl": 124.33280611115016,
             "fmt": "{:.1%}"
           },
           {
             "metric": "xFP share",
-            "him": 0.23110228118725765,
-            "role_avg": 0.2407222997016338,
-            "vs_role": 96.003686186822,
-            "nfl_avg": 0.18683597799745108,
-            "vs_nfl": 123.6926012132473,
+            "him": 0.23099851959515522,
+            "role_avg": 0.2402221929583029,
+            "vs_role": 96.16035752169297,
+            "nfl_avg": 0.18587645279838708,
+            "vs_nfl": 124.27530013482144,
             "fmt": "{:.1%}"
           }
         ]
       },
       "this_week": {
         "bye": false,
-        "opponent": "MIN",
+        "opponent": "SEA",
         "home": true,
-        "ease_rank": 32,
+        "ease_rank": 31,
         "out_reason": null,
-        "projection": 17.6,
-        "proj_source": "ffanalytics",
-        "matchup_mult": null,
-        "matchup_pct": null,
-        "matchup_basis": null,
-        "matchup_def_rank": null,
-        "matchup_def_pct": null,
-        "matchup_vegas_pct": null,
-        "matchup_baseline": null,
-        "expected_pts": null,
-        "delta_pts": null,
+        "projection": 22.4,
+        "proj_source": "nflverse-est",
+        "matchup_mult": 0.931,
+        "matchup_pct": -6.9,
+        "matchup_basis": "defense+vegas",
+        "matchup_def_rank": 30,
+        "matchup_def_pct": -16.7,
+        "matchup_vegas_pct": -1.9,
+        "matchup_baseline": 22.4,
+        "expected_pts": 20.9,
+        "delta_pts": -1.5,
         "ml": {
-          "proj": 20.0,
-          "week": -2.0,
+          "proj": 19.4,
+          "week": -2.5,
           "call": "bad",
-          "avg": 23.1,
+          "avg": 23.0,
           "why": [
             {
               "label": "Vegas line",
-              "pts": -2.1
+              "pts": -1.4
             },
             {
               "label": "Game setting",
-              "pts": 0.3
+              "pts": -0.6
+            },
+            {
+              "label": "Opposing defense",
+              "pts": -0.4
             }
           ]
         }

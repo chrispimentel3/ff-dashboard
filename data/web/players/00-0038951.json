@@ -199,77 +199,97 @@
         "rows": [
           {
             "metric": "target share",
-            "him": 0.005583376734372288,
-            "role_avg": 0.022629969418960245,
+            "him": 0.00572812509685204,
+            "role_avg": 0.023216648622639238,
             "vs_role": 24.672489082969438,
-            "nfl_avg": 0.05647279549718574,
-            "vs_nfl": 9.886843187443288,
+            "nfl_avg": 0.0566862279935073,
+            "vs_nfl": 10.1049678195348,
             "fmt": "{:.1%}"
           },
           {
             "metric": "1D per touch",
-            "him": 0.19516952742745677,
-            "role_avg": 0.19805589307411908,
-            "vs_role": 98.54265096490609,
-            "nfl_avg": 0.23448905109489052,
-            "vs_nfl": 83.23182959552241,
+            "him": 0.19821080872522365,
+            "role_avg": 0.20140515222482436,
+            "vs_role": 98.41397130891919,
+            "nfl_avg": 0.2358447488584475,
+            "vs_nfl": 84.0429179299593,
             "fmt": "{:.3f}"
           },
           {
             "metric": "carry share",
-            "him": 0.07142034852878226,
-            "role_avg": 0.09824109824109824,
-            "vs_role": 72.69905345877356,
-            "nfl_avg": 0.26632439077301323,
-            "vs_nfl": 26.817051311553893,
+            "him": 0.07155438075168329,
+            "role_avg": 0.10054999294880834,
+            "vs_role": 71.16298932821687,
+            "nfl_avg": 0.266005932142082,
+            "vs_nfl": 26.899543245322768,
             "fmt": "{:.1%}"
           },
           {
             "metric": "inside-10 share",
-            "him": 0.18846213652620122,
-            "role_avg": 0.21100917431192662,
-            "vs_role": 89.31466470154753,
-            "nfl_avg": 0.42292490118577075,
-            "vs_nfl": 44.56160798236347,
+            "him": 0.19274910693927186,
+            "role_avg": 0.21973094170403587,
+            "vs_role": 87.72051193358699,
+            "nfl_avg": 0.42513368983957217,
+            "vs_nfl": 45.33846917942621,
             "fmt": "{:.1%}"
           },
           {
             "metric": "snap %",
-            "him": 0.06809820821050189,
-            "role_avg": 0.15861141955467242,
-            "vs_role": 42.933988234705154,
-            "nfl_avg": 0.32863905677792005,
-            "vs_nfl": 20.721276673003505,
+            "him": 0.06839369053859341,
+            "role_avg": 0.16258992805755396,
+            "vs_role": 42.06514595072781,
+            "nfl_avg": 0.32838308383679055,
+            "vs_nfl": 20.82740978600034,
             "fmt": "{:.1%}"
           },
           {
             "metric": "xFP share",
-            "him": 0.03542966391008023,
-            "role_avg": 0.03129132531382247,
-            "vs_role": 113.22519437816752,
-            "nfl_avg": 0.0861533135388538,
-            "vs_nfl": 41.123971272564,
+            "him": 0.03570860946797638,
+            "role_avg": 0.032403539637108424,
+            "vs_role": 110.19971851187209,
+            "nfl_avg": 0.08621452838279113,
+            "vs_nfl": 41.418320250423136,
             "fmt": "{:.1%}"
           }
         ]
       },
       "this_week": {
         "bye": false,
-        "opponent": "DET",
-        "home": false,
-        "ease_rank": 28,
+        "opponent": "CAR",
+        "home": true,
+        "ease_rank": 3,
         "out_reason": null,
-        "projection": 1.2,
-        "proj_source": "ffanalytics",
-        "matchup_mult": null,
-        "matchup_pct": null,
-        "matchup_basis": null,
-        "matchup_def_rank": null,
-        "matchup_def_pct": null,
-        "matchup_vegas_pct": null,
-        "matchup_baseline": null,
-        "expected_pts": null,
-        "delta_pts": null
+        "projection": 4.2,
+        "proj_source": "nflverse-est",
+        "matchup_mult": 1.076,
+        "matchup_pct": 7.6,
+        "matchup_basis": "defense+vegas",
+        "matchup_def_rank": 6,
+        "matchup_def_pct": 7.0,
+        "matchup_vegas_pct": 3.5,
+        "matchup_baseline": 4.2,
+        "expected_pts": 4.5,
+        "delta_pts": 0.3,
+        "ml": {
+          "proj": 2.8,
+          "week": -0.4,
+          "call": "normal",
+          "avg": 6.7,
+          "why": [
+            {
+              "label": "Injury report",
+              "pts": -1.3
+            },
+            {
+              "label": "Vegas line",
+              "pts": 1.2
+            },
+            {
+              "label": "Teammates out",
+              "pts": -0.5
+            }
+          ]
+        }
       }
     },
     "2025": {

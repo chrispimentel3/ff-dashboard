@@ -217,95 +217,115 @@
         "rows": [
           {
             "metric": "target share",
-            "him": 0.015873867285018824,
-            "role_avg": 0.05310256662405349,
-            "vs_role": 29.892843781732672,
-            "nfl_avg": 0.078678763821945,
-            "vs_nfl": 20.175542311445547,
+            "him": 0.015957997792161286,
+            "role_avg": 0.0536185174333431,
+            "vs_role": 29.762101893249437,
+            "nfl_avg": 0.07871349978840457,
+            "vs_nfl": 20.273520851009206,
             "fmt": "{:.1%}"
           },
           {
             "metric": "air-yards share",
-            "him": 0.013124724212445068,
-            "role_avg": 0.03956808979185906,
-            "vs_role": 33.16997176635354,
-            "nfl_avg": 0.05842675523603794,
-            "vs_nfl": 22.46355143191259,
+            "him": 0.013342517020457119,
+            "role_avg": 0.04078638147613537,
+            "vs_role": 32.71316684041705,
+            "nfl_avg": 0.05973432243595273,
+            "vs_nfl": 22.336433186737814,
             "fmt": "{:.1%}"
           },
           {
             "metric": "1D per target",
-            "him": 0.3916456759026029,
-            "role_avg": 0.37592592592592594,
-            "vs_role": 104.18160836818008,
-            "nfl_avg": 0.34144144144144145,
-            "vs_nfl": 114.70361484218712,
+            "him": 0.39451624891605075,
+            "role_avg": 0.3788706739526412,
+            "vs_role": 104.12952916101533,
+            "nfl_avg": 0.3449820788530466,
+            "vs_nfl": 114.35847630917212,
             "fmt": "{:.3f}"
           },
           {
             "metric": "TPRR (est.)",
-            "him": 0.09578976655208477,
-            "role_avg": 0.13102407446049624,
-            "vs_role": 73.10852371711687,
-            "nfl_avg": 0.1481611993849308,
-            "vs_nfl": 64.65239681491629,
+            "him": 0.09759874308927453,
+            "role_avg": 0.1338100774343563,
+            "vs_role": 72.93826067558619,
+            "nfl_avg": 0.15030930584307226,
+            "vs_nfl": 64.9319365436833,
             "fmt": "{:.3f}"
           },
           {
             "metric": "1D/RR (est.)",
-            "him": 0.04036202250496001,
-            "role_avg": 0.04925534651014951,
-            "vs_role": 81.94444941452812,
-            "nfl_avg": 0.05058837348368358,
-            "vs_nfl": 79.78517537824793,
+            "him": 0.04111799191215268,
+            "role_avg": 0.05069671421920967,
+            "vs_role": 81.10583209468143,
+            "nfl_avg": 0.051854016800701445,
+            "vs_nfl": 79.29567360265996,
             "fmt": "{:.3f}"
           },
           {
             "metric": "aDOT",
-            "him": 6.205442176870748,
-            "role_avg": 6.188888888888889,
-            "vs_role": 100.26746784889897,
-            "nfl_avg": 6.164864864864865,
-            "vs_nfl": 100.65820278133174,
+            "him": 6.243448198951713,
+            "role_avg": 6.2276867030965395,
+            "vs_role": 100.25308748828577,
+            "nfl_avg": 6.205197132616488,
+            "vs_nfl": 100.61643595711352,
             "fmt": "{:.1f}"
           },
           {
             "metric": "snap %",
-            "him": 0.22650322449217467,
-            "role_avg": 0.3456923221149339,
-            "vs_role": 65.52162428903125,
-            "nfl_avg": 0.4522563877544132,
-            "vs_nfl": 50.082924337858486,
+            "him": 0.22646365942759075,
+            "role_avg": 0.3451352235041338,
+            "vs_role": 65.61592210969401,
+            "nfl_avg": 0.4514543495825478,
+            "vs_nfl": 50.16313601519132,
             "fmt": "{:.1%}"
           },
           {
             "metric": "xFP share",
-            "him": 0.01784239344443069,
-            "role_avg": 0.03303299870326984,
-            "vs_role": 54.013847197785665,
-            "nfl_avg": 0.04737289987585863,
-            "vs_nfl": 37.6637138346754,
+            "him": 0.017861736884320273,
+            "role_avg": 0.033118254789625545,
+            "vs_role": 53.933206921022744,
+            "nfl_avg": 0.04742095742469845,
+            "vs_nfl": 37.666335422863625,
             "fmt": "{:.1%}"
           }
         ]
       },
       "this_week": {
         "bye": false,
-        "opponent": "PIT",
-        "home": true,
-        "ease_rank": 20,
+        "opponent": "DAL",
+        "home": false,
+        "ease_rank": 18,
         "out_reason": null,
-        "projection": 1.5,
-        "proj_source": "ffanalytics",
-        "matchup_mult": null,
-        "matchup_pct": null,
-        "matchup_basis": null,
-        "matchup_def_rank": null,
-        "matchup_def_pct": null,
-        "matchup_vegas_pct": null,
-        "matchup_baseline": null,
-        "expected_pts": null,
-        "delta_pts": null
+        "projection": 1.4,
+        "proj_source": "nflverse-est",
+        "matchup_mult": 1.015,
+        "matchup_pct": 1.5,
+        "matchup_basis": "defense+vegas",
+        "matchup_def_rank": 17,
+        "matchup_def_pct": -0.5,
+        "matchup_vegas_pct": 1.6,
+        "matchup_baseline": 1.4,
+        "expected_pts": 1.5,
+        "delta_pts": 0.0,
+        "ml": {
+          "proj": 0.4,
+          "week": 0.1,
+          "call": "normal",
+          "avg": 1.8,
+          "why": [
+            {
+              "label": "Teammates out",
+              "pts": -0.8
+            },
+            {
+              "label": "Vegas line",
+              "pts": 0.5
+            },
+            {
+              "label": "Game setting",
+              "pts": 0.5
+            }
+          ]
+        }
       }
     },
     "2025": {
