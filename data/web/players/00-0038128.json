@@ -15,10 +15,10 @@
     "headshot_url": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/earybrx24kkhnk4innsw"
   },
   "ownership": {
-    "kind": "waivers",
+    "kind": "free_agent",
     "team": null,
     "slot": null,
-    "waiver_until": "Nov 25"
+    "waiver_until": null
   },
   "nfl_status": "Reserve / IR",
   "out_reason": null,
@@ -26,8 +26,8 @@
     "2026": {
       "games": 8,
       "pts_pg": 13.879999999999999,
-      "xfp_pg": 14.690425000000001,
-      "vs_exp_pg": -0.8104250000000022,
+      "xfp_pg": 14.674199999999999,
+      "vs_exp_pg": -0.7942,
       "usage_label": "Pass att/g",
       "usage_value": 26.0,
       "usage_fmt": "26.0",
@@ -131,8 +131,8 @@
           "rushing_yards": 39,
           "rushing_tds": 1,
           "half_ppr": 17.700000000000003,
-          "xfp": 13.947,
-          "vs_exp": 3.7530000000000037
+          "xfp": 13.9744,
+          "vs_exp": 3.7256000000000036
         },
         {
           "week": 2,
@@ -148,8 +148,8 @@
           "rushing_yards": 6,
           "rushing_tds": 0,
           "half_ppr": 12.479999999999999,
-          "xfp": 7.682,
-          "vs_exp": 4.797999999999998
+          "xfp": 7.714,
+          "vs_exp": 4.765999999999998
         },
         {
           "week": 3,
@@ -165,8 +165,8 @@
           "rushing_yards": 56,
           "rushing_tds": 0,
           "half_ppr": 11.0,
-          "xfp": 24.0718,
-          "vs_exp": -13.0718
+          "xfp": 23.993,
+          "vs_exp": -12.992999999999999
         },
         {
           "week": 4,
@@ -182,8 +182,8 @@
           "rushing_yards": 11,
           "rushing_tds": 0,
           "half_ppr": 2.5,
-          "xfp": 7.006399999999999,
-          "vs_exp": -4.506399999999999
+          "xfp": 7.0246,
+          "vs_exp": -4.5246
         },
         {
           "week": 5,
@@ -199,8 +199,8 @@
           "rushing_yards": 74,
           "rushing_tds": 1,
           "half_ppr": 20.880000000000003,
-          "xfp": 26.0916,
-          "vs_exp": -5.211599999999997
+          "xfp": 25.9848,
+          "vs_exp": -5.104799999999997
         },
         {
           "week": 7,
@@ -216,8 +216,8 @@
           "rushing_yards": 37,
           "rushing_tds": 1,
           "half_ppr": 26.02,
-          "xfp": 14.2818,
-          "vs_exp": 11.738199999999999
+          "xfp": 14.329,
+          "vs_exp": 11.690999999999999
         },
         {
           "week": 8,
@@ -233,8 +233,8 @@
           "rushing_yards": 2,
           "rushing_tds": 0,
           "half_ppr": 15.639999999999997,
-          "xfp": 14.724,
-          "vs_exp": 0.9159999999999968
+          "xfp": 14.716800000000001,
+          "vs_exp": 0.923199999999996
         },
         {
           "week": 9,
@@ -250,8 +250,8 @@
           "rushing_yards": 7,
           "rushing_tds": 0,
           "half_ppr": 4.82,
-          "xfp": 9.718800000000003,
-          "vs_exp": -4.898800000000003
+          "xfp": 9.657,
+          "vs_exp": -4.837
         }
       ],
       "role": {
@@ -270,11 +270,11 @@
           },
           {
             "metric": "inside-10 share",
-            "him": 0.22419186652763295,
-            "role_avg": 0.25547445255474455,
-            "vs_role": 87.75510204081631,
-            "nfl_avg": 0.25196850393700787,
-            "vs_nfl": 88.97614702815433,
+            "him": 0.22491944146079482,
+            "role_avg": 0.2571428571428571,
+            "vs_role": 87.468671679198,
+            "nfl_avg": 0.2529182879377432,
+            "vs_nfl": 88.92968685449888,
             "fmt": "{:.1%}"
           },
           {
@@ -288,11 +288,11 @@
           },
           {
             "metric": "xFP share",
-            "him": 0.22505870312876075,
-            "role_avg": 0.15115320270951008,
-            "vs_role": 148.89443233385143,
-            "nfl_avg": 0.18587645279838708,
-            "vs_nfl": 121.07972781946359,
+            "him": 0.22501631810613176,
+            "role_avg": 0.1522215186716773,
+            "vs_role": 147.82162211340415,
+            "nfl_avg": 0.18660498352254343,
+            "vs_nfl": 120.58430265821274,
             "fmt": "{:.1%}"
           }
         ]
@@ -305,15 +305,15 @@
         "out_reason": null,
         "projection": 13.1,
         "proj_source": "nflverse-est",
-        "matchup_mult": 1.073,
-        "matchup_pct": 7.3,
+        "matchup_mult": 1.068,
+        "matchup_pct": 6.8,
         "matchup_basis": "defense+vegas",
         "matchup_def_rank": 9,
         "matchup_def_pct": 10.4,
-        "matchup_vegas_pct": 4.3,
+        "matchup_vegas_pct": 3.8,
         "matchup_baseline": 13.1,
         "expected_pts": 14.0,
-        "delta_pts": 1.0
+        "delta_pts": 0.9
       }
     },
     "2025": {
@@ -380,7 +380,7 @@
         },
         {
           "stat": "EPA/dropback",
-          "value_fmt": "+0.74",
+          "value_fmt": "+0.54",
           "pos_rank": "\u2014",
           "means": "Points added per dropback, sacks included. Above +0.10 is good."
         },

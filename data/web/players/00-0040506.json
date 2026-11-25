@@ -15,9 +15,9 @@
     "headshot_url": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/zsjrzuziooij49ubg0lx"
   },
   "ownership": {
-    "kind": "other_team",
-    "team": "MAYE DAY MAYE DAY",
-    "slot": "BN",
+    "kind": "free_agent",
+    "team": null,
+    "slot": null,
     "waiver_until": null
   },
   "nfl_status": "Active",
@@ -26,8 +26,8 @@
     "2026": {
       "games": 10,
       "pts_pg": 2.81,
-      "xfp_pg": 2.0903,
-      "vs_exp_pg": 0.7196999999999999,
+      "xfp_pg": 2.0774,
+      "vs_exp_pg": 0.7326,
       "usage_label": "Target share",
       "usage_value": 0.05985915492957746,
       "usage_fmt": "6.0%",
@@ -172,8 +172,8 @@
           "receiving_air_yards": 2,
           "receiving_yards_after_catch": 0,
           "half_ppr": 0.0,
-          "xfp": 0.899,
-          "vs_exp": -0.899
+          "xfp": 0.88,
+          "vs_exp": -0.88
         },
         {
           "week": 3,
@@ -206,8 +206,8 @@
           "receiving_air_yards": 2,
           "receiving_yards_after_catch": 4,
           "half_ppr": 1.8,
-          "xfp": 2.8500000000000005,
-          "vs_exp": -1.0500000000000005
+          "xfp": 2.8350000000000004,
+          "vs_exp": -1.0350000000000004
         },
         {
           "week": 5,
@@ -223,8 +223,8 @@
           "receiving_air_yards": -7,
           "receiving_yards_after_catch": 21,
           "half_ppr": 1.5,
-          "xfp": 4.131,
-          "vs_exp": -2.6310000000000002
+          "xfp": 4.068,
+          "vs_exp": -2.5679999999999996
         },
         {
           "week": 7,
@@ -274,8 +274,8 @@
           "receiving_air_yards": 73,
           "receiving_yards_after_catch": 1,
           "half_ppr": 1.1,
-          "xfp": 5.622,
-          "vs_exp": -4.522
+          "xfp": 5.6000000000000005,
+          "vs_exp": -4.5
         },
         {
           "week": 10,
@@ -291,8 +291,8 @@
           "receiving_air_yards": 23,
           "receiving_yards_after_catch": 26,
           "half_ppr": 14.100000000000001,
-          "xfp": 5.4190000000000005,
-          "vs_exp": 8.681000000000001
+          "xfp": 5.424,
+          "vs_exp": 8.676000000000002
         },
         {
           "week": 11,
@@ -308,8 +308,8 @@
           "receiving_air_yards": 12,
           "receiving_yards_after_catch": 14,
           "half_ppr": 3.6,
-          "xfp": 1.9820000000000002,
-          "vs_exp": 1.6179999999999999
+          "xfp": 1.967,
+          "vs_exp": 1.633
         }
       ],
       "role": {
@@ -328,11 +328,11 @@
           },
           {
             "metric": "air-yards share",
-            "him": 0.09131322198300869,
-            "role_avg": 0.08436220677107024,
-            "vs_role": 108.23948955105108,
-            "nfl_avg": 0.1622141997593261,
-            "vs_nfl": 56.29175628181025,
+            "him": 0.09118952257656322,
+            "role_avg": 0.08354045510484785,
+            "vs_role": 109.1561237751403,
+            "nfl_avg": 0.1605274063629825,
+            "vs_nfl": 56.80620190820667,
             "fmt": "{:.1%}"
           },
           {
@@ -346,20 +346,20 @@
           },
           {
             "metric": "TPRR (est.)",
-            "him": 0.185812217889812,
-            "role_avg": 0.16012421757484593,
-            "vs_role": 116.04254540882229,
-            "nfl_avg": 0.20875196703124324,
-            "vs_nfl": 89.01100216315666,
+            "him": 0.18466182276767032,
+            "role_avg": 0.15811121594527655,
+            "vs_role": 116.79236141703137,
+            "nfl_avg": 0.20608038746756566,
+            "vs_nfl": 89.60669427930577,
             "fmt": "{:.3f}"
           },
           {
             "metric": "1D/RR (est.)",
-            "him": 0.049893407758983745,
-            "role_avg": 0.05729386339799266,
-            "vs_role": 87.08333632940487,
-            "nfl_avg": 0.07814890027249194,
-            "vs_nfl": 63.84403054299409,
+            "him": 0.04957452450806698,
+            "role_avg": 0.05657359358414907,
+            "vs_role": 87.6283816659596,
+            "nfl_avg": 0.07714876117027875,
+            "vs_nfl": 64.25835458154494,
             "fmt": "{:.3f}"
           },
           {
@@ -382,11 +382,11 @@
           },
           {
             "metric": "xFP share",
-            "him": 0.04653774627959444,
-            "role_avg": 0.0377488711926957,
-            "vs_role": 123.28248450671383,
-            "nfl_avg": 0.07442961714885826,
-            "vs_nfl": 62.52584396144287,
+            "him": 0.04645327651252419,
+            "role_avg": 0.0377523824564636,
+            "vs_role": 123.04727143007345,
+            "nfl_avg": 0.07454725044708317,
+            "vs_nfl": 62.31386970536052,
             "fmt": "{:.1%}"
           }
         ]
@@ -399,14 +399,14 @@
         "out_reason": null,
         "projection": 3.6,
         "proj_source": "nflverse-est",
-        "matchup_mult": 1.063,
-        "matchup_pct": 6.3,
+        "matchup_mult": 1.053,
+        "matchup_pct": 5.3,
         "matchup_basis": "defense+vegas",
         "matchup_def_rank": 6,
         "matchup_def_pct": 9.1,
-        "matchup_vegas_pct": 3.0,
+        "matchup_vegas_pct": 2.0,
         "matchup_baseline": 3.6,
-        "expected_pts": 3.9,
+        "expected_pts": 3.8,
         "delta_pts": 0.2
       }
     },

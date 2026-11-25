@@ -26,8 +26,8 @@
     "2026": {
       "games": 6,
       "pts_pg": 0.9499999999999998,
-      "xfp_pg": 0.89,
-      "vs_exp_pg": 0.05999999999999991,
+      "xfp_pg": 0.9001666666666667,
+      "vs_exp_pg": 0.04983333333333325,
       "usage_label": "Target share",
       "usage_value": 0.015625,
       "usage_fmt": "1.6%",
@@ -155,8 +155,8 @@
           "receiving_air_yards": -2,
           "receiving_yards_after_catch": 0,
           "half_ppr": 0.3,
-          "xfp": 0.7190000000000001,
-          "vs_exp": -0.4190000000000001
+          "xfp": 0.72,
+          "vs_exp": -0.42
         },
         {
           "week": 4,
@@ -172,8 +172,8 @@
           "receiving_air_yards": 1,
           "receiving_yards_after_catch": 19,
           "half_ppr": 2.5,
-          "xfp": 1.078,
-          "vs_exp": 1.422
+          "xfp": 1.076,
+          "vs_exp": 1.424
         },
         {
           "week": 5,
@@ -206,8 +206,8 @@
           "receiving_air_yards": 0,
           "receiving_yards_after_catch": 0,
           "half_ppr": 0.5,
-          "xfp": 0.54,
-          "vs_exp": -0.040000000000000036
+          "xfp": 0.544,
+          "vs_exp": -0.04400000000000004
         },
         {
           "week": 7,
@@ -223,8 +223,8 @@
           "receiving_air_yards": 0,
           "receiving_yards_after_catch": -1,
           "half_ppr": 2.4,
-          "xfp": 3.0029999999999997,
-          "vs_exp": -0.6029999999999998
+          "xfp": 3.061,
+          "vs_exp": -0.661
         },
         {
           "week": 10,
@@ -260,11 +260,11 @@
           },
           {
             "metric": "air-yards share",
-            "him": 0.006225733458270442,
-            "role_avg": 0.04078638147613537,
-            "vs_role": 15.264245645113672,
-            "nfl_avg": 0.05973432243595273,
-            "vs_nfl": 10.422372271729854,
+            "him": 0.006154371615307214,
+            "role_avg": 0.040318871684807606,
+            "vs_role": 15.26424564511367,
+            "nfl_avg": 0.05894980747606229,
+            "vs_nfl": 10.440019872509874,
             "fmt": "{:.1%}"
           },
           {
@@ -278,20 +278,20 @@
           },
           {
             "metric": "TPRR (est.)",
-            "him": 0.10597894930217559,
-            "role_avg": 0.1338100774343563,
-            "vs_role": 79.20102232521768,
-            "nfl_avg": 0.15030930584307226,
-            "vs_nfl": 70.50724418408333,
+            "him": 0.10523092388518418,
+            "role_avg": 0.13274914039491056,
+            "vs_role": 79.27051246594633,
+            "nfl_avg": 0.1487817494387355,
+            "vs_nfl": 70.72838186280069,
             "fmt": "{:.3f}"
           },
           {
             "metric": "1D/RR (est.)",
-            "him": 0.02978277271462114,
-            "role_avg": 0.05069671421920967,
+            "him": 0.029546634694853267,
+            "role_avg": 0.05029475628805355,
             "vs_role": 58.746948738812044,
-            "nfl_avg": 0.051854016800701445,
-            "vs_nfl": 57.43580642766764,
+            "nfl_avg": 0.051327037216768075,
+            "vs_nfl": 57.56543977021267,
             "fmt": "{:.3f}"
           },
           {
@@ -299,8 +299,8 @@
             "him": 6.1005910560945695,
             "role_avg": 6.2276867030965395,
             "vs_role": 97.9591836734694,
-            "nfl_avg": 6.205197132616488,
-            "vs_nfl": 98.31421831915581,
+            "nfl_avg": 6.200716845878136,
+            "vs_nfl": 98.38525460406849,
             "fmt": "{:.1f}"
           },
           {
@@ -314,11 +314,11 @@
           },
           {
             "metric": "xFP share",
-            "him": 0.016409633775978223,
-            "role_avg": 0.033118254789625545,
-            "vs_role": 49.54860659239394,
-            "nfl_avg": 0.04742095742469845,
-            "vs_nfl": 34.60418065585392,
+            "him": 0.016617062506479683,
+            "role_avg": 0.03333380924466154,
+            "vs_role": 49.85047578725474,
+            "nfl_avg": 0.0474451871828317,
+            "vs_nfl": 35.023705233673645,
             "fmt": "{:.1%}"
           }
         ]
@@ -334,9 +334,9 @@
         "matchup_mult": 1.048,
         "matchup_pct": 4.8,
         "matchup_basis": "defense+vegas",
-        "matchup_def_rank": 15,
-        "matchup_def_pct": 1.3,
-        "matchup_vegas_pct": 4.4,
+        "matchup_def_rank": 18,
+        "matchup_def_pct": -2.6,
+        "matchup_vegas_pct": 5.5,
         "matchup_baseline": 1.6,
         "expected_pts": 1.7,
         "delta_pts": 0.1
@@ -454,7 +454,7 @@
         },
         {
           "stat": "EPA/target",
-          "value_fmt": "+0.14",
+          "value_fmt": "+0.10",
           "pos_rank": "\u2014",
           "means": "Points added per target."
         }
