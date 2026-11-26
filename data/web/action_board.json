@@ -1,5 +1,5 @@
 {
-  "headline": "20 trades raise your title odds.",
+  "headline": "2 free agents would start for you and 18 trades raise your title odds.",
   "subhead": "Everything below is ranked by what it adds to your starting nine, not by name.",
   "basis": null,
   "xfp_available": true,
@@ -7,13 +7,13 @@
     {
       "player": "Christian Watson",
       "pos": "WR",
-      "slot": "BN",
-      "half_ppr_pg": 15.76,
+      "slot": "WR",
+      "half_ppr_pg": 15.6454545455,
       "proj_pg": 12.73,
-      "per_g": -3.03,
-      "tgt_pct": 0.2321428571,
+      "per_g": -2.9154545455,
+      "tgt_pct": 0.1551724138,
       "tm_rank": 2.0,
-      "why": "scoring 15.8/g, we project 12.7/g from here",
+      "why": "scoring 15.6/g, we project 12.7/g from here; only 16% of targets",
       "timing": {
         "call": "now",
         "why": "sell now: his value is at its season high and his schedule doesn't change"
@@ -26,7 +26,7 @@
       "half_ppr_pg": 20.62,
       "proj_pg": 17.77,
       "per_g": -2.85,
-      "tgt_pct": 0.1298701299,
+      "tgt_pct": 0.1296296296,
       "tm_rank": 3.0,
       "why": "scoring 20.6/g, we project 17.8/g from here; only 13% of targets; #3 option on his own offense",
       "timing": {
@@ -54,8 +54,8 @@
       "half_ppr_pg": 6.2333333333,
       "proj_pg": 8.76,
       "per_g": 2.5266666667,
-      "tgt_pct": 0.1111111111,
-      "tm_rank": 3.0,
+      "tgt_pct": 0.0588235294,
+      "tm_rank": 4.0,
       "why": "scoring 6.2/g, we project 8.8/g from here"
     },
     {
@@ -65,12 +65,31 @@
       "half_ppr_pg": 5.18,
       "proj_pg": 7.35,
       "per_g": 2.17,
-      "tgt_pct": 0.038961039,
-      "tm_rank": 8.0,
+      "tgt_pct": 0.0555555556,
+      "tm_rank": 7.0,
       "why": "scoring 5.2/g, we project 7.3/g from here"
     }
   ],
-  "waivers": [],
+  "waivers": [
+    {
+      "player": "J.J. McCarthy",
+      "pos": "QB",
+      "gain": 0.0,
+      "bid": 1,
+      "max_bid": 3,
+      "drop": "Anthony Richardson Sr.",
+      "why": "+4.5 pts/wk over the next 3 weeks \u2014 covers a bye or injury"
+    },
+    {
+      "player": "Bryce Young",
+      "pos": "QB",
+      "gain": 0.098,
+      "bid": 1,
+      "max_bid": 3,
+      "drop": "Anthony Richardson Sr.",
+      "why": "+5.0 pts/wk over the next 3 weeks \u2014 covers a bye or injury"
+    }
+  ],
   "trades": [
     {
       "partner": "Don R.I.C.O",
@@ -78,29 +97,63 @@
       "give_val": 25.3,
       "get": "Jaxon Smith-Njigba (WR)",
       "get_val": 19.5,
-      "addresses": "consolidation",
-      "fairness": 1.0,
-      "d_title": 0.0158,
-      "thesis": "Two for one: -2.0 this week, but +3.46 pts/wk over the weeks that count most \u2014 already net of picking up Rachaad White, which you could do anyway.",
-      "d_me": 3.46,
-      "p_accept": 0.598,
+      "addresses": "lineup",
+      "fairness": 1.03,
+      "d_title": 0.037,
+      "thesis": "Jaxon Smith-Njigba starts for you over Breece Hall: +4.29 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 4.29,
+      "p_accept": 0.605,
       "flag": "LIKELY",
       "sits_for_them": []
     },
     {
-      "partner": "Killa Cam",
-      "give": "Breece Hall (RB)",
-      "give_val": 12.7,
-      "get": "Jaylen Warren (RB)",
-      "get_val": 13.9,
+      "partner": "Revenge of the Smith",
+      "give": "Breece Hall (RB) + Malik Nabers (WR)",
+      "give_val": 25.3,
+      "get": "James Cook III (RB)",
+      "get_val": 17.4,
       "addresses": "lineup",
-      "fairness": 1.03,
-      "d_title": 0.013,
-      "thesis": "Jaylen Warren starts for you over Breece Hall: +2.52 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 2.52,
-      "p_accept": 0.647,
+      "fairness": 0.9,
+      "d_title": 0.0262,
+      "thesis": "James Cook III starts for you over Breece Hall: +1.84 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 1.84,
+      "p_accept": 0.662,
       "flag": "LIKELY",
       "sits_for_them": []
+    },
+    {
+      "partner": "Burrow-Chase combo",
+      "give": "Christian Watson (WR) + Jadarian Price (RB)",
+      "give_val": 21.5,
+      "get": "Javonte Williams (RB)",
+      "get_val": 15.7,
+      "addresses": "lineup",
+      "fairness": 0.74,
+      "d_title": 0.0257,
+      "thesis": "Javonte Williams starts for you over Christian Watson: +0.61 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 0.61,
+      "p_accept": 0.503,
+      "flag": "LIKELY",
+      "sits_for_them": [
+        "Jadarian Price wouldn't start for them (they start Quinshon Judkins & Travis Etienne Jr.)"
+      ]
+    },
+    {
+      "partner": "Saquon Hater",
+      "give": "Denzel Boston (WR)",
+      "give_val": 9.1,
+      "get": "Jordan Love (QB)",
+      "get_val": 18.9,
+      "addresses": "lineup",
+      "fairness": 0.63,
+      "d_title": 0.0335,
+      "thesis": "Jordan Love starts for you over Jayden Daniels: +2.66 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 2.66,
+      "p_accept": 0.189,
+      "flag": "NEEDS_PITCH",
+      "sits_for_them": [
+        "Denzel Boston wouldn't start for them (they start Amon-Ra St. Brown & Rashee Rice & Garrett Wilson)"
+      ]
     },
     {
       "partner": "deez nuts",
@@ -109,48 +162,18 @@
       "get": "Jahmyr Gibbs (RB)",
       "get_val": 22.7,
       "addresses": "lineup",
-      "fairness": 0.92,
-      "d_title": 0.0273,
-      "thesis": "Jahmyr Gibbs starts for you over Christian McCaffrey: +3.99 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 3.99,
-      "p_accept": 0.245,
-      "flag": "NEEDS_PITCH",
-      "sits_for_them": []
-    },
-    {
-      "partner": "Burrow-Chase combo",
-      "give": "Christian Watson (WR)",
-      "give_val": 12.7,
-      "get": "Ja'Marr Chase (WR)",
-      "get_val": 17.2,
-      "addresses": "lineup",
-      "fairness": 0.59,
-      "d_title": 0.0217,
-      "thesis": "Ja'Marr Chase starts for you over Christian Watson: +3.76 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 3.76,
-      "p_accept": 0.172,
-      "flag": "NEEDS_PITCH",
-      "sits_for_them": []
-    },
-    {
-      "partner": "Undisputed",
-      "give": "Jayden Daniels (QB) + Denzel Boston (WR)",
-      "give_val": 27.6,
-      "get": "Caleb Williams (QB)",
-      "get_val": 19.6,
-      "addresses": "lineup",
-      "fairness": 0.91,
-      "d_title": 0.0167,
-      "thesis": "Caleb Williams starts for you over Jayden Daniels: +1.85 pts/wk to your lineup over the weeks that count most.",
-      "d_me": 1.85,
-      "p_accept": 0.202,
+      "fairness": 0.94,
+      "d_title": 0.0242,
+      "thesis": "Jahmyr Gibbs starts for you over Christian McCaffrey: +3.94 pts/wk to your lineup over the weeks that count most.",
+      "d_me": 3.94,
+      "p_accept": 0.253,
       "flag": "NEEDS_PITCH",
       "sits_for_them": []
     }
   ],
   "roster_src": "scraped Yahoo rosters",
-  "yahoo_pulled_at": "2026-11-25T13:11:41+00:00",
+  "yahoo_pulled_at": "2026-11-26T12:45:12+00:00",
   "season": 2026,
-  "week": 11,
+  "week": 12,
   "next_week": 12
 }
